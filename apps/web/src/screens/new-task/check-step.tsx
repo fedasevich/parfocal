@@ -14,7 +14,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import {
   type DecisionKindKey,
-  decisionKinds,
+  decisionKindsFor,
   estimateText,
   isAnnotate,
   questionKinds,
@@ -24,6 +24,7 @@ import {
   templateChanges,
 } from "./model.ts";
 import { FieldNote, fieldId, GroupTitle, RadioRows, ToggleRow } from "./parts.tsx";
+import { isDrawn } from "./result-sets.ts";
 import { ScopeRow } from "./reviewers-step.tsx";
 import { type StepProps, styleOf } from "./steps.tsx";
 
@@ -81,6 +82,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
   const { t } = useLingui();
 
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
+  const drawn = isDrawn(draft.resultSetId);
   const form = data.forms.find((candidate) => candidate.key === draft.form);
   const shared = { draft, data, update, errors };
   return (
@@ -123,7 +125,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
                 decision: { kind: value as DecisionKindKey, agreeFrom: 4, disagreeTo: 2 },
               }))
             }
-            options={decisionKinds.map((kind) => ({
+            options={decisionKindsFor(drawn).map((kind) => ({
               value: kind.key,
               title: kind.name,
               sub: kind.detail,
@@ -133,6 +135,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
                   data-counts-as-line=""
                   className="mt-0.5 mb-1.5 ml-6.25"
                   decisionStyle={styleOf[kind.key]}
+                  source={drawn ? "drawn" : "ai"}
                   agreeFrom={draft.decision.agreeFrom}
                   disagreeTo={draft.decision.disagreeTo}
                   onRangeChange={(range) =>

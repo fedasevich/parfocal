@@ -28,7 +28,13 @@ import {
   type TemplateChoice,
   taskNameFor,
 } from "./model.ts";
-import { drawnChoice, drawnSource, groupResultSets, templateFor } from "./result-sets.ts";
+import {
+  drawnChoice,
+  drawnSource,
+  drawnTaskName,
+  groupResultSets,
+  templateFor,
+} from "./result-sets.ts";
 
 const studyKinds: Record<string, string> = {
   "regions-and-cells": "Regions and cells",
@@ -220,9 +226,12 @@ export function useTaskData(projectId: string): {
     groups,
     pool,
     resultSets: sources,
-    names: Object.fromEntries(
-      defaults.names.map((item) => [groupedSetId(item.result_set_id), taskNameFor(item.name)]),
-    ),
+    names: {
+      ...Object.fromEntries(
+        defaults.names.map((item) => [groupedSetId(item.result_set_id), taskNameFor(item.name)]),
+      ),
+      ...(drawnSlides ? { [drawnSource]: drawnTaskName } : {}),
+    },
     templates: choices,
     defaultTemplateId: templateFor(
       choices,

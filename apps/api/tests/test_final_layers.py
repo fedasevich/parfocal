@@ -13,6 +13,8 @@ from workspace_support import owner
 
 pytestmark = pytest.mark.db
 
+NO_DRAWN = {"drawn-confirmed": 0, "drawn-edited": 0}
+
 REDRAWN = square(0, 0, 80)
 DRAWN = square(390, 90, 20)
 ADDED = square(300, 300, 40)
@@ -131,7 +133,13 @@ def test_a_signed_off_review_exports_what_its_decisions_and_edits_say(
     assert (parfocal[added]["author"], parfocal[added]["source"]) == (first, None)
     assert same_shape(features[added]["geometry"], ADDED)
     [slide] = manifest["slides"]
-    assert slide["objects"] == {"human": 1, "ai-confirmed": 1, "ai-edited": 2, "ai-unchecked": 0}
+    assert slide["objects"] == {
+        "human": 1,
+        "ai-confirmed": 1,
+        "ai-edited": 2,
+        "ai-unchecked": 0,
+        **NO_DRAWN,
+    }
     assert (slide["unsure_left_out"], slide["open_left_out"], slide["unchecked_left_out"]) == (
         1,
         1,

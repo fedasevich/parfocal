@@ -3,7 +3,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import type { DecisionStyle } from "@parfocal/ui/components/decision-buttons";
 import { NumberStepper } from "@parfocal/ui/components/number-stepper";
 import { StackedBar } from "@parfocal/ui/components/progress-meter";
-import { countsAsRule } from "@parfocal/ui/lib/counts-as-rule";
+import { type ClaimSource, countsAsRule } from "@parfocal/ui/lib/counts-as-rule";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -14,6 +14,7 @@ type CountsAsLineProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   onRangeChange?: (range: { agreeFrom: number; disagreeTo: number }) => void;
   split?: { agree: number; unsure: number; disagree: number };
   emptyText?: string;
+  source?: ClaimSource;
 };
 
 function CountsAsLine({
@@ -23,6 +24,7 @@ function CountsAsLine({
   onRangeChange,
   split = { agree: 0, unsure: 0, disagree: 0 },
   emptyText = t`No answers yet. The split fills in as reviews come in.`,
+  source = "ai",
   className,
   ...props
 }: CountsAsLineProps) {
@@ -62,7 +64,7 @@ function CountsAsLine({
         </div>
       ) : null}
       <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">
-        {countsAsRule(decisionStyle, { agreeFrom, disagreeTo })}
+        {countsAsRule(decisionStyle, { agreeFrom, disagreeTo }, source)}
       </p>
       <StackedBar split={split} emptyText={emptyText} className="mt-1" />
     </div>

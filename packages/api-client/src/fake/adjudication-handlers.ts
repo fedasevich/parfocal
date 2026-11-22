@@ -48,7 +48,7 @@ import {
   startNextVersion,
 } from "./queue-scene.ts";
 import { savedNoteOf } from "./review-decisions.ts";
-import { toReviewObjects, toThreads } from "./review-handlers.ts";
+import { drawnPage, drawnTools, toReviewObjects, toThreads } from "./review-handlers.ts";
 import {
   adjudications,
   type PersonKey,
@@ -208,11 +208,24 @@ const outlinesOf = (
   };
 };
 
-export const toDisagreementQueue = (taskId: string): DisagreementQueue => ({
+const drawnRow = (row: QueueRow, index: number): QueueRow =>
+  row.kind === "region"
+    ? {
+        ...row,
+        drawn: true,
+        drawn_by_user_id: people.LM.id,
+        tool: drawnTools[index % drawnTools.length] ?? null,
+        ai: { ...row.ai, score: 0 },
+      }
+    : row;
+
+export const toDisagreementQueue = (taskId: string, drawn = false): DisagreementQueue => ({
   task_id: taskId,
   total_objects: queueTotalObjects,
   locked: reviewsAreIn() ? null : { user_id: idOf(lockedBy.by), slides_left: lockedBy.slidesLeft },
-  rows: shownQueueRows(outlineOverlapOf(taskId)).map(toQueueRow),
+  rows: shownQueueRows(outlineOverlapOf(taskId))
+    .map(toQueueRow)
+    .map((row, index) => (drawn ? drawnRow(row, index) : row)),
 });
 
 const seedOf = (slideId: string, object: string) =>
@@ -432,7 +445,7 @@ const decisionsOf = (taskId: string): Evaluation["decisions"] => {
   };
 };
 
-export const toTaskEvaluation = (taskId: string): Evaluation => {
+export const toTaskEvaluation = (taskId: string, drawn = false): Evaluation => {
   const numbers = taskId === comparisonId() ? comparisonNumbers : evaluationNumbers;
   const tumor = {
     kind: "region",
@@ -452,6 +465,7 @@ export const toTaskEvaluation = (taskId: string): Evaluation => {
   return {
     task_id: taskId,
     sample: false,
+    ai_result: !drawn,
     decisions: decisionsOf(taskId),
     display: taskDisplayFor(task().code),
     presets: [],
@@ -739,7 +753,9 @@ export const toTaskAdjudications = (): TaskAdjudication[] =>
 export function adjudicationHandlers(): RequestHandler[] {
   return [
     getListTaskAdjudicationsMockHandler(() => toTaskAdjudications()),
-    getGetDisagreementQueueMockHandler(({ params }) => toDisagreementQueue(String(params.taskId))),
+    getGetDisagreementQueueMockHandler(({ params, request }) =>
+      toDisagreementQueue(String(params.taskId), drawnPage(request)),
+    ),
     updateQueuedObjectInScene(),
     settleQueuedOutlineInScene(),
     clearQueuedOutlineInScene(),
@@ -749,7 +765,9 @@ export function adjudicationHandlers(): RequestHandler[] {
     decideAdjudicationInScene(),
     getSendToAdjudicatorMockHandler(({ request }) => sendToAdjudicatorInScene(request)),
     getListMyAdjudicationsMockHandler(() => toMyAdjudications()),
-    getGetTaskEvaluationMockHandler(({ params }) => toTaskEvaluation(String(params.taskId))),
+    getGetTaskEvaluationMockHandler(({ params, request }) =>
+      toTaskEvaluation(String(params.taskId), drawnPage(request)),
+    ),
     getGetEvaluationReportMockHandler(({ params }) => toEvaluationReport(String(params.taskId))),
     getGetSignOffSummaryMockHandler(({ params }) => toSignOffSummary(String(params.taskId))),
     getListEvaluationChangesMockHandler(({ params }) => toEvaluationChanges(String(params.taskId))),

@@ -876,6 +876,8 @@ export const DatasetOrigin = {
   "ai-confirmed": "ai-confirmed",
   "ai-edited": "ai-edited",
   "ai-unchecked": "ai-unchecked",
+  "drawn-confirmed": "drawn-confirmed",
+  "drawn-edited": "drawn-edited",
 } as const;
 
 export interface AppliedFilters {
@@ -2631,6 +2633,8 @@ export interface QueueRow {
   outlines?: ReviewerOutline[];
   settled_outline?: SettledOutline | null;
   drawn?: boolean;
+  drawn_by_user_id?: string | null;
+  tool?: DrawingTool | null;
 }
 
 export interface DisagreementQueue {
@@ -3023,6 +3027,7 @@ export interface PresetUse {
 export interface Evaluation {
   task_id: string;
   sample: boolean;
+  ai_result?: boolean;
   decisions: DecisionCounts;
   classes: ClassMetrics[];
   overall: ClassMetrics[];

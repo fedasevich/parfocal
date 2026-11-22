@@ -33,6 +33,7 @@ from parfocal_api.disagreements import (
     queue_of,
     settle_outline,
 )
+from parfocal_api.drawn_sources import Drawer, drawers_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, NotFoundError
 from parfocal_api.review_objects import UNKNOWN, AiClaim, ai_claims, kind_of
@@ -43,6 +44,7 @@ from parfocal_api.reviewer_progress import slides_left_by_reviewer
 from parfocal_api.tables import (
     REASON_TEXT,
     DecisionStyle,
+    DrawingTool,
     adjudications,
     disagreement_decisions,
     project_classes,
@@ -154,6 +156,8 @@ class QueueRow(BaseModel):
     outlines: list[ReviewerOutline] = []
     settled_outline: SettledOutline | None = None
     drawn: bool = False
+    drawn_by_user_id: uuid.UUID | None = None
+    tool: DrawingTool | None = None
 
 
 class QueueLock(BaseModel):
@@ -305,7 +309,7 @@ def reason_of(reasons: Iterable[str]) -> str | None:
 
 async def claims_of(
     connection: AsyncConnection, store: ResultStore, task_id: uuid.UUID, queue: list[QueuedObject]
-) -> dict[Key, AiClaim]:
+) -> tuple[dict[Key, AiClaim], dict[Key, Drawer]]:
     sets = {
         row.slide_id: row.result_set_id
         for row in await connection.execute(
@@ -315,8 +319,13 @@ async def claims_of(
         )
     }
     claims: dict[Key, AiClaim] = {}
+    drawn: dict[Key, Drawer] = {}
     for slide_id in {item.slide_id for item in queue}:
         on_slide = [item for item in queue if item.slide_id == slide_id]
+        drawers = await drawers_of(connection, sets.get(slide_id))
+        for item in on_slide:
+            if item.drawn and item.number in drawers:
+                drawn[key_of(item)] = drawers[item.number]
         found = await ai_claims(
             connection,
             store,
@@ -326,7 +335,7 @@ async def claims_of(
         )
         for item in on_slide:
             claims[key_of(item)] = found.get((letter_of(item), item.number), UNKNOWN)
-    return claims
+    return claims, drawn
 
 
 async def decided_at(connection: AsyncConnection, task_id: uuid.UUID) -> dict[Key, datetime]:
@@ -400,6 +409,7 @@ class QueueFacts:
         names: dict[Any, str],
         picked: dict[Any, uuid.UUID],
         claims: dict[Key, AiClaim],
+        drawers: dict[Key, Drawer],
         decided: dict[Key, datetime],
         editors: dict[Key, Any],
         retypes: dict[Any, uuid.UUID],
@@ -408,6 +418,7 @@ class QueueFacts:
         self.names = names
         self.picked = picked
         self.claims = claims
+        self.drawers = drawers
         self.decided = decided
         self.editors = editors
         self.retypes = retypes
@@ -432,11 +443,13 @@ async def facts_of(
     task: Any,
     queue: list[QueuedObject],
 ) -> QueueFacts:
+    claims, drawers = await claims_of(connection, store, task.id, queue)
     return QueueFacts(
         labels=await labels_of(connection, (item.slide_id for item in queue)),
         names=await class_names(connection, task.project_id),
         picked=await answer_classes(connection, task.id),
-        claims=await claims_of(connection, store, task.id, queue),
+        claims=claims,
+        drawers=drawers,
         decided=await decided_at(connection, task.id),
         editors=await last_editors(connection, task.id),
         retypes=await reviewer_retypes(connection, task.id),
@@ -449,8 +462,11 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
     decision = item.decision
     sent = item.adjudication
     editor = facts.editors.get(key_of(item)) if item.edited_after_decisions else None
+    drawer = facts.drawers.get(key_of(item))
     return QueueRow(
         drawn=item.drawn,
+        drawn_by_user_id=None if drawer is None else drawer.user_id,
+        tool=None if drawer is None or drawer.tool is None else DrawingTool(drawer.tool),
         key=f"{label}:{item.object}",
         slide_id=item.slide_id,
         slide_label=label,

@@ -12,7 +12,13 @@ import { slides } from "./scenario.ts";
 import { annotateStubTaskId } from "./scenario-review.ts";
 import { annotateTaskClasses, signedOffSlidesOf } from "./shared-layer-handlers.ts";
 
-const checkedOrigins: DatasetOrigin[] = ["human", "ai-confirmed", "ai-edited"];
+const checkedOrigins: DatasetOrigin[] = [
+  "human",
+  "ai-confirmed",
+  "ai-edited",
+  "drawn-confirmed",
+  "drawn-edited",
+];
 const allOrigins: DatasetOrigin[] = [...checkedOrigins, "ai-unchecked"];
 
 type FakeObject = { readonly origin: DatasetOrigin; readonly classId: string | null };

@@ -7,7 +7,7 @@ import { Zone } from "@parfocal/ui/components/zone";
 import type { ReactNode } from "react";
 import {
   andJoin,
-  decisionKinds,
+  decisionKindsFor,
   displaySummary,
   dueText,
   estimateText,
@@ -27,6 +27,7 @@ import {
   summary,
 } from "./model.ts";
 import { FieldNote, GroupTitle } from "./parts.tsx";
+import { isDrawn } from "./result-sets.ts";
 import { type StepProps, TextLink } from "./steps.tsx";
 
 type ReviewRow = [IconName, string, ReactNode];
@@ -45,7 +46,9 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       ? 0
       : draft.required.filter((key) => Number(key.slice(1)) <= (form?.questions.length ?? 0))
           .length;
-  const kind = decisionKinds.find((candidate) => candidate.key === draft.decision.kind);
+  const kind = decisionKindsFor(isDrawn(draft.resultSetId)).find(
+    (candidate) => candidate.key === draft.decision.kind,
+  );
   const nameOf = (id: string) => data.people.find((person) => person.id === id)?.name ?? id;
   const people = sum.n ? (
     <span className="flex flex-wrap gap-x-4 gap-y-1.5">

@@ -11,6 +11,8 @@ import {
   allClosed,
   canSend,
   countOf,
+  drawerOf,
+  drawnText,
   filterCounts,
   filterRows,
   isClosed,
@@ -176,6 +178,26 @@ test("a task with one reviewer says the reviewer vs AI and two reviewers say bot
   assert.equal(rowTag(lone, nameOf, { style, classes, reviewers: 2 }).label, "both vs AI");
   assert.equal(rowTag(lone, nameOf, { style, classes }).label, "both vs AI");
   assert.equal(tagOf("differ", 1), "reviewers differ");
+});
+
+test("a drawn row names its drawer and tool instead of the AI", () => {
+  const style = toReviewStyle(undefined);
+  const drawn = row("T5", {
+    tag: "bothai",
+    drawn: true,
+    drawn_by_user_id: "u9",
+    tool: "smart-select",
+    answers: [{ user_id: "u1", raw: "disagree", reason: null, note: null }],
+  });
+  const names = (id: string | null | undefined) => (id === "u9" ? "Lucie" : undefined);
+  assert.equal(
+    rowTag(drawn, names, { style, classes, reviewers: 1 }).label,
+    "the reviewer vs Lucie",
+  );
+  assert.equal(rowTag(drawn, names, { style, classes, reviewers: 2 }).label, "both vs Lucie");
+  assert.equal(drawnText(drawn, names), "Drawn by Lucie with Smart select");
+  assert.equal(drawnText({ drawn_by_user_id: null, tool: null }, names), "Drawn by a person");
+  assert.equal(drawerOf({ drawn_by_user_id: null }, names), "the drawer");
 });
 
 test("an outline row says outline differs and gives each reviewer's outline its own colour", () => {

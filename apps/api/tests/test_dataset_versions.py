@@ -19,6 +19,8 @@ from parfocal_common.object_store import ObjectStore, StorageError
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
+NO_DRAWN = {"drawn-confirmed": 0, "drawn-edited": 0}
+
 
 def counts(api: ApiAs, person: Any, task: str, **params: Any) -> dict[str, Any]:
     return ok(api(person).get(f"/api/review-tasks/{task}/dataset", params=params))
@@ -37,11 +39,17 @@ def test_the_dataset_counts_follow_origin_class_slide_and_unchecked_filters(
     owner = o.people["owner"]
     plain = counts(api, owner, task)
     assert plain["signed_off_slides"] == 1
-    assert plain["objects"] == {"human": 1, "ai-confirmed": 1, "ai-edited": 1, "ai-unchecked": 0}
+    assert plain["objects"] == {
+        "human": 1,
+        "ai-confirmed": 1,
+        "ai-edited": 1,
+        "ai-unchecked": 0,
+        **NO_DRAWN,
+    }
     assert plain["classes"] == {str(class_id): 3}
     assert (plain["unchecked_left_out"], plain["filtered_out"]) == (1, 0)
     assert plain["filters"] == {
-        "origins": ["human", "ai-confirmed", "ai-edited"],
+        "origins": ["human", "ai-confirmed", "ai-edited", "drawn-confirmed", "drawn-edited"],
         "class_ids": None,
         "slide_ids": None,
         "include_unchecked": False,
@@ -51,7 +59,13 @@ def test_the_dataset_counts_follow_origin_class_slide_and_unchecked_filters(
     assert slide["label"]
 
     edited = counts(api, owner, task, origin="ai-edited")
-    assert edited["objects"] == {"human": 0, "ai-confirmed": 0, "ai-edited": 1, "ai-unchecked": 0}
+    assert edited["objects"] == {
+        "human": 0,
+        "ai-confirmed": 0,
+        "ai-edited": 1,
+        "ai-unchecked": 0,
+        **NO_DRAWN,
+    }
     assert edited["filtered_out"] == 2
 
     wider = counts(api, owner, task, include_unchecked="true")

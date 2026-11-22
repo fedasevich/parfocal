@@ -105,6 +105,7 @@ class LayerRow:
     geojson: str | None
     drawn_by_user_id: uuid.UUID | None = None
     tool: str | None = None
+    drawn: bool = False
 
 
 @dataclass(frozen=True)
@@ -488,6 +489,7 @@ def layer_rows(
                     uuid.UUID(entry["drawn_by"]) if entry.get("drawn_by") is not None else None
                 ),
                 tool=entry.get("tool"),
+                drawn=bool(entry["person"]) and state is not FinalState.ADDED,
             )
         )
     return rows, left_out

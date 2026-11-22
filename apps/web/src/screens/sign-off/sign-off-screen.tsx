@@ -30,7 +30,7 @@ import { useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { closeOn, ReasonModal, useSignature } from "../clinical-report/modals.tsx";
 import { AdjudicationRows, useTaskAdjudications } from "../disagreements/adjudication-rows.tsx";
 import { downloadExport } from "../evaluation/download-export.ts";
-import { headlineTiles } from "../evaluation/numbers.ts";
+import { headlineTiles, personMetrics } from "../evaluation/numbers.ts";
 import { andJoin } from "../format.ts";
 import { ProjectBackground } from "../jobs/project-background.tsx";
 import { personProp, usePeople } from "../people.ts";
@@ -570,7 +570,18 @@ function SignOffModal({
           </ReadinessList>
         </SmallModalZone>
         <SmallModalZone title={t`Results`}>
-          <MetricTiles variant="panel" tiles={evaluation ? headlineTiles(evaluation) : []} />
+          <MetricTiles
+            variant="panel"
+            data-testid="sign-off-metrics"
+            tiles={
+              evaluation
+                ? headlineTiles(
+                    evaluation,
+                    evaluation.ai_result === false ? personMetrics : undefined,
+                  )
+                : []
+            }
+          />
         </SmallModalZone>
         {adjudicationZone}
         <SmallModalZone title={t`What signing does`}>

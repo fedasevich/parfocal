@@ -20,6 +20,8 @@ from parfocal_api.training_exports import Manifest, letter_at, rgb_of
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
+NO_DRAWN = {"drawn-confirmed": 0, "drawn-edited": 0}
+
 QUPATH = Path(__file__).parent / "fixtures" / "qupath-objects.geojson"
 SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [9, 0], [9, 9], [0, 9], [0, 0]]]}
 HUMAN = {"type": "Polygon", "coordinates": [[[50, 50], [80, 50], [80, 80], [50, 80], [50, 50]]]}
@@ -147,10 +149,22 @@ def test_a_signed_off_slide_exports_its_layer_with_origins_and_letters(
         "sha256": hashlib.sha256(content).hexdigest(),
         "bytes": len(content),
     }
-    assert entry["objects"] == {"human": 1, "ai-confirmed": 1, "ai-edited": 1, "ai-unchecked": 0}
+    assert entry["objects"] == {
+        "human": 1,
+        "ai-confirmed": 1,
+        "ai-edited": 1,
+        "ai-unchecked": 0,
+        **NO_DRAWN,
+    }
     assert (entry["unchecked_left_out"], entry["marks_left_out"]) == (1, 2)
     assert manifest["unchecked_left_out"] == 1
-    assert manifest["origins"] == ["human", "ai-confirmed", "ai-edited"]
+    assert manifest["origins"] == [
+        "human",
+        "ai-confirmed",
+        "ai-edited",
+        "drawn-confirmed",
+        "drawn-edited",
+    ]
     assert manifest["check_options"]["unchecked_export"] == "leave-out"
     assert manifest["classes"] == [
         {"id": str(class_id), "key": 1, "name": "Tumour", "colour": "#c80000"}

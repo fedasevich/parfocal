@@ -200,6 +200,19 @@ async def drawn_task_slides(
     return {(row.task_id, row.slide_id) for row in rows}
 
 
+async def reviews_ai(connection: AsyncConnection, task_id: uuid.UUID) -> bool:
+    found = await connection.scalar(
+        select(func.count())
+        .select_from(review_task_slides)
+        .join(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
+        .where(
+            review_task_slides.c.task_id == task_id,
+            result_sets.c.source != ResultSource.DRAWN,
+        )
+    )
+    return bool(found)
+
+
 async def drawers_of(connection: AsyncConnection, set_id: uuid.UUID | None) -> dict[int, Drawer]:
     if set_id is None:
         return {}

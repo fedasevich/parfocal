@@ -9768,6 +9768,11 @@ export const getGetDisagreementQueueResponseMock = (
       null,
     ]),
     drawn: faker.datatype.boolean(),
+    drawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    tool: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(DrawingTool)),
+      null,
+    ]),
   })),
   ...overrideResponse,
 });
@@ -9857,6 +9862,8 @@ export const getUpdateQueuedObjectResponseMock = (
     null,
   ]),
   drawn: faker.datatype.boolean(),
+  drawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  tool: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(DrawingTool)), null]),
   ...overrideResponse,
 });
 
@@ -9945,6 +9952,8 @@ export const getSettleQueuedOutlineResponseMock = (
     null,
   ]),
   drawn: faker.datatype.boolean(),
+  drawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  tool: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(DrawingTool)), null]),
   ...overrideResponse,
 });
 
@@ -10033,6 +10042,8 @@ export const getClearQueuedOutlineResponseMock = (
     null,
   ]),
   drawn: faker.datatype.boolean(),
+  drawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  tool: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(DrawingTool)), null]),
   ...overrideResponse,
 });
 
@@ -13966,6 +13977,7 @@ export const getGetTaskEvaluationResponseMock = (
 ): Evaluation => ({
   task_id: faker.string.uuid(),
   sample: faker.datatype.boolean(),
+  ai_result: faker.datatype.boolean(),
   decisions: {
     style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
     counts_as: faker.helpers.arrayElements(Object.values(DecisionValue)),

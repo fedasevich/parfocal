@@ -116,7 +116,7 @@ test("a sent task lists each result once, shows its date, and reaches the bell a
 }) => {
   await page.goto(`${newTask}?scene=slides`);
   await expect(
-    flow(page).getByRole("radiogroup", { name: "AI result to check" }).getByRole("radio"),
+    flow(page).getByRole("radiogroup", { name: "Objects to check" }).getByRole("radio"),
   ).toHaveCount(3);
   for (const step of ["Reviewers", "What to check", "How it runs", "Send"]) {
     await flow(page).getByRole("button", { name: "Next" }).click();

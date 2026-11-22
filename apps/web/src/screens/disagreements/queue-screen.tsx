@@ -58,6 +58,8 @@ import {
   canSend,
   claimText,
   countOf,
+  drawerOf,
+  drawnText,
   filterCounts,
   filterRows,
   isClosed,
@@ -117,6 +119,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
   const clearOutline = useClearQueuedOutline({ mutation: { onSuccess: () => void refresh() } });
   const drawing = useOutlineDrawing();
   const rows = queue?.rows ?? [];
+  const drawnOnly = rows.length > 0 && rows.every((item) => item.drawn);
   const row =
     rows.find((candidate) => candidate.key === selectedKey) ??
     rows.find((candidate) => !isClosed(candidate)) ??
@@ -316,7 +319,13 @@ export function QueueScreen({ taskId }: { taskId: string }) {
               { value: "rev", label: t`Reviewers differ ${counts.rev}` },
               {
                 value: "ai",
-                label: alone ? t`Reviewer vs AI ${counts.ai}` : t`Both vs AI ${counts.ai}`,
+                label: drawnOnly
+                  ? alone
+                    ? t`Reviewer vs drawer ${counts.ai}`
+                    : t`Both vs drawer ${counts.ai}`
+                  : alone
+                    ? t`Reviewer vs AI ${counts.ai}`
+                    : t`Both vs AI ${counts.ai}`,
               },
             ]}
           />
@@ -415,7 +424,11 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                     </span>
                   ))}
                   <small className="text-caption text-fg-dim">
-                    <Trans>Each reviewer's outline is drawn over the AI one.</Trans>
+                    {row.drawn ? (
+                      <Trans>Each reviewer's outline is drawn over the original one.</Trans>
+                    ) : (
+                      <Trans>Each reviewer's outline is drawn over the AI one.</Trans>
+                    )}
                   </small>
                 </section>
               ) : null}
@@ -445,12 +458,18 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                 />
               ) : null}
               <EvidenceList>
-                <EvidenceRow
-                  icon="smart"
-                  title={summary?.result_set.name ? t`AI · ${summary.result_set.name}` : t`AI`}
-                >
-                  {claimText(row.ai)}
-                </EvidenceRow>
+                {row.drawn ? (
+                  <EvidenceRow icon="pen" title={drawnText(row, nameOf)}>
+                    {row.ai.class_name}
+                  </EvidenceRow>
+                ) : (
+                  <EvidenceRow
+                    icon="smart"
+                    title={summary?.result_set.name ? t`AI · ${summary.result_set.name}` : t`AI`}
+                  >
+                    {claimText(row.ai)}
+                  </EvidenceRow>
+                )}
                 {row.answers.map((answer) => (
                   <EvidenceRow
                     key={answer.user_id}
@@ -767,11 +786,13 @@ function DecidePanel({
   const disagreeing = row.answers
     .filter((answer) => answer.raw === "disagree")
     .map((answer) => nameOf(answer.user_id) ?? "");
-  const mapping = t`Agree keeps the AI's call.${
-    disagreeing.length
-      ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}, and ${row.object} leaves the training data.`
-      : ""
-  }`;
+  const disagreeNote = disagreeing.length
+    ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}, and ${row.object} leaves the training data.`
+    : "";
+  const drawer = drawerOf(row, nameOf);
+  const mapping = row.drawn
+    ? t`Agree keeps the outline ${drawer} drew.${disagreeNote}`
+    : t`Agree keeps the AI's call.${disagreeNote}`;
   const declinedKeys = rows.filter((item) => item.state === "declined").map((item) => item.key);
   const retypes = [
     ...new Set(row.answers.flatMap((answer) => (answer.retyped_to ? [answer.retyped_to] : []))),
@@ -852,7 +873,13 @@ function DecidePanel({
             In the training data, Disagree removes {row.object}, a settled outline included. Agree
             keeps the settled outline, or else the edits of the reviewers who agreed.
           </Trans>
-          {retypes.length ? (
+          {retypes.length && row.drawn ? (
+            <Trans>
+              {" "}
+              Keep with the reviewer's type keeps the settled outline, or else the one {drawer}{" "}
+              drew, with the reviewer's type, and counts {row.object} as edited.
+            </Trans>
+          ) : retypes.length ? (
             <Trans>
               {" "}
               Keep with the reviewer's type keeps the settled outline, or else the AI's, with the

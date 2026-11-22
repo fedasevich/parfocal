@@ -385,3 +385,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0430](0430-a-review-task-takes-drawn-and-one-click-objects.md) | A review task takes objects drawn by hand or with one click tools | Accepted | 2026-11-22 |
 | [0431](0431-the-queue-can-keep-a-reviewers-new-type.md) | The disagreement queue can keep a reviewer's new type | Accepted | 2026-11-22 |
 | [0432](0432-drawn-objects-are-reviewed-from-a-hidden-snapshot.md) | Drawn objects are reviewed from a hidden snapshot | Accepted | 2026-11-22 |
+| [0433](0433-drawn-objects-get-their-own-export-origins.md) | Drawn objects get their own export origins | Accepted | 2026-11-22 |

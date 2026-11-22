@@ -13,6 +13,8 @@ export const headlineMetrics = [
   "cell-agreement",
 ] as const;
 
+export const personMetrics = ["kappa"] as const;
+
 type HeadlineNumbers = Pick<
   Evaluation,
   "overall" | "dice" | "cell_agreement_with_ai" | "mean_kappa"
@@ -106,7 +108,7 @@ export function methodsLines(
   const { decisions } = evaluation;
   const style = toReviewStyle({ style: decisions.style, counts_as: decisions.counts_as });
   const lines = [
-    `Reviewers answered in the ${styleName[style.kind]} style. ${countsAsRule(style.kind, style)}`,
+    `Reviewers answered in the ${styleName[style.kind]} style. ${countsAsRule(style.kind, style, evaluation.ai_result === false ? "drawn" : "ai")}`,
   ];
   const counted = Object.entries(decisions.counted)
     .map(([value, count]) => `${count} ${countWord[value] ?? value}`)

@@ -29,8 +29,28 @@ export const tagText: Record<QueueRow["tag"], string> = {
   outline: "outline differs",
 };
 
-export const tagOf = (tag: QueueRow["tag"], reviewers?: number) =>
-  tag === "bothai" && reviewers === 1 ? "the reviewer vs AI" : tagText[tag];
+export const tagOf = (tag: QueueRow["tag"], reviewers?: number, drawer?: string) => {
+  if (tag === "bothai" && drawer !== undefined) {
+    return reviewers === 1 ? `the reviewer vs ${drawer}` : `both vs ${drawer}`;
+  }
+  return tag === "bothai" && reviewers === 1 ? "the reviewer vs AI" : tagText[tag];
+};
+
+type Names = (userId: string | null | undefined) => string | undefined;
+
+const toolWords: Record<string, string> = {
+  hand: "by hand",
+  "smart-select": "with Smart select",
+};
+
+export const drawerOf = (row: Pick<QueueRow, "drawn_by_user_id">, nameOf: Names) =>
+  nameOf(row.drawn_by_user_id) ?? "the drawer";
+
+export function drawnText(row: Pick<QueueRow, "drawn_by_user_id" | "tool">, nameOf: Names) {
+  const who = nameOf(row.drawn_by_user_id) ?? "a person";
+  const how = row.tool ? toolWords[row.tool] : undefined;
+  return how ? `Drawn by ${who} ${how}` : `Drawn by ${who}`;
+}
 export const rowCode = (row: Pick<QueueRow, "object" | "drawn">) =>
   row.drawn ? `${row.object}⁺` : row.object;
 
@@ -65,7 +85,10 @@ export function rowTag(
   if (row.state === "declined") return { label: `declined by ${who}`, tone: "warn" };
   if (row.state === "look-again") return { label: "asked to look again", tone: "accent" };
   if (row.edited) return { label: "edited after decisions", tone: "warn" };
-  return { label: tagOf(row.tag, look.reviewers), tone: "neutral" };
+  return {
+    label: tagOf(row.tag, look.reviewers, row.drawn ? drawerOf(row, nameOf) : undefined),
+    tone: "neutral",
+  };
 }
 
 export const isClosed = (row: QueueRow) =>

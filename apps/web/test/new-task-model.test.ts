@@ -5,6 +5,7 @@ import {
   annotateSlideLine,
   applyTemplate,
   blockersFor,
+  decisionKindsFor,
   displaySummary,
   estimateText,
   initialDraft,
@@ -471,6 +472,16 @@ test("a project without its own default starts from the workspace default", () =
 test("the default task name says what it reviews", () => {
   assert.equal(taskNameFor("GeoJSON import"), "Review of GeoJSON import");
   assert.equal(taskNameFor("  "), "");
+});
+
+test("the decision questions of a drawn review speak of the outline, not the AI", () => {
+  const drawn = decisionKindsFor(true);
+  assert.deepEqual(
+    drawn.map((kind) => kind.key),
+    decisionKindsFor(false).map((kind) => kind.key),
+  );
+  for (const kind of drawn) assert.doesNotMatch(`${kind.name} ${kind.detail}`, /\bAI\b/);
+  assert.match(decisionKindsFor(false)[0]?.detail ?? "", /^The AI's claim/);
 });
 
 test("a count is singular for one slide", () => {

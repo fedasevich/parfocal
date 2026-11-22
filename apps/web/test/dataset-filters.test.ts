@@ -13,7 +13,7 @@ import {
 test("the starting filters ask for checked objects only and send no narrowing", () => {
   assert.deepEqual(datasetParams(startingFilters), { include_unchecked: false });
   assert.deepEqual(freezeFilters(startingFilters), {
-    origins: ["human", "ai-confirmed", "ai-edited"],
+    origins: ["human", "ai-confirmed", "ai-edited", "drawn-confirmed", "drawn-edited"],
     class_ids: null,
     slide_ids: null,
     include_unchecked: false,

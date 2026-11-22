@@ -126,6 +126,9 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
   const byId = new Map(data.slides.map((slide) => [slide.id, slide]));
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
   const annotate = isAnnotate(draft);
+  const checkLabel = data.resultSets.some((set) => isDrawn(set.id))
+    ? t`Objects to check`
+    : t`AI result to check`;
   const withResult = slidesWithResult(draft, data).length;
   const leftOut = data.groups
     .filter((group) => draft.groups[group.key])
@@ -266,11 +269,11 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
         <FieldNote error={errors.get("groups")} />
       </Zone>
       {annotate && !draft.check.hasResult ? null : (
-        <Zone title={annotate ? t`AI result to start from` : t`AI result to check`}>
+        <Zone title={annotate ? t`AI result to start from` : checkLabel}>
           <div className="grid gap-1.5">
             <RadioRows
               id={fieldId("rset")}
-              label={t`AI result to check`}
+              label={checkLabel}
               value={draft.resultSetId}
               onChange={(value) =>
                 update((current) => {

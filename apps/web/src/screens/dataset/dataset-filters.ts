@@ -4,7 +4,14 @@ export const checkedOrigins = [
   "human",
   "ai-confirmed",
   "ai-edited",
+  "drawn-confirmed",
+  "drawn-edited",
 ] as const satisfies readonly DatasetOrigin[];
+
+export const drawnOrigins: ReadonlySet<DatasetOrigin> = new Set([
+  "drawn-confirmed",
+  "drawn-edited",
+]);
 
 export type CheckedOrigin = (typeof checkedOrigins)[number];
 

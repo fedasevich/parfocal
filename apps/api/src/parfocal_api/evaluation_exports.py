@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.ai_changes import ai_changes, report_changes
 from parfocal_api.blind_first import seen_by, viewer_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.drawn_sources import drawn_task_slides
 from parfocal_api.evaluation import (
     UNCLASSIFIED,
     Evaluation,
@@ -356,10 +357,12 @@ async def object_rows(
     slide_ids = {uuid.UUID(item.slide) for item in objects} | {row.slide_id for row in added}
     where = await paths_of(connection, sorted(slide_ids))
     stamp = {"evaluation_version": version.number, "evaluation_checksum": version.checksum}
+    by_hand = {slide for _, slide in await drawn_task_slides(connection, [task.id])}
     rows: list[dict[str, Any]] = []
     for item in objects:
         slide_id = uuid.UUID(item.slide)
         values = [given.value for given in item.decisions.values()]
+        drawn = item.kind == "region" and slide_id in by_hand
         rows.append(
             {
                 **stamp,
@@ -367,7 +370,7 @@ async def object_rows(
                 "slide_id": slide_id,
                 "kind": item.kind,
                 "number": item.number,
-                "origin": "ai",
+                "origin": "drawn" if drawn else "ai",
                 "class": item.class_name,
                 "reviewers": len(values),
                 "agree": values.count(engine.AGREE),

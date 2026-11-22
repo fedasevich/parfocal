@@ -65931,7 +65931,9 @@
           "human",
           "ai-confirmed",
           "ai-edited",
-          "ai-unchecked"
+          "ai-unchecked",
+          "drawn-confirmed",
+          "drawn-edited"
         ],
         "title": "DatasetOrigin"
       },
@@ -67223,6 +67225,11 @@
           "sample": {
             "type": "boolean",
             "title": "Sample"
+          },
+          "ai_result": {
+            "type": "boolean",
+            "title": "Ai Result",
+            "default": true
           },
           "decisions": {
             "$ref": "#/components/schemas/DecisionCounts"
@@ -78021,6 +78028,28 @@
             "type": "boolean",
             "title": "Drawn",
             "default": false
+          },
+          "drawn_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drawn By User Id"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DrawingTool"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

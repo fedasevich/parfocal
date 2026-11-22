@@ -7,8 +7,9 @@ import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal"
 import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useState } from "react";
-import { type Draft, decisionKinds, mapping, type TaskData } from "./model.ts";
+import { type Draft, decisionKindsFor, mapping, type TaskData } from "./model.ts";
 import { CheckRow, RowText, SlideThumb } from "./parts.tsx";
+import { isDrawn } from "./result-sets.ts";
 import { SetTags, styleOf } from "./steps.tsx";
 
 type ModalProps = {
@@ -159,7 +160,9 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
   const [raw, setRaw] = useState<string | undefined>(undefined);
   const [reasons, setReasons] = useState<string[]>([]);
   const kind = draft.decision.kind;
-  const name = decisionKinds.find((candidate) => candidate.key === kind)?.name ?? "";
+  const name =
+    decisionKindsFor(isDrawn(draft.resultSetId)).find((candidate) => candidate.key === kind)
+      ?.name ?? "";
   const counts = raw === undefined ? null : countsAsFor(draft, raw);
   const offered = counts === "disagree" ? regionReasons : counts === "unsure" ? unsureReasons : [];
   const question =

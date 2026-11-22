@@ -65,6 +65,14 @@ class DatasetOrigin(StrEnum):
     AI_CONFIRMED = "ai-confirmed"
     AI_EDITED = "ai-edited"
     AI_UNCHECKED = "ai-unchecked"
+    DRAWN_CONFIRMED = "drawn-confirmed"
+    DRAWN_EDITED = "drawn-edited"
+
+
+DRAWN_ORIGINS = {
+    DatasetOrigin.AI_CONFIRMED: DatasetOrigin.DRAWN_CONFIRMED,
+    DatasetOrigin.AI_EDITED: DatasetOrigin.DRAWN_EDITED,
+}
 
 
 class AiDifference(StrEnum):
@@ -111,7 +119,13 @@ class ManifestFile(Strict):
     bytes: int
 
 
-CHECKED_ORIGINS = (DatasetOrigin.HUMAN, DatasetOrigin.AI_CONFIRMED, DatasetOrigin.AI_EDITED)
+CHECKED_ORIGINS = (
+    DatasetOrigin.HUMAN,
+    DatasetOrigin.AI_CONFIRMED,
+    DatasetOrigin.AI_EDITED,
+    DatasetOrigin.DRAWN_CONFIRMED,
+    DatasetOrigin.DRAWN_EDITED,
+)
 UNCLASSED = "none"
 
 
@@ -149,6 +163,11 @@ def applied_filters(filters: DatasetFilters | None, options: CheckOptions) -> Ap
 
 def class_key(class_id: uuid.UUID | None) -> str:
     return UNCLASSED if class_id is None else str(class_id)
+
+
+def origin_of(row: LayerRow) -> DatasetOrigin:
+    origin = DatasetOrigin(row.origin)
+    return DRAWN_ORIGINS.get(origin, origin) if row.drawn else origin
 
 
 def kept(shape: Shape, applied: AppliedFilters) -> bool:
@@ -475,7 +494,7 @@ async def slide_objects(
                 geometry,
                 row.class_id or (source.class_id if source else None),
                 None if row.class_id or source is None else source.class_name,
-                DatasetOrigin(row.origin),
+                origin_of(row),
                 letters.of(row.created_by_user_id),
                 letters.of(row.changed_by_user_id),
                 None

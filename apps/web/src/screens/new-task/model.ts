@@ -119,6 +119,29 @@ export const decisionKinds: { key: DecisionKindKey; name: string; detail: string
   },
 ];
 
+const drawnKinds: Record<DecisionKindKey, { name: string; detail: string }> = {
+  certainty5: {
+    name: "5-point certainty",
+    detail:
+      "The drawn outline and its type, then how sure the reviewer is, from 1 Certainly not to 5 Certainly.",
+  },
+  agree: {
+    name: "Agree with the outline",
+    detail: "The drawn outline and its type, then Agree, Disagree or Not sure.",
+  },
+  yesno: {
+    name: "Yes or no",
+    detail: "One question for every object, such as Is this tumor? The drawn type stays hidden.",
+  },
+  blind: {
+    name: "Pick the class blind",
+    detail: "The reviewer picks the class without seeing the drawn one, then Parfocal compares.",
+  },
+};
+
+export const decisionKindsFor = (drawn: boolean) =>
+  drawn ? decisionKinds.map((kind) => ({ ...kind, ...drawnKinds[kind.key] })) : decisionKinds;
+
 export const reminderChoices: { key: ReminderKey; name: string; days: number[] }[] = [
   { key: "2d-daily", name: "2 days before, then daily", days: [2, 1] },
   { key: "1d", name: "The day before", days: [1] },

@@ -1,3 +1,4 @@
+import csv
 import io
 import json
 import uuid
@@ -183,6 +184,9 @@ def test_a_reviewed_drawn_object_reaches_the_final_layer_with_its_drawer(
     assert [(item["object"], item["drawn"], item["why"]) for item in queued] == [
         (wrong, True, "against-the-ai")
     ]
+    rows = ok(as_owner.get(f"/api/review-tasks/{task}/disagreement-queue")).json()["rows"]
+    assert [(row["object"], row["drawn"], row["tool"]) for row in rows] == [(wrong, True, None)]
+    assert rows[0]["drawn_by_user_id"] == str(d.people["owner"].user_id)
     ok(
         as_owner.put(
             f"/api/review-tasks/{task}/disagreements/{d.slide}/{wrong}",
@@ -211,6 +215,22 @@ def test_a_reviewed_drawn_object_reaches_the_final_layer_with_its_drawer(
     }
     assert set(features) == {f"{hand}+", f"{smart}+"}
     assert same_shape(features[f"{hand}+"]["geometry"], FIXED)
+    hand_props = features[f"{hand}+"]["properties"]["parfocal"]
+    assert (hand_props["origin"], hand_props["tool"]) == ("drawn-edited", "hand")
     smart_props = features[f"{smart}+"]["properties"]["parfocal"]
-    assert (smart_props["origin"], smart_props["tool"]) == ("ai-confirmed", "smart-select")
+    assert (smart_props["origin"], smart_props["tool"]) == ("drawn-confirmed", "smart-select")
     assert smart_props["drawn_by"] is not None
+    counted = ok(as_owner.get(f"/api/review-tasks/{task}/dataset")).json()
+    assert counted["objects"]["drawn-confirmed"] == 1
+    assert counted["objects"]["drawn-edited"] == 1
+    assert counted["objects"]["ai-confirmed"] == counted["objects"]["ai-edited"] == 0
+    table = ok(as_owner.get(f"/api/review-tasks/{task}/evaluation/exports/objects.csv")).text
+    origins = {row["origin"] for row in csv.DictReader(io.StringIO(table))}
+    assert origins == {"drawn"}
+
+
+def test_a_review_of_drawn_objects_has_no_ai_result_to_score(api: ApiAs, database: str) -> None:
+    d = drawn_slide(api, database)
+    task = drawn_task(api, d)
+    scored = ok(api(d.people["owner"]).get(f"/api/review-tasks/{task}/evaluation")).json()
+    assert scored["ai_result"] is False

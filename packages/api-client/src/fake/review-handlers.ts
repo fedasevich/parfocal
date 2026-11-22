@@ -150,12 +150,12 @@ const slideSummary = (slideId: string) => {
   };
 };
 
-const drawnPage = (request: Request) =>
+export const drawnPage = (request: Request) =>
   [request.referrer, request.headers.get("referer") ?? ""].some((url) =>
     url.includes("source=drawn"),
   );
 
-const drawnTools = ["hand", "smart-select"] as const;
+export const drawnTools = ["hand", "smart-select"] as const;
 
 export const toReviewObjects = (taskId: string, slideId: string, drawn = false): ReviewObjects => ({
   task_id: taskId,

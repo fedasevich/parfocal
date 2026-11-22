@@ -12,6 +12,7 @@ from sqlalchemy.types import Integer, Uuid
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.disagreements import choice_value
 from parfocal_api.display_settings import TaskDisplaySettings, display_of
+from parfocal_api.drawn_sources import reviews_ai
 from parfocal_api.opinions import form_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ForbiddenError
@@ -89,6 +90,7 @@ class PresetUse(BaseModel):
 class Evaluation(BaseModel):
     task_id: uuid.UUID
     sample: bool
+    ai_result: bool = True
     decisions: DecisionCounts
     classes: list[ClassMetrics]
     overall: list[ClassMetrics]
@@ -504,6 +506,7 @@ async def evaluate(connection: AsyncConnection, task: Any) -> Evaluation:
     return Evaluation(
         task_id=task_id,
         sample=bool(sample),
+        ai_result=await reviews_ai(connection, task_id),
         decisions=await decision_counts(connection, task, names),
         classes=[metrics(kind, name, counts) for (kind, name), counts in sorted(table.items())],
         overall=[metrics(kind, "all", engine.overall(table, kind)) for kind in ("region", "cell")],

@@ -51,6 +51,8 @@ export const drawnSource = "drawn";
 
 export const isDrawn = (id: string) => id === drawnSource;
 
+export const drawnTaskName = "Review of drawn outlines";
+
 export function drawnChoice(slideCount: number): ResultSetChoice {
   return {
     id: drawnSource,

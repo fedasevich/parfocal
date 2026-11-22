@@ -129,6 +129,11 @@ msgstr " in {projectCode}"
 msgid " Keep with the reviewer's type keeps the settled outline, or else the AI's, with the reviewer's type, and counts {0} as edited."
 msgstr " Keep with the reviewer's type keeps the settled outline, or else the AI's, with the reviewer's type, and counts {0} as edited."
 
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid " Keep with the reviewer's type keeps the settled outline, or else the one {drawer} drew, with the reviewer's type, and counts {0} as edited."
+msgstr " Keep with the reviewer's type keeps the settled outline, or else the one {drawer} drew, with the reviewer's type, and counts {0} as edited."
+
 #: src/screens/review/guided-review.tsx
 #: src/viewer/stage-coach.tsx
 msgid " or $1"
@@ -1645,7 +1650,7 @@ msgstr "{0}_report_v1.pdf saved to Downloads"
 msgid "{0}, {1, plural, one {# object} other {# objects}}, plus {2} added by a reviewer"
 msgstr "{0}, {1, plural, one {# object} other {# objects}}, plus {2} added by a reviewer"
 
-#. placeholder {0}: region.object
+#. placeholder {0}: shownCode(region)
 #. placeholder {1}: dotStateWord(value, skip)
 #: src/screens/review/object-card.tsx
 msgid "{0}, {1}"
@@ -1681,7 +1686,7 @@ msgstr "{0}, {1}, is already next to this one"
 msgid "{0}, {1}, is now next to this one"
 msgstr "{0}, {1}, is now next to this one"
 
-#. placeholder {0}: region.object
+#. placeholder {0}: shownCode(region)
 #. placeholder {1}: dotStateWord(value, skip)
 #: src/screens/review/object-card.tsx
 msgid "{0}, {1}, sets the category"
@@ -3518,10 +3523,13 @@ msgstr "After this the AI result appears and you can give your decisions."
 msgid "Agree"
 msgstr "Agree"
 
-#. placeholder {0}: disagreeing.length ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}, and ${row.object} leaves the training data.` : ""
 #: src/screens/disagreements/queue-screen.tsx
-msgid "Agree keeps the AI's call.{0}"
-msgstr "Agree keeps the AI's call.{0}"
+msgid "Agree keeps the AI's call.{disagreeNote}"
+msgstr "Agree keeps the AI's call.{disagreeNote}"
+
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Agree keeps the outline {drawer} drew.{disagreeNote}"
+msgstr "Agree keeps the outline {drawer} drew.{disagreeNote}"
 
 #: ../../packages/ui/src/components/counts-as.tsx
 msgid "Agree starts at"
@@ -4584,6 +4592,11 @@ msgstr "Both versions stay in the case. The clinician has version 2."
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Both vs AI {0}"
 msgstr "Both vs AI {0}"
+
+#. placeholder {0}: counts.ai
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Both vs drawer {0}"
+msgstr "Both vs drawer {0}"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Bottom dock"
@@ -6893,6 +6906,14 @@ msgstr "Drawn with the ruler across {across}. It is yours only and is not a deci
 msgid "Drawn with the ruler. It is yours only and is not a decision."
 msgstr "Drawn with the ruler. It is yours only and is not a decision."
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Drawn, agreed"
+msgstr "Drawn, agreed"
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Drawn, edited"
+msgstr "Drawn, edited"
+
 #: src/screens/upload/formats-drawer.tsx
 msgid "Drop a result file"
 msgstr "Drop a result file"
@@ -7003,6 +7024,10 @@ msgstr "Each reviewer gets one email, and the task shows at the top of their My 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Each reviewer's outline is drawn over the AI one."
 msgstr "Each reviewer's outline is drawn over the AI one."
+
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Each reviewer's outline is drawn over the original one."
+msgstr "Each reviewer's outline is drawn over the original one."
 
 #: src/screens/admin/tile-sharing-modal.tsx
 msgid "Each run of this model sends tiles of the project's slides to {host}. The lab that runs the server sees them. Slide labels and patient details are never sent."
@@ -11763,6 +11788,7 @@ msgstr "Objects queued for you"
 
 #: src/screens/admin/template-editor.tsx
 #: src/screens/new-task/check-step.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Objects to check"
 msgstr "Objects to check"
 
@@ -14250,6 +14276,11 @@ msgstr "Reviewer only, added {0}"
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Reviewer vs AI {0}"
 msgstr "Reviewer vs AI {0}"
+
+#. placeholder {0}: counts.ai
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Reviewer vs drawer {0}"
+msgstr "Reviewer vs drawer {0}"
 
 #: src/screens/admin/role-permissions.tsx
 msgid "Reviewer, reviews and annotates"
@@ -19855,6 +19886,11 @@ msgstr "You declined {0}'s ask to join."
 #: src/screens/review/object-card.tsx
 msgid "You disagree with the AI on {0}"
 msgstr "You disagree with the AI on {0}"
+
+#. placeholder {0}: shownCode(object)
+#: src/screens/review/object-card.tsx
+msgid "You disagree with the drawn outline {0}"
+msgstr "You disagree with the drawn outline {0}"
 
 #: src/screens/refusals.ts
 msgid "You do not have access to do that here."
