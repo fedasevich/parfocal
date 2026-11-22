@@ -2,6 +2,53 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.13 (2026-11-22)
+
+### Fixes
+
+- PROTO-142: Import TaskSignedOffError in threads from task_kinds
+- PROTO-143: Use the body type size for the refused submit notice
+- ci: Type the API tests, regenerate the data map, list new routes and the thumbs storage key
+- ci: Update two time left tests to the PROTO-153 and PROTO-157 wording
+- ci: Cover the batch decision and settled outline routes in the permission matrix
+- PROTO-137: Answer the fake slide address check for sample and test hook slides
+- ci: Mark the seeded dataset version test as a database test
+- ci: Probe the batch decision, outline and final layer writes and expect the final layer audit
+- ci: Store the seeded judged cell and read cell files only for judged cells in the report
+- ci: Count home's open disagreements in two queries and allow home ten
+- ci: Raise the showcase project phase ceiling to 900 statements a workspace
+- ci: Update sign-in, search and failed slide specs to PROTO-137 and PROTO-138
+- ci: Open the clinical case scene, refuse unknown slide ids and size the Open report link
+- PROTO-130: Read 1 MiB groups while a slide opens and rebaseline fitted budgets
+- ci: Note T3 not seeded T2, outline task cells per TEST-054, wait for the lazy jobs call
+- ci: Approve the jobs tray baselines that PROTO-137 and PROTO-150 changed on purpose
+- ci: Keep case only task slides off the fake not found page so compare can swap them in
+- ci: Hold the full viewer loader on the set scoped AI progress PROTO-145 asks for
+- ci: Wait for the fake to record each finished task before task-timer leaves the page
+- ci: Wait for the minimap setting to save before settings-previews reloads
+- INGEST-032: Keep a rendered sample thumbnail beside its original
+- OPS-009: Count a bucket in a jurisdiction for its environment
+
+### Refactoring
+
+- PROTO-116: Move the review task errors into their own module under the file length rule
+- PROTO-153: Move showcase account seeding and annotate rail actions out of long files
+
+### Docs
+
+- OPS-038: Log the v0.35.12 deploy
+- OPS-038: Log the db job fixes
+- OPS-038: Log the first browser CI repair
+- OPS-038: Log the second browser CI repair
+- OPS-038: Log the third browser CI repair
+- OPS-038: Log CI green on main
+- TEST-056: Tick 34 review tasks after the v0.35.12 deployed walk
+
+### Other
+
+- ci: Rebaseline the all code bundle budget after the round four and five fixes
+- ci: Rebaseline viewer request and byte budgets after PROTO-130 256 KiB blocks
+
 ## v0.35.12 (2026-11-21)
 
 ### Features
