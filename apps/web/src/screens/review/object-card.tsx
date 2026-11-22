@@ -19,6 +19,7 @@ import {
   countWord,
   type ReviewStyle,
   rawLabel,
+  shownCode,
   unsureReasons,
 } from "./decision-style.ts";
 import { disagreeOptions } from "./disagree-reasons.ts";
@@ -72,11 +73,11 @@ export function ObjectDots({
             onClick={() => onJump(region.object)}
             title={
               region.object === lead
-                ? t`${region.object}, ${dotStateWord(value, skip)}, sets the category`
-                : t`${region.object}, ${dotStateWord(value, skip)}`
+                ? t`${shownCode(region)}, ${dotStateWord(value, skip)}, sets the category`
+                : t`${shownCode(region)}, ${dotStateWord(value, skip)}`
             }
             data-lead={region.object === lead || undefined}
-            aria-label={region.object}
+            aria-label={shownCode(region)}
             aria-current={region.object === current ? "true" : undefined}
             className={cn(
               "grid size-5.5 cursor-pointer place-items-center rounded-full border-0 p-0 text-label font-bold",
@@ -348,7 +349,7 @@ export function ObjectCard({
           Object <b className="font-semibold text-fg">{position}</b> of {total} on this slide
         </Trans>
       </span>
-      <ObjectIdTag size="lg">{object.object}</ObjectIdTag>
+      <ObjectIdTag size="lg">{shownCode(object)}</ObjectIdTag>
     </div>
   );
   if (redrawPoints !== null) {
@@ -388,7 +389,11 @@ export function ObjectCard({
         {head}
         {dots}
         <small className="text-body-sm font-semibold text-fg-dim">
-          <Trans>You disagree with the AI on {object.object}</Trans>
+          {object.drawn ? (
+            <Trans>You disagree with the drawn outline {shownCode(object)}</Trans>
+          ) : (
+            <Trans>You disagree with the AI on {object.object}</Trans>
+          )}
         </small>
         <div className="grid gap-2.5">
           <span className="text-body-sm font-semibold">

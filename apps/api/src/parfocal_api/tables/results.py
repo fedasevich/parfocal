@@ -27,6 +27,12 @@ from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 class ResultSource(StrEnum):
     IMPORT = "import"
     RUN = "run"
+    DRAWN = "drawn"
+
+
+class DrawingTool(StrEnum):
+    HAND = "hand"
+    SMART_SELECT = "smart-select"
 
 
 class ResultStatus(StrEnum):
@@ -122,9 +128,18 @@ result_objects = Table(
     Column("score", SmallInteger, nullable=True, info=OPERATIONAL),
     Column("probabilities", ARRAY(SmallInteger), nullable=True, info=OPERATIONAL),
     Column("parent_number", Integer, nullable=True, info=OPERATIONAL),
+    Column(
+        "drawn_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column("tool", String(20), nullable=True, info=OPERATIONAL),
     tenant_foreign_key("result_set_id", "result_sets"),
     Index("ix_result_objects_geometry", "geometry", postgresql_using="gist"),
     one_of("kind", ResultObjectKind),
+    one_of("tool", DrawingTool),
     CheckConstraint("number > 0", name="number"),
     CheckConstraint("score BETWEEN 0 AND 255", name="score"),
     CheckConstraint("ST_IsValid(geometry)", name="geometry_valid"),

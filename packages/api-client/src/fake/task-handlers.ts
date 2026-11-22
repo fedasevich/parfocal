@@ -77,6 +77,7 @@ export const toProjectSlides = (projectId: string): ProjectSlide[] =>
                   specimen: slide.specimen ?? "",
                 },
           result_set_ids: slide.sets.map(resultSetIdOf),
+          drawn_count: slide.drawn ?? 0,
         }),
       )
     : [];
@@ -243,7 +244,9 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   display: draft.display ?? taskDisplayFor(newTask.code),
   created_by_user_id: people.DH.id,
   created_at: `${newTask.sentOn}T14:30:00+02:00`,
-  slide_count: draft.slide_ids?.length || (draft.result_sets?.length ?? 0),
+  slide_count:
+    draft.slide_ids?.length ||
+    (draft.result_sets?.length ?? 0) + (draft.drawn_slide_ids?.length ?? 0),
   reviewer_count: draft.reviewer_ids.length,
   slides: (draft.slide_ids?.length
     ? draft.slide_ids
@@ -251,7 +254,8 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   ).map((slideId) => ({
     slide_id: slideId,
     result_set_id:
-      draft.result_sets?.find((set) => set.slide_id === slideId)?.result_set_id ?? null,
+      draft.result_sets?.find((set) => set.slide_id === slideId)?.result_set_id ??
+      (draft.drawn_slide_ids?.includes(slideId) ? `drawn-${slideId}` : null),
     reviewer_ids: draft.reviewer_ids,
   })),
 });

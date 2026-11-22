@@ -150,11 +150,25 @@ const slideSummary = (slideId: string) => {
   };
 };
 
-export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects => ({
+const drawnPage = (request: Request) =>
+  [request.referrer, request.headers.get("referer") ?? ""].some((url) =>
+    url.includes("source=drawn"),
+  );
+
+const drawnTools = ["hand", "smart-select"] as const;
+
+export const toReviewObjects = (taskId: string, slideId: string, drawn = false): ReviewObjects => ({
   task_id: taskId,
   slide_id: slideId,
   slide: slideSummary(slideId),
   objects: objectsOn(taskId, slideId).map((item, index) => ({
+    ...(drawn && item.kind === "region"
+      ? {
+          drawn: true,
+          drawn_by_user_id: people.LM.id,
+          tool: drawnTools[index % drawnTools.length],
+        }
+      : {}),
     object: item.object,
     kind: item.kind,
     number: index + 1,
@@ -651,8 +665,8 @@ export function reviewHandlers(): RequestHandler[] {
           ? problem(404, "not-found", "Task slide not found")
           : undefined,
     ),
-    getListReviewObjectsMockHandler(({ params }) =>
-      toReviewObjects(String(params.taskId), String(params.slideId)),
+    getListReviewObjectsMockHandler(({ params, request }) =>
+      toReviewObjects(String(params.taskId), String(params.slideId), drawnPage(request)),
     ),
     getGetTaskDisplayMockHandler(({ params }) => toTaskDisplay(String(params.taskId))),
     getListThreadCommentsMockHandler(({ params }) => toThreadComments(String(params.threadId))),

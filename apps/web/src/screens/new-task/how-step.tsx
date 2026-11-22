@@ -27,6 +27,7 @@ import {
   reminderChoices,
 } from "./model.ts";
 import { FieldNote, fieldId, GroupTitle, ToggleRow, Warn } from "./parts.tsx";
+import { isDrawn } from "./result-sets.ts";
 import { type StepProps, setColours } from "./steps.tsx";
 
 const displayRows = lazyText(
@@ -184,7 +185,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
       </div>,
     );
   };
-  const others = data.resultSets.filter((set) => set.id !== draft.resultSetId);
+  const others = data.resultSets.filter((set) => set.id !== draft.resultSetId && !isDrawn(set.id));
   const sets: { key: "cam" | "sam" | "rev"; title: string; sub: string }[] = [
     ...others.map((set) => ({
       key: set.key,

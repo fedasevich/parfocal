@@ -55,6 +55,7 @@ import {
   whoReviews,
 } from "./model.ts";
 import { fieldId } from "./parts.tsx";
+import { isDrawn } from "./result-sets.ts";
 import { ReviewersStep } from "./reviewers-step.tsx";
 import { SendStep, SentPanel } from "./send-step.tsx";
 import { KindStep, SlidesStep, styleOf } from "./steps.tsx";
@@ -135,7 +136,8 @@ const pinnedSet = (draft: Draft, data: TaskData, slideId: string) =>
 function annotateFields(draft: Draft, data: TaskData): Partial<TaskDraft> {
   const fromPreset = annotatePresets.find((item) => item.key === draft.preset)?.options;
   const change = fromPreset ? checkChangeOf(draft.check, fromPreset) : undefined;
-  const withResult = draft.check.hasResult ? slidesWithResult(draft, data) : [];
+  const withResult =
+    draft.check.hasResult && !isDrawn(draft.resultSetId) ? slidesWithResult(draft, data) : [];
   return {
     kind: "annotate",
     blinded: false,
@@ -148,6 +150,7 @@ function annotateFields(draft: Draft, data: TaskData): Partial<TaskDraft> {
       slide_id: slide.id,
       result_set_id: pinnedSet(draft, data, slide.id),
     })),
+    drawn_slide_ids: [],
     scope: { kind: "whole-slide" },
     preset: checkPresetOf[draft.preset],
     ...(change ? { check: change } : {}),
@@ -171,10 +174,14 @@ function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
         }
       : {}),
     slide_ids: slides.map((slide) => slide.id),
-    result_sets: slides.map((slide) => ({
-      slide_id: slide.id,
-      result_set_id: pinnedSet(draft, data, slide.id),
-    })),
+    ...(isDrawn(draft.resultSetId)
+      ? { result_sets: [], drawn_slide_ids: slides.map((slide) => slide.id) }
+      : {
+          result_sets: slides.map((slide) => ({
+            slide_id: slide.id,
+            result_set_id: pinnedSet(draft, data, slide.id),
+          })),
+        }),
     scope: scopeOf(draft),
     blinded: draft.blind,
     ai_hidden_first_read: draft.hide,

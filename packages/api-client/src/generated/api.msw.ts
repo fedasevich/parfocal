@@ -309,6 +309,7 @@ import {
   DecisionValue,
   Download,
   DrawAs,
+  DrawingTool,
   EmailDigest,
   EventKind,
   EventStatus,
@@ -1045,6 +1046,7 @@ export const getListProjectSlidesResponseMock = (): ProjectSlide[] =>
       { length: faker.number.int({ min: 1, max: 10 }) },
       (_, i) => i + 1,
     ).map(() => faker.string.uuid()),
+    drawn_count: faker.number.int(),
     width: faker.helpers.arrayElement([faker.number.int(), null]),
     height: faker.helpers.arrayElement([faker.number.int(), null]),
   }));
@@ -9451,6 +9453,12 @@ export const getListReviewObjectsResponseMock = (
         ),
         null,
       ]),
+      drawn: faker.datatype.boolean(),
+      drawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      tool: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(DrawingTool)),
+        null,
+      ]),
     }),
   ),
   added: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -9759,6 +9767,7 @@ export const getGetDisagreementQueueResponseMock = (
       },
       null,
     ]),
+    drawn: faker.datatype.boolean(),
   })),
   ...overrideResponse,
 });
@@ -9847,6 +9856,7 @@ export const getUpdateQueuedObjectResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -9934,6 +9944,7 @@ export const getSettleQueuedOutlineResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -10021,6 +10032,7 @@ export const getClearQueuedOutlineResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13273,6 +13285,7 @@ export const getListDisagreementsResponseMock = (): QueuedObject[] =>
       },
       null,
     ]),
+    drawn: faker.datatype.boolean(),
   }));
 
 export const getDecideDisagreementResponseMock = (
@@ -13361,6 +13374,7 @@ export const getDecideDisagreementResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13450,6 +13464,7 @@ export const getKeepReviewerTypeResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13539,6 +13554,7 @@ export const getLeaveDisagreementOpenResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13628,6 +13644,7 @@ export const getAskReviewersToLookAgainResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13717,6 +13734,7 @@ export const getKeepReviewerDecisionsResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13813,6 +13831,7 @@ export const getSendToAdjudicatorResponseMock = (): QueuedObject[] =>
       },
       null,
     ]),
+    drawn: faker.datatype.boolean(),
   }));
 
 export const getListTaskAdjudicationsResponseMock = (): TaskAdjudication[] =>

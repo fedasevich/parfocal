@@ -497,7 +497,11 @@ async def list_slide_result_sets(
         return []
     rows = await connection.execute(
         select(result_sets)
-        .where(result_sets.c.slide_id == slide_id, result_sets.c.deleted_at.is_(None))
+        .where(
+            result_sets.c.slide_id == slide_id,
+            result_sets.c.deleted_at.is_(None),
+            result_sets.c.source != ResultSource.DRAWN,
+        )
         .order_by(result_sets.c.created_at)
     )
     return [result_set_of(row) for row in rows]
@@ -515,6 +519,7 @@ async def list_project_result_sets(
         .where(
             result_sets.c.project_id == project_id,
             result_sets.c.deleted_at.is_(None),
+            result_sets.c.source != ResultSource.DRAWN,
             readable_slide(principal, result_sets.c.project_id, result_sets.c.slide_id),
             ~ai_hidden(principal, result_sets.c.project_id, result_sets.c.slide_id),
         )

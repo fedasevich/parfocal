@@ -28,7 +28,7 @@ import {
   type TemplateChoice,
   taskNameFor,
 } from "./model.ts";
-import { groupResultSets, templateFor } from "./result-sets.ts";
+import { drawnChoice, drawnSource, groupResultSets, templateFor } from "./result-sets.ts";
 
 const studyKinds: Record<string, string> = {
   "regions-and-cells": "Regions and cells",
@@ -145,8 +145,15 @@ export function useTaskData(projectId: string): {
     id: slide.id,
     name: slide.case ? `${slide.label} · ${slide.stain}` : slide.label,
     caseLabel: slide.case?.label ?? null,
-    sets: [...new Set(slide.result_set_ids.map(groupedSetId))],
+    sets: [
+      ...new Set(slide.result_set_ids.map(groupedSetId)),
+      ...((slide.drawn_count ?? 0) > 0 ? [drawnSource] : []),
+    ],
   }));
+  const drawnSlides = slides.filter((slide) => slide.sets.includes(drawnSource)).length;
+  const sources = [...grouped.choices, ...(drawnSlides ? [drawnChoice(drawnSlides)] : [])];
+  const firstSource =
+    defaults.result_set_id || !drawnSlides ? groupedSetId(defaults.result_set_id) : drawnSource;
   const { groups, pool } = toGroups(slides, defaults.slide_ids);
   for (const group of groups) {
     const specimen = projectSlides.find((slide) => slide.case?.label === group.key)?.case?.specimen;
@@ -212,7 +219,7 @@ export function useTaskData(projectId: string): {
     slides,
     groups,
     pool,
-    resultSets: grouped.choices,
+    resultSets: sources,
     names: Object.fromEntries(
       defaults.names.map((item) => [groupedSetId(item.result_set_id), taskNameFor(item.name)]),
     ),
@@ -224,7 +231,7 @@ export function useTaskData(projectId: string): {
         typeof workspaceDefault === "string" ? workspaceDefault : null,
         choices,
       ),
-      grouped.choices.find((set) => set.id === groupedSetId(defaults.result_set_id))?.objects ?? {
+      sources.find((set) => set.id === firstSource)?.objects ?? {
         regions: true,
         cells: true,
         zones: true,
@@ -238,7 +245,7 @@ export function useTaskData(projectId: string): {
     })),
     forms: templateDefaults.opinion_forms,
     defaults: {
-      resultSetId: groupedSetId(defaults.result_set_id),
+      resultSetId: firstSource,
       reviewerIds: defaults.reviewer_ids,
       due: defaults.due_on,
       reminders: reminderOf(defaults.reminder_days),

@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 53 |
-| `personal` | 107 |
+| `personal` | 108 |
 | `secret` | 15 |
-| `operational` | 936 |
+| `operational` | 938 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -74,6 +74,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `version` | operational |
 | `origin` | operational |
 | `source_number` | operational |
+| `tool` | operational |
 | `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
@@ -952,6 +953,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `score` | operational |
 | `probabilities` | operational |
 | `parent_number` | operational |
+| `drawn_by_user_id` | personal |
+| `tool` | operational |
 
 ## result_set_classes
 

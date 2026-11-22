@@ -153,6 +153,7 @@ class QueueRow(BaseModel):
     outline_overlap: float | None = None
     outlines: list[ReviewerOutline] = []
     settled_outline: SettledOutline | None = None
+    drawn: bool = False
 
 
 class QueueLock(BaseModel):
@@ -449,6 +450,7 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
     sent = item.adjudication
     editor = facts.editors.get(key_of(item)) if item.edited_after_decisions else None
     return QueueRow(
+        drawn=item.drawn,
         key=f"{label}:{item.object}",
         slide_id=item.slide_id,
         slide_label=label,

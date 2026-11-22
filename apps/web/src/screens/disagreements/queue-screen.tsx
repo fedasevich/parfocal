@@ -63,6 +63,7 @@ import {
   isClosed,
   nextOpen,
   type QueueFilter,
+  rowCode,
   rowLabel,
   rowTag,
   styledText,
@@ -325,7 +326,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
               return (
                 <QueueRowView
                   key={item.key}
-                  object={item.object}
+                  object={rowCode(item)}
                   slide={item.slide_label}
                   tag={tag.label}
                   tone={tag.tone}

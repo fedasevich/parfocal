@@ -47,6 +47,22 @@ export function groupResultSets(sets: readonly ResultSet[]): GroupedResultSets {
   return { choices, groupOf };
 }
 
+export const drawnSource = "drawn";
+
+export const isDrawn = (id: string) => id === drawnSource;
+
+export function drawnChoice(slideCount: number): ResultSetChoice {
+  return {
+    id: drawnSource,
+    key: "rev",
+    label: "Drawn and Smart select outlines",
+    short: "drawn outlines",
+    detail: `Outlines people drew by hand or with Smart select on ${slideCount === 1 ? "1 slide" : `${slideCount} slides`}`,
+    slideSets: {},
+    objects: { regions: true, cells: false, zones: false },
+  };
+}
+
 const needs: Record<ScopeKind, keyof ResultSetChoice["objects"] | null> = {
   regions: "regions",
   cells: "cells",

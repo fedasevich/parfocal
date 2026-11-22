@@ -14,6 +14,7 @@ from parfocal_api.blinding import ai_hidden_on, sees_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.display import reviewed_task, usable_on
 from parfocal_api.display_settings import FIELD_OF, display_of
+from parfocal_api.drawn_sources import drawers_of
 from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
@@ -23,6 +24,7 @@ from parfocal_api.review_tasks import code_of
 from parfocal_api.reviewed_layer import review_slide, task_slide
 from parfocal_api.tables import (
     AnnotationKind,
+    DrawingTool,
     annotations,
     cases,
     display_presets,
@@ -62,6 +64,9 @@ class ReviewObject(BaseModel):
     detector_score: float | None = None
     foreground: float | None = None
     outline: list[float] | None = None
+    drawn: bool = False
+    drawn_by_user_id: uuid.UUID | None = None
+    tool: DrawingTool | None = None
 
 
 class AddedObject(BaseModel):
@@ -354,9 +359,11 @@ async def list_review_objects(
         )
     keys = await ordered_keys(connection, task_id, slide_id)
     claims = await ai_claims(connection, results, row.result_set_id, slide_id, keys)
+    drawers = await drawers_of(connection, row.result_set_id)
     objects: list[ReviewObject] = []
     for letter, number in keys:
         claim = claims.get((letter, number), UNKNOWN)
+        drawer = drawers.get(number) if letter is Letter.REGION else None
         objects.append(
             ReviewObject(
                 object=ObjectId(letter, number).text(ascii=True),
@@ -367,6 +374,9 @@ async def list_review_objects(
                 size_mm=claim.size_mm,
                 other_class=claim.other_class,
                 outline=claim.outline,
+                drawn=drawer is not None,
+                drawn_by_user_id=None if drawer is None else drawer.user_id,
+                tool=None if drawer is None or drawer.tool is None else DrawingTool(drawer.tool),
             )
         )
     return ReviewObjects(
