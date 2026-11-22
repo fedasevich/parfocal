@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { ReviewObject } from "@parfocal/api-client";
+import { rowCode, rowLabel } from "../src/screens/disagreements/text.ts";
 import { agreeWithTheAi } from "../src/screens/review/decision-mapping.ts";
 import { cardText, shownCode } from "../src/screens/review/decision-style.ts";
 
@@ -25,6 +26,12 @@ test("a drawn outline shows its person mark and says who drew it with which tool
     cardText(agreeWithTheAi, object({ drawn: true, tool: "hand" }), "number").question,
     "A person drew T7⁺ by hand as tumor.",
   );
+});
+
+test("the queue shows a drawn outline with its person mark and an AI object without", () => {
+  assert.equal(rowCode({ object: "T7", drawn: true }), "T7⁺");
+  assert.equal(rowLabel({ object: "T7", slide_label: "B2", drawn: true }), "T7⁺ on B2");
+  assert.equal(rowLabel({ object: "T7", slide_label: "A1" }), "T7");
 });
 
 test("an AI object keeps its plain code and the AI's claim", () => {

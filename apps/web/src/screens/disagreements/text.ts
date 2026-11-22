@@ -31,8 +31,11 @@ export const tagText: Record<QueueRow["tag"], string> = {
 
 export const tagOf = (tag: QueueRow["tag"], reviewers?: number) =>
   tag === "bothai" && reviewers === 1 ? "the reviewer vs AI" : tagText[tag];
-export const rowLabel = (row: Pick<QueueRow, "object" | "slide_label">) =>
-  row.slide_label === "A1" ? row.object : `${row.object} on ${row.slide_label}`;
+export const rowCode = (row: Pick<QueueRow, "object" | "drawn">) =>
+  row.drawn ? `${row.object}⁺` : row.object;
+
+export const rowLabel = (row: Pick<QueueRow, "object" | "slide_label" | "drawn">) =>
+  row.slide_label === "A1" ? rowCode(row) : `${rowCode(row)} on ${row.slide_label}`;
 
 export const claimText = (ai: QueueRow["ai"]) =>
   `${ai.class_name}, ${Math.round(ai.score * 100)}% sure`;

@@ -9767,6 +9767,7 @@ export const getGetDisagreementQueueResponseMock = (
       },
       null,
     ]),
+    drawn: faker.datatype.boolean(),
   })),
   ...overrideResponse,
 });
@@ -9855,6 +9856,7 @@ export const getUpdateQueuedObjectResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -9942,6 +9944,7 @@ export const getSettleQueuedOutlineResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -10029,6 +10032,7 @@ export const getClearQueuedOutlineResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 

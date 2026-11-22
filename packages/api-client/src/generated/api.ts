@@ -2630,6 +2630,7 @@ export interface QueueRow {
   outline_overlap?: number | null;
   outlines?: ReviewerOutline[];
   settled_outline?: SettledOutline | null;
+  drawn?: boolean;
 }
 
 export interface DisagreementQueue {

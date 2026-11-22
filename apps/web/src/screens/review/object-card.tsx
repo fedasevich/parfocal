@@ -73,11 +73,11 @@ export function ObjectDots({
             onClick={() => onJump(region.object)}
             title={
               region.object === lead
-                ? t`${region.object}, ${dotStateWord(value, skip)}, sets the category`
-                : t`${region.object}, ${dotStateWord(value, skip)}`
+                ? t`${shownCode(region)}, ${dotStateWord(value, skip)}, sets the category`
+                : t`${shownCode(region)}, ${dotStateWord(value, skip)}`
             }
             data-lead={region.object === lead || undefined}
-            aria-label={region.object}
+            aria-label={shownCode(region)}
             aria-current={region.object === current ? "true" : undefined}
             className={cn(
               "grid size-5.5 cursor-pointer place-items-center rounded-full border-0 p-0 text-label font-bold",
