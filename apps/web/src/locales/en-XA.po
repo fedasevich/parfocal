@@ -6874,6 +6874,10 @@ msgstr ""
 msgid "Draw a new outline if the AI's is wrong."
 msgstr ""
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Draw a new outline if the drawn one is wrong."
+msgstr ""
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Draw as"
@@ -18640,6 +18644,10 @@ msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
 msgid "Two outlines of one object differ below this share of overlap. A redraw is compared with the AI outline when the other reviewer kept it."
+msgstr ""
+
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Two outlines of one object differ below this share of overlap. A redraw is compared with the drawn outline when the other reviewer kept it."
 msgstr ""
 
 #: src/screens/new-task/modals.tsx

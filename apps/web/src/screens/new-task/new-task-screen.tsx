@@ -55,7 +55,7 @@ import {
   whoReviews,
 } from "./model.ts";
 import { fieldId } from "./parts.tsx";
-import { isDrawn } from "./result-sets.ts";
+import { drawnLabel, isDrawn } from "./result-sets.ts";
 import { ReviewersStep } from "./reviewers-step.tsx";
 import { SendStep, SentPanel } from "./send-step.tsx";
 import { KindStep, SlidesStep, styleOf } from "./steps.tsx";
@@ -381,8 +381,12 @@ function NewTaskFlow({
         },
       );
     const own = templateOf(draft, data);
-    const questions =
+    const picked =
       !isAnnotate(draft) && own && draft.form === own.preset.form ? own.formQuestions : null;
+    const questions =
+      picked && isDrawn(draft.resultSetId)
+        ? picked.map((question) => ({ ...question, label: drawnLabel(question.label) }))
+        : picked;
     if (!questions) {
       createTask(null);
       return;

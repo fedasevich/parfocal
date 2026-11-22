@@ -20,6 +20,7 @@ export function OutlineSettle({
   onDraw,
   onFinishDraw,
   onCancelDraw,
+  drawn = false,
 }: {
   choices: readonly OutlineChoice[];
   settledFrom: SettledFrom;
@@ -30,6 +31,7 @@ export function OutlineSettle({
   onDraw: () => void;
   onFinishDraw: () => void;
   onCancelDraw: () => void;
+  drawn?: boolean;
 }) {
   const { t } = useLingui();
   const settled = settledFrom === undefined ? "none" : settledFrom === null ? "drawn" : "picked";
@@ -86,7 +88,9 @@ export function OutlineSettle({
           <small className="text-caption text-fg-dim">
             {settled === "drawn" ? (
               <Trans>A new outline is settled.</Trans>
-            ) : settled !== "none" ? null : choices.length === 0 ? (
+            ) : settled !== "none" ? null : choices.length === 0 && drawn ? (
+              <Trans>Draw a new outline if the drawn one is wrong.</Trans>
+            ) : choices.length === 0 ? (
               <Trans>Draw a new outline if the AI's is wrong.</Trans>
             ) : (
               <Trans>Pick one outline or draw a new one.</Trans>

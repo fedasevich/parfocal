@@ -24,7 +24,7 @@ import {
   templateChanges,
 } from "./model.ts";
 import { FieldNote, fieldId, GroupTitle, RadioRows, ToggleRow } from "./parts.tsx";
-import { isDrawn } from "./result-sets.ts";
+import { isDrawn, questionLabel } from "./result-sets.ts";
 import { ScopeRow } from "./reviewers-step.tsx";
 import { type StepProps, styleOf } from "./steps.tsx";
 
@@ -209,7 +209,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
                   className="grid min-h-10 grid-cols-[20px_minmax(0,1fr)_auto_auto] items-center gap-3 border-t border-line text-body-sm"
                 >
                   <span className="text-fg-dim">{index + 1}</span>
-                  <span className="text-fg">{question.label}</span>
+                  <span className="text-fg">{questionLabel(question.label, drawn)}</span>
                   <StatusTag>{questionKinds[question.kind] ?? question.kind}</StatusTag>
                   <ToggleRow
                     inline

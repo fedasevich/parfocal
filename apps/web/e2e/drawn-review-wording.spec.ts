@@ -29,6 +29,8 @@ test("the wizard names a review of drawn outlines after them and asks about the 
   await expect(question).toContainText("The drawn outline and its type, then how sure");
   await expect(question).toContainText("agree with the drawn outline");
   await expect(question).not.toContainText(aiWording);
+  await expect(body).toContainText("Are the drawn outlines acceptable for this slide?");
+  await expect(body).not.toContainText("Is the AI result acceptable");
 
   await body.getByRole("button", { name: "Preview" }).click();
   const preview = page.getByRole("dialog", { name: "Preview the question" });
@@ -70,6 +72,10 @@ test("the queue's Decide panel names who drew the outline and with which tool", 
   await expect(page.getByText(/% sure$/)).toHaveCount(0);
   await expect(panel).not.toContainText(aiWording);
   await expect(panel.getByTestId("queue-mapping")).toContainText(/^Agree keeps the outline \S+/);
+  await expect(page.getByTestId("outline-settle")).toContainText(
+    "Draw a new outline if the drawn one is wrong.",
+  );
+  await expect(page.getByText("Draw a new outline if the AI's is wrong.")).toHaveCount(0);
 });
 
 test("the sign-off of a drawn review shows no model scores", async ({ page }) => {
@@ -123,4 +129,28 @@ test("the task settings of a drawn review count answers against the drawn outlin
   const drawer = page.getByRole("dialog", { name: "Settings for RT-13" });
   await expect(drawer).toContainText("as agree with the drawn outline");
   await expect(drawer).not.toContainText("agree with the AI");
+  await expect(drawer).toContainText(
+    "A redraw is compared with the drawn outline when the other reviewer kept it.",
+  );
+  await expect(drawer).not.toContainText("compared with the AI outline");
+});
+
+test("an AI review keeps its AI wording in the wizard form, outline settle and settings", async ({
+  page,
+}) => {
+  await page.goto(`${newTask}?scene=check`);
+  await expect(flow(page)).toContainText("Is the AI result acceptable for this slide?");
+  await page.goto(`${rt14}/disagreements?stage=open`);
+  await expect(page.getByTestId("outline-settle")).toContainText(
+    "Draw a new outline if the AI's is wrong.",
+  );
+  await page.goto("/projects/00000000-0000-4000-8003-000000000007?tab=tasks");
+  await page
+    .getByTestId("task-row")
+    .filter({ hasText: "RT-13" })
+    .getByRole("button", { name: "Settings for RT-13" })
+    .click();
+  await expect(page.getByRole("dialog", { name: "Settings for RT-13" })).toContainText(
+    "A redraw is compared with the AI outline when the other reviewer kept it.",
+  );
 });

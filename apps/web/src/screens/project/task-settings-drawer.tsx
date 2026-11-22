@@ -247,7 +247,11 @@ export function TaskSettingsDrawer({
           </Zone>
           <Zone
             title={t`Outline overlap`}
-            sub={t`Two outlines of one object differ below this share of overlap. A redraw is compared with the AI outline when the other reviewer kept it.`}
+            sub={
+              source === "drawn"
+                ? t`Two outlines of one object differ below this share of overlap. A redraw is compared with the drawn outline when the other reviewer kept it.`
+                : t`Two outlines of one object differ below this share of overlap. A redraw is compared with the AI outline when the other reviewer kept it.`
+            }
           >
             <div className="flex items-center gap-3">
               <NumberStepper

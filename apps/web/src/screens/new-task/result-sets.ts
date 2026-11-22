@@ -53,6 +53,22 @@ export const isDrawn = (id: string) => id === drawnSource;
 
 export const drawnTaskName = "Review of drawn outlines";
 
+const drawnQuestions: Record<string, string> = {
+  "Is the AI result acceptable for this slide?":
+    "Are the drawn outlines acceptable for this slide?",
+  "Is the AI result acceptable?": "Are the drawn outlines acceptable?",
+  "Did the AI change your answer?": "Did the drawn outlines change your answer?",
+};
+
+export const drawnLabel = (label: string) =>
+  drawnQuestions[label] ??
+  label
+    .replace(/\bthe AI result\b/g, "the drawn outlines")
+    .replace(/\bthe AI's\b/g, "the drawn")
+    .replace(/\bthe AI\b/g, "the drawn outlines");
+
+export const questionLabel = (label: string, drawn: boolean) => (drawn ? drawnLabel(label) : label);
+
 export function drawnChoice(slideCount: number): ResultSetChoice {
   return {
     id: drawnSource,

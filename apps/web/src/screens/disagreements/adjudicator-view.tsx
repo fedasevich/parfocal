@@ -280,6 +280,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       </EvidenceList>
       {outlines.length > 0 ? (
         <OutlineSettle
+          drawn={current.drawn ?? false}
           choices={outlines.map((entry) => ({
             key: entry.letter,
             hex: entry.hex,

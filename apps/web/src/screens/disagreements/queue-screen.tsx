@@ -434,6 +434,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
               ) : null}
               {outlineSettles ? (
                 <OutlineSettle
+                  drawn={row.drawn ?? false}
                   choices={outlines.map((entry) => ({
                     key: entry.userId,
                     hex: entry.hex,
