@@ -1,4 +1,5 @@
 import type { QueueAnswerRecord, QueueRow } from "@parfocal/api-client";
+import type { ClaimSource } from "@parfocal/ui/lib/counts-as-rule";
 import { answersFor, type ProjectClass } from "@parfocal/ui/lib/decision-answers";
 import { countsAs, type ReviewStyle } from "../review/decision-mapping.ts";
 
@@ -58,7 +59,7 @@ export const rowLabel = (row: Pick<QueueRow, "object" | "slide_label" | "drawn">
   row.slide_label === "A1" ? rowCode(row) : `${rowCode(row)} on ${row.slide_label}`;
 
 export const claimText = (ai: QueueRow["ai"]) =>
-  `${ai.class_name}, ${Math.round(ai.score * 100)}% sure`;
+  ai.score == null ? ai.class_name : `${ai.class_name}, ${Math.round(ai.score * 100)}% sure`;
 
 const firstName = (name: string | undefined) => name?.split(" ")[0] ?? "";
 
@@ -96,27 +97,24 @@ export const isClosed = (row: QueueRow) =>
 
 export const canSend = (row: QueueRow) => row.state === "open" || row.state === "declined";
 
-const verb: Record<Answer, string> = {
-  agree: "agrees with the AI",
-  disagree: "disagrees with the AI",
-  unsure: "is not sure",
-};
+const against: Record<ClaimSource, string> = { ai: "the AI", drawn: "the drawn outline" };
+
+const verbOf = (raw: Answer, source: ClaimSource) =>
+  raw === "unsure" ? "is not sure" : `${raw}s with ${against[source]}`;
 
 type Anonymous = { raw: Answer; reason: string | null };
 
-export function adjudicatorWhy(a: Anonymous, b: Anonymous) {
+export function adjudicatorWhy(a: Anonymous, b: Anonymous, source: ClaimSource = "ai") {
   const second = (answer: Anonymous) => answer.reason === "Need a second look";
   if (second(a) || second(b)) {
-    return `One reviewer asked for a second look, the other ${verb[second(a) ? b.raw : a.raw]}`;
+    return `One reviewer asked for a second look, the other ${verbOf(second(a) ? b.raw : a.raw, source)}`;
   }
   if (a.raw === b.raw) {
-    return a.raw === "disagree"
-      ? "Both reviewers disagree with the AI"
-      : a.raw === "agree"
-        ? "Both reviewers agree with the AI"
-        : "Neither reviewer is sure";
+    return a.raw === "unsure"
+      ? "Neither reviewer is sure"
+      : `Both reviewers ${a.raw} with ${against[source]}`;
   }
-  return `One reviewer ${verb[a.raw]}, the other ${verb[b.raw]}`;
+  return `One reviewer ${verbOf(a.raw, source)}, the other ${verbOf(b.raw, source)}`;
 }
 
 export function countOf(style: ReviewStyle, raw: string, aiClass: string): Answer {

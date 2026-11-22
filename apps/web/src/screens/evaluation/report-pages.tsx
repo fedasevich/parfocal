@@ -40,6 +40,7 @@ import {
   headlineTiles,
   methodsLines,
   opinionRows,
+  personMetrics,
   reasonRows,
 } from "./numbers.ts";
 
@@ -176,16 +177,29 @@ function BlockBody({
   const { t } = useLingui();
 
   const decimals = format.decimals;
+  const drawn = evaluation?.ai_result === false;
+  const scored = (metrics: readonly string[]) =>
+    drawn
+      ? metrics.filter((metric) => (personMetrics as readonly string[]).includes(metric))
+      : metrics;
   switch (block.kind) {
-    case "headline-numbers":
-      return (
-        <MetricTiles
-          tiles={
-            evaluation ? headlineTiles(evaluation, block.metrics ?? headlineMetrics, decimals) : []
-          }
-        />
-      );
+    case "headline-numbers": {
+      const metrics = scored(block.metrics ?? headlineMetrics);
+      if (drawn && !metrics.length)
+        return (
+          <Empty>
+            <Trans>This task reviews drawn outlines, so no AI result is scored.</Trans>
+          </Empty>
+        );
+      return <MetricTiles tiles={evaluation ? headlineTiles(evaluation, metrics, decimals) : []} />;
+    }
     case "region-metrics": {
+      if (drawn)
+        return (
+          <Empty>
+            <Trans>This task reviews drawn outlines, so no AI result is scored.</Trans>
+          </Empty>
+        );
       const columns = block.columns ?? ["sensitivity", "precision", "dice"];
       const regions = (evaluation?.classes ?? []).filter((row) => row.kind === "region");
       if (!regions.length)
@@ -208,6 +222,12 @@ function BlockBody({
       );
     }
     case "confusion-matrix":
+      if (drawn)
+        return (
+          <Empty>
+            <Trans>This task reviews drawn outlines, so no AI result is scored.</Trans>
+          </Empty>
+        );
       if (!report.confusion.classes.length)
         return (
           <Empty>
@@ -367,6 +387,12 @@ function BlockBody({
         );
       return <p className="m-0 whitespace-pre-line">{block.body}</p>;
     case "comparison":
+      if (drawn)
+        return (
+          <Empty>
+            <Trans>This task reviews drawn outlines, so no AI result is scored.</Trans>
+          </Empty>
+        );
       if (!block.task_id)
         return (
           <Empty>

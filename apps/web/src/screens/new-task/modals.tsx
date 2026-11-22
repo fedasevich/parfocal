@@ -165,14 +165,18 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
       ?.name ?? "";
   const counts = raw === undefined ? null : countsAsFor(draft, raw);
   const offered = counts === "disagree" ? regionReasons : counts === "unsure" ? unsureReasons : [];
+  const drawn = isDrawn(draft.resultSetId);
+  const code = drawn ? "T2⁺" : "T2";
   const question =
     kind === "certainty5"
-      ? t`How sure are you that T2 is tumor?`
-      : kind === "agree"
-        ? t`The AI says T2 is tumor, 91% sure.`
-        : kind === "yesno"
-          ? t`Is this tumor?`
-          : t`What is T2?`;
+      ? t`How sure are you that ${code} is tumor?`
+      : kind === "agree" && drawn
+        ? t`A person drew ${code} as tumor.`
+        : kind === "agree"
+          ? t`The AI says T2 is tumor, 91% sure.`
+          : kind === "yesno"
+            ? t`Is this tumor?`
+            : t`What is ${code}?`;
   return (
     <SmallModal
       open
@@ -190,16 +194,24 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
       <SmallModalZone>
         <div className="grid gap-3.5">
           <div className="flex items-center gap-1 text-body-sm text-fg-dim">
-            <ObjectIdTag>
-              <Trans>T2</Trans>
-            </ObjectIdTag>
-            {kind === "certainty5" ? (
+            <ObjectIdTag>{code}</ObjectIdTag>
+            {kind === "certainty5" && drawn ? (
+              <span>
+                <Trans>
+                  Drawn as: <b className="font-semibold text-fg">Tumor</b>
+                </Trans>
+              </span>
+            ) : kind === "certainty5" ? (
               <span>
                 <Trans>
                   AI says: <b className="font-semibold text-fg">Tumor, 91% sure</b>
                 </Trans>
               </span>
-            ) : kind === "agree" ? null : (
+            ) : kind === "agree" ? null : drawn ? (
+              <span>
+                <Trans>The drawn type is hidden in this style</Trans>
+              </span>
+            ) : (
               <span>
                 <Trans>The AI's claim is hidden in this style</Trans>
               </span>

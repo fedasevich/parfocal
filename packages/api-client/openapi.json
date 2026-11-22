@@ -60064,6 +60064,11 @@
                 "type": "null"
               }
             ]
+          },
+          "drawn": {
+            "type": "boolean",
+            "title": "Drawn",
+            "default": false
           }
         },
         "type": "object",
@@ -60327,7 +60332,14 @@
             "title": "Class Name"
           },
           "score": {
-            "type": "number",
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Score"
           }
         },
@@ -66532,6 +66544,11 @@
             },
             "type": "array",
             "title": "Rows"
+          },
+          "ai_result": {
+            "type": "boolean",
+            "title": "Ai Result",
+            "default": true
           }
         },
         "type": "object",

@@ -52,6 +52,7 @@ export function TaskSettingsDrawer({
   const detail = okData(useGetReviewTask(task.id).data) ?? task;
   const signedOff = okData(useGetReviewTaskStates(task.id).data)?.signed_off_at != null;
   const evaluation = okData(useGetTaskEvaluation(task.id).data);
+  const source = evaluation?.ai_result === false ? "drawn" : "ai";
   const change = useChangeReviewTask();
   const stored = toReviewStyle(detail.decision);
   const storedRange: Range = { agreeFrom: stored.agreeFrom, disagreeTo: stored.disagreeTo };
@@ -228,6 +229,7 @@ export function TaskSettingsDrawer({
               agreeFrom={range.agreeFrom}
               disagreeTo={range.disagreeTo}
               split={splitOf(answers, range)}
+              source={source}
               {...(editable ? { onRangeChange: setPicked } : {})}
             />
             {signedOff ? (
@@ -284,7 +286,7 @@ export function TaskSettingsDrawer({
           }
         }}
         title={t`Change Counts as on ${task.code}?`}
-        subtitle={countsAsRule(stored.kind, range)}
+        subtitle={countsAsRule(stored.kind, range, source)}
         width={480}
         hint={failure ?? t`Written to the audit log and the task's log with your name.`}
         primaryLabel={t`Change Counts as`}

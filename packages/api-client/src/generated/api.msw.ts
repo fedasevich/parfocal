@@ -9693,7 +9693,7 @@ export const getGetDisagreementQueueResponseMock = (
     kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
     ai: {
       class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      score: faker.number.float({ fractionDigits: 2 }),
+      score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     },
     size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     tag: faker.helpers.arrayElement(Object.values(QueueTag)),
@@ -9774,6 +9774,7 @@ export const getGetDisagreementQueueResponseMock = (
       null,
     ]),
   })),
+  ai_result: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -9787,7 +9788,7 @@ export const getUpdateQueuedObjectResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
   ai: {
     class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    score: faker.number.float({ fractionDigits: 2 }),
+    score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   },
   size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   tag: faker.helpers.arrayElement(Object.values(QueueTag)),
@@ -9877,7 +9878,7 @@ export const getSettleQueuedOutlineResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
   ai: {
     class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    score: faker.number.float({ fractionDigits: 2 }),
+    score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   },
   size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   tag: faker.helpers.arrayElement(Object.values(QueueTag)),
@@ -9967,7 +9968,7 @@ export const getClearQueuedOutlineResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
   ai: {
     class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    score: faker.number.float({ fractionDigits: 2 }),
+    score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   },
   size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   tag: faker.helpers.arrayElement(Object.values(QueueTag)),
@@ -10062,7 +10063,7 @@ export const getGetMyAdjudicationResponseMock = (
       kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
       ai: {
         class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-        score: faker.number.float({ fractionDigits: 2 }),
+        score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
       },
       size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
       reviewer_a: {
@@ -10118,6 +10119,7 @@ export const getGetMyAdjudicationResponseMock = (
         },
         null,
       ]),
+      drawn: faker.datatype.boolean(),
     }),
   ),
   ...overrideResponse,
@@ -10133,7 +10135,7 @@ export const getDecideAdjudicationResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
   ai: {
     class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    score: faker.number.float({ fractionDigits: 2 }),
+    score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   },
   size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   reviewer_a: {
@@ -10181,6 +10183,7 @@ export const getDecideAdjudicationResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -10194,7 +10197,7 @@ export const getSettleAdjudicationOutlineResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
   ai: {
     class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    score: faker.number.float({ fractionDigits: 2 }),
+    score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   },
   size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   reviewer_a: {
@@ -10242,6 +10245,7 @@ export const getSettleAdjudicationOutlineResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -10255,7 +10259,7 @@ export const getClearAdjudicationOutlineResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
   ai: {
     class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    score: faker.number.float({ fractionDigits: 2 }),
+    score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   },
   size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
   reviewer_a: {
@@ -10303,6 +10307,7 @@ export const getClearAdjudicationOutlineResponseMock = (
     },
     null,
   ]),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 

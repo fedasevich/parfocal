@@ -137,7 +137,7 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
             ? t`${sum.ns} of ${plural(sum.all, "slide")}${out ? t`, ${out} without ${short}` : ""}`
             : "",
         ],
-        ["layers", "AI result", set?.label ?? ""],
+        ["layers", isDrawn(draft.resultSetId) ? t`Objects` : "AI result", set?.label ?? ""],
         ["text", t`Task name`, draft.name.trim()],
       ],
     ],
@@ -176,7 +176,7 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
         [
           "eye",
           t`Blinding`,
-          `${draft.blind ? t`Blind until they submit` : t`Open`}${draft.hide ? t`, first read without the AI` : ""}`,
+          `${draft.blind ? t`Blind until they submit` : t`Open`}${draft.hide ? (isDrawn(draft.resultSetId) ? t`, first read without the drawn outlines` : t`, first read without the AI`) : ""}`,
         ],
         ["monitor", t`Starts in`, draft.start === "guided" ? t`Guided review` : t`The full viewer`],
         ["sliders", t`Display`, displaySummary(draft)],

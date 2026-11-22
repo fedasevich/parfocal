@@ -179,6 +179,10 @@ msgstr ", done"
 msgid ", first read without the AI"
 msgstr ", first read without the AI"
 
+#: src/screens/new-task/send-step.tsx
+msgid ", first read without the drawn outlines"
+msgstr ", first read without the drawn outlines"
+
 #: src/screens/clinical-report/steps.tsx
 msgid ", kept against the size"
 msgstr ", kept against the size"
@@ -2924,6 +2928,10 @@ msgstr "A number from 1 to 9. Reviewers press it to give a cell this class."
 #: src/screens/upload/formats-drawer.tsx
 msgid "A number is outside its allowed range, such as a score above 1."
 msgstr "A number is outside its allowed range, such as a score above 1."
+
+#: src/screens/new-task/modals.tsx
+msgid "A person drew {code} as tumor."
+msgstr "A person drew {code} as tumor."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "A preset only fills in the options. You can change each of them on the next step."
@@ -6881,6 +6889,14 @@ msgstr "Draw as"
 msgid "Draw the new outline of {0}"
 msgstr "Draw the new outline of {0}"
 
+#: src/screens/new-task/how-step.tsx
+msgid "Drawing order"
+msgstr "Drawing order"
+
+#: src/screens/new-task/modals.tsx
+msgid "Drawn as: <0>Tumor</0>"
+msgstr "Drawn as: <0>Tumor</0>"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Drawn by"
 msgstr "Drawn by"
@@ -8474,6 +8490,10 @@ msgstr "Hide the AI for a first read"
 msgid "Hide the checklist"
 msgstr "Hide the checklist"
 
+#: src/screens/new-task/how-step.tsx
+msgid "Hide the drawn outlines for a first read"
+msgstr "Hide the drawn outlines for a first read"
+
 #: src/screens/upload/overlays.tsx
 msgid "Hide the example call"
 msgstr "Hide the example call"
@@ -8612,8 +8632,8 @@ msgid "How objects draw"
 msgstr "How objects draw"
 
 #: src/screens/new-task/modals.tsx
-msgid "How sure are you that T2 is tumor?"
-msgstr "How sure are you that T2 is tumor?"
+msgid "How sure are you that {code} is tumor?"
+msgstr "How sure are you that {code} is tumor?"
 
 #: src/screens/viewer/layer-views.tsx
 msgid "How sure the AI is"
@@ -11769,6 +11789,7 @@ msgstr "Objective detents"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/evaluation/report-pages.tsx
+#: src/screens/new-task/send-step.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 #: src/viewer/annotate-task-panel.tsx
@@ -14320,6 +14341,10 @@ msgstr "Reviewers mark the slide first, then the AI result is shown."
 msgid "Reviewers mark the slide on their own first, then the AI result is shown."
 msgstr "Reviewers mark the slide on their own first, then the AI result is shown."
 
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers mark the slide on their own first, then the drawn outlines are shown."
+msgstr "Reviewers mark the slide on their own first, then the drawn outlines are shown."
+
 #: src/screens/project/settings-tab.tsx
 msgid "Reviewers see each other only after they submit."
 msgstr "Reviewers see each other only after they submit."
@@ -16735,10 +16760,6 @@ msgid "T regions, C cells"
 msgstr "T regions, C cells"
 
 #: src/screens/new-task/modals.tsx
-msgid "T2"
-msgstr "T2"
-
-#: src/screens/new-task/modals.tsx
 msgid "T2 on A1 · {name}"
 msgstr "T2 on A1 · {name}"
 
@@ -17214,6 +17235,10 @@ msgstr "The draft could not be saved. Try again."
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The draft is saved as you go."
 msgstr "The draft is saved as you go."
+
+#: src/screens/new-task/modals.tsx
+msgid "The drawn type is hidden in this style"
+msgstr "The drawn type is hidden in this style"
 
 #: src/routes/issue-pages.$kind.tsx
 msgid "The due date is in the past."
@@ -17927,6 +17952,10 @@ msgstr "These filters leave no object. Choose more slides, classes or origins, t
 msgid "These questions show the AI's claim. With the AI hidden the first read uses Pick the class blind, then the claim is revealed."
 msgstr "These questions show the AI's claim. With the AI hidden the first read uses Pick the class blind, then the claim is revealed."
 
+#: src/screens/new-task/how-step.tsx
+msgid "These questions show the drawn type. With the outlines hidden the first read uses Pick the class blind, then the type is revealed."
+msgstr "These questions show the drawn type. With the outlines hidden the first read uses Pick the class blind, then the type is revealed."
+
 #: src/screens/developer/developer-screen.tsx
 msgid "These settings are saved in this browser and apply to every slide you open. To watch them change a slide, open one and pick Developer mode in the search palette, or press Ctrl+Shift+D. The drawer then stays over the panel until you close it."
 msgstr "These settings are saved in this browser and apply to every slide you open. To watch them change a slide, open one and pick Developer mode in the search palette, or press Ctrl+Shift+D. The drawer then stays over the panel until you close it."
@@ -18186,6 +18215,10 @@ msgstr "This task is signed off, so the mapping is locked."
 #: src/screens/project/task-settings-drawer.tsx
 msgid "This task is signed off, so the overlap is locked."
 msgstr "This task is signed off, so the overlap is locked."
+
+#: src/screens/evaluation/report-pages.tsx
+msgid "This task reviews drawn outlines, so no AI result is scored."
+msgstr "This task reviews drawn outlines, so no AI result is scored."
 
 #: src/screens/refusals.ts
 msgid "This task was withdrawn, so nothing can be changed. You can look at it read only."
@@ -19369,8 +19402,8 @@ msgid "What I see now"
 msgstr "What I see now"
 
 #: src/screens/new-task/modals.tsx
-msgid "What is T2?"
-msgstr "What is T2?"
+msgid "What is {code}?"
+msgstr "What is {code}?"
 
 #: src/screens/new-task/modals.tsx
 #: src/screens/review/object-card.tsx
@@ -19422,6 +19455,10 @@ msgstr "What the AI shows"
 #: src/screens/new-task/steps.tsx
 msgid "What the experts do"
 msgstr "What the experts do"
+
+#: src/screens/new-task/how-step.tsx
+msgid "What the layers show"
+msgstr "What the layers show"
 
 #: src/screens/clinical-report/steps.tsx
 msgid "What the sections show"

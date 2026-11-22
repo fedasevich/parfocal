@@ -1,5 +1,5 @@
 import type { ResultSet } from "@parfocal/api-client";
-import { type ResultSetChoice, type ScopeKind, shortDate } from "./model.ts";
+import { drawnSource, type ResultSetChoice, type ScopeKind, shortDate } from "./model.ts";
 
 const resultSetKeys = ["cam", "sam"] as const;
 
@@ -47,7 +47,7 @@ export function groupResultSets(sets: readonly ResultSet[]): GroupedResultSets {
   return { choices, groupOf };
 }
 
-export const drawnSource = "drawn";
+export { drawnSource };
 
 export const isDrawn = (id: string) => id === drawnSource;
 

@@ -8,6 +8,7 @@ import {
   settledStageOutline,
 } from "../src/screens/disagreements/reviewer-outlines.ts";
 import {
+  adjudicatorWhy,
   allClosed,
   canSend,
   countOf,
@@ -198,6 +199,20 @@ test("a drawn row names its drawer and tool instead of the AI", () => {
   assert.equal(drawnText(drawn, names), "Drawn by Lucie with Smart select");
   assert.equal(drawnText({ drawn_by_user_id: null, tool: null }, names), "Drawn by a person");
   assert.equal(drawerOf({ drawn_by_user_id: null }, names), "the drawer");
+  const agree = { raw: "agree" as const, reason: null };
+  const disagree = { raw: "disagree" as const, reason: null };
+  assert.equal(
+    adjudicatorWhy(agree, disagree),
+    "One reviewer agrees with the AI, the other disagrees with the AI",
+  );
+  assert.equal(
+    adjudicatorWhy(agree, disagree, "drawn"),
+    "One reviewer agrees with the drawn outline, the other disagrees with the drawn outline",
+  );
+  assert.equal(
+    adjudicatorWhy(disagree, disagree, "drawn"),
+    "Both reviewers disagree with the drawn outline",
+  );
 });
 
 test("an outline row says outline differs and gives each reviewer's outline its own colour", () => {

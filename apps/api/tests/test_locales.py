@@ -220,7 +220,12 @@ def test_every_message_has_a_pseudo_translation() -> None:
 def test_the_report_renders_with_every_string_translated_in_the_pseudo_locale() -> None:
     report = render_report(FULL_REPORT, Locale.PSEUDO)
     literals: list[str] = []
-    for data in (FULL_REPORT, EMPTY_REPORT, replace(REPORT, signed_off_on=None, reasons=())):
+    for data in (
+        FULL_REPORT,
+        EMPTY_REPORT,
+        replace(REPORT, signed_off_on=None, reasons=()),
+        replace(FULL_REPORT, ai_result=False),
+    ):
         source = render_report(data, Locale.PSEUDO).source
         found = [
             literal.replace('\\"', '"').replace("\\\\", "\\") for literal in LITERAL.findall(source)

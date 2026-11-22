@@ -679,10 +679,17 @@ export const displayWords = {
   },
 } as const;
 
+export const drawnSource = "drawn";
+
 export function displaySummary(draft: Draft) {
   const locked = Object.keys(draft.locks).length;
   const display = draft.display;
-  return `${displayWords.draw[display.draw]} · ${displayWords.conf[display.conf]} · ${displayWords.order[display.order]}${locked ? ` · ${locked} locked` : ""}`;
+  const locks = locked ? ` · ${locked} locked` : "";
+  if (draft.resultSetId === drawnSource) {
+    const order = display.order === "ai" ? "drawing order" : displayWords.order[display.order];
+    return `${displayWords.draw[display.draw]} · ${order}${locks}`;
+  }
+  return `${displayWords.draw[display.draw]} · ${displayWords.conf[display.conf]} · ${displayWords.order[display.order]}${locks}`;
 }
 
 const slidesOf = (count: number) => `${count} ${count === 1 ? "slide" : "slides"}`;

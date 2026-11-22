@@ -28,7 +28,8 @@ export const reviewObjectOf = (object: AdjudicationObject): ReviewObject => ({
   kind: object.kind,
   number: 1,
   class_name: object.ai.class_name,
-  score: object.ai.score,
+  score: object.ai.score ?? 0,
+  drawn: object.drawn ?? false,
   size_mm: object.size_mm,
   other_class: null,
 });
@@ -63,6 +64,7 @@ export function adjudicatorCard(
     why: adjudicatorWhy(
       { raw: a?.counted ?? "unsure", reason: a?.reason ?? null },
       { raw: b?.counted ?? "unsure", reason: b?.reason ?? null },
+      object.drawn ? "drawn" : "ai",
     ),
     hiddenNote: text.hiddenNote,
     above: text.above,

@@ -253,6 +253,10 @@ test("a lock needs a reason of at least 5 characters", () => {
   const draft = sceneDraft(data, "locks");
   assert.deepEqual(issues(draft, data), []);
   assert.equal(displaySummary(draft), "Outline · confidence as a number · AI order · 1 locked");
+  assert.equal(
+    displaySummary({ ...draft, resultSetId: "drawn" }),
+    "Outline · drawing order · 1 locked",
+  );
   const short = { ...draft, locks: { conf: "Or" } };
   assert.deepEqual(
     issues(short, data).map((issue) => issue.text),

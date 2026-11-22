@@ -99,6 +99,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
   const { t } = useLingui();
 
   const display = draft.display;
+  const drawn = isDrawn(draft.resultSetId);
   const setDisplay = (change: Partial<Display>) =>
     update((current) => ({ ...current, display: { ...current.display, ...change } }));
   const row = (key: string, label: string, control: ReactNode) => {
@@ -145,7 +146,10 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
             [key]: key === "width" ? Number(value) : String(value),
           })
         }
-        options={displayRows[key].options.map(([value, label]) => ({ value, label }))}
+        options={displayRows[key].options.map(([value, label]) => ({
+          value,
+          label: drawn && key === "order" && value === "ai" ? t`Drawing order` : label,
+        }))}
       />,
     );
   const range = (
@@ -240,11 +244,11 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
           </div>
           <div className="grid gap-3 border-t border-line pt-4">
             <GroupTitle>
-              <Trans>What the AI shows</Trans>
+              {drawn ? <Trans>What the layers show</Trans> : <Trans>What the AI shows</Trans>}
             </GroupTitle>
-            {seg("conf")}
-            {range("heat", t`Heatmap`, 0, 100, 10)}
-            {range("cutoff", t`Score cutoff`, 0, 1, 0.05)}
+            {drawn ? null : seg("conf")}
+            {drawn ? null : range("heat", t`Heatmap`, 0, 100, 10)}
+            {drawn ? null : range("cutoff", t`Score cutoff`, 0, 1, 0.05)}
             {row(
               "sets",
               t`Other layers`,
@@ -370,6 +374,7 @@ function ReviewHowStep(props: StepProps) {
   const { t } = useLingui();
 
   const { draft, update } = props;
+  const drawn = isDrawn(draft.resultSetId);
   const claimShown =
     draft.hide && (draft.decision.kind === "certainty5" || draft.decision.kind === "agree");
   return (
@@ -383,13 +388,26 @@ function ReviewHowStep(props: StepProps) {
             onChange={(blind) => update((current) => ({ ...current, blind }))}
           />
           <ToggleRow
-            title={t`Hide the AI for a first read`}
-            sub={t`Reviewers mark the slide on their own first, then the AI result is shown.`}
+            title={
+              drawn ? t`Hide the drawn outlines for a first read` : t`Hide the AI for a first read`
+            }
+            sub={
+              drawn
+                ? t`Reviewers mark the slide on their own first, then the drawn outlines are shown.`
+                : t`Reviewers mark the slide on their own first, then the AI result is shown.`
+            }
             checked={draft.hide}
             onChange={(hide) => update((current) => ({ ...current, hide }))}
           />
         </div>
-        {claimShown ? (
+        {claimShown && drawn ? (
+          <Warn>
+            <Trans>
+              These questions show the drawn type. With the outlines hidden the first read uses Pick
+              the class blind, then the type is revealed.
+            </Trans>
+          </Warn>
+        ) : claimShown ? (
           <Warn>
             <Trans>
               These questions show the AI's claim. With the AI hidden the first read uses Pick the

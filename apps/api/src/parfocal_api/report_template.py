@@ -27,6 +27,7 @@ from parfocal_common.report_layout import ReportPage, report_pages
 
 DECISIONS = ("agree", "disagree", "unsure")
 METRICS = ("sensitivity", "precision", "dice", "kappa", "cell-agreement")
+PERSON_METRICS = ("kappa",)
 
 REPORT_MESSAGES: Mapping[str, str] = {
     "report.title": "Evaluation report",
@@ -79,6 +80,7 @@ REPORT_MESSAGES: Mapping[str, str] = {
     "report.methods.counts_as": "Counts as agree",
     "report.missing": "Not enough data",
     "report.empty.region-metrics": "This task has no regions to measure.",
+    "report.empty.drawn-metrics": "This task reviews drawn outlines, so no AI result is scored.",
     "report.empty.confusion-matrix": (
         "This task has no cells, so there are no cell types to compare."
     ),
@@ -304,6 +306,7 @@ class ReportData:
     changes: tuple[ReportChange, ...] = ()
     ai_changes: ReportAiChanges | None = None
     review: bool = True
+    ai_result: bool = True
 
 
 @dataclass(frozen=True)
@@ -369,6 +372,7 @@ def report_data(
         format=report_format or ReportFormat(),
         decision_style=str(evaluation.decisions.style),
         counts_as=tuple(str(value) for value in evaluation.decisions.counts_as),
+        ai_result=evaluation.ai_result,
     )
 
 
@@ -469,17 +473,22 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
             empty,
         )
 
+    def scored(metrics: Sequence[str]) -> list[str]:
+        return [name for name in metrics if data.ai_result or name in PERSON_METRICS]
+
     def headline(block: HeadlineNumbers) -> list[str]:
+        shown = scored(block.metrics)
+        if not shown:
+            return said("report.empty.drawn-metrics")
         return table(
             (messages["report.metric"], messages["report.value"]),
-            [
-                (messages[f"report.metric.{name}"], share(data.headline.get(name)))
-                for name in block.metrics
-            ],
+            [(messages[f"report.metric.{name}"], share(data.headline.get(name))) for name in shown],
             "report.missing",
         )
 
     def regions(block: RegionMetrics) -> list[str]:
+        if not data.ai_result:
+            return said("report.empty.drawn-metrics")
         found = [item for item in data.classes if item.kind == "region"]
         ordered = sorted(found, key=lambda item: -(getattr(item, block.sort_by) or -1.0))
         shown = ordered[: block.rows] if block.rows else ordered
@@ -603,6 +612,8 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         other = data.compared.get(str(block.task_id))
         if other is None:
             return said("report.empty.compared-missing")
+        if not scored(block.metrics):
+            return said("report.empty.drawn-metrics")
         return table(
             (messages["report.metric"], messages["report.this_task"], other.task_name),
             [
@@ -611,7 +622,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
                     share(data.headline.get(name)),
                     share(other.headline.get(name)),
                 )
-                for name in block.metrics
+                for name in scored(block.metrics)
             ],
             "report.missing",
         )
@@ -650,6 +661,8 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
                 return headline(block)
             case RegionMetrics():
                 return regions(block)
+            case ConfusionMatrix() if not data.ai_result:
+                return said("report.empty.drawn-metrics")
             case ConfusionMatrix():
                 return classes(
                     "cell",

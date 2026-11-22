@@ -109,6 +109,7 @@ def test_the_queue_lists_rows_and_takes_each_action(api: ApiAs, database: str) -
     body = queue.json()
     assert body["locked"] is None
     assert body["total_objects"] == 2
+    assert body["ai_result"] is True
     rows = {row["object"]: row for row in body["rows"]}
     assert set(rows) == {"T1", "T2"}
     assert (rows["T1"]["tag"], rows["T2"]["tag"]) == ("differ", "bothai")

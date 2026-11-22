@@ -33,7 +33,7 @@ from parfocal_api.disagreements import (
     queue_of,
     settle_outline,
 )
-from parfocal_api.drawn_sources import Drawer, drawers_of
+from parfocal_api.drawn_sources import Drawer, drawers_of, reviews_ai
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, NotFoundError
 from parfocal_api.review_objects import UNKNOWN, AiClaim, ai_claims, kind_of
@@ -108,7 +108,7 @@ TAGS = {
 
 class AiCall(BaseModel):
     class_name: str
-    score: float
+    score: float | None
 
 
 class QueueAnswerRecord(BaseModel):
@@ -170,6 +170,7 @@ class DisagreementQueue(BaseModel):
     total_objects: int
     locked: QueueLock | None
     rows: list[QueueRow]
+    ai_result: bool = True
 
 
 class QueuedObjectUpdate(BaseModel):
@@ -213,6 +214,7 @@ class AdjudicationObject(BaseModel):
     decision_note: str | None
     outlines: list[AnonymousOutline] = []
     settled_outline: AnonymousSettledOutline | None = None
+    drawn: bool = False
 
 
 class AdjudicatorOutlineDraft(BaseModel):
@@ -456,6 +458,10 @@ async def facts_of(
     )
 
 
+def call_of(item: QueuedObject, claim: AiClaim) -> AiCall:
+    return AiCall(class_name=claim.class_name, score=None if item.drawn else claim.score)
+
+
 def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
     claim = facts.claim(item)
     label = facts.label(item)
@@ -472,7 +478,7 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
         slide_label=label,
         object=item.object,
         kind=kind_of(letter_of(item)),
-        ai=AiCall(class_name=claim.class_name, score=claim.score),
+        ai=call_of(item, claim),
         size_mm=claim.size_mm,
         tag=TAGS.get(item.why, QueueTag.SECOND),
         answers=[
@@ -557,6 +563,7 @@ async def get_disagreement_queue(
         total_objects=await total_objects(connection, task_id),
         locked=await lock_of(connection, task_id),
         rows=[row_of(item, facts) for item in queue],
+        ai_result=await reviews_ai(connection, task_id),
     )
 
 
@@ -728,7 +735,8 @@ def adjudication_object(
         slide_label=label,
         object=item.object,
         kind=kind_of(letter_of(item)),
-        ai=AiCall(class_name=claim.class_name, score=claim.score),
+        ai=call_of(item, claim),
+        drawn=item.drawn,
         size_mm=claim.size_mm,
         reviewer_a=first,
         reviewer_b=second,

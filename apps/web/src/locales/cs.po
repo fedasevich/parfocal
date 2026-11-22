@@ -179,6 +179,10 @@ msgstr ""
 msgid ", first read without the AI"
 msgstr ""
 
+#: src/screens/new-task/send-step.tsx
+msgid ", first read without the drawn outlines"
+msgstr ""
+
 #: src/screens/clinical-report/steps.tsx
 msgid ", kept against the size"
 msgstr ""
@@ -2921,6 +2925,10 @@ msgstr ""
 
 #: src/screens/upload/formats-drawer.tsx
 msgid "A number is outside its allowed range, such as a score above 1."
+msgstr ""
+
+#: src/screens/new-task/modals.tsx
+msgid "A person drew {code} as tumor."
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -6876,6 +6884,14 @@ msgstr ""
 msgid "Draw the new outline of {0}"
 msgstr ""
 
+#: src/screens/new-task/how-step.tsx
+msgid "Drawing order"
+msgstr ""
+
+#: src/screens/new-task/modals.tsx
+msgid "Drawn as: <0>Tumor</0>"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Drawn by"
 msgstr ""
@@ -8469,6 +8485,10 @@ msgstr ""
 msgid "Hide the checklist"
 msgstr ""
 
+#: src/screens/new-task/how-step.tsx
+msgid "Hide the drawn outlines for a first read"
+msgstr ""
+
 #: src/screens/upload/overlays.tsx
 msgid "Hide the example call"
 msgstr ""
@@ -8607,7 +8627,7 @@ msgid "How objects draw"
 msgstr ""
 
 #: src/screens/new-task/modals.tsx
-msgid "How sure are you that T2 is tumor?"
+msgid "How sure are you that {code} is tumor?"
 msgstr ""
 
 #: src/screens/viewer/layer-views.tsx
@@ -11764,6 +11784,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/evaluation/report-pages.tsx
+#: src/screens/new-task/send-step.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 #: src/viewer/annotate-task-panel.tsx
@@ -14311,6 +14332,10 @@ msgstr ""
 msgid "Reviewers mark the slide on their own first, then the AI result is shown."
 msgstr ""
 
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers mark the slide on their own first, then the drawn outlines are shown."
+msgstr ""
+
 #: src/screens/project/settings-tab.tsx
 msgid "Reviewers see each other only after they submit."
 msgstr ""
@@ -16726,10 +16751,6 @@ msgid "T regions, C cells"
 msgstr ""
 
 #: src/screens/new-task/modals.tsx
-msgid "T2"
-msgstr ""
-
-#: src/screens/new-task/modals.tsx
 msgid "T2 on A1 · {name}"
 msgstr ""
 
@@ -17204,6 +17225,10 @@ msgstr ""
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The draft is saved as you go."
+msgstr ""
+
+#: src/screens/new-task/modals.tsx
+msgid "The drawn type is hidden in this style"
 msgstr ""
 
 #: src/routes/issue-pages.$kind.tsx
@@ -17918,6 +17943,10 @@ msgstr ""
 msgid "These questions show the AI's claim. With the AI hidden the first read uses Pick the class blind, then the claim is revealed."
 msgstr ""
 
+#: src/screens/new-task/how-step.tsx
+msgid "These questions show the drawn type. With the outlines hidden the first read uses Pick the class blind, then the type is revealed."
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "These settings are saved in this browser and apply to every slide you open. To watch them change a slide, open one and pick Developer mode in the search palette, or press Ctrl+Shift+D. The drawer then stays over the panel until you close it."
 msgstr ""
@@ -18176,6 +18205,10 @@ msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
 msgid "This task is signed off, so the overlap is locked."
+msgstr ""
+
+#: src/screens/evaluation/report-pages.tsx
+msgid "This task reviews drawn outlines, so no AI result is scored."
 msgstr ""
 
 #: src/screens/refusals.ts
@@ -19360,7 +19393,7 @@ msgid "What I see now"
 msgstr ""
 
 #: src/screens/new-task/modals.tsx
-msgid "What is T2?"
+msgid "What is {code}?"
 msgstr ""
 
 #: src/screens/new-task/modals.tsx
@@ -19412,6 +19445,10 @@ msgstr ""
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/steps.tsx
 msgid "What the experts do"
+msgstr ""
+
+#: src/screens/new-task/how-step.tsx
+msgid "What the layers show"
 msgstr ""
 
 #: src/screens/clinical-report/steps.tsx

@@ -184,7 +184,10 @@ def test_a_reviewed_drawn_object_reaches_the_final_layer_with_its_drawer(
     assert [(item["object"], item["drawn"], item["why"]) for item in queued] == [
         (wrong, True, "against-the-ai")
     ]
-    rows = ok(as_owner.get(f"/api/review-tasks/{task}/disagreement-queue")).json()["rows"]
+    queue = ok(as_owner.get(f"/api/review-tasks/{task}/disagreement-queue")).json()
+    assert queue["ai_result"] is False
+    rows = queue["rows"]
+    assert rows[0]["ai"]["score"] is None
     assert [(row["object"], row["drawn"], row["tool"]) for row in rows] == [(wrong, True, None)]
     assert rows[0]["drawn_by_user_id"] == str(d.people["owner"].user_id)
     ok(

@@ -119,7 +119,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
   const clearOutline = useClearQueuedOutline({ mutation: { onSuccess: () => void refresh() } });
   const drawing = useOutlineDrawing();
   const rows = queue?.rows ?? [];
-  const drawnOnly = rows.length > 0 && rows.every((item) => item.drawn);
+  const drawnOnly = queue?.ai_result === false;
   const row =
     rows.find((candidate) => candidate.key === selectedKey) ??
     rows.find((candidate) => !isClosed(candidate)) ??

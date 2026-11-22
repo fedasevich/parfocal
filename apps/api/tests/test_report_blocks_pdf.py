@@ -81,6 +81,15 @@ def test_every_block_kind_prints_its_own_content() -> None:
         assert block.title in text
 
 
+def test_a_drawn_review_prints_no_model_scores() -> None:
+    drawn = replace(FULL_REPORT, ai_result=False)
+    text = " ".join(pages_of(pdf_of(render_report(drawn), SIGNED)))
+    assert "This task reviews drawn outlines, so no AI result is scored." in text
+    assert "Cohen kappa" in text
+    for left_out in ("Sensitivity", "Precision", "Dice 0.60", "Cell agreement with the AI"):
+        assert left_out not in text, (left_out, text)
+
+
 def test_a_block_with_nothing_to_show_says_why() -> None:
     text = " ".join(pages_of(pdf_of(render_report(EMPTY_REPORT), DRAFT)))
     for expected in (

@@ -346,7 +346,7 @@ export const ObjectKind = {
 
 export interface AiCall {
   class_name: string;
-  score: number;
+  score: number | null;
 }
 
 export interface AnonymousAnswer {
@@ -387,6 +387,7 @@ export interface AdjudicationObject {
   decision_note: string | null;
   outlines?: AnonymousOutline[];
   settled_outline?: AnonymousSettledOutline | null;
+  drawn?: boolean;
 }
 
 export interface AdjudicatorOutlineDraft {
@@ -2642,6 +2643,7 @@ export interface DisagreementQueue {
   total_objects: number;
   locked: QueueLock | null;
   rows: QueueRow[];
+  ai_result?: boolean;
 }
 
 export type DisagreementReasonsWidth =

@@ -215,7 +215,7 @@ const drawnRow = (row: QueueRow, index: number): QueueRow =>
         drawn: true,
         drawn_by_user_id: people.LM.id,
         tool: drawnTools[index % drawnTools.length] ?? null,
-        ai: { ...row.ai, score: 0 },
+        ai: { ...row.ai, score: null },
       }
     : row;
 
@@ -226,6 +226,7 @@ export const toDisagreementQueue = (taskId: string, drawn = false): Disagreement
   rows: shownQueueRows(outlineOverlapOf(taskId))
     .map(toQueueRow)
     .map((row, index) => (drawn ? drawnRow(row, index) : row)),
+  ai_result: !drawn,
 });
 
 const seedOf = (slideId: string, object: string) =>
@@ -291,13 +292,18 @@ const toAdjudicationObject = (seed: QueueSeedRow): AdjudicationObject => {
   };
 };
 
-export const toMyAdjudication = (taskId: string): MyAdjudicationTask => ({
+export const toMyAdjudication = (taskId: string, drawn = false): MyAdjudicationTask => ({
   task_id: taskId,
   asked_by_user_id: idOf(researcher),
   note: sentNote(),
   objects: queueRows
     .filter((seed) => forAdjudicator(liveRow(queueKey(seed))))
-    .map(toAdjudicationObject),
+    .map(toAdjudicationObject)
+    .map((object) =>
+      drawn && object.kind === "region"
+        ? { ...object, drawn: true, ai: { ...object.ai, score: null } }
+        : object,
+    ),
 });
 
 const counted = (keys: PersonKey[]) =>
@@ -761,7 +767,9 @@ export function adjudicationHandlers(): RequestHandler[] {
     clearQueuedOutlineInScene(),
     settleAdjudicationOutlineInScene(),
     clearAdjudicationOutlineInScene(),
-    getGetMyAdjudicationMockHandler(({ params }) => toMyAdjudication(String(params.taskId))),
+    getGetMyAdjudicationMockHandler(({ params, request }) =>
+      toMyAdjudication(String(params.taskId), drawnPage(request)),
+    ),
     decideAdjudicationInScene(),
     getSendToAdjudicatorMockHandler(({ request }) => sendToAdjudicatorInScene(request)),
     getListMyAdjudicationsMockHandler(() => toMyAdjudications()),
