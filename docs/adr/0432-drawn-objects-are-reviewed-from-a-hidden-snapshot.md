@@ -1,4 +1,4 @@
-# XXXX. Drawn objects are reviewed from a hidden snapshot
+# 0432. Drawn objects are reviewed from a hidden snapshot
 
 - Date: 2026-11-22
 - Status: Accepted
