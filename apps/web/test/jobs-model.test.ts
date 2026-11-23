@@ -48,6 +48,7 @@ const job = (patch: Partial<MyJob>): MyJob => ({
   started_by_user_id: "dh",
   slides: [],
   pause: null,
+  wait: null,
   created_at: "2026-10-15T14:30:00+02:00",
   finished_at: null,
   ...patch,
@@ -66,6 +67,7 @@ const model = (patch: Partial<ProjectModel>): ProjectModel => ({
   server: "Parfocal GPU",
   runs_ahead: 1,
   queue_minutes: 8,
+  start_minutes: 0,
   latency_ms: null,
   ...patch,
 });
@@ -241,6 +243,34 @@ test("the estimate adds the queue on the Parfocal GPU and none on the lab server
     shared.perSlide,
     "About 17 min a slide on the Parfocal GPU. Runs from other workspaces are ahead of yours, about 13 min.",
   );
+});
+
+test("the estimate adds the measured GPU start and names it", () => {
+  const cold = runEstimate(model({ start_minutes: 3 }), [{ width: 2220, height: 2967 }], today);
+  assert.equal(cold.total, 5);
+  assert.equal(cold.doneAround, "14:43");
+  assert.equal(
+    cold.perSlide,
+    "About 2 min a slide on the Parfocal GPU. One run is ahead of yours, about 8 min. About 3 min of the estimate is waiting for a GPU to start.",
+  );
+  const lab = runEstimate(model({ start_minutes: 3, host: "lab", latency_ms: 210 }), [{}], today);
+  assert.equal(lab.total, 17);
+});
+
+test("a queued run says why it waits", () => {
+  const since = local(15, 14, 9);
+  const waiting = (reason: "waiting-for-gpu" | "gpu-busy" | "woken-again") =>
+    job({ status: "queued", percent: 0, minutes_left: null, wait: { reason, since } });
+  assert.equal(trayValueText(waiting("waiting-for-gpu")), "Waiting for a GPU");
+  assert.equal(runSummary(waiting("gpu-busy")).text, "Waiting, the GPU is busy");
+  assert.equal(trayValueText(waiting("woken-again")), "Starting the GPU again");
+  assert.equal(
+    trayDetail(waiting("waiting-for-gpu"), today),
+    "tumor_052 and tumor_060 in P07 · queued since 14:09",
+  );
+  const plain = job({ status: "queued", percent: 0 });
+  assert.equal(trayValueText(plain), "Waiting to start");
+  assert.equal(trayDetail(plain, today), "tumor_052 and tumor_060 in P07");
 });
 
 test("the estimate fits the slide, about two minutes for a small one and an hour for a huge one", () => {

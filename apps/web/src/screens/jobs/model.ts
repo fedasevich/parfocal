@@ -47,7 +47,7 @@ export function trayValueText(job: MyJob): string {
   if (job.status === "cancelled") return "Cancelled";
   if (job.status === "done") return "Done";
   if (job.status === "paused") return `Paused at ${job.percent}%`;
-  if (job.status === "queued") return "Waiting to start";
+  if (job.status === "queued") return waitText(job);
   const left = knownMinutes(job.minutes_left);
   if (job.percent < 5 && left !== null) return `Starting · ${left} min`;
   return left === null ? `${job.percent}%` : `${job.percent}% · ${left} min left`;
@@ -70,8 +70,20 @@ export const pauseText = (job: MyJob) =>
     ? "the lab server is busy"
     : "paused";
 
+const waitTexts = {
+  "waiting-for-gpu": "Waiting for a GPU",
+  "gpu-busy": "Waiting, the GPU is busy",
+  "woken-again": "Starting the GPU again",
+} as const;
+
+export const waitText = (job: MyJob) =>
+  job.status === "queued" && job.wait ? waitTexts[job.wait.reason] : "Waiting to start";
+
 export function trayDetail(job: MyJob, today: Date): string {
   if (job.status === "paused") return `${job.detail} · ${pauseText(job)}`;
+  if (job.status === "queued" && job.wait) {
+    return `${job.detail} · queued since ${formatClock(new Date(job.wait.since))}`;
+  }
   if (isFinished(job) && job.finished_at) {
     return `${job.detail} · ${finishedWhen(new Date(job.finished_at), today)}`;
   }
@@ -264,7 +276,7 @@ export function runSummary(job: MyJob): RunSummary {
   }
   const percent = job.percent;
   if (job.status === "queued") {
-    return { state: "running", percent, text: "Waiting to start" };
+    return { state: "running", percent, text: waitText(job) };
   }
   const left = knownMinutes(job.minutes_left);
   if (percent < 5) {
@@ -316,16 +328,19 @@ export function runEstimate(model: ProjectModel, sizes: SlideSize[], now: Date):
   const total = each.reduce((sum, minutes) => sum + minutes, 0);
   const least = each.length ? Math.min(...each) : model.minutes_per_slide;
   const most = each.length ? Math.max(...each) : model.minutes_per_slide;
-  const wait = model.host === "lab" ? 0 : model.queue_minutes;
+  const gpuStart = model.host === "lab" ? 0 : model.start_minutes;
+  const wait = model.host === "lab" ? 0 : model.queue_minutes + gpuStart;
   const doneAround = formatClock(new Date(now.getTime() + (total + wait) * 60000));
   const range = least === most ? `${least}` : `${least} to ${most}`;
+  const start =
+    gpuStart > 0 ? ` About ${gpuStart} min of the estimate is waiting for a GPU to start.` : "";
   const perSlide =
     model.serving === "offline"
       ? `${model.server} is not answering right now, so this run cannot start.`
       : model.host === "lab"
         ? `About ${range} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
-        : `About ${range} min a slide on the ${model.server}. ${queueAhead(model)}`;
-  return { total, doneAround, perSlide };
+        : `About ${range} min a slide on the ${model.server}. ${queueAhead(model)}${start}`;
+  return { total: total + gpuStart, doneAround, perSlide };
 }
 
 export const makesLabel = { regions: "Regions", cells: "Cells", heatmap: "Heatmap" } as const;

@@ -1,4 +1,6 @@
 import json
+import math
+import statistics
 import uuid
 from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
@@ -256,6 +258,7 @@ class ProjectModel(BaseModel):
     server: str
     runs_ahead: int
     queue_minutes: int
+    start_minutes: int
     latency_ms: int | None
     serving: Serving = Serving.READY
 
@@ -930,6 +933,23 @@ async def measured_seconds(connection: AsyncConnection, model: CatalogueModel) -
     return [float(value) for value in rows if value > 0]
 
 
+async def measured_start_minutes(connection: AsyncConnection) -> int:
+    waited = func.extract("epoch", first_start() - jobs.c.created_at)
+    rows = await connection.scalars(
+        select(waited)
+        .select_from(jobs.join(model_runs, model_runs.c.job_id == jobs.c.id))
+        .where(
+            jobs.c.status == JobStatus.DONE,
+            model_runs.c.detector.in_(NUCLEI_DETECTORS),
+            waited.is_not(None),
+        )
+        .order_by(jobs.c.created_at.desc())
+        .limit(LAST_SAMPLES)
+    )
+    seconds = [float(value) for value in rows if value >= 0]
+    return math.ceil(statistics.median(seconds) / 60) if seconds else 0
+
+
 async def runs_ahead(connection: AsyncConnection) -> list[QueuedRun]:
     started = first_start()
     rows = await connection.execute(
@@ -970,6 +990,7 @@ async def list_project_models(
     minutes = {name: rate.minutes_per_slide for name, rate in rates.items()}
     ahead = await runs_ahead(connection)
     shared = await shared_queue_minutes(connection, minutes)
+    start = await measured_start_minutes(connection)
     hidden = await hidden_names(connection)
     now = datetime.now(UTC)
     return [
@@ -986,6 +1007,7 @@ async def list_project_models(
             server=PARFOCAL_SERVER,
             runs_ahead=len(ahead),
             queue_minutes=queue_minutes(ahead, minutes, minutes[model.name], now, shared),
+            start_minutes=start if model.name in NUCLEI_DETECTORS else 0,
             latency_ms=None,
             serving=serving_of(probe, model.name)
             if model.name in NUCLEI_DETECTORS

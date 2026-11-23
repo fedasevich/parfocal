@@ -57,6 +57,7 @@ export const toMyJob = (job: JobRow): MyJob => {
     started_by_user_id: people[job.by].id,
     slides: job.slides,
     pause: job.pause,
+    wait: null,
     created_at: job.createdAt,
     finished_at: job.finishedAt,
   };
@@ -161,6 +162,7 @@ export const toProjectModels = (): ProjectModel[] =>
       server: model.server,
       runs_ahead: model.runsAhead,
       queue_minutes: model.queueMinutes,
+      start_minutes: 0,
       latency_ms: isWorkerOffline(model.name) ? null : model.latencyMs,
       serving: servingOf(model.name),
     }),

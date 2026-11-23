@@ -22,6 +22,7 @@ const model = (patch: Partial<ProjectModel>): ProjectModel =>
     makes: ["regions", "cells"],
     minutes_per_slide: 17,
     queue_minutes: 4,
+    start_minutes: 0,
     runs_ahead: 1,
     server: "Parfocal GPU",
     latency_ms: null,

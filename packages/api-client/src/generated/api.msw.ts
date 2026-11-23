@@ -374,6 +374,7 @@ import {
   ReviewerLetter,
   Role,
   Rule,
+  RunWaitReason,
   ScopeKindKey,
   ServiceScope,
   ServiceStatus,
@@ -5289,6 +5290,7 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     server: faker.string.alpha({ length: { min: 10, max: 20 } }),
     runs_ahead: faker.number.int(),
     queue_minutes: faker.number.int(),
+    start_minutes: faker.number.int(),
     latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
     serving: faker.helpers.arrayElement(Object.values(Serving)),
   }));
@@ -10722,6 +10724,13 @@ export const getListMyJobsResponseMock = (): MyJob[] =>
       {
         reason: faker.helpers.arrayElement(Object.values(JobPauseReason)),
         server: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        since: faker.date.past().toISOString().slice(0, 19) + "Z",
+      },
+      null,
+    ]),
+    wait: faker.helpers.arrayElement([
+      {
+        reason: faker.helpers.arrayElement(Object.values(RunWaitReason)),
         since: faker.date.past().toISOString().slice(0, 19) + "Z",
       },
       null,
