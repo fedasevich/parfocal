@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.42.0 (2026-11-23)
+
+### Features
+
+- TEST-058: Cut the seeded COCO patch export zip from its frozen version
+
+### Docs
+
+- OPS-039: Tick the reseed in Modal's EU region
+
 ## v0.41.0 (2026-11-23)
 
 ### Features
