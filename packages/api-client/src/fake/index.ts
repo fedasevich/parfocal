@@ -30,6 +30,7 @@ import { settingsHandlers } from "./settings-handlers.ts";
 import { sharedLayerHandlers } from "./shared-layer-handlers.ts";
 import { signUpHandlers } from "./sign-up-handlers.ts";
 import { statusHandlers } from "./status-handlers.ts";
+import { studyRunHandlers } from "./study-run-handlers.ts";
 import { taskExportHandlers } from "./task-export-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
@@ -79,6 +80,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...settingsHandlers(),
     ...correctionsHandlers(),
     ...timingHandlers(),
+    ...studyRunHandlers(),
     ...consoleHandlers(),
     ...teamActionHandlers(),
     ...tileAccessHandlers(),
@@ -217,6 +219,7 @@ export {
   toSharedAiObjects,
 } from "./shared-layer-handlers.ts";
 export { setFakeMaintenance } from "./status-handlers.ts";
+export { fakeStudyRunsKey, resetFakeStudyRuns } from "./study-run-handlers.ts";
 export { teamReviewerStatus, toTeamWorkload } from "./team-handlers.ts";
 export {
   defaultFakeTeamScene,

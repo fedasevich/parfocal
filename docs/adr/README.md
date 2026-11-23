@@ -388,3 +388,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0433](0433-drawn-objects-get-their-own-export-origins.md) | Drawn objects get their own export origins | Accepted | 2026-11-22 |
 | [0434](0434-role-test-accounts-are-created-by-script.md) | Role test accounts are created by script | Proposed | 2026-11-23 |
 | [0435](0435-per-participant-study-projects.md) | Each study participant gets a project of their own, seeded fresh | Accepted | 2026-11-23 |
+| [XXXX](XXXX-study-sessions-and-traces-upload-to-the-api.md) | Study sessions and traces upload to the API, and the results page reads them there | Accepted | 2026-11-23 |

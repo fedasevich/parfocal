@@ -7882,6 +7882,10 @@ export interface StorageUsage {
   sources: StorageSource[];
 }
 
+export interface StudyDryRun {
+  dry_run: boolean;
+}
+
 export type StudyKind = (typeof StudyKind)[keyof typeof StudyKind];
 
 export const StudyKind = {
@@ -7892,6 +7896,40 @@ export const StudyKind = {
   "reviewers-first": "reviewers-first",
   other: "other",
 } as const;
+
+export type StudySessionRowAnswers = { [key: string]: unknown };
+
+export interface StudySessionRow {
+  session_key: string;
+  participant: string;
+  round: number;
+  dry_run: boolean;
+  answers: StudySessionRowAnswers;
+  trace_parts: number;
+  updated_at: string;
+}
+
+export interface StudySessionUpload {
+  /**
+   * @minLength 1
+   * @maxLength 40
+   */
+  participant: string;
+  /**
+   * @minimum 1
+   * @maximum 1000
+   */
+  round: number;
+  /**
+   * @minLength 4
+   * @maxLength 2796206
+   */
+  answers_gz: string;
+}
+
+export interface StudySessions {
+  sessions: StudySessionRow[];
+}
 
 /**
  * @minLength 2
@@ -7955,6 +7993,27 @@ export interface StudyTemplateVersion {
   version: number;
   name: string;
   created_at: string;
+}
+
+export interface StudyTracePart {
+  seq: number;
+  events_gz: string;
+}
+
+export interface StudyTrace {
+  parts: StudyTracePart[];
+}
+
+export interface StudyTraceUpload {
+  /**
+   * @minLength 4
+   * @maxLength 2796206
+   */
+  events_gz: string;
+}
+
+export interface StudyUploadSaved {
+  session_key: string;
 }
 
 export interface Target {
@@ -76403,6 +76462,886 @@ export const useRestoreStudyTemplate = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRestoreStudyTemplateMutationOptions(options), queryClient);
+};
+
+export type saveStudySessionResponse200 = {
+  data: StudyUploadSaved;
+  status: 200;
+};
+
+export type saveStudySessionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveStudySessionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveStudySessionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveStudySessionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveStudySessionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveStudySessionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveStudySessionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type saveStudySessionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveStudySessionResponseSuccess = saveStudySessionResponse200 & {
+  headers: Headers;
+};
+export type saveStudySessionResponseError = (
+  | saveStudySessionResponse400
+  | saveStudySessionResponse401
+  | saveStudySessionResponse403
+  | saveStudySessionResponse404
+  | saveStudySessionResponse409
+  | saveStudySessionResponse422
+  | saveStudySessionResponse429
+  | saveStudySessionResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveStudySessionResponse =
+  | saveStudySessionResponseSuccess
+  | saveStudySessionResponseError;
+
+export const getSaveStudySessionUrl = (sessionKey: string) => {
+  return `/api/me/study-sessions/${sessionKey}`;
+};
+
+/**
+ * @summary Save Study Session
+ */
+export const saveStudySession = async (
+  sessionKey: string,
+  studySessionUpload: StudySessionUpload,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveStudySessionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveStudySessionResponse>(getSaveStudySessionUrl(sessionKey), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(studySessionUpload),
+  });
+};
+
+export const getSaveStudySessionMutationKey = () => ["saveStudySession"] as const;
+
+export const getSaveStudySessionMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveStudySession>>,
+    TError,
+    SaveStudySessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveStudySession>>,
+  TError,
+  SaveStudySessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveStudySessionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveStudySession>>,
+    SaveStudySessionMutationVariables
+  > = (props) => {
+    const { sessionKey, data } = props ?? {};
+
+    return saveStudySession(sessionKey, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveStudySessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveStudySession>>
+>;
+export type SaveStudySessionMutationBody = StudySessionUpload;
+export type SaveStudySessionMutationError = Problem;
+export type SaveStudySessionMutationVariables = { sessionKey: string; data: StudySessionUpload };
+
+/**
+ * @summary Save Study Session
+ */
+export const useSaveStudySession = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveStudySession>>,
+      TError,
+      SaveStudySessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveStudySession>>,
+  TError,
+  SaveStudySessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveStudySessionMutationOptions(options), queryClient);
+};
+
+export type saveStudyTracePartResponse200 = {
+  data: StudyUploadSaved;
+  status: 200;
+};
+
+export type saveStudyTracePartResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveStudyTracePartResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveStudyTracePartResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveStudyTracePartResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveStudyTracePartResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveStudyTracePartResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveStudyTracePartResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type saveStudyTracePartResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveStudyTracePartResponseSuccess = saveStudyTracePartResponse200 & {
+  headers: Headers;
+};
+export type saveStudyTracePartResponseError = (
+  | saveStudyTracePartResponse400
+  | saveStudyTracePartResponse401
+  | saveStudyTracePartResponse403
+  | saveStudyTracePartResponse404
+  | saveStudyTracePartResponse409
+  | saveStudyTracePartResponse422
+  | saveStudyTracePartResponse429
+  | saveStudyTracePartResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveStudyTracePartResponse =
+  | saveStudyTracePartResponseSuccess
+  | saveStudyTracePartResponseError;
+
+export const getSaveStudyTracePartUrl = (sessionKey: string, seq: number) => {
+  return `/api/me/study-sessions/${sessionKey}/trace/${seq}`;
+};
+
+/**
+ * @summary Save Study Trace Part
+ */
+export const saveStudyTracePart = async (
+  sessionKey: string,
+  seq: number,
+  studyTraceUpload: StudyTraceUpload,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveStudyTracePartResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveStudyTracePartResponse>(getSaveStudyTracePartUrl(sessionKey, seq), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(studyTraceUpload),
+  });
+};
+
+export const getSaveStudyTracePartMutationKey = () => ["saveStudyTracePart"] as const;
+
+export const getSaveStudyTracePartMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveStudyTracePart>>,
+    TError,
+    SaveStudyTracePartMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveStudyTracePart>>,
+  TError,
+  SaveStudyTracePartMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveStudyTracePartMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveStudyTracePart>>,
+    SaveStudyTracePartMutationVariables
+  > = (props) => {
+    const { sessionKey, seq, data } = props ?? {};
+
+    return saveStudyTracePart(sessionKey, seq, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveStudyTracePartMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveStudyTracePart>>
+>;
+export type SaveStudyTracePartMutationBody = StudyTraceUpload;
+export type SaveStudyTracePartMutationError = Problem;
+export type SaveStudyTracePartMutationVariables = {
+  sessionKey: string;
+  seq: number;
+  data: StudyTraceUpload;
+};
+
+/**
+ * @summary Save Study Trace Part
+ */
+export const useSaveStudyTracePart = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveStudyTracePart>>,
+      TError,
+      SaveStudyTracePartMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveStudyTracePart>>,
+  TError,
+  SaveStudyTracePartMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveStudyTracePartMutationOptions(options), queryClient);
+};
+
+export type listStudySessionsResponse200 = {
+  data: StudySessions;
+  status: 200;
+};
+
+export type listStudySessionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listStudySessionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listStudySessionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listStudySessionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listStudySessionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listStudySessionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listStudySessionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listStudySessionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listStudySessionsResponseSuccess = listStudySessionsResponse200 & {
+  headers: Headers;
+};
+export type listStudySessionsResponseError = (
+  | listStudySessionsResponse400
+  | listStudySessionsResponse401
+  | listStudySessionsResponse403
+  | listStudySessionsResponse404
+  | listStudySessionsResponse409
+  | listStudySessionsResponse422
+  | listStudySessionsResponse429
+  | listStudySessionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listStudySessionsResponse =
+  | listStudySessionsResponseSuccess
+  | listStudySessionsResponseError;
+
+export const getListStudySessionsUrl = () => {
+  return `/api/tenant/study-sessions`;
+};
+
+/**
+ * @summary List Study Sessions
+ */
+export const listStudySessions = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listStudySessionsResponse> => {
+  return apiFetch<listStudySessionsResponse>(getListStudySessionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListStudySessionsQueryKey = () => {
+  return [`/api/tenant/study-sessions`] as const;
+};
+
+export const getListStudySessionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStudySessions>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudySessions>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStudySessionsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStudySessions>>> = ({ signal }) =>
+    listStudySessions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStudySessions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListStudySessionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStudySessions>>
+>;
+export type ListStudySessionsQueryError = Problem;
+
+export function useListStudySessions<
+  TData = Awaited<ReturnType<typeof listStudySessions>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudySessions>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudySessions>>,
+          TError,
+          Awaited<ReturnType<typeof listStudySessions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudySessions<
+  TData = Awaited<ReturnType<typeof listStudySessions>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudySessions>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudySessions>>,
+          TError,
+          Awaited<ReturnType<typeof listStudySessions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudySessions<
+  TData = Awaited<ReturnType<typeof listStudySessions>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudySessions>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Study Sessions
+ */
+
+export function useListStudySessions<
+  TData = Awaited<ReturnType<typeof listStudySessions>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudySessions>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListStudySessionsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getStudyTraceResponse200 = {
+  data: StudyTrace;
+  status: 200;
+};
+
+export type getStudyTraceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getStudyTraceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getStudyTraceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getStudyTraceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getStudyTraceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getStudyTraceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getStudyTraceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getStudyTraceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getStudyTraceResponseSuccess = getStudyTraceResponse200 & {
+  headers: Headers;
+};
+export type getStudyTraceResponseError = (
+  | getStudyTraceResponse400
+  | getStudyTraceResponse401
+  | getStudyTraceResponse403
+  | getStudyTraceResponse404
+  | getStudyTraceResponse409
+  | getStudyTraceResponse422
+  | getStudyTraceResponse429
+  | getStudyTraceResponse500
+) & {
+  headers: Headers;
+};
+
+export type getStudyTraceResponse = getStudyTraceResponseSuccess | getStudyTraceResponseError;
+
+export const getGetStudyTraceUrl = (sessionKey: string) => {
+  return `/api/tenant/study-sessions/${sessionKey}/trace`;
+};
+
+/**
+ * @summary Get Study Trace
+ */
+export const getStudyTrace = async (
+  sessionKey: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getStudyTraceResponse> => {
+  return apiFetch<getStudyTraceResponse>(getGetStudyTraceUrl(sessionKey), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStudyTraceQueryKey = (sessionKey: string) => {
+  return [`/api/tenant/study-sessions/${sessionKey}/trace`] as const;
+};
+
+export const getGetStudyTraceQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudyTrace>>,
+  TError = Problem,
+>(
+  sessionKey: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTrace>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStudyTraceQueryKey(sessionKey);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStudyTrace>>> = ({ signal }) =>
+    getStudyTrace(sessionKey, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: sessionKey !== null && sessionKey !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getStudyTrace>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetStudyTraceQueryResult = NonNullable<Awaited<ReturnType<typeof getStudyTrace>>>;
+export type GetStudyTraceQueryError = Problem;
+
+export function useGetStudyTrace<
+  TData = Awaited<ReturnType<typeof getStudyTrace>>,
+  TError = Problem,
+>(
+  sessionKey: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTrace>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStudyTrace>>,
+          TError,
+          Awaited<ReturnType<typeof getStudyTrace>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStudyTrace<
+  TData = Awaited<ReturnType<typeof getStudyTrace>>,
+  TError = Problem,
+>(
+  sessionKey: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTrace>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStudyTrace>>,
+          TError,
+          Awaited<ReturnType<typeof getStudyTrace>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStudyTrace<
+  TData = Awaited<ReturnType<typeof getStudyTrace>>,
+  TError = Problem,
+>(
+  sessionKey: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTrace>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Study Trace
+ */
+
+export function useGetStudyTrace<
+  TData = Awaited<ReturnType<typeof getStudyTrace>>,
+  TError = Problem,
+>(
+  sessionKey: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStudyTrace>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetStudyTraceQueryOptions(sessionKey, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type markStudyDryRunResponse200 = {
+  data: StudyDryRun;
+  status: 200;
+};
+
+export type markStudyDryRunResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type markStudyDryRunResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type markStudyDryRunResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type markStudyDryRunResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type markStudyDryRunResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type markStudyDryRunResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type markStudyDryRunResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type markStudyDryRunResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type markStudyDryRunResponseSuccess = markStudyDryRunResponse200 & {
+  headers: Headers;
+};
+export type markStudyDryRunResponseError = (
+  | markStudyDryRunResponse400
+  | markStudyDryRunResponse401
+  | markStudyDryRunResponse403
+  | markStudyDryRunResponse404
+  | markStudyDryRunResponse409
+  | markStudyDryRunResponse422
+  | markStudyDryRunResponse429
+  | markStudyDryRunResponse500
+) & {
+  headers: Headers;
+};
+
+export type markStudyDryRunResponse = markStudyDryRunResponseSuccess | markStudyDryRunResponseError;
+
+export const getMarkStudyDryRunUrl = (sessionKey: string) => {
+  return `/api/tenant/study-sessions/${sessionKey}/dry-run`;
+};
+
+/**
+ * @summary Mark Study Dry Run
+ */
+export const markStudyDryRun = async (
+  sessionKey: string,
+  studyDryRun: StudyDryRun,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<markStudyDryRunResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<markStudyDryRunResponse>(getMarkStudyDryRunUrl(sessionKey), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(studyDryRun),
+  });
+};
+
+export const getMarkStudyDryRunMutationKey = () => ["markStudyDryRun"] as const;
+
+export const getMarkStudyDryRunMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markStudyDryRun>>,
+    TError,
+    MarkStudyDryRunMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markStudyDryRun>>,
+  TError,
+  MarkStudyDryRunMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMarkStudyDryRunMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markStudyDryRun>>,
+    MarkStudyDryRunMutationVariables
+  > = (props) => {
+    const { sessionKey, data } = props ?? {};
+
+    return markStudyDryRun(sessionKey, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkStudyDryRunMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markStudyDryRun>>
+>;
+export type MarkStudyDryRunMutationBody = StudyDryRun;
+export type MarkStudyDryRunMutationError = Problem;
+export type MarkStudyDryRunMutationVariables = { sessionKey: string; data: StudyDryRun };
+
+/**
+ * @summary Mark Study Dry Run
+ */
+export const useMarkStudyDryRun = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof markStudyDryRun>>,
+      TError,
+      MarkStudyDryRunMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof markStudyDryRun>>,
+  TError,
+  MarkStudyDryRunMutationVariables,
+  TContext
+> => {
+  return useMutation(getMarkStudyDryRunMutationOptions(options), queryClient);
 };
 
 export type listTemplateOffersResponse200 = {

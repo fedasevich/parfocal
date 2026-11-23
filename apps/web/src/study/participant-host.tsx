@@ -25,7 +25,9 @@ import {
   updateStudy,
   writeGuard,
 } from "./study-storage.ts";
+import { startStudyUpload, uploadingSink } from "./study-upload.ts";
 import { startTaskMeter, studyUiAttribute, type TaskMeter } from "./task-metrics.ts";
+import { readStageCameras } from "./trace/stage-cameras.ts";
 import { createRecorder, type FrameTools, type Recorder } from "./trace/trace-recorder.ts";
 import { createBatcher, indexedDbSink } from "./trace/trace-store.ts";
 import { useStudy } from "./use-study.ts";
@@ -65,6 +67,8 @@ export default function ParticipantHost() {
   const sessionId = run?.sessionId;
   const recorder = useRef<Recorder | null>(null);
 
+  useEffect(() => startStudyUpload(), []);
+
   useEffect(() => {
     if (sessionId === undefined) return;
     let frames: FrameTools | undefined;
@@ -77,9 +81,16 @@ export default function ParticipantHost() {
       () => undefined,
     );
     const active = createRecorder({
-      batcher: createBatcher(sessionId, indexedDbSink(), undefined, undefined, Date.now()),
+      batcher: createBatcher(
+        sessionId,
+        uploadingSink(indexedDbSink()),
+        undefined,
+        undefined,
+        Date.now(),
+      ),
       now: traceClock,
       frames: () => frames,
+      cameras: () => readStageCameras(),
     });
     active.attach(window);
     recorder.current = active;
@@ -127,16 +138,17 @@ function TaskBar({
   const guardKey = guard === undefined ? "" : JSON.stringify(guard);
 
   const taskId = task?.id;
+  const firstClick = task?.firstClick;
 
   useEffect(() => {
     if (taskId === undefined) return;
-    meter.current = startTaskMeter(document);
+    meter.current = startTaskMeter(document, undefined, firstClick);
     recorder.current?.mark(taskId, "start");
     return () => {
       meter.current?.stop();
       meter.current = null;
     };
-  }, [taskId, recorder]);
+  }, [taskId, firstClick, recorder]);
 
   useEffect(() => {
     writeGuard(guardKey === "" ? undefined : (JSON.parse(guardKey) as typeof guard));
@@ -149,6 +161,11 @@ function TaskBar({
     writeGuard(undefined);
     drainBlocks();
     const counts = meter.current?.counts() ?? { clicks: 0, deadClicks: 0, keys: 0, wheels: 0 };
+    const moves = meter.current?.firstMoves() ?? {
+      timeToFirstActionMs: null,
+      firstClickCorrect: null,
+      pathStraightness: null,
+    };
     const known = readStudy().sessions.find((entry) => entry.id === sessionId);
     updateStudy((current) =>
       recordTask(
@@ -170,6 +187,7 @@ function TaskBar({
           notes: {},
           reason: why,
           endedAt: end,
+          ...moves,
         },
         startedAt,
       ),

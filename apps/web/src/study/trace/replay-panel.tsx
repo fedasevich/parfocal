@@ -1,6 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useMemo, useState } from "react";
 import {
+  type CameraSample,
+  cameraAt,
   cursorAt,
   deadClicks,
   documentHtml,
@@ -11,11 +13,41 @@ import {
   screenAt,
   type TraceEvent,
   taskSpans,
+  viewBoxOf,
   wireframeAt,
 } from "./trace-model.ts";
 
 const stageWidth = 800;
 const stepMs = 100;
+const mapWidth = 200;
+
+function CameraMap({ camera }: { camera: CameraSample }) {
+  const { t } = useLingui();
+  const scale = mapWidth / Math.max(1, camera.w);
+  const box = viewBoxOf(camera);
+  return (
+    <div
+      className="relative shrink-0 overflow-hidden rounded border border-line bg-surf-raised"
+      style={{ width: mapWidth, height: Math.max(1, camera.h) * scale }}
+      role="img"
+      aria-label={t`Viewer camera on the slide`}
+      data-testid="replay-camera"
+      data-slide={camera.slide}
+      data-camera={`${camera.x},${camera.y},${camera.zoom}`}
+    >
+      <span
+        className="absolute border-2 border-accent"
+        style={{
+          left: box.left * scale,
+          top: box.top * scale,
+          width: Math.max(2, box.width * scale),
+          height: Math.max(2, box.height * scale),
+        }}
+        data-testid="replay-camera-box"
+      />
+    </div>
+  );
+}
 
 export function ReplayPanel(props: { events: TraceEvent[]; titles: Record<string, string> }) {
   const { t } = useLingui();
@@ -55,6 +87,7 @@ export function ReplayPanel(props: { events: TraceEvent[]; titles: Record<string
   const atSeconds = Math.round(time / 1000);
   const totalSeconds = Math.round(total / 1000);
   const cursor = cursorAt(events, time);
+  const camera = cameraAt(events, time);
   const click = recentClick(events, time);
   const percent = (value: number) => `${total === 0 ? 0 : (value / total) * 100}%`;
 
@@ -141,6 +174,17 @@ export function ReplayPanel(props: { events: TraceEvent[]; titles: Record<string
           </button>
         ) : null}
       </div>
+
+      {camera === undefined ? null : (
+        <div className="flex items-start gap-3">
+          <CameraMap camera={camera} />
+          <p className="font-mono text-body-sm text-fg-dim" data-testid="replay-camera-text">
+            <Trans>
+              Slide {camera.slide}, centre {camera.x}, {camera.y}, zoom {camera.zoom}
+            </Trans>
+          </p>
+        </div>
+      )}
 
       <div
         className="relative overflow-hidden rounded border border-line bg-surf-field"

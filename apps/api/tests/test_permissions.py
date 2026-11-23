@@ -89,6 +89,7 @@ from parfocal_api.tables import (
     slide_counters,
     slides,
     source_watches,
+    study_sessions,
     task_nudges,
     task_reassignments,
     template_offers,
@@ -226,6 +227,8 @@ OPEN_OPERATIONS = {
     "setMyAvailability": "member",
     "sendFeedback": "member",
     "recordTimingEvents": "member",
+    "saveStudySession": "member",
+    "saveStudyTracePart": "member",
     "listMembers": "platform",
 }
 
@@ -1223,6 +1226,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getAiUsage": lambda _: Call("GET", "/api/tenant/ai-usage"),
     "getAiCorrections": lambda _: Call("GET", "/api/tenant/ai-corrections"),
     "getTaskTiming": lambda _: Call("GET", "/api/tenant/task-timing"),
+    "listStudySessions": lambda _: Call("GET", "/api/tenant/study-sessions"),
+    "getStudyTrace": lambda _: Call("GET", "/api/tenant/study-sessions/matrix-session/trace"),
+    "markStudyDryRun": lambda _: Call(
+        "PUT", "/api/tenant/study-sessions/matrix-session/dry-run", {"dry_run": True}
+    ),
     "setRetentionPolicy": lambda _: Call("PUT", "/api/tenant/retention", {}),
     "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
     "placeLegalHold": lambda _: Call("POST", "/api/tenant/legal-holds", {"reason": "Matrix hold"}),
@@ -1692,6 +1700,8 @@ PLACEHOLDER = Workspace(
     uuid.uuid4(),
     uuid.uuid4(),
 )
+STUDY_ANSWERS_GZ = base64.b64encode(gzip.compress(b'{"participant": "P-MTRX"}')).decode()
+STUDY_EVENTS_GZ = base64.b64encode(gzip.compress(b"[]")).decode()
 MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listAnnouncements": lambda _: Call("GET", "/api/announcements"),
     "listSiteValidations": lambda _: Call("GET", "/api/site-validations"),
@@ -1740,6 +1750,14 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST",
         "/api/me/timing-events",
         {"events": [{"name": "cell_review_timed", "duration_ms": 10}]},
+    ),
+    "saveStudySession": lambda _: Call(
+        "PUT",
+        "/api/me/study-sessions/matrix-session",
+        {"participant": "P-MTRX", "round": 1, "answers_gz": STUDY_ANSWERS_GZ},
+    ),
+    "saveStudyTracePart": lambda _: Call(
+        "PUT", "/api/me/study-sessions/matrix-session/trace/1", {"events_gz": STUDY_EVENTS_GZ}
     ),
 }
 
@@ -2142,6 +2160,15 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             )
             adjudicator = await add_person(
                 connection, tenant_id, f"{slug}-adjudicator", Role.REVIEWER
+            )
+            await connection.execute(
+                insert(study_sessions).values(
+                    tenant_id=tenant_id,
+                    session_key="matrix-session",
+                    participant="P-MTRX",
+                    round=1,
+                    answers={},
+                )
             )
             account, spare_account = [
                 await connection.scalar(

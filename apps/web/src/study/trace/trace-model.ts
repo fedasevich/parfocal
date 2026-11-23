@@ -17,7 +17,51 @@ export type TraceEvent =
   | { t: number; k: "key"; key: string }
   | { t: number; k: "mutation" }
   | { t: number; k: "frame"; frame: Frame }
-  | { t: number; k: "task"; taskId: string; edge: "start" | "end"; outcome?: string };
+  | { t: number; k: "task"; taskId: string; edge: "start" | "end"; outcome?: string }
+  | ({ t: number; k: "camera" } & CameraSample);
+
+export type CameraSample = {
+  slide: string;
+  x: number;
+  y: number;
+  zoom: number;
+  w: number;
+  h: number;
+  vw: number;
+  vh: number;
+};
+
+export const sameCamera = (a: CameraSample | undefined, b: CameraSample): boolean =>
+  a !== undefined &&
+  a.slide === b.slide &&
+  a.x === b.x &&
+  a.y === b.y &&
+  a.zoom === b.zoom &&
+  a.vw === b.vw &&
+  a.vh === b.vh;
+
+export function cameraAt(events: TraceEvent[], time: number): CameraSample | undefined {
+  const limit = startOf(events) + time;
+  let found: CameraSample | undefined;
+  for (const event of events) {
+    if (event.t > limit) break;
+    if (event.k === "load") found = undefined;
+    if (event.k === "camera") {
+      const { slide, x, y, zoom, w, h, vw, vh } = event;
+      found = { slide, x, y, zoom, w, h, vw, vh };
+    }
+  }
+  return found;
+}
+
+export type ViewBox = { left: number; top: number; width: number; height: number };
+
+export function viewBoxOf(camera: CameraSample): ViewBox {
+  const scale = 2 ** camera.zoom;
+  const width = camera.vw / scale;
+  const height = camera.vh / scale;
+  return { left: camera.x - width / 2, top: camera.y - height / 2, width, height };
+}
 
 export type TraceBatch = { sessionId: string; index: number; events: TraceEvent[] };
 

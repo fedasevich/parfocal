@@ -1,0 +1,20 @@
+export const roundFourReported = {
+  tasksCompleted: 40,
+  tasksAttempted: 40,
+  meanSeq: 6.4,
+  seqSixOrSeven: 35,
+  seqRated: 40,
+  seqBelowFour: 0,
+  meanSus: 83.8,
+  susByParticipant: [
+    { participant: "P1", score: 100 },
+    { participant: "P2", score: 95 },
+    { participant: "P3", score: 80 },
+    { participant: "P4", score: 60 },
+  ],
+  deadClickPercent: 15,
+  deadClicks: 42,
+  clicks: 277,
+  medianTimeToFirstActionSeconds: 4.8,
+  roundOneSus: 52.5,
+} as const;

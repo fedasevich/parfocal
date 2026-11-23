@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 53 |
-| `personal` | 108 |
+| `personal` | 111 |
 | `secret` | 15 |
-| `operational` | 938 |
+| `operational` | 951 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1390,6 +1390,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `seconds` | operational |
 | `finished_at` | operational |
 
+## study_sessions
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `session_key` | operational |
+| `participant` | personal |
+| `round` | operational |
+| `answers` | personal |
+| `dry_run` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## study_template_versions
 
 | Column | Class |
@@ -1418,6 +1432,18 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## study_trace_parts
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `session_key` | operational |
+| `seq` | operational |
+| `body` | personal |
+| `size` | operational |
+| `created_at` | operational |
 
 ## task_nudges
 

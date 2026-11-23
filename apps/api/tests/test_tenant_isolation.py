@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import gzip
 import hashlib
 import io
@@ -112,8 +113,10 @@ from parfocal_api.tables import (
     source_watches,
     sso_connections,
     stage_throughput,
+    study_sessions,
     study_template_versions,
     study_templates,
+    study_trace_parts,
     task_nudges,
     task_reassignments,
     template_offers,
@@ -1552,6 +1555,38 @@ async def seed_timing_events(connection: AsyncConnection, seeded: Seeded) -> Non
     seeded.markers.add(str(duration))
 
 
+STUDY_SESSION_KEY = "isolation-session"
+
+
+async def seed_study_sessions(connection: AsyncConnection, seeded: Seeded) -> None:
+    participant = f"P-{uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        insert(study_sessions).values(
+            tenant_id=seeded.tenant_id,
+            session_key=STUDY_SESSION_KEY,
+            participant=participant,
+            round=1,
+            answers={"participant": participant},
+        )
+    )
+    seeded.markers.add(participant)
+
+
+async def seed_study_trace_parts(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = uuid.uuid4().hex
+    body = gzip.compress(json.dumps([{"t": 1, "k": "route", "path": marker}]).encode(), mtime=0)
+    await connection.execute(
+        insert(study_trace_parts).values(
+            tenant_id=seeded.tenant_id,
+            session_key=STUDY_SESSION_KEY,
+            seq=1,
+            body=body,
+            size=len(body),
+        )
+    )
+    seeded.markers.add(base64.b64encode(body).decode())
+
+
 async def seed_event_attempts(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         insert(event_attempts).values(
@@ -1873,6 +1908,8 @@ SEEDERS: dict[str, Seeder] = {
     "event_outbox": seed_event_outbox,
     "event_attempts": seed_event_attempts,
     "timing_events": seed_timing_events,
+    "study_sessions": seed_study_sessions,
+    "study_trace_parts": seed_study_trace_parts,
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
@@ -2005,6 +2042,10 @@ GET_ROUTES = {
         Exposure.TENANT, lambda _: "/api/tenant/ai-corrections", admin_rights=True
     ),
     "getTaskTiming": Route(Exposure.TENANT, lambda _: "/api/tenant/task-timing", admin_rights=True),
+    "listStudySessions": Route(Exposure.TENANT, lambda _: "/api/tenant/study-sessions"),
+    "getStudyTrace": Route(
+        Exposure.TENANT, lambda _: f"/api/tenant/study-sessions/{STUDY_SESSION_KEY}/trace"
+    ),
     "listLegalHolds": Route(
         Exposure.TENANT, lambda _: "/api/tenant/legal-holds", admin_rights=True
     ),
