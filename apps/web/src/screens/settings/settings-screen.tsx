@@ -97,6 +97,7 @@ import {
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
+import { deviceName } from "./device-name.ts";
 import { FeelPreview } from "./feel-preview.tsx";
 import { forgetNotesRead, readNotesRead, rememberNotesRead } from "./notes-read.ts";
 import { lockAfterText, patientBannerText } from "./privacy.ts";
@@ -998,7 +999,7 @@ function LoadedSettings({
     }
     if (others.length === 0) return t`No other device is signed in.`;
     return t`${others.length === 2 ? "Two" : others.length} other devices are signed in: ${andJoin(
-      others.map((session) => withArticle(session.user_agent ?? "unknown device")),
+      others.map((session) => withArticle(deviceName(session.user_agent))),
     )}.`;
   };
 
