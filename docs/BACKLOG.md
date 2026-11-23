@@ -1063,11 +1063,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-045.
   Size: M.
 
-- [ ] SEC-052 · The admin API and the Admin page agree on who may read workspace settings
+- [x] SEC-052 · The admin API and the Admin page agree on who may read workspace settings
   On 2026-11-23 the PILOT-011 walk (a numbered walkthrough page of the whole deployed app, per role) found that role-researcher, a researcher without admin rights, is refused by the Admin page but gets 200 from GET /api/tenant/overview, /storage, /webhooks, /security, /retention and /import-sources, while /api/tenant/audit-events answers 403. The routes check role permissions such as WORKSPACE_SETTINGS and INTEGRATIONS, which the permission matrix grants a researcher, and the page checks admin rights. Decide which is meant, write it in an ADR if it changes the matrix, and make the routes, the page and apps/api/tests/test_permissions.py agree. Webhook targets and security settings should not reach someone the page refuses.
   Done when the permission matrix test states the chosen rule for each admin read, a browser spec shows the page and the API agree for a researcher without admin rights, and the deployed check as role-researcher matches.
   Depends on nothing. Size: S.
-- [ ] SEC-053 · No API answer is kept in a shared cache
+- [x] SEC-053 · No API answer is kept in a shared cache
   On 2026-11-23 the deployed walk found that Cloudflare cached GET /api/review-tasks/ID/evaluation/exports/objects.csv for 4 hours (max-age 14400, CF-Cache-Status HIT), so a request with no cookie read 3 rows a researcher had fetched, and decisions.csv stayed stale after 30 new decisions. The API set no Cache-Control and Cloudflare caches .csv and .pdf by extension. The Worker now fetches the API with cache no-store and marks any API answer without its own rule private, no-store, and the API adds the same default in a middleware.
   Done when the edge and API tests prove the default, and on the deployed app a signed-out request for a fresh export URL answers 401 and the response carries private, no-store with CF-Cache-Status not HIT.
   Depends on nothing. Size: S.
