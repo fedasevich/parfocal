@@ -9,7 +9,7 @@ import pytest
 from db_support import OWNER_URL, migrated_database, query, with_database
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from test_showcase import EmptyStore, MemoryResults
+from test_showcase import EmptyStore, MemoryResults, PublishedStore
 
 from parfocal_api.disagreements import queue_of
 from parfocal_api.showcase import PEOPLE
@@ -124,7 +124,7 @@ async def queued(
     return sorted((labels[str(item.slide_id)], item.number, item.why.value) for item in items)
 
 
-def seeded_one(seeded: Seeded, code: str) -> StudyProject:
+def seeded_one(seeded: Seeded, code: str, store: EmptyStore | None = None) -> StudyProject:
     counted = [0]
 
     def executed(*_: Any) -> None:
@@ -136,7 +136,7 @@ def seeded_one(seeded: Seeded, code: str) -> StudyProject:
         made = asyncio.run(
             seed_participant(
                 seeded.url,
-                EmptyStore(),  # type: ignore[arg-type]
+                store or EmptyStore(),  # type: ignore[arg-type]
                 MemoryResults(),
                 code,
             )
@@ -230,6 +230,13 @@ def test_a_participant_code_is_short_and_plain() -> None:
     with pytest.raises(BadParticipantCodeError):
         seat_subject("P1'; drop")
     assert seat_subject("p1").endswith("study-p1@showcase.invalid")
+
+
+def test_a_full_sample_pool_still_seeds_an_outline_disagreement(seeded: Seeded) -> None:
+    made = seeded_one(seeded, "P9", PublishedStore())
+    state = snapshot(seeded.url, made)
+    assert "outlines-differ" in {why for *_, why in state["queue"]}
+    assert asyncio.run(remove_participant(seeded.url, "P9")) == 1
 
 
 def test_the_web_finds_the_seeded_names() -> None:

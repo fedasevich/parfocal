@@ -73,6 +73,11 @@ class BadParticipantCodeError(ValueError):
         super().__init__(f"a participant code is 1 to 32 letters, digits or dashes, not {code!r}")
 
 
+class NoOutlineDisagreementError(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__("no queue slide has two outlined regions to redraw apart")
+
+
 @dataclass(frozen=True)
 class StudyProject:
     code: str
@@ -195,13 +200,15 @@ async def seed_queue(
     )
     reviewers = [principal_of(seeded, key, Role.REVIEWER, False) for key in ("rhea", "remy")]
     decided: dict[uuid.UUID, set[int]] = {}
-    for index, slide_id in enumerate(sets):
+    outlined = False
+    for slide_id in sets:
         redrawn = (
-            await redraw_apart(connection, reviewers, results, task_id, slide_id)
-            if index == 0
-            else None
+            None
+            if outlined
+            else await redraw_apart(connection, reviewers, results, task_id, slide_id)
         )
         if redrawn is not None:
+            outlined = True
             for key in ("rhea", "remy"):
                 await decide(
                     connection,
@@ -225,6 +232,8 @@ async def seed_queue(
             [DecisionReason.BOUNDARY_OFF],
         )
         decided[slide_id] = {1} if redrawn is None else {1, redrawn}
+    if not outlined:
+        raise NoOutlineDisagreementError
     await agree_on_the_rest(connection, seeded, project_id, task_id, decided)
     for slide_id in sets:
         await submit(connection, task_id, slide_id)
@@ -271,6 +280,8 @@ async def seed_study_project(
             connection, creator, slide, taken.file, "regions.parfocal.json"
         )
 
+    queued = dict([await with_result(label) for label in QUEUE_SLIDES])
+    queue_id = await seed_queue(connection, seeded, creator, results, project.id, queued)
     reviewed = dict([await with_result(label) for label in REVIEW_SLIDES])
     review_id = await review_task(
         connection,
@@ -282,8 +293,6 @@ async def seed_study_project(
         [seat_id],
         DecisionStyle.AGREE,
     )
-    queued = dict([await with_result(label) for label in QUEUE_SLIDES])
-    queue_id = await seed_queue(connection, seeded, creator, results, project.id, queued)
     annotated = await add_slide(
         connection, seeded, project.id, ANNOTATE_SLIDE, sample_facts(pool.next().stored)
     )
