@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { type ParticipantProject, participantTokens } from "./participant-project.ts";
 
 const validPattern = (pattern: string) => {
   try {
@@ -187,6 +188,7 @@ export const defaultTasks: StudyTask[] = [
 export type StudyContext = {
   slides: { id: string; label: string; project: { id: string } }[];
   resume: { projectId: string; slideId: string; taskId: string } | null;
+  participant?: ParticipantProject | null | undefined;
 };
 
 const fillTokens = (template: string, task: StudyTask, context: StudyContext) => {
@@ -197,6 +199,7 @@ const fillTokens = (template: string, task: StudyTask, context: StudyContext) =>
     task: context.resume?.taskId,
     taskProject: context.resume?.projectId,
     taskSlide: context.resume?.slideId,
+    ...participantTokens(context.participant),
   };
   let missing = false;
   const filled = template.replace(/\{(\w+)\}/g, (token, name: string) => {
