@@ -7184,6 +7184,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a spec on the fake API reviews drawn outlines and finds no AI wording in the wizard, queue and sign-off, an export test writes the drawn origin, and the deployed app shows the same.
   Depends on PROTO-160. Size: M.
 
+- [ ] PROTO-164 · Every opinion form and screen reads as drawn on a drawn task
+  PROTO-163 (drawn objects read as drawn in the queue, sign-off and export) rewords only the template's default opinion form, and it was checked only where the deployed walk looked. The owner asked on 2026-11-23 for the drawn wording everywhere. Any opinion form shows "the drawn outlines" instead of "the AI result" on a drawn task, worded when it is shown or per task, never by rewriting stored form text that AI tasks share or anything a signed evaluation checksums. Every other string a drawn task can reach, including emails, notifications, the reviewer's screens and the adjudicator, reads as drawn.
+  Done when a spec shows a custom opinion form in drawn wording on a drawn task and unchanged on an AI task, the sweep lists what it changed and what it left alone on purpose, and the deployed app shows a drawn adjudication in drawn wording.
+  Depends on PROTO-163. Size: M.
+
 ---
 
 ## Later epics (not in v1, kept for planning)
