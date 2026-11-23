@@ -38,7 +38,28 @@ Running the outcome review in its own transaction next to the gallery tour gaine
 
 The larger deployed ratio on v0.40.0 fits lock waits growing with the length of the transaction being waited on. With the waits gone, the 1.11 ratio of v0.39.0 is the better guide, which puts the next deployed seed near 650 s. That is an estimate, not a measurement. The modelled seed is about 160 s over v0.39.0, which is close to the earlier statement-count estimate.
 
+## After the fix was deployed
+
+v0.40.1 with the fix (reset run 45236490355) logged "reset: seed took 980 s", not the estimated 650 s. Two more checks followed.
+
+The same seed ran against a Postgres container of its own limited to 0.25 CPU and 1 GB of memory, the size of the production Neon compute (`autoscaling_limit_min_cu` and `max_cu` are both 0.25, in `aws-eu-central-1`). It took 588.0 s at 85 ms, against 584.4 s on the full-speed local Postgres. Database CPU is not the gap.
+
+The "Set up job" log of each reset names the runner's region. The three runs differ.
+
+| Run | Release | Runner region | Seed deployed | Seed local at 85 ms | Deployed over local |
+| --- | --- | --- | --- | --- | --- |
+| 45144791349 | v0.39.0 | us-east-1 | 468 s | 422.5 s | 1.11 |
+| 45202007617 | v0.40.0 | us-west-2 | 1314 s | 783.7 s | 1.68 |
+| 45236490355 | v0.40.1 | us-west-2 | 980 s | 584.4 s | 1.68 |
+
+The seed runs on the GitHub runner and talks to Neon in Frankfurt one statement at a time. Its time is set by the round trip time between the two. It does not depend on anything that changed between the two later releases, since both have the same 1.68 ratio. From the ratios, a round trip costs about 94 ms from us-east-1 and about 143 ms from us-west-2. These are derived from the ratios, not pinged. GitHub picks the region per run, so the same code can take about 650 s or about 1000 s.
+
+Each workspace's seed runs about 5000 statements one after another, and the audit trigger's per-workspace lock keeps them in sequence. Reaching 600 s from us-west-2 would mean cutting about 40% of them, which cannot be done without dropping seeded parts. The dropped options in the follow-ups save about 100 s in total.
+
+The seed now prints `seed: <phase> took N s` to stderr for the workspace header, each workspace's states, styles, outcome review, projects, gallery tour, annotation example, agent examples and clinical case, and the seats. The next reset log shows the split as it happens.
+
 ## Follow-ups
 
-- TODO: read `reset: seed took N s` on the next reset-production run and compare it with the estimate of about 650 s.
+- TODO: run the seed next to the database, for example as a function in the Modal app's `eu` region, which the reset calls instead of running the seed on the runner. At an EU round trip of about 10 to 20 ms the seed would be a fraction of today's time. The Modal image would need the 13 MB of `packages/test-fixtures` the seed reads, and a deploy to test it.
+- TODO: read the `seed:` and `reset:` lines and the runner region on the next reset-production run.
 - If the deployed seed stays over about 600 s, two more cuts are known. `update_queued_object` builds the queue three times a call, worth about 7 to 12 s per workspace, and the class decision example's filler answers could be one insert, worth about 16 s per workspace. The filler cut would skip the AI class snapshot and audit events that `save_decision` writes.

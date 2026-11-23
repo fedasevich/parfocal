@@ -2,6 +2,8 @@ import argparse
 import asyncio
 import json
 import os
+import sys
+import time
 import uuid
 from collections.abc import Coroutine, Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -929,11 +931,14 @@ async def seed_projects(
         )
         if mode is PrivacyMode.DE_IDENTIFIED:
             job_ids = await add_jobs(connection, seeded, project.id)
-            await seed_states(connection, seeded, principal, results, project.id, pool, job_ids)
-            await seed_styles(connection, seeded, principal, results, project.id, pool)
-            await seed_outcome_review(
-                connection, seeded, principal, results, store, project.id, pool
-            )
+            with Timed(f"{workspace.slug} states"):
+                await seed_states(connection, seeded, principal, results, project.id, pool, job_ids)
+            with Timed(f"{workspace.slug} styles"):
+                await seed_styles(connection, seeded, principal, results, project.id, pool)
+            with Timed(f"{workspace.slug} outcome review"):
+                await seed_outcome_review(
+                    connection, seeded, principal, results, store, project.id, pool
+                )
     await seed_gallery(connection, seeded, principal, store, manifest, workspace.gallery)
 
 
@@ -951,6 +956,7 @@ async def seed(
     if require_fixture_folders and (missing := await unpublished_gallery(store)):
         raise MissingFixtureFoldersError(missing)
     engine = create_engine(database_url)
+    started = time.monotonic()
     try:
         async with scoped_transaction(
             engine, DatabaseScope(platform=True, auth=True)
@@ -973,6 +979,7 @@ async def seed(
                     owners[tenant_id] = await add_owner(connection, tenant_id, owner_email)
             if created or owners:
                 await pseudonymise(connection, shared_actors(bool(owners)))
+        took("workspaces and owner", started)
         facts = manifest if manifest is not None else fixture_facts()
         fresh = {tenant_id for tenant_id, _ in created}
         await side_by_side(
@@ -988,17 +995,18 @@ async def seed(
             )
             for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True)
         )
-        await seat_accounts(engine, tenant_ids, viewer_emails, SEEDED_VIEWER)
-        await seat_accounts(engine, tenant_ids, agent_emails, SEEDED_AGENT)
-        if owners:
-            await pseudonymise_example_actors(engine, owners.values(), agent_emails)
-        case_facts = {
-            slide.file: gallery_facts(
-                slide, facts, await stored_facts(store, fixture_folder(slide.file))
-            )
-            for slide in FORMAT_GALLERY
-            if slide.file in CASE_FILES
-        }
+        with Timed("seats"):
+            await seat_accounts(engine, tenant_ids, viewer_emails, SEEDED_VIEWER)
+            await seat_accounts(engine, tenant_ids, agent_emails, SEEDED_AGENT)
+            if owners:
+                await pseudonymise_example_actors(engine, owners.values(), agent_emails)
+            case_facts = {
+                slide.file: gallery_facts(
+                    slide, facts, await stored_facts(store, fixture_folder(slide.file))
+                )
+                for slide in FORMAT_GALLERY
+                if slide.file in CASE_FILES
+            }
         links = await side_by_side(
             seed_example(engine, tenant_id, owner, results, workspace, agent_emails, case_facts)
             for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True)
@@ -1013,6 +1021,23 @@ async def seed(
 
 
 ACTING_PEOPLE = ("ada", "rui", "rhea", "remy")
+
+
+def took(name: str, started: float) -> None:
+    sys.stderr.write(f"seed: {name} took {time.monotonic() - started:.0f} s\n")
+    sys.stderr.flush()
+
+
+class Timed:
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.started = time.monotonic()
+
+    def __enter__(self) -> None:
+        self.started = time.monotonic()
+
+    def __exit__(self, *_: object) -> None:
+        took(self.name, self.started)
 
 
 def shared_actors(owned: bool) -> list[str]:
@@ -1063,21 +1088,28 @@ async def seed_tenant(
 ) -> None:
     if fresh:
         people = await people_of(engine, tenant_id)
-        async with scoped_transaction(
-            engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
-        ) as connection:
-            await seed_projects(
-                connection, workspace, Seeded(tenant_id, people), store, results, facts
-            )
+        with Timed(f"{workspace.slug} projects"):
+            async with scoped_transaction(
+                engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
+            ) as connection:
+                await seed_projects(
+                    connection, workspace, Seeded(tenant_id, people), store, results, facts
+                )
     if owner is None:
         return
     people = await people_of(engine, tenant_id)
-    async with scoped_transaction(
-        engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
-    ) as connection:
-        await seed_gallery_tour(
-            connection, Seeded(tenant_id, people, owner), store, results, facts, workspace.gallery
-        )
+    with Timed(f"{workspace.slug} gallery tour"):
+        async with scoped_transaction(
+            engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
+        ) as connection:
+            await seed_gallery_tour(
+                connection,
+                Seeded(tenant_id, people, owner),
+                store,
+                results,
+                facts,
+                workspace.gallery,
+            )
 
 
 async def seat_on_cell_tour(
@@ -1130,24 +1162,27 @@ async def seed_example(
     async with scoped_transaction(
         engine, DatabaseScope(tenant_id=seeded.tenant_id, user_id=seeded.people["ada"])
     ) as connection:
-        await seed_annotation_example(
-            connection, creator, owner, results, workspace.gallery, [seeded.owner, *agents[:1]]
-        )
+        with Timed(f"{workspace.slug} annotation example"):
+            await seed_annotation_example(
+                connection, creator, owner, results, workspace.gallery, [seeded.owner, *agents[:1]]
+            )
         if agents:
-            await sign_off_example(connection, owner, seats[0], workspace.gallery)
-            await seed_checked_example(
-                connection, creator, owner, seats[0], results, workspace.gallery
+            with Timed(f"{workspace.slug} agent examples"):
+                await sign_off_example(connection, owner, seats[0], workspace.gallery)
+                await seed_checked_example(
+                    connection, creator, owner, seats[0], results, workspace.gallery
+                )
+                await seed_adjudication(connection, creator, agents[0])
+                await seed_adjudication(connection, creator, agents[0], DRAWN_TASK)
+                await seat_on_cell_tour(connection, creator, workspace.gallery, agents[0])
+        with Timed(f"{workspace.slug} clinical case"):
+            made = (
+                None
+                if case_facts is None
+                else await seed_showcase_case(
+                    connection, creator, owner, results, workspace.clinical_study, case_facts, seats
+                )
             )
-            await seed_adjudication(connection, creator, agents[0])
-            await seed_adjudication(connection, creator, agents[0], DRAWN_TASK)
-            await seat_on_cell_tour(connection, creator, workspace.gallery, agents[0])
-        made = (
-            None
-            if case_facts is None
-            else await seed_showcase_case(
-                connection, creator, owner, results, workspace.clinical_study, case_facts, seats
-            )
-        )
     if made is None:
         return None
     return f"shared report link for {workspace.clinical_study}: {made.shared_url}"
