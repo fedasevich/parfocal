@@ -38,7 +38,9 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 
 - One task per fresh subagent, using `.claude/agents/task-runner.md`. Pass a different model when the table below says so. Never fork the main session for task work, because a fork carries its whole context.
 - At most two task agents alive at once. Short read-only Haiku reviews may run about six.
-- Budget about 120 turns. When a run passes it, or the work is plainly bigger than one task, the agent commits what is green, leaves a claim `note:` with the next step and hands back.
+- Aim for about 120 turns, and let the agent finish its task. The owner prefers one agent finishing over leftovers split into new tasks (2026-11-24). An agent hands back unfinished, with a claim `note:` naming the next step, only when something outside its reach blocks it.
+- An agent sends independent reads and searches as several tool calls in one message. In the sessions of 2026-11-19 to 2026-11-23, 85% of subagent turns made a single call, and every turn re-reads the whole context.
+- Keep absolute paths out of a brief. An agent that copies one into `cd path && ...` is refused by the worktree guard, which happened 126 times in those sessions.
 - The main session only picks tasks, spawns, relays questions and merges. End it after one epic or about three tasks and start fresh.
 
 | Work | Model |
@@ -129,10 +131,10 @@ Review is for what only the owner can give. A task "waiting for a green CI run o
 
 ## Checks and output
 
-- While working, run only the test file you touch. Before committing, run `bash scripts/verify-changed.sh 2>&1 | tail -40`, which lints the changed files and runs typecheck and tests only for the changed packages and their dependents. Run it at most three times per task. Leave the full `pnpm -s verify` to the lead's merge and CI.
-- In a worktree agent, use one plain command per Bash call. Put anything with a heredoc, loop, `$(...)`, `;` chain or `sed -i` in a scratchpad script and run it as `bash path`, and change files with Write or Edit, because the harness refuses compound commands there.
+- While working, run only the test file you touch. Before committing, run `bash scripts/verify-changed.sh 2>&1 | tail -40`, which lints the changed files and runs typecheck and tests only for the changed packages and their dependents. Run it at most three times per task. `scripts/guard_checks.py` pauses the fourth verify and the eleventh Playwright run of an agent once, and then every third verify and every tenth Playwright run, and the same command sent again runs. Leave the full `pnpm -s verify` to the lead's merge and CI.
+- In a worktree agent, use one plain command per Bash call and never start it with `cd`, because the shell already starts in the worktree. Put anything with a heredoc, loop, `$(...)`, `;` chain or `sed -i` in a scratchpad script and run it as `bash path`, and change files with Write or Edit, because the harness refuses compound commands there.
 - To wait for background work, use a Bash `until` loop or load Monitor with ToolSearch first. Never `sleep`. The tool name is `Bash`, capitalised.
-- Commit headers are at most 100 characters, or commitlint fails the commit.
+- Commit headers are at most 100 characters, or commitlint fails the commit. `lefthook.yml` prints only failures, so a clean commit is quiet.
 - `.claude/settings.json` sets `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` to 25, so a session compacts at about 250k of its 1M window. A long lead run keeps its state in the run plan and heartbeat, so compaction loses nothing.
 - Pipe long output through `tail`, `head -50` or `grep`. Never print whole generated files, lockfiles or full diffs. Use `git diff --stat` first.
 - Before ticking a task that changes `workers/ml` or a model graph, the lead runs `pnpm --filter @parfocal/ml test:accuracy` on the owner's Mac, one such run at a time because of the Mac's memory. It runs every `workers/ml` test, the `weights` ones included, with `PARFOCAL_REQUIRE_WEIGHTS=1`, so a missing weight, ONNX graph, dataset or POC cache fails instead of skipping. CI has none of these files, so this run is the only check of the accuracy numbers. Source: TEST-028 (model accuracy tests that cannot be skipped unseen).

@@ -24,6 +24,7 @@ Write an ADR for every choice between real alternatives that is costly to undo. 
 
 ## Working rules
 
+- Write every owner request down in the same turn it arrives, before any work: as a log line naming the task it belongs to (`board.py note`), or as a new task only when no task covers it. A request kept only in chat is lost at the next compaction, as the walkthrough asked for five times was.
 - One backlog task per change. Respect "Depends on" and the Definition of Done in `docs/BACKLOG.md`.
 - Build the obvious. When a behaviour is plainly needed, such as the camera stopping at the slide edge, build it, reusing the POC's tuned constants, and name it in the log. Add a backlog task when it is bigger than the current one. Ask the owner only about real product choices.
 - Viv is the primary renderer and must work perfectly. Alternates sit behind the renderer interface and pass the same golden-image tests.
