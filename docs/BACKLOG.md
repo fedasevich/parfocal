@@ -7186,7 +7186,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 9, 10 and 11. The idle lock gives no warning before it locks and only blurs the page. Two calls the app expects to fail still go out. Opening a Preferences section or a draft report writes to the server.
   Done when a spec sees the warning before the lock and no slide or patient text in the locked page, and specs open Preferences and a draft report with no write and without the two calls.
   Depends on nothing. Size: S.
-- [ ] PROTO-157 · Round five small slips
+- [x] PROTO-157 · Round five small slips
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 7, 8 and 12 and the partly fixed recheck of round four issue 15. A case has no link on the project page, the slide counter restarts after a submit, and the remaining number and word slips.
   Done when unit tests or specs cover each item.
   Depends on nothing. Size: S.
@@ -7220,7 +7220,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   PROTO-163 (drawn objects read as drawn in the queue, sign-off and export) rewords only the template's default opinion form, and it was checked only where the deployed walk looked. The owner asked on 2026-11-23 for the drawn wording everywhere. Any opinion form shows "the drawn outlines" instead of "the AI result" on a drawn task, worded when it is shown or per task, never by rewriting stored form text that AI tasks share or anything a signed evaluation checksums. Every other string a drawn task can reach, including emails, notifications, the reviewer's screens and the adjudicator, reads as drawn.
   Done when a spec shows a custom opinion form in drawn wording on a drawn task and unchanged on an AI task, the sweep lists what it changed and what it left alone on purpose, and the deployed app shows a drawn adjudication in drawn wording.
   Depends on PROTO-163. Size: M.
-- [ ] PROTO-165 · The Dataset page lists a task's patch exports with their downloads
+- [ ] PROTO-166 · A preparing review answers a waiting state, and job counts and states read true
+  Left from PROTO-159 (round six slips after the v0.35.12 walk). While a new task prepares its review order, `/objects` answers 409 and the page polls it, which logs console errors on every poll. Answer 200 with a preparing state and an estimate instead, and let the page show it. A whole slide run said 16 units against 11 tiles, an import job still read running after its done notice, and a task said 100% reviewed while counting slides, not objects. Make each count and state match what happened, with the unit named.
+  Done when an API test gets the preparing state with no 409, a browser spec finds no console error while a task prepares, and unit tests cover the run units, the import job state after its notice and the reviewed percentage wording.
+  Depends on PROTO-159. Size: S.
+- [x] PROTO-165 · The Dataset page lists a task's patch exports with their downloads
   On 2026-11-23 the lead found that the seeded COCO export of "Every outcome review" from TEST-058 (the seeded COCO patch export downloads a real zip) is cut and stored, but no screen shows it. The Dataset page shows only an export started from its own dialog in the current session, the jobs window has no patch download, and `/api/me/jobs` lists only the caller's own jobs. So an export started by a colleague, or before a page reload, cannot be found. Add a list route for a task's patch exports (who started it, the version, format, state and size) and show them on the Dataset page with a download for each finished one.
   Done when an API test lists the seeded export for the agent account, a browser spec on the fake API downloads a listed export after a reload, and on the deployed app the agent account downloads the seeded COCO export of "Every outcome review" from the Dataset page.
   Depends on TEST-058. Size: S.

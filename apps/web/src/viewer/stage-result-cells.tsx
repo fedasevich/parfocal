@@ -20,6 +20,7 @@ import { useDisplayChoice } from "../screens/review/use-display-choice.ts";
 import { useMyDisplay } from "../screens/review/use-my-display.ts";
 import { useDisplayDefaults } from "../shell/display-defaults.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
+import { cellNumberOf } from "./focus-object.ts";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { type CellRetype, RetypeAiCell } from "./picked-cell-retype.tsx";
@@ -27,6 +28,7 @@ import { cellAt, type PickedCell, pickSlopScreenPixels } from "./result-cell-pic
 import {
   chunkCells,
   mergeRegions,
+  outlineArea,
   regionBox,
   regionPageLimit,
   setRegions,
@@ -102,6 +104,7 @@ function SetCells({
   outlines,
   paints,
   retype,
+  focus,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -109,6 +112,7 @@ function SetCells({
   outlines: boolean;
   paints: readonly ClassPaint[];
   retype: CellRetype | null;
+  focus: CellFocus | null;
 }) {
   const { paged, version } = usePagedCells(set.id);
   const { frame, size } = useStageSize();
@@ -127,6 +131,29 @@ function SetCells({
   }, [paged, outlines, left, top, width, height]);
   const [drawn, setDrawn] = useState({ cells: 0, as: "none" });
   const [picked, setPicked] = useState<PickedCell | null>(null);
+  useEffect(() => {
+    if (paged === null || focus === null) return;
+    let current = true;
+    paged.cell(focus.number).then(
+      (cell) => {
+        if (!current || cell === null || cell.removed || !focus.claim()) return;
+        const ring = Array.from(cell.ring);
+        setPicked({
+          id: `${set.id}:${cell.number}`,
+          number: cell.number,
+          typeName: paints[cell.classIndex]?.name ?? null,
+          score: cell.score / 255,
+          ring,
+        });
+        const area = outlineArea(ring);
+        if (area !== null) void engine.flyToArea(area);
+      },
+      (error: unknown) => console.error("the searched cell did not load", error),
+    );
+    return () => {
+      current = false;
+    };
+  }, [paged, focus, set.id, paints, engine]);
   useEffect(() => {
     if (paged === null || version < 0) return;
     const loaded = outlines ? chunkCells(set.id, paged, paints) : [];
@@ -254,6 +281,11 @@ function PickedCellCard({
   );
 }
 
+function pickedCentreOf(picked: PickedCell | null): string {
+  const area = outlineArea(picked?.ring);
+  return area === null ? "" : `${area.x + area.width / 2},${area.y + area.height / 2}`;
+}
+
 function SetCellsMarker({
   frame,
   set,
@@ -272,6 +304,7 @@ function SetCellsMarker({
       ref={frame}
       className="pointer-events-none invisible absolute inset-0"
       data-picked={picked?.id ?? ""}
+      data-picked-centre={pickedCentreOf(picked)}
       data-testid="result-set-cells"
       data-set={set.id}
       data-cells={drawn.cells}
@@ -381,6 +414,7 @@ function ResultSetLayer({
   inTask,
   shown,
   retype = null,
+  focus = null,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -388,6 +422,7 @@ function ResultSetLayer({
   inTask: boolean;
   shown: boolean;
   retype?: CellRetype | null;
+  focus?: CellFocus | null;
 }) {
   const paints = useSetPaints(set.id);
   if (!shown) return null;
@@ -402,6 +437,7 @@ function ResultSetLayer({
           outlines={!inTask || taskSet}
           paints={paints}
           retype={retype}
+          focus={focus}
         />
       ) : null}
       {!inTask && (set.region_count ?? 0) > 0 ? (
@@ -418,7 +454,10 @@ type SetsProps = {
   slideId: string;
   inTask?: boolean;
   retype?: CellRetype | null;
+  focusObject?: string | undefined;
 };
+
+type CellFocus = { readonly number: number; readonly claim: () => boolean };
 
 function SetToggles({
   sets,
@@ -478,7 +517,30 @@ function drawableSets(sets: readonly ResultSet[], inTask: boolean) {
   );
 }
 
-function SlideResultSets({ engine, module, slideId, inTask = false, retype = null }: SetsProps) {
+function SlideResultSets({
+  engine,
+  module,
+  slideId,
+  inTask = false,
+  retype = null,
+  focusObject,
+}: SetsProps) {
+  const claimed = useRef<string | null>(null);
+  const number = cellNumberOf(focusObject);
+  const focus = useMemo(
+    (): CellFocus | null =>
+      number === null || focusObject === undefined
+        ? null
+        : {
+            number,
+            claim: () => {
+              if (claimed.current === focusObject) return false;
+              claimed.current = focusObject;
+              return true;
+            },
+          },
+    [number, focusObject],
+  );
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const drawable = drawableSets(okData(useListSlideResultSets(slideId).data) ?? [], inTask);
   const toggle = (id: string) =>
@@ -499,6 +561,7 @@ function SlideResultSets({ engine, module, slideId, inTask = false, retype = nul
           inTask={inTask}
           shown={!hidden.has(set.id)}
           retype={retype}
+          focus={focus}
         />
       ))}
       <SetToggles sets={drawable} shown={(id) => !hidden.has(id)} onToggle={toggle} />

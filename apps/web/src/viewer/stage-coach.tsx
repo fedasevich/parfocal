@@ -5,7 +5,7 @@ import { CoachTip } from "../screens/review/guided-parts.tsx";
 export function StageCoachOnSlide({ object, drawn }: { object: string; drawn: boolean }) {
   return (
     <div data-testid="stage-coach" className="pointer-events-none absolute inset-0 z-5">
-      <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
+      <CoachTip n={1} className="absolute top-4 left-4 w-75">
         {drawn ? (
           <Trans>A person drew this. It is outlined in white.</Trans>
         ) : (

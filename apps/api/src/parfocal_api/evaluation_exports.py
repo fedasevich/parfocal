@@ -285,12 +285,12 @@ def full_id(where: tuple[str, str | None, str], kind: str, number: int, person: 
 
 
 async def decision_rows(
-    connection: AsyncConnection, task: Any, version: Version
+    connection: AsyncConnection, task: Any, version: Version, store: Results | None = None
 ) -> list[dict[str, Any]]:
     names = await class_names(connection, task.project_id)
     objects = {
         (uuid.UUID(item.slide), item.kind, item.number): item
-        for item in await ai_objects(connection, task.id, names)
+        for item in await ai_objects(connection, task.id, names, store)
     }
     given = (
         await connection.execute(
@@ -332,10 +332,10 @@ async def decision_rows(
 
 
 async def object_rows(
-    connection: AsyncConnection, task: Any, version: Version
+    connection: AsyncConnection, task: Any, version: Version, store: Results | None = None
 ) -> list[dict[str, Any]]:
     names = await class_names(connection, task.project_id)
-    objects = await ai_objects(connection, task.id, names)
+    objects = await ai_objects(connection, task.id, names, store)
     added = (
         await connection.execute(
             select(
@@ -502,6 +502,7 @@ async def rendered_report(
     evaluation: Evaluation,
     version: Version,
     locale: Locale,
+    store: Results | None = None,
 ) -> RenderedReport:
     project_name = await connection.scalar(
         select(projects.c.name).where(projects.c.id == task.project_id)
@@ -519,8 +520,8 @@ async def rendered_report(
     )
     data = replace(
         data,
-        objects=report_objects(await object_rows(connection, task, version)),
-        decision_rows=report_decisions(await decision_rows(connection, task, version))
+        objects=report_objects(await object_rows(connection, task, version, store)),
+        decision_rows=report_decisions(await decision_rows(connection, task, version, store))
         if "decisions" in report_format.appendices
         else (),
         compared=await compared_tasks(connection, principal, blocks),
@@ -592,7 +593,10 @@ async def task_report(
         return await annotate_report(connection, principal, task, results, locale)
     evaluation = await evaluate(connection, task)
     version = await version_of(connection, task, evaluation)
-    return await rendered_report(connection, principal, task, evaluation, version, locale), version
+    rendered = await rendered_report(
+        connection, principal, task, evaluation, version, locale, results
+    )
+    return rendered, version
 
 
 def typst_options(report: RenderedReport, version: Version) -> dict[str, Any]:
@@ -695,9 +699,13 @@ async def export_task_evaluation(
     content: str | bytes
     match kind:
         case ExportKind.DECISIONS:
-            content = csv_text(DECISION_COLUMNS, await decision_rows(connection, task, version))
+            content = csv_text(
+                DECISION_COLUMNS, await decision_rows(connection, task, version, results)
+            )
         case ExportKind.OBJECTS:
-            content = csv_text(OBJECT_COLUMNS, await object_rows(connection, task, version))
+            content = csv_text(
+                OBJECT_COLUMNS, await object_rows(connection, task, version, results)
+            )
         case ExportKind.ANNOTATIONS_JSON:
             content = await annotations_json(connection, results, task, version)
         case ExportKind.ANNOTATIONS_GEOJSON:

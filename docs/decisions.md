@@ -19,6 +19,7 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Open questions
 
+- **Smart select Best warms up before the click** (PROTO-159, round six slips). When Best is picked, the viewer sends one GPU call to warm the box around the view's centre, then a second when the person clicks. Keeping the warm-up makes the first click answer 3 to 4 seconds sooner, but bills two GPU calls when the click lands outside the warmed box. Recommended: keep the warm-up, because the wait is what people notice and each call costs a fraction of a cent. Reply "keep warm-up" or "no warm-up".
 - **How the next usability round runs** (EXP-014, the study runs for the participant in one tab, and PILOT-005, the moderated second round). Recommended: moderated, on a browser the lead prepares and signs in to the participant's fresh study project, as round 4 and PILOT-005 planned. It needs no participant accounts and lets you hear them think aloud. The other choice is remote and unmoderated through a link, which reaches more people but needs a sign-in account per participant and loses the think-aloud. Reply with "moderated" or "remote". Until you answer, agents build the moderated way, which the remote way can reuse.
 
 ## The review column, what each task waits for

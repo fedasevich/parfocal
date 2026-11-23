@@ -379,6 +379,7 @@ function GuardedViewer({
         inTask={task !== undefined}
         retype={retype}
         reviewTaskId={reviewTask ?? undefined}
+        focusObject={task === undefined ? object : undefined}
       />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       <SlideNoticeList
@@ -604,6 +605,7 @@ function GuardedViewer({
               projectId={projectId}
               {...(task === undefined ? {} : { taskId: task })}
               areas={areas}
+              focusObject={reviewTask === null && annotateTask === null ? object : undefined}
               viewed={viewed}
               outlines={fakeOutlines && task !== undefined && annotateTask === null}
               workspace={workspace}
