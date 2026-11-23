@@ -19,7 +19,7 @@ from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.result_membership import stored_cells
-from parfocal_api.review_order import Results, order_state, temperature_of
+from parfocal_api.review_order import Results, order_wait, temperature_of
 from parfocal_api.review_tasks import code_of
 from parfocal_api.reviewed_layer import review_slide, task_slide
 from parfocal_api.tables import (
@@ -81,6 +81,8 @@ class ReviewObjects(BaseModel):
     slide: SlideFacts
     objects: list[ReviewObject]
     added: list[AddedObject]
+    order: Literal["ready", "preparing"] = "ready"
+    ready_in_seconds: int | None = None
 
 
 class SlideAgreement(BaseModel):
@@ -288,18 +290,23 @@ async def slide_facts(connection: AsyncConnection, slide_id: uuid.UUID) -> Slide
     )
 
 
+@dataclass(frozen=True, slots=True)
+class OrderedKeys:
+    keys: list[ObjectKey]
+    ready_in_seconds: int | None = None
+
+
 async def ordered_keys(
     connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID
-) -> list[ObjectKey]:
+) -> OrderedKeys:
     packed = await connection.scalar(
         select(review_order.c.objects).where(
             review_order.c.task_id == task_id, review_order.c.slide_id == slide_id
         )
     )
     if packed is None:
-        await order_state(connection, task_id)
-        return []
-    return unpack(bytes(packed))
+        return OrderedKeys([], await order_wait(connection, task_id))
+    return OrderedKeys(unpack(bytes(packed)))
 
 
 def kind_of(letter: Letter) -> Literal["region", "cell"]:
@@ -357,7 +364,18 @@ async def list_review_objects(
         return ReviewObjects(
             task_id=task_id, slide_id=slide_id, slide=facts, objects=[], added=added
         )
-    keys = await ordered_keys(connection, task_id, slide_id)
+    ordered = await ordered_keys(connection, task_id, slide_id)
+    if ordered.ready_in_seconds is not None:
+        return ReviewObjects(
+            task_id=task_id,
+            slide_id=slide_id,
+            slide=facts,
+            objects=[],
+            added=added,
+            order="preparing",
+            ready_in_seconds=ordered.ready_in_seconds,
+        )
+    keys = ordered.keys
     claims = await ai_claims(connection, results, row.result_set_id, slide_id, keys)
     drawers = await drawers_of(connection, row.result_set_id)
     objects: list[ReviewObject] = []

@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from sqlalchemy import case, func, literal, select, union_all
+from sqlalchemy import DateTime, case, func, literal, null, select, union_all
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -15,9 +15,10 @@ from parfocal_api.notifications import member_of
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ProblemError
 from parfocal_api.projects import code_of as project_code
-from parfocal_api.tables import project_members, projects, slides, uploads
+from parfocal_api.tables import project_members, projects, result_sets, slides, uploads
 from parfocal_common.jobs import JobStatus, job_steps, job_units, jobs
-from parfocal_common.model_runs import model_runs
+from parfocal_common.model_runs import KIND as MODEL_RUN
+from parfocal_common.model_runs import MODEL_STAGE, model_runs
 from parfocal_common.result_imports import UploadKind
 
 RECENT = 20
@@ -27,6 +28,13 @@ class MyJobKind(StrEnum):
     UPLOAD = "upload"
     MODEL_RUN = "model-run"
     IMPORT = "import"
+
+
+class JobUnit(StrEnum):
+    TILE = "tile"
+
+
+IMPORT_STILL_WORKING = frozenset({JobStatus.QUEUED, JobStatus.RUNNING})
 
 
 class JobPauseReason(StrEnum):
@@ -64,6 +72,7 @@ class MyJob(BaseModel):
     minutes_left: int | None = Field(ge=0)
     units_done: int = Field(ge=0)
     units_total: int | None = Field(ge=0)
+    unit: JobUnit | None
     started_by_user_id: uuid.UUID
     slides: list[JobSlide]
     pause: JobPause | None
@@ -85,8 +94,10 @@ def started_by(me: uuid.UUID) -> Any:
             uploads.c.file_name.label("title"),
             func.coalesce(uploads.c.slide_id, slides.c.id).label("slide_id"),
             uploads.c.file_name.label("file"),
+            result_sets.c.created_at.label("result_ready_at"),
         )
         .outerjoin(slides, slides.c.upload_id == uploads.c.id)
+        .outerjoin(result_sets, result_sets.c.id == uploads.c.result_set_id)
         .where(uploads.c.created_by_user_id == me, uploads.c.job_id.is_not(None))
     )
     from_runs = select(
@@ -102,14 +113,25 @@ def started_by(me: uuid.UUID) -> Any:
         ),
         model_runs.c.slide_id,
         literal(""),
+        null().cast(DateTime(timezone=True)),
     ).where(model_runs.c.started_by_user_id == me)
     return union_all(from_uploads, from_runs).subquery("started")
+
+
+def counted_step() -> Any:
+    return (jobs.c.kind != MODEL_RUN) | (job_steps.c.name == MODEL_STAGE)
 
 
 def units_of() -> Any:
     done = (
         select(func.count())
-        .where(job_units.c.job_id == jobs.c.id)
+        .select_from(job_units)
+        .join(
+            job_steps,
+            (job_steps.c.job_id == job_units.c.job_id)
+            & (job_steps.c.ordinal == job_units.c.ordinal),
+        )
+        .where(job_units.c.job_id == jobs.c.id, counted_step())
         .correlate(jobs)
         .scalar_subquery()
     )
@@ -120,11 +142,21 @@ def units_of() -> Any:
                 else_=func.sum(job_steps.c.units_total),
             )
         )
-        .where(job_steps.c.job_id == jobs.c.id)
+        .where(job_steps.c.job_id == jobs.c.id, counted_step())
         .correlate(jobs)
         .scalar_subquery()
     )
     return done.label("units_done"), total.label("units_total")
+
+
+def unit_of(kind: MyJobKind) -> JobUnit | None:
+    return JobUnit.TILE if kind is MyJobKind.MODEL_RUN else None
+
+
+def shown_status(kind: MyJobKind, status: JobStatus, result_ready: bool) -> JobStatus:
+    if kind is MyJobKind.IMPORT and result_ready and status in IMPORT_STILL_WORKING:
+        return JobStatus.DONE
+    return status
 
 
 def percent_of(status: JobStatus, done: int, total: int | None) -> int:
@@ -175,6 +207,7 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
                 started.c.title,
                 started.c.slide_id,
                 started.c.file,
+                started.c.result_ready_at,
                 projects.c.number,
                 projects.c.name.label("project_name"),
                 slides.c.label.label("slide_label"),
@@ -198,7 +231,11 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
     for row in rows:
         if not await readable(connection, person, row):
             continue
-        status = JobStatus(row.status)
+        kind = MyJobKind(row.kind)
+        status = shown_status(kind, JobStatus(row.status), row.result_ready_at is not None)
+        finished_at = row.finished_at
+        if status is JobStatus.DONE and finished_at is None:
+            finished_at = row.result_ready_at
         shown = (
             [JobSlide(id=row.slide_id, label=row.slide_label, file=row.file)]
             if row.slide_label is not None
@@ -208,7 +245,7 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
         found.append(
             MyJob(
                 id=row.id,
-                kind=MyJobKind(row.kind),
+                kind=kind,
                 title=row.title,
                 project=JobProject(id=row.project_id, code=code, name=row.project_name),
                 status=status,
@@ -218,11 +255,12 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
                 minutes_left=None,
                 units_done=row.units_done,
                 units_total=row.units_total,
+                unit=unit_of(kind),
                 started_by_user_id=person.user_id,
                 slides=shown,
                 pause=pause_of(row, status),
                 created_at=row.created_at,
-                finished_at=row.finished_at,
+                finished_at=finished_at,
             )
         )
     return found

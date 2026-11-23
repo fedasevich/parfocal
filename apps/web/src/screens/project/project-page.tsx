@@ -35,6 +35,7 @@ import { markTried } from "../home/getting-started.ts";
 import { okData } from "../placeholder.tsx";
 import { usePeople } from "./people.ts";
 import { ProjectNoAccess } from "./project-no-access.tsx";
+import { reviewedShare, reviewedShareText } from "./reviewed-share.ts";
 import { useScreenToast } from "./screen-toast.tsx";
 import { automaticImportsId, SettingsTab } from "./settings-tab.tsx";
 import { SlidesTab } from "./slides-tab.tsx";
@@ -87,6 +88,7 @@ export function ProjectPage({
   }, [isSample]);
   const format = useFormat();
   const overview = okData(useGetProjectOverview(projectId, { query: { staleTime: 0 } }).data);
+  const share = overview ? reviewedShare(overview) : null;
   const tasksQuery = useListReviewTasks(projectId);
   const tasks = okData(tasksQuery.data) ?? [];
   const slidesFirst = { query: { enabled: view.tab === "slides" } };
@@ -223,10 +225,8 @@ export function ProjectPage({
                   <Trans>{format.integer(overview.objects)} objects with an ID</Trans>
                 </span>
               ) : null}
-              {overview ? (
-                <span>
-                  <Trans>{overview.reviewed_percent}% reviewed</Trans>
-                </span>
+              {share ? (
+                <span data-testid="project-reviewed-share">{reviewedShareText(share)}</span>
               ) : null}
             </p>
           </div>

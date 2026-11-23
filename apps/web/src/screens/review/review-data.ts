@@ -80,6 +80,7 @@ export type ReviewSession = {
   slideSize: { width: number; height: number } | null;
   ready: boolean;
   order: ReviewOrderState;
+  readyInSeconds: number | null;
   retryOrder: () => void;
 };
 
@@ -95,12 +96,18 @@ export function useReviewSession(
   const objectsQuery = useListReviewObjects(taskId, slideId, {
     query: {
       enabled: viewedProjectId === undefined || (task !== undefined && !slideOutsideTask),
-      refetchInterval: (query) => preparingInterval(query.state.error),
+      refetchInterval: (query) => preparingInterval(okData(query.state.data), query.state.error),
     },
   });
-  const reviewObjects = slideOutsideTask ? undefined : okData(objectsQuery.data);
+  const answered = slideOutsideTask ? undefined : okData(objectsQuery.data);
   const [heldOrder, holdOrder] = useState<ReviewOrderState>("ready");
-  const order = nextReviewOrderState(heldOrder, objectsQuery.error, objectsQuery.isFetching);
+  const order = nextReviewOrderState(
+    heldOrder,
+    answered,
+    objectsQuery.error,
+    objectsQuery.isFetching,
+  );
+  const reviewObjects = order === "preparing" ? undefined : answered;
   if (order !== heldOrder) holdOrder(order);
   const decisions = okData(useListDecisions(taskId, slideId).data) ?? [];
   const person = usePeople();
@@ -151,6 +158,7 @@ export function useReviewSession(
     slideSize: slide?.width && slide.height ? { width: slide.width, height: slide.height } : null,
     ready: task !== undefined && (reviewObjects !== undefined || slideOutsideTask),
     order,
+    readyInSeconds: order === "preparing" ? (answered?.ready_in_seconds ?? null) : null,
     retryOrder: () => void objectsQuery.refetch(),
   };
 }

@@ -10,13 +10,24 @@ test("a slide whose review order is still being prepared waits with a way back a
   page,
 }) => {
   const polls: string[] = [];
+  const statuses: number[] = [];
+  const consoleErrors: string[] = [];
   page.on("request", (request) => {
     if (new URL(request.url()).pathname === objectsOf) polls.push(request.url());
+  });
+  page.on("response", (response) => {
+    if (new URL(response.url()).pathname === objectsOf) statuses.push(response.status());
+  });
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
   });
   await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided&issue=preparing`);
   const waiting = page.getByTestId("review-order-preparing");
   await expect(waiting).toBeVisible();
   await expect(waiting.getByText(/being put in review order/)).toBeVisible();
+  await expect(page.getByTestId("review-order-estimate")).toHaveText(
+    "It should be ready in about 20 seconds.",
+  );
   const back = page.getByTestId("review-order-back");
   await expect(back).toHaveText(/^Back to /);
   await expect(back).toHaveAttribute("href", /^\/(projects\/[0-9a-f-]{36}|my-work)$/);
@@ -25,6 +36,8 @@ test("a slide whose review order is still being prepared waits with a way back a
   await page.getByTestId("review-order-retry").click();
   await expect.poll(() => polls.length).toBeGreaterThan(before);
   await expect(waiting).toBeVisible();
+  expect(new Set(statuses)).toEqual(new Set([200]));
+  expect(consoleErrors).toEqual([]);
   await back.click();
   await expect(waiting).toHaveCount(0);
   await expect(page).not.toHaveURL(/\/guided/);

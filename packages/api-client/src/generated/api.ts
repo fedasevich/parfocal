@@ -4347,6 +4347,12 @@ export interface JobSlide {
   file: string;
 }
 
+export type JobUnit = (typeof JobUnit)[keyof typeof JobUnit];
+
+export const JobUnit = {
+  tile: "tile",
+} as const;
+
 export type JoinPolicy = (typeof JoinPolicy)[keyof typeof JoinPolicy];
 
 export const JoinPolicy = {
@@ -5289,6 +5295,7 @@ export interface MyJob {
   /** @minimum 0 */
   units_done: number;
   units_total: number | null;
+  unit: JobUnit | null;
   started_by_user_id: string;
   slides: JobSlide[];
   pause: JobPause | null;
@@ -6226,6 +6233,8 @@ export interface ProjectOverview {
    */
   reviewed_percent: number;
   /** @minimum 0 */
+  reviewed_slides: number;
+  /** @minimum 0 */
   needs_review: number;
   /** @minimum 0 */
   no_results: number;
@@ -6851,6 +6860,13 @@ export interface ReviewObject {
   tool?: DrawingTool | null;
 }
 
+export type ReviewObjectsOrder = (typeof ReviewObjectsOrder)[keyof typeof ReviewObjectsOrder];
+
+export const ReviewObjectsOrder = {
+  ready: "ready",
+  preparing: "preparing",
+} as const;
+
 export interface SlideFacts {
   label: string;
   case_label: string | null;
@@ -6865,6 +6881,8 @@ export interface ReviewObjects {
   slide: SlideFacts;
   objects: ReviewObject[];
   added: AddedObject[];
+  order?: ReviewObjectsOrder;
+  ready_in_seconds?: number | null;
 }
 
 export interface ReviewOrder {

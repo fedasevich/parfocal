@@ -1314,7 +1314,7 @@ msgid "{0} or less"
 msgstr ""
 
 #. placeholder {0}: others.length === 2 ? "Two" : others.length
-#. placeholder {1}: andJoin( others.map((session) => withArticle(session.user_agent ?? "unknown device")), )
+#. placeholder {1}: andJoin( others.map((session) => withArticle(deviceName(session.user_agent))), )
 #: src/screens/settings/settings-screen.tsx
 msgid "{0} other devices are signed in: {1}."
 msgstr ""
@@ -1867,11 +1867,6 @@ msgstr ""
 #. placeholder {0}: Math.round(guess.tissue_share * 100)
 #: src/screens/upload/result-problems.tsx
 msgid "{0}% on tissue"
-msgstr ""
-
-#. placeholder {0}: overview.reviewed_percent
-#: src/screens/project/project-page.tsx
-msgid "{0}% reviewed"
 msgstr ""
 
 #. placeholder {0}: magnification.toFixed(1)
@@ -9102,6 +9097,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/connect-model.tsx
 msgid "It sends"
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} minutes."
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} seconds."
 msgstr ""
 
 #. placeholder {0}: joinSteps(open)

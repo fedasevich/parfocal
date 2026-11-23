@@ -26,7 +26,7 @@ def test_the_overview_counts_the_project_from_stored_data(api: ApiAs, database: 
     assert overview["objects"] == 7
     assert overview["no_results"] == 0
     assert overview["needs_review"] == 1
-    assert overview["reviewed_percent"] == 0
+    assert (overview["reviewed_percent"], overview["reviewed_slides"]) == (0, 0)
     assert [item["slide_id"] for item in overview["slide_files"]] == [str(r.slide)]
     assert overview["storage"]["allowance_gb"] is None
     assert overview["import_failure"] is None

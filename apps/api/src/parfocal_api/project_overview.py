@@ -86,6 +86,7 @@ class ProjectOverview(BaseModel):
     result_sets: int = Field(ge=0)
     objects: int = Field(ge=0)
     reviewed_percent: float = Field(ge=0, le=100)
+    reviewed_slides: int = Field(ge=0)
     needs_review: int = Field(ge=0)
     no_results: int = Field(ge=0)
     case_groups: list[CaseGroup]
@@ -320,6 +321,7 @@ async def get_project_overview(
         result_sets=set_count or 0,
         objects=int(object_count or 0),
         reviewed_percent=round(100 * reviewed / len(states), 1) if states else 0,
+        reviewed_slides=reviewed,
         needs_review=sum(1 for state in states if state in NEEDS_REVIEW),
         no_results=sum(1 for state in states if state is State.UPLOADED),
         case_groups=[

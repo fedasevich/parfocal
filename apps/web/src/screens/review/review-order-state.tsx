@@ -3,14 +3,30 @@ import { InlineState } from "@parfocal/ui/components/banner";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { Loader } from "@parfocal/ui/components/loader";
 import { Link } from "@tanstack/react-router";
-import { waitedMinutes } from "./review-order-state.ts";
+import { readyEstimate, waitedMinutes } from "./review-order-state.ts";
 
 type ReviewOrderStateProps = {
   readonly order: "preparing" | "failed";
   readonly onRetry: () => void;
   readonly projectId?: string | undefined;
   readonly madeAt?: string | undefined;
+  readonly readyInSeconds?: number | null | undefined;
 };
+
+function EstimateLine({ seconds }: { readonly seconds?: number | null | undefined }) {
+  const estimate = readyEstimate(seconds);
+  if (estimate === null) return null;
+  const { count } = estimate;
+  return (
+    <p className="text-body-sm text-fg-dim" data-testid="review-order-estimate">
+      {estimate.unit === "seconds" ? (
+        <Trans>It should be ready in about {count} seconds.</Trans>
+      ) : (
+        <Trans>It should be ready in about {count} minutes.</Trans>
+      )}
+    </p>
+  );
+}
 
 function BackLink({ projectId }: { readonly projectId?: string | undefined }) {
   const className = buttonVariants({ variant: "ghost" });
@@ -49,7 +65,13 @@ function WaitLine({ madeAt }: { readonly madeAt?: string | undefined }) {
   );
 }
 
-export function ReviewOrderState({ order, onRetry, projectId, madeAt }: ReviewOrderStateProps) {
+export function ReviewOrderState({
+  order,
+  onRetry,
+  projectId,
+  madeAt,
+  readyInSeconds,
+}: ReviewOrderStateProps) {
   const { t } = useLingui();
   if (order === "preparing") {
     return (
@@ -68,6 +90,7 @@ export function ReviewOrderState({ order, onRetry, projectId, madeAt }: ReviewOr
               page checks again every few seconds.
             </Trans>
           </p>
+          <EstimateLine seconds={readyInSeconds} />
           <WaitLine madeAt={madeAt} />
           <div className="flex items-center gap-2">
             <BackLink projectId={projectId} />

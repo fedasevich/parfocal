@@ -34,6 +34,8 @@ describe("stage issues", () => {
     assert.equal(nothingFoundOf({ objects: [] }), true);
     assert.equal(nothingFoundOf({ objects: [{}] }), false);
     assert.equal(nothingFoundOf(undefined), false);
+    assert.equal(nothingFoundOf({ objects: [], order: "preparing" }), false);
+    assert.equal(nothingFoundOf({ objects: [], order: "ready" }), true);
   });
 
   it("counts only the two highest magnifications as a slide that cannot be read", () => {
