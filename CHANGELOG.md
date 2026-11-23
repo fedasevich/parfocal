@@ -2,6 +2,20 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.43.0 (2026-11-23)
+
+### Features
+
+- PROTO-165: List a task's patch exports on the Dataset page with downloads
+
+### Docs
+
+- TEST-058: Tick the seeded COCO zip and add the patch export list
+
+### Other
+
+- PROTO-165: Claim PROTO-165 PROTO-104 for the parallel run
+
 ## v0.42.0 (2026-11-23)
 
 ### Features
