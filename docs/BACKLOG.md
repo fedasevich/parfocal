@@ -4708,7 +4708,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Copy what only `parfocal-dev` holds into `parfocal-dev-eu` (`fixtures/` has 2,203 objects there and 33 in the EU bucket, among them `fixtures/ui-visual/` and `fixtures/sam-parity/`), point every reader at the EU endpoint with a read-only key scoped to `parfocal-dev-eu`, and remove the bucket from OpenTofu with a plan that destroys only it. Write the owner's delete command, its cost and what it frees in `docs/decisions.md`.
   Done when a full CI run and `pnpm fixtures` pass with no key that can reach `parfocal-dev`, `git grep` finds no reader of it, and the owner's delete step is in `docs/decisions.md`.
   Size: S.
-- [ ] OPS-038 · A GPU call waiting for an EU GPU shows the wait, not an error
+- [x] OPS-038 · A GPU call waiting for an EU GPU shows the wait, not an error
   Decision 159 (what a GPU job does when Modal has no GPU free in the EU) keeps all six GPU pools pinned to Modal's `eu` region. On 2026-11-19 a view map call waited 244 s for a T4 and the typer and view map answered Cloudflare's 524, which the viewer shows as a failure.
   Let the API answer a GPU call that is still waiting for a container with a waiting state the viewer can poll instead of holding the request past Cloudflare's 100 s, show "Waiting for a GPU" with Cancel in the typer and view map, make the deployed smoke retry once after three minutes before it fails, and log each wait. After a week, write a result file with how often the EU wait passed 60 s.
   Done when an API test holds a fake GPU pool for 150 s and the call ends in a result without a 524, a browser test sees "Waiting for a GPU" and Cancel stops the call, the smoke passes on a cold EU pool, and the result file exists.
@@ -7123,7 +7123,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issue 3. "Sign with single sign-on" signs at once with no sign-in step on task sign-off, report sign out and co-sign. A signature must re-prove the signer through the identity provider (a fresh authentication or step-up), as the signing ADRs describe, or say plainly when the app runs without one.
   Done when DB tests prove a sign-off, a sign out and a co-sign are refused without a fresh authentication inside the allowed window, and a spec on the fake API walks the sign-in step for each.
   Depends on nothing. Size: M.
-- [ ] PROTO-135 · Best in Smart select answers or says why it cannot
+- [x] PROTO-135 · Best in Smart select answers or says why it cannot
   From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issue 4. Two embedding calls after a click on Best got no reply in 10 seconds and the tool fell back to Good with no word on why. Find where the call waits (cold GPU, the region change of ADR 0407, gpu pools in any region, the embedding route or the client timeout), make Best show the GPU wait like other GPU calls and answer once warm, and log the wait in the OPS-038 (GPU wait log) format.
   Done when a result file has measured cold and warm Best times on the deployed app, Best shows the wait and then a proposal, and a spec on the fake API covers the slow answer and the refusal.
   Depends on nothing. Size: M.
@@ -7219,7 +7219,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Left over from PROTO-157 (round five small slips), from `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` issues 12 and 15. Importing a result set sends no notification, which needs a new notification kind. A Best embedding records no GPU seconds, so ai usage and Admin cannot show them. Hand drawn outlines list as M1 and M2 while one click and model objects use their class letter.
   Done when a test sends the import notice, a test finds an ai usage row with GPU seconds after a Best embedding, and a unit test names a hand drawn outline by its class like other objects, or the owner is asked in `docs/decisions.md` if the naming is a real product choice.
   Depends on nothing. Size: M.
-- [ ] PROTO-159 · Round six slips after the v0.35.12 walk
+- [x] PROTO-159 · Round six slips after the v0.35.12 walk
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.12.md` (the deployed walkthrough of v0.35.12), new issues 1 to 7. The decisions CSV of the sign-off window says "unclassified" for every cell while the report and dataset name the types. The top bar Upload button on a project's upload page opens the first project and drops the picked files. A slide outside an annotate task opens with no notice and two 404 calls, and one outside a review task makes three 404 calls. Guided review opens a 15 µm region at 297× as a blur and the first coach bubble covers the object. /objects answers 409 with console errors while a new task prepares. Picking Best and then clicking makes two GPU calls on the deployed app. The run notice says "pathosam-hovernext v1.2", the job counts 16 units against 11 tiles, the import job reads running after its notice, and the walk's project says "100% reviewed".
   Done when unit tests or specs cover each item and the next deployed walk finds none of them.
   Depends on nothing. Size: M.
@@ -7245,7 +7245,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   PROTO-163 (drawn objects read as drawn in the queue, sign-off and export) rewords only the template's default opinion form, and it was checked only where the deployed walk looked. The owner asked on 2026-11-23 for the drawn wording everywhere. Any opinion form shows "the drawn outlines" instead of "the AI result" on a drawn task, worded when it is shown or per task, never by rewriting stored form text that AI tasks share or anything a signed evaluation checksums. Every other string a drawn task can reach, including emails, notifications, the reviewer's screens and the adjudicator, reads as drawn.
   Done when a spec shows a custom opinion form in drawn wording on a drawn task and unchanged on an AI task, the sweep lists what it changed and what it left alone on purpose, and the deployed app shows a drawn adjudication in drawn wording.
   Depends on PROTO-163. Size: M.
-- [ ] PROTO-166 · A preparing review answers a waiting state, and job counts and states read true
+- [x] PROTO-166 · A preparing review answers a waiting state, and job counts and states read true
   Left from PROTO-159 (round six slips after the v0.35.12 walk). While a new task prepares its review order, `/objects` answers 409 and the page polls it, which logs console errors on every poll. Answer 200 with a preparing state and an estimate instead, and let the page show it. A whole slide run said 16 units against 11 tiles, an import job still read running after its done notice, and a task said 100% reviewed while counting slides, not objects. Make each count and state match what happened, with the unit named.
   Done when an API test gets the preparing state with no 409, a browser spec finds no console error while a task prepares, and unit tests cover the run units, the import job state after its notice and the reviewed percentage wording.
   Depends on PROTO-159. Size: S.
@@ -7254,6 +7254,18 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when an API test lists the seeded export for the agent account, a browser spec on the fake API downloads a listed export after a reload, and on the deployed app the agent account downloads the seeded COCO export of "Every outcome review" from the Dataset page.
   Depends on TEST-058. Size: S.
 
+- [ ] PROTO-167 · Round seven slips from the deployed walk of v0.46.0
+  From docs/results/2026-11-23-deployed-walk-v0.46.0.md. After the GPU answered Best at 26 s, the Smart select chip read only "Outlining" for 35 s with no wait or progress, so say what it is doing or make the step faster. RT-11's evaluation JSON lists its 30 cells under one class "unclassified" while its decisions and objects CSVs name Immune and Stroma, so the evaluation must use the cell classes too. Privacy and session reads "1 other devices are signed in", so make the count plural only when it is not one.
+  Done when each slip has a test, and a deployed check shows the Outlining step, the evaluation classes of a cell task and the singular device line.
+  Depends on nothing. Size: S.
+- [ ] PROTO-168 · A queued whole slide run starts within its promised time
+  The deployed walk of v0.46.0 started a 2 tile PathoSAM + HoVer-NeXt run on synthetic-zlib.ome.tiff at 22:09:37 UTC with the dialog promising About 2 min and 0 runs ahead. /api/me/jobs read queued with 0 units until about 22:28, then the run finished both tiles in about 30 s. Modal main showed parfocal-gpu-pool with 1 task the whole time, and the v0.47.0 deploy ran from about 22:11 to 22:27, so the wait may come from the deploy replacing the dispatcher or the pool. Find the cause from the run's timestamps and the Modal logs, make a queued run start when the pool is free (including after a deploy), and make the dialog's estimate and the job's state say why it waits.
+  Done when a test reproduces the cause, and a deployed run of a small slide starts within the dialog's estimate, recorded with its cost.
+  Depends on nothing. Size: M.
+- [ ] EXP-018 · The moderator prepares a participant project from the console for the code the page shows
+  The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
+  Done when an API test seeds and removes a participant project through the new route, a Playwright spec on the fake API prepares a participant and starts task 1, and a deployed dry run as one code goes from Prepare to the thank-you page, recorded in a result file.
+  Depends on EXP-015, EXP-017. Size: M.
 ---
 
 ## Later epics (not in v1, kept for planning)
