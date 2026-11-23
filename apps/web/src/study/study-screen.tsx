@@ -1,8 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useGetMyHome, useListMySlides } from "@parfocal/api-client";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { now } from "../clock.ts";
-import { okData } from "../screens/placeholder.tsx";
+import { useStudyContext } from "./study-context.ts";
 import {
   checkMet,
   currentRound,
@@ -16,7 +16,6 @@ import {
   recordResult,
   resolveGuard,
   resolveStartPath,
-  type StudyContext,
   startNextRound,
   startSession,
   summariseRound,
@@ -59,18 +58,6 @@ const probeOf = (target: Window | null): PageProbe | undefined => {
     return undefined;
   }
 };
-
-function useStudyContext(): StudyContext {
-  const slides = okData(useListMySlides().data)?.slides ?? [];
-  const resume = okData(useGetMyHome().data)?.resume ?? null;
-  return {
-    slides,
-    resume:
-      resume === null
-        ? null
-        : { projectId: resume.project.id, slideId: resume.slide_id, taskId: resume.task_id },
-  };
-}
 
 export function StudyScreen() {
   const { t } = useLingui();
@@ -118,6 +105,16 @@ export function StudyScreen() {
     },
     [],
   );
+
+  useEffect(() => {
+    const refresh = () => setState(readStudy());
+    window.addEventListener("storage", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
 
   useEffect(() => {
     if (taskStart === null) return;
@@ -253,6 +250,12 @@ export function StudyScreen() {
             <Trans>Round {round.number}. No session has run yet, so the tasks can change.</Trans>
           )}
         </p>
+        <Link
+          to="/study"
+          className="w-fit text-body-sm text-accent underline-offset-4 hover:underline"
+        >
+          <Trans>Open the participant page</Trans>
+        </Link>
       </header>
 
       <section className="grid gap-3" aria-label={t`Run a session`}>
@@ -433,6 +436,11 @@ export function StudyScreen() {
                       `${result.taskId} ${durationSeconds(result)}s ${result.outcome}${result.auto ? " (auto)" : ""}`,
                   )
                   .join(", ")}
+                {session.final?.susScore == null ? null : (
+                  <span data-testid="study-sus-score">
+                    <Trans> · SUS {session.final.susScore}</Trans>
+                  </span>
+                )}
                 {session.blocks.length === 0 ? null : (
                   <span data-testid="study-block-log">{blockLine(session.blocks)}</span>
                 )}

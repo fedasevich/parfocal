@@ -2166,6 +2166,10 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/patch-exports/{a.ids['patch_job']}",
     ),
+    "listPatchExports": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/patch-exports",
+    ),
     "getPatchExportStatus": Route(
         Exposure.TENANT,
         lambda a: (

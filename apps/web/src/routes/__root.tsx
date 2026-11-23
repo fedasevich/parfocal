@@ -20,6 +20,7 @@ import { SettingsOverlayHost } from "../shell/settings-overlay.tsx";
 import { inGlobalShell } from "../shell/shell-routes.ts";
 import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
 import { SurveyHost } from "../shell/survey-host.tsx";
+import { useParticipantRun } from "../study/participant-run.ts";
 import { insideTaskWindow } from "../study/study-window.ts";
 import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
 import { useRememberReturnPage } from "../viewer/use-return-page.ts";
@@ -27,6 +28,7 @@ import { useRememberReturnPage } from "../viewer/use-return-page.ts";
 const TourHost = lazy(() => import("../help/tour-host.tsx"));
 const PageTitle = lazy(() => import("../shell/page-title.ts"));
 const StudyGuardHost = lazy(() => import("../study/study-guard-host.tsx"));
+const ParticipantHost = lazy(() => import("../study/participant-host.tsx"));
 
 export const Route = createRootRoute({
   validateSearch: overlaySearch,
@@ -48,6 +50,7 @@ function RootContent() {
     select: (matches) => matches.some(inGlobalShell),
   });
   const signedIn = useSignedInArea();
+  const studyRun = useParticipantRun();
   useAppliedDensity();
   useAppliedLocale();
   useAppliedLengthUnits();
@@ -71,9 +74,14 @@ function RootContent() {
       <SettingsOverlayHost />
       <LabKey />
       <FeedbackHost />
-      {insideTaskWindow() ? (
+      {insideTaskWindow() || studyRun?.phase === "task" ? (
         <Suspense fallback={null}>
           <StudyGuardHost />
+        </Suspense>
+      ) : null}
+      {studyRun?.sessionId !== undefined && studyRun.phase !== "done" ? (
+        <Suspense fallback={null}>
+          <ParticipantHost />
         </Suspense>
       ) : null}
       <Suspense fallback={null}>

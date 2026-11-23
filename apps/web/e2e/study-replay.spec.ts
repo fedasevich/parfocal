@@ -1,3 +1,4 @@
+import { pilotTasks } from "../src/study/study-model.ts";
 import { expect, type Page, test } from "./a11y.ts";
 
 test.use({ viewport: { width: 1280, height: 900 } });
@@ -50,7 +51,9 @@ test("a scripted session is recorded with masked text and replays with task jump
     type: "skip-axe",
     description: "axe cannot enter the sandboxed replay frame",
   });
-  await page.goto("/study");
+  await page.goto("/study/console");
+  await page.getByLabel("Task set JSON").fill(JSON.stringify(pilotTasks));
+  await page.getByRole("button", { name: "Save tasks" }).click();
   await expect(page.getByTestId("study-recorder-warning")).toHaveCount(0);
   await startSessionFor(page, "P1");
   const task = await openFirstTaskSlide(page);
@@ -117,7 +120,9 @@ test("a blocked recorder warns on the start screen and the replay falls back to 
   const devtools = await page.context().newCDPSession(page);
   await devtools.send("Network.enable");
   await devtools.send("Network.setBlockedURLs", { urls: ["*dom-frames*"] });
-  await page.goto("/study");
+  await page.goto("/study/console");
+  await page.getByLabel("Task set JSON").fill(JSON.stringify(pilotTasks));
+  await page.getByRole("button", { name: "Save tasks" }).click();
   await expect(page.getByTestId("study-recorder-warning")).toBeVisible();
   await startSessionFor(page, "P1");
   const task = await openFirstTaskSlide(page);

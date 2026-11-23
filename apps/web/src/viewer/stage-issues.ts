@@ -22,8 +22,10 @@ export function stageIssueOf(facts: StageIssueFacts): StageIssue | null {
   return null;
 }
 
-export function nothingFoundOf(objects: { readonly objects: readonly unknown[] } | undefined) {
-  return objects !== undefined && objects.objects.length === 0;
+export function nothingFoundOf(
+  objects: { readonly objects: readonly unknown[]; readonly order?: string } | undefined,
+) {
+  return objects !== undefined && objects.order !== "preparing" && objects.objects.length === 0;
 }
 
 export function isWithdrawn(task: { readonly withdrawn_at?: string | null } | undefined): boolean {

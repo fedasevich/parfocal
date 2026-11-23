@@ -80,9 +80,10 @@ export function createBatcher(
   sink: TraceSink,
   schedule: Schedule = windowSchedule,
   intervalMs = uploadIntervalMs,
+  startIndex = 0,
 ): Batcher {
   let pending: TraceEvent[] = [];
-  let index = 0;
+  let index = startIndex;
   let queue: Promise<void> = Promise.resolve();
 
   const flush = () => {

@@ -126,6 +126,7 @@ export const toProjectOverview = (idOrCode: string): ProjectOverview => {
     result_sets: project.counts.resultSets,
     objects: seed.objects ?? project.counts.slides * objectsPerSlide,
     reviewed_percent: project.counts.reviewedPercent,
+    reviewed_slides: Math.round((project.counts.reviewedPercent / 100) * project.counts.slides),
     needs_review: seed.needsReview,
     no_results: seed.noResults,
     case_groups: cases

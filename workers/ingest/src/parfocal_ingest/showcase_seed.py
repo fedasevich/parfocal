@@ -27,6 +27,7 @@ from parfocal_common.jobs import JobStatus, jobs
 from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_common.settings import AppEnv, StorageSettings
+from parfocal_ingest import study_seed
 from parfocal_ingest.patch_export import PatchWriter, source_of
 
 NOT_FOUND = 404
@@ -161,6 +162,10 @@ async def main() -> None:
         description="Seed the ČVUT workspaces with invented people over every feature",
     )
     parser.parse_args()
+    participant = study_seed.from_environment(os.environ)
+    if participant is not None:
+        await study_seed.run(os.environ, *participant)
+        return
     database_url = os.environ["DATABASE_URL"]
     settings = StorageSettings(app_env=AppEnv(os.environ.get("APP_ENV", AppEnv.DEV)))
     async with httpx2.AsyncClient(timeout=60) as http:

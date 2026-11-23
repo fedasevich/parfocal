@@ -69,6 +69,11 @@ msgstr " · sample numbers"
 msgid " · signed {0}"
 msgstr " · signed {0}"
 
+#. placeholder {0}: session.final.susScore
+#: src/study/study-screen.tsx
+msgid " · SUS {0}"
+msgstr " · SUS {0}"
+
 #: src/screens/viewer/viewer-result-sets.tsx
 msgid " · the result this task checks"
 msgstr " · the result this task checks"
@@ -1871,11 +1876,6 @@ msgstr "{0}) · task {1}"
 msgid "{0}% on tissue"
 msgstr "{0}% on tissue"
 
-#. placeholder {0}: overview.reviewed_percent
-#: src/screens/project/project-page.tsx
-msgid "{0}% reviewed"
-msgstr "{0}% reviewed"
-
 #. placeholder {0}: magnification.toFixed(1)
 #. placeholder {1}: Math.round(viewport[0])
 #. placeholder {2}: Math.round(viewport[1])
@@ -2376,6 +2376,10 @@ msgstr "{taskCodeOrThe} was withdrawn on 16 Oct. There is nothing left to decide
 msgid "{taskCodeOrThe} was withdrawn."
 msgstr "{taskCodeOrThe} was withdrawn."
 
+#: src/study/participant-screen.tsx
+msgid "{taskCount} short tasks"
+msgstr "{taskCount} short tasks"
+
 #. placeholder {0}: summary.result_set.name
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{taskName} · {0}"
@@ -2847,6 +2851,10 @@ msgstr "A copy to change. Name, paper and format are on the right."
 #: src/screens/clinical-report/steps.tsx
 msgid "A deposit of {0} is a {1}. Confirm the size or pick {2}"
 msgstr "A deposit of {0} is a {1}. Confirm the size or pick {2}"
+
+#: src/study/participant-screen.tsx
+msgid "A few questions about the whole experience"
+msgstr "A few questions about the whole experience"
 
 #: src/screens/upload/formats-drawer.tsx
 msgid "A field the schema does not define. Remove or rename it."
@@ -3940,6 +3948,10 @@ msgstr "Announcement text"
 msgid "Announcements"
 msgstr "Announcements"
 
+#: src/study/study-copy.ts
+msgid "Another reason"
+msgstr "Another reason"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Another specialty"
 msgstr "Another specialty"
@@ -3988,9 +4000,17 @@ msgstr "Anyone with the link sees the numbers of this report without signing in.
 msgid "Anything else lands in Not matched yet, and you pick its slide."
 msgstr "Anything else lands in Not matched yet, and you pick its slide."
 
+#: src/study/study-copy.ts
+msgid "Anything that was hard, confusing or annoying. You can leave this empty."
+msgstr "Anything that was hard, confusing or annoying. You can leave this empty."
+
 #: src/screens/clinical-report/steps.tsx
 msgid "Anything the clinician should know"
 msgstr "Anything the clinician should know"
+
+#: src/study/study-copy.ts
+msgid "Anything we should change, add or keep as it is. You can leave this empty."
+msgstr "Anything we should change, add or keep as it is. You can leave this empty."
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Aperio"
@@ -4277,6 +4297,7 @@ msgstr "B · {0}"
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
 #: src/shell/survey-prompt.tsx
+#: src/study/participant-screen.tsx
 msgid "Back"
 msgstr "Back"
 
@@ -4372,6 +4393,11 @@ msgstr "Back to the project"
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Back to the report"
 msgstr "Back to the report"
+
+#: src/study/participant-host.tsx
+#: src/study/participant-screen.tsx
+msgid "Back to the task"
+msgstr "Back to the task"
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Back to the view"
@@ -5370,6 +5396,10 @@ msgstr "Choose slide files"
 msgid "Choose slides or result files"
 msgstr "Choose slides or result files"
 
+#: src/study/participant-host.tsx
+msgid "Choose the answer that fits best. You can also go back and keep trying."
+msgstr "Choose the answer that fits best. You can also go back and keep trying."
+
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose the data folder"
 msgstr "Choose the data folder"
@@ -5967,6 +5997,8 @@ msgstr "Context"
 
 #: ../../packages/ui/src/components/auth.tsx
 #: src/screens/my-work/to-review-tab.tsx
+#: src/study/participant-host.tsx
+#: src/study/participant-screen.tsx
 msgid "Continue"
 msgstr "Continue"
 
@@ -7821,6 +7853,10 @@ msgstr "Find nuclei"
 msgid "Findings"
 msgstr "Findings"
 
+#: src/study/participant-screen.tsx
+msgid "Finish"
+msgstr "Finish"
+
 #: src/screens/disagreements/outline-settle.tsx
 #: src/screens/review/first-read.tsx
 #: src/screens/review/object-card.tsx
@@ -7959,6 +7995,10 @@ msgstr "For both of them"
 #: src/screens/admin/workspace-settings.tsx
 msgid "For cases where the lab asks for tumor cellularity, the number line says whether the tumor share is above or below a cutoff whatever the unsure cells are."
 msgstr "For cases where the lab asks for tumor cellularity, the number line says whether the tumor share is above or below a cutoff whatever the unsure cells are."
+
+#: src/study/participant-screen.tsx
+msgid "For each statement, pick how much you agree. Go with your first reaction."
+msgstr "For each statement, pick how much you agree. Go with your first reaction."
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "For example a block chosen for molecular testing."
@@ -8480,6 +8520,10 @@ msgstr "Help"
 msgid "Help and what's new"
 msgstr "Help and what's new"
 
+#: src/study/participant-screen.tsx
+msgid "Help us test Parfocal"
+msgstr "Help us test Parfocal"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Hematopathology"
 msgstr "Hematopathology"
@@ -8711,6 +8755,10 @@ msgstr "https://data.example.org/slides/"
 msgid "HUD"
 msgstr "HUD"
 
+#: src/study/participant-screen.tsx
+msgid "I agree and start"
+msgstr "I agree and start"
+
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "I agree to the terms and the data processing agreement"
@@ -8720,17 +8768,77 @@ msgstr "I agree to the terms and the data processing agreement"
 msgid "I already have an account, sign in"
 msgstr "I already have an account, sign in"
 
+#: src/study/participant-host.tsx
+msgid "I can't find it"
+msgstr "I can't find it"
+
 #: src/screens/clinical-report/steps.tsx
 msgid "I confirm this category"
 msgstr "I confirm this category"
+
+#: src/study/study-copy.ts
+msgid "I did not know where to look"
+msgstr "I did not know where to look"
+
+#: src/study/study-copy.ts
+msgid "I felt very confident using the system."
+msgstr "I felt very confident using the system."
+
+#: src/study/study-copy.ts
+msgid "I found the system unnecessarily complex."
+msgstr "I found the system unnecessarily complex."
+
+#: src/study/study-copy.ts
+msgid "I found the system very cumbersome to use."
+msgstr "I found the system very cumbersome to use."
+
+#: src/study/study-copy.ts
+msgid "I found the various functions in this system were well integrated."
+msgstr "I found the various functions in this system were well integrated."
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "I have reviewed the whole-slide images and rendered this diagnosis."
 msgstr "I have reviewed the whole-slide images and rendered this diagnosis."
 
+#: src/study/study-copy.ts
+msgid "I looked in several places and found nothing"
+msgstr "I looked in several places and found nothing"
+
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "I mostly"
 msgstr "I mostly"
+
+#: src/study/study-copy.ts
+msgid "I needed to learn a lot of things before I could get going with this system."
+msgstr "I needed to learn a lot of things before I could get going with this system."
+
+#: src/study/study-copy.ts
+msgid "I think that I would like to use this system frequently."
+msgstr "I think that I would like to use this system frequently."
+
+#: src/study/study-copy.ts
+msgid "I think that I would need the support of a technical person to be able to use this system."
+msgstr "I think that I would need the support of a technical person to be able to use this system."
+
+#: src/study/study-copy.ts
+msgid "I thought the system was easy to use."
+msgstr "I thought the system was easy to use."
+
+#: src/study/study-copy.ts
+msgid "I thought there was too much inconsistency in this system."
+msgstr "I thought there was too much inconsistency in this system."
+
+#: src/study/study-copy.ts
+msgid "I was not sure what the task asked for"
+msgstr "I was not sure what the task asked for"
+
+#: src/study/study-copy.ts
+msgid "I would imagine that most people would learn to use this system very quickly."
+msgstr "I would imagine that most people would learn to use this system very quickly."
+
+#: src/study/participant-host.tsx
+msgid "I'm done"
+msgstr "I'm done"
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "IBM Plex Mono, monospace"
@@ -8757,6 +8865,10 @@ msgstr "ID matching"
 #: src/screens/upload/formats-drawer.tsx
 msgid "If a Parfocal JSON file is rejected"
 msgstr "If a Parfocal JSON file is rejected"
+
+#: src/study/participant-screen.tsx
+msgid "If something is hard to find, that is what we want to learn."
+msgstr "If something is hard to find, that is what we want to learn."
 
 #: src/annotations/task-export.ts
 msgid "Image tiles of the signed off slides with a class mask for each tile and an index, cut as a job"
@@ -9109,6 +9221,14 @@ msgstr "It sat in results/ and a PNG has no slide ID inside. Pick its slide and 
 msgid "It sends"
 msgstr "It sends"
 
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} minutes."
+msgstr "It should be ready in about {count} minutes."
+
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} seconds."
+msgstr "It should be ready in about {count} seconds."
+
 #. placeholder {0}: joinSteps(open)
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid "It sits near the 0.2 mm line, so both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis. To settle it, {0}."
@@ -9432,6 +9552,10 @@ msgstr "Last arrivals"
 #: src/screens/upload/overlays.tsx
 msgid "Last call {0}"
 msgstr "Last call {0}"
+
+#: src/study/participant-screen.tsx
+msgid "Last questions"
+msgstr "Last questions"
 
 #. placeholder {0}: cell(last.renderer)
 #. placeholder {1}: nucleiText(last.nuclei)
@@ -10821,6 +10945,7 @@ msgstr "New workspace"
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
+#: src/study/participant-screen.tsx
 #: src/viewer/stage-guided-card.tsx
 msgid "Next"
 msgstr "Next"
@@ -10850,6 +10975,10 @@ msgstr "Next slide"
 #: src/screens/upload/live-wizard.tsx
 msgid "Next step"
 msgstr "Next step"
+
+#: src/study/participant-screen.tsx
+msgid "Next task"
+msgstr "Next task"
 
 #: src/screens/viewer/zone-gallery.tsx
 msgid "Next unsure cell"
@@ -12263,6 +12392,10 @@ msgstr "Open the clinical report of this case"
 msgid "Open the evaluation report"
 msgstr "Open the evaluation report"
 
+#: src/study/study-screen.tsx
+msgid "Open the participant page"
+msgstr "Open the participant page"
+
 #: src/screens/home/home-screen.tsx
 #: src/screens/jobs/job-window-screen.tsx
 msgid "Open the project"
@@ -12423,6 +12556,10 @@ msgstr "optional"
 msgid "Optional"
 msgstr "Optional"
 
+#: src/study/participant-screen.tsx
+msgid "Optional. Say it to the moderator or type it here. Skip what you have nothing to say about."
+msgstr "Optional. Say it to the moderator or type it here. Skip what you have nothing to say about."
+
 #: src/viewer/start-run-panel.tsx
 msgid "Options"
 msgstr "Options"
@@ -12553,6 +12690,10 @@ msgstr "Over 200 tumor cells"
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Over target"
 msgstr "Over target"
+
+#: src/study/study-copy.ts
+msgid "Overall, how difficult or easy was this task to complete?"
+msgstr "Overall, how difficult or easy was this task to complete?"
 
 #: src/screens/admin/admin-shell.tsx
 msgid "Overview"
@@ -13154,6 +13295,11 @@ msgstr "Play"
 msgid "Play all, from upload to the signed report"
 msgstr "Play all, from upload to the signed report"
 
+#. placeholder {0}: unanswered.join(", ")
+#: src/study/participant-screen.tsx
+msgid "Please answer statement {0}."
+msgstr "Please answer statement {0}."
+
 #: src/screens/upload/formats-drawer.tsx
 msgid "PNG or TIFF at one pyramid level. The level is checked with an overlay."
 msgstr "PNG or TIFF at one pyramid level. The level is checked with an overlay."
@@ -13542,6 +13688,10 @@ msgstr "Random"
 msgid "Raster"
 msgstr "Raster"
 
+#: src/study/participant-screen.tsx
+msgid "Reach each goal your own way. The moderator watches but does not help."
+msgstr "Reach each goal your own way. The moderator watches but does not help."
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Read an evaluation report"
 msgstr "Read an evaluation report"
@@ -13646,6 +13796,7 @@ msgstr "Ready to sign off"
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/project/slide-move-dialog.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/study/participant-host.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Reason"
 msgstr "Reason"
@@ -14907,6 +15058,10 @@ msgstr "Saved. Two factors are no longer required for everyone."
 msgid "Saving"
 msgstr "Saving"
 
+#: src/study/participant-screen.tsx
+msgid "Say what you look for and what you expect to happen."
+msgstr "Say what you look for and what you expect to happen."
+
 #: src/results/add-result-set.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Scale"
@@ -14956,6 +15111,10 @@ msgstr "Scores in {0} bins from 0 to 1, cutoff {1}"
 #: src/screens/admin/workspace-settings.tsx
 msgid "Scores under this percentage count as unsure."
 msgstr "Scores under this percentage count as unsure."
+
+#: src/study/participant-screen.tsx
+msgid "Screen, mouse movements, clicks and key presses. No camera, no microphone."
+msgstr "Screen, mouse movements, clicks and key presses. No camera, no microphone."
 
 #: src/routes/prototype.tsx
 msgid "Screens"
@@ -16327,6 +16486,10 @@ msgstr "Someone replies to me"
 msgid "Someone with admin rights there gets your request and answers by email, usually within a day"
 msgstr "Someone with admin rights there gets your request and answers by email, usually within a day"
 
+#: src/study/study-copy.ts
+msgid "Something did not work as I expected"
+msgstr "Something did not work as I expected"
+
 #: src/routes/issue-states.tsx
 msgid "Something went wrong"
 msgstr "Something went wrong"
@@ -16502,13 +16665,22 @@ msgstr "Start something"
 msgid "Start systematic scan"
 msgstr "Start systematic scan"
 
+#: src/study/participant-screen.tsx
 #: src/study/study-screen.tsx
 msgid "Start task"
 msgstr "Start task"
 
+#: src/study/participant-screen.tsx
+msgid "Start task ({left})"
+msgstr "Start task ({left})"
+
 #: src/annotations/smart-layer.tsx
 msgid "Start the model"
 msgstr "Start the model"
+
+#: src/study/participant-screen.tsx
+msgid "Start the next participant"
+msgstr "Start the next participant"
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Start the report"
@@ -16682,14 +16854,30 @@ msgstr "Stores the manifest and the GeoJSON of these filters once, with a number
 msgid "Strong"
 msgstr "Strong"
 
+#: src/study/study-copy.ts
+msgid "Strongly agree"
+msgstr "Strongly agree"
+
+#: src/study/study-copy.ts
+msgid "Strongly disagree"
+msgstr "Strongly disagree"
+
 #: ../../packages/ui/src/components/icon.tsx
 #: src/shell/page-title-names.ts
 msgid "Study"
 msgstr "Study"
 
+#: src/shell/page-title-names.ts
+msgid "Study console"
+msgstr "Study console"
+
 #: src/study/study-screen.tsx
 msgid "Study mode"
 msgstr "Study mode"
+
+#: src/study/participant-host.tsx
+msgid "Study task"
+msgstr "Study task"
 
 #: src/screens/new-task/steps.tsx
 #: src/screens/project/settings-tab.tsx
@@ -16880,9 +17068,24 @@ msgstr "Target"
 msgid "Task"
 msgstr "Task"
 
+#. placeholder {0}: run.index + 1
+#. placeholder {1}: tasks.length
+#: src/study/participant-host.tsx
+msgid "Task {0} of {1}"
+msgstr "Task {0} of {1}"
+
+#. placeholder {0}: run.index + 1
+#: src/study/participant-screen.tsx
+msgid "Task {0} of {total}"
+msgstr "Task {0} of {total}"
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Task {taskCode}"
 msgstr "Task {taskCode}"
+
+#: src/study/participant-screen.tsx
+msgid "Task complete"
+msgstr "Task complete"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/settings/settings-screen.tsx
@@ -16998,6 +17201,14 @@ msgstr "Text label"
 #: src/screens/settings/settings-screen.tsx
 msgid "Text size"
 msgstr "Text size"
+
+#: src/study/participant-screen.tsx
+msgid "Thank you for telling us"
+msgstr "Thank you for telling us"
+
+#: src/study/participant-screen.tsx
+msgid "Thank you!"
+msgstr "Thank you!"
 
 #: src/feedback/feedback-dialog.tsx
 msgid "Thanks, the team has it"
@@ -17357,6 +17568,10 @@ msgstr "The four lanes, each box opens its screen in its scene"
 #: src/screens/new-task/send-step.tsx
 msgid "The full viewer"
 msgstr "The full viewer"
+
+#: src/study/participant-screen.tsx
+msgid "The goal stays at the bottom of the screen while you work."
+msgstr "The goal stays at the bottom of the screen while you work."
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "The ID tags on the slide"
@@ -18077,6 +18292,14 @@ msgstr "They stay in this tab and save when the connection returns."
 msgid "They stay open after the sign-off."
 msgstr "They stay open after the sign-off."
 
+#: src/study/study-copy.ts
+msgid "Think about the whole app. Write as much or as little as you want, or leave it empty."
+msgstr "Think about the whole app. Write as much or as little as you want, or leave it empty."
+
+#: src/study/participant-screen.tsx
+msgid "Think aloud"
+msgstr "Think aloud"
+
 #: src/screens/admin/join-requests.tsx
 msgid "This ask is already answered."
 msgstr "This ask is already answered."
@@ -18262,6 +18485,10 @@ msgstr "This slide, {slideName}"
 #: src/screens/project/task-settings-drawer.tsx
 msgid "This style counts each answer by its own rule, so there is nothing to map."
 msgstr "This style counts each answer by its own rule, so there is nothing to map."
+
+#: src/study/participant-screen.tsx
+msgid "This tab is recorded"
+msgstr "This tab is recorded"
 
 #: src/screens/review/display-tab.tsx
 #: src/screens/review/guided-review.tsx
@@ -19052,6 +19279,10 @@ msgstr "Uploads, runs models, creates projects or tasks, signs off, sees other d
 msgid "URL parameters"
 msgstr "URL parameters"
 
+#: src/study/participant-screen.tsx
+msgid "Usability study"
+msgstr "Usability study"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Usage statistics"
 msgstr "Usage statistics"
@@ -19215,6 +19446,14 @@ msgstr "Version 2, replaces version 1"
 msgid "Versions"
 msgstr "Versions"
 
+#: src/study/study-copy.ts
+msgid "Very difficult"
+msgstr "Very difficult"
+
+#: src/study/study-copy.ts
+msgid "Very easy"
+msgstr "Very easy"
+
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "View"
@@ -19363,6 +19602,10 @@ msgstr "was invited and gets"
 msgid "was refused"
 msgstr "was refused"
 
+#: src/study/study-copy.ts
+msgid "Was there anything you expected to find but could not?"
+msgstr "Was there anything you expected to find but could not?"
+
 #: src/screens/upload/overlays.tsx
 #: src/screens/upload/watched-folder.tsx
 msgid "Watched folder"
@@ -19388,6 +19631,10 @@ msgstr "We email a {codeLength}-character code to the address on your account."
 #: src/feedback/feedback-dialog.tsx
 msgid "We read every message. Nothing else from this screen was sent."
 msgstr "We read every message. Nothing else from this screen was sent."
+
+#: src/study/participant-screen.tsx
+msgid "We test the app, not you"
+msgstr "We test the app, not you"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "WebGPU only"
@@ -19444,6 +19691,18 @@ msgstr "What a new project and a new review task start with. People can change t
 msgid "What changes"
 msgstr "What changes"
 
+#: src/study/study-copy.ts
+msgid "What did you dislike?"
+msgstr "What did you dislike?"
+
+#: src/study/study-copy.ts
+msgid "What did you like in this task?"
+msgstr "What did you like in this task?"
+
+#: src/study/study-copy.ts
+msgid "What did you like?"
+msgstr "What did you like?"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "What do you do in Parfocal?"
 msgstr "What do you do in Parfocal?"
@@ -19474,6 +19733,10 @@ msgstr "What files work?"
 #: src/screens/upload/files-step.tsx
 msgid "What folder shape works"
 msgstr "What folder shape works"
+
+#: src/study/participant-host.tsx
+msgid "What got in the way?"
+msgstr "What got in the way?"
 
 #: src/viewer/stage-shape-edit.tsx
 msgid "What happened to {object}"
@@ -19568,6 +19831,10 @@ msgstr "What this version is for, such as the model it trains"
 #: src/screens/onboarding/invite-screen.tsx
 msgid "What to check"
 msgstr "What to check"
+
+#: src/study/study-copy.ts
+msgid "What would you recommend?"
+msgstr "What would you recommend?"
 
 #: src/shell/issue-pages.tsx
 msgid "What you already saved is safe, and other pages still work."
@@ -19968,6 +20235,10 @@ msgstr "You can change this at any time."
 msgid "You can close this window. Jobs in the top bar shows how far it is."
 msgstr "You can close this window. Jobs in the top bar shows how far it is."
 
+#: src/study/study-copy.ts
+msgid "You can leave this empty."
+msgstr "You can leave this empty."
+
 #: src/screens/upload/progress-step.tsx
 msgid "You can leave this page or close the tab. The upload keeps going on the server and shows in the jobs tray at the top."
 msgstr "You can leave this page or close the tab. The upload keeps going on the server and shows in the jobs tray at the top."
@@ -20057,6 +20328,10 @@ msgstr "You see what {0} sees until you move the slide"
 msgid "You send the report to a colleague instead of signing it yourself. "
 msgstr "You send the report to a colleague instead of signing it yourself. "
 
+#: src/study/participant-screen.tsx
+msgid "You stay anonymous"
+msgstr "You stay anonymous"
+
 #: src/annotations/smart-layer.tsx
 msgid "You stopped waiting for Best, Good outlined this view. Click again to ask Best again"
 msgstr "You stopped waiting for Best, Good outlined this view. Click again to ask Best again"
@@ -20064,6 +20339,10 @@ msgstr "You stopped waiting for Best, Good outlined this view. Click again to as
 #: src/screens/review/guided-review.tsx
 msgid "You submitted this slide. Changes are saved and {otherReviewer} is told."
 msgstr "You submitted this slide. Changes are saved and {otherReviewer} is told."
+
+#: src/study/participant-screen.tsx
+msgid "You will try an app where doctors review what an AI found on tissue scans. You do not need any medical knowledge."
+msgstr "You will try an app where doctors review what an AI found on tissue scans. You do not need any medical knowledge."
 
 #: src/screens/onboarding/invite-screen.tsx
 msgid "You're invited"
@@ -20097,6 +20376,14 @@ msgstr "Your answer on {0}"
 msgid "Your answer on {currentId}"
 msgstr "Your answer on {currentId}"
 
+#: src/study/participant-screen.tsx
+msgid "Your answers are saved. You can close this tab now."
+msgstr "Your answers are saved. You can close this tab now."
+
+#: src/study/participant-screen.tsx
+msgid "Your browser blocked part of the study. An ad blocker or privacy extension stopped the screen recorder from loading. Turn it off for this site, then reload the page."
+msgstr "Your browser blocked part of the study. An ad blocker or privacy extension stopped the screen recorder from loading. Turn it off for this site, then reload the page."
+
 #. placeholder {0}: difference.browser
 #. placeholder {1}: difference.server
 #: src/screens/upload/server-check.tsx
@@ -20106,6 +20393,11 @@ msgstr "Your browser puts it with: {0}. The server puts it with: {1}. The upload
 #: ../../packages/ui/src/components/area-call.tsx
 msgid "Your call on {area}"
 msgstr "Your call on {area}"
+
+#. placeholder {0}: run.code
+#: src/study/participant-screen.tsx
+msgid "Your code is <0>{0}</0>"
+msgstr "Your code is <0>{0}</0>"
 
 #: src/viewer/stage-issue-cards.tsx
 msgid "Your decided slides are kept and show in the report."

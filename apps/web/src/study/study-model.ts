@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { type ParticipantProject, participantTokens } from "./participant-project.ts";
 
 const validPattern = (pattern: string) => {
   try {
@@ -66,6 +67,49 @@ export type TaskResult = {
 
 export type BlockedAttempt = { taskId: string; at: number; to: string };
 
+export const taskNoteKeys = ["like", "dislike", "recommend"] as const;
+
+export type TaskNoteKey = (typeof taskNoteKeys)[number];
+
+export type TaskNotes = Partial<Record<TaskNoteKey, string | undefined>>;
+
+export type TaskRecord = {
+  id: string;
+  idx: number;
+  title: string;
+  goal: string;
+  success: boolean;
+  durationMs: number;
+  clicks: number;
+  deadClicks: number;
+  blocked: number;
+  keys: number;
+  wheels: number;
+  seq: number | null;
+  notes: TaskNotes;
+  reason: string | null;
+  endedAt: number;
+};
+
+export const finalTextKeys = ["like", "dislike", "missing", "recommend"] as const;
+
+export type FinalTextKey = (typeof finalTextKeys)[number];
+
+export type AnswerChange = {
+  key: string;
+  from: string | number;
+  to: string | number;
+  at: number;
+};
+
+export type FinalAnswers = {
+  sus: (number | null)[];
+  susScore: number | null;
+  open: Partial<Record<FinalTextKey, string | undefined>>;
+  changes: AnswerChange[];
+  finishedAt: number | null;
+};
+
 export type StudySession = {
   id: string;
   round: number;
@@ -73,6 +117,9 @@ export type StudySession = {
   startedAt: number;
   results: TaskResult[];
   blocks: BlockedAttempt[];
+  consentAt?: number | undefined;
+  tasks?: TaskRecord[] | undefined;
+  final?: FinalAnswers | undefined;
 };
 
 export type ActiveGuard = {
@@ -96,7 +143,7 @@ const cellGuard: TaskGuard = {
 };
 const areaVisits = '[data-testid="area-visits"]';
 
-export const defaultTasks: StudyTask[] = [
+export const pilotTasks: StudyTask[] = [
   {
     id: "t1",
     title: "Open the slide",
@@ -184,9 +231,108 @@ export const defaultTasks: StudyTask[] = [
   },
 ];
 
+const reviewOnStudySlide = "/projects/{studyProject}/slides/{reviewSlide}?task={reviewTask}";
+const cellOnStudySlide = "/projects/{studyProject}/slides/{cellSlide}?task={cellTask}";
+const studyCellGuard: TaskGuard = {
+  stayOn: ["^/projects/{studyProject}/slides/{cellSlide}(/|$)"],
+  where: "This task happens on the slide's cell findings screen. Stay on it until you are done.",
+};
+const reviewSlideGuard: TaskGuard = {
+  stayOn: ["^/projects/{studyProject}/slides/{reviewSlide}(/|$)"],
+  where:
+    "You do not need to leave this slide for this task. The goal is at the bottom of the screen.",
+};
+
+export const round5Tasks: StudyTask[] = [
+  {
+    id: "open-case",
+    title: "Open the slide to review",
+    instruction: "Find the slide that is waiting for your review in this project and open it.",
+    startPath: "/projects/{studyProject}?tab=slides",
+    check: { path: "/slides/{reviewSlide}(\\?|$)" },
+  },
+  {
+    id: "patient-details",
+    title: "Find the case details",
+    instruction: "Open the case information and find the name of the doctor who sent this case in.",
+    startPath: reviewOnStudySlide,
+    guard: reviewSlideGuard,
+  },
+  {
+    id: "unsure-place",
+    title: "Go to the least sure place",
+    instruction:
+      "The AI is unsure about some cells on this slide. Go to the place where it is the least sure.",
+    startPath: cellOnStudySlide,
+    guard: studyCellGuard,
+  },
+  {
+    id: "check-cells",
+    title: "Answer four unsure cells",
+    instruction:
+      "The AI was unsure about some of the cells in this place. Give your answer for at least 4 of them. Any answer is fine.",
+    startPath: cellOnStudySlide,
+    guard: studyCellGuard,
+  },
+  {
+    id: "change-type",
+    title: "Change a cell to immune",
+    instruction:
+      "Find a cell the AI calls a tumor cell that you think is an immune cell. Change its type to immune.",
+    startPath: cellOnStudySlide,
+    check: {
+      selector: '[data-testid="cell-type-bar"]:not([data-chosen=""]):not([data-chosen="keep"])',
+    },
+    guard: studyCellGuard,
+  },
+  {
+    id: "whole-slide",
+    title: "Look at the whole slide",
+    instruction:
+      "Quickly bring up a view of the entire tissue scan, then get back to the close-up you were looking at.",
+    startPath: reviewOnStudySlide,
+    guard: reviewSlideGuard,
+  },
+  {
+    id: "compare",
+    title: "Compare two slides",
+    instruction: "This case has a second slide. Show it next to the slide you are reading.",
+    startPath: reviewOnStudySlide,
+    check: { path: "[?&]with=" },
+  },
+  {
+    id: "add-scans",
+    title: "Add new scans",
+    instruction:
+      "New scans for this patient have just arrived on your computer. Start adding them to this case.",
+    startPath: reviewOnStudySlide,
+    check: { path: "/upload(\\?|$)" },
+  },
+  {
+    id: "sign-out",
+    title: "Finish the review",
+    instruction: "You have finished reviewing this slide. Submit your review.",
+    startPath: reviewOnStudySlide,
+  },
+  {
+    id: "queue-decision",
+    title: "Settle a disagreement",
+    instruction:
+      "Two reviewers disagree about some slides. Open the first one and give your decision.",
+    startPath: "/tasks/{queueTask}/disagreements",
+  },
+  {
+    id: "annotate-area",
+    title: "Outline a tumor area",
+    instruction: "Draw an outline around one area of tumor on this slide and save it.",
+    startPath: "/projects/{studyProject}/slides/{annotateSlide}/annotate-task?task={annotateTask}",
+  },
+];
+
 export type StudyContext = {
   slides: { id: string; label: string; project: { id: string } }[];
   resume: { projectId: string; slideId: string; taskId: string } | null;
+  participant?: ParticipantProject | null | undefined;
 };
 
 const fillTokens = (template: string, task: StudyTask, context: StudyContext) => {
@@ -197,6 +343,7 @@ const fillTokens = (template: string, task: StudyTask, context: StudyContext) =>
     task: context.resume?.taskId,
     taskProject: context.resume?.projectId,
     taskSlide: context.resume?.slideId,
+    ...participantTokens(context.participant),
   };
   let missing = false;
   const filled = template.replace(/\{(\w+)\}/g, (token, name: string) => {
@@ -258,7 +405,7 @@ export function checkMet(task: StudyTask, context: StudyContext, page: PageProbe
 }
 
 export const initialState = (): StudyState => ({
-  rounds: [{ number: 1, tasks: defaultTasks }],
+  rounds: [{ number: 1, tasks: round5Tasks }],
   sessions: [],
 });
 
@@ -267,6 +414,9 @@ export const currentRound = (state: StudyState): Round => {
   if (last === undefined) throw new Error("A study always has a round");
   return last;
 };
+
+export const roundTasks = (state: StudyState, session: StudySession | undefined): StudyTask[] =>
+  state.rounds.find((round) => round.number === session?.round)?.tasks ?? currentRound(state).tasks;
 
 export const isFrozen = (state: StudyState, round: number): boolean =>
   state.sessions.some((session) => session.round === round) ||
@@ -407,6 +557,175 @@ export function summariseRound(state: StudyState, round: number): TaskSummary[] 
   });
 }
 
+export const susItemCount = 10;
+
+export function susScore(sus: readonly (number | null)[]): number | null {
+  if (sus.length !== susItemCount || sus.some((value) => value === null)) return null;
+  return (
+    2.5 *
+    sus.reduce<number>(
+      (sum, value, index) => sum + (index % 2 === 0 ? (value ?? 0) - 1 : 5 - (value ?? 0)),
+      0,
+    )
+  );
+}
+
+const updateSession = (
+  state: StudyState,
+  sessionId: string,
+  change: (session: StudySession) => StudySession,
+): StudyState => ({
+  ...state,
+  sessions: state.sessions.map((session) => (session.id === sessionId ? change(session) : session)),
+});
+
+export function startParticipantSession(
+  state: StudyState,
+  code: string,
+  id: string,
+  at: number,
+): StudyState {
+  const started = startSession(state, code, id, at);
+  return updateSession(started, id, (session) => ({ ...session, consentAt: at, tasks: [] }));
+}
+
+export function recordTask(
+  state: StudyState,
+  sessionId: string,
+  record: TaskRecord,
+  startedAt: number,
+): StudyState {
+  const withResult = recordResult(state, sessionId, {
+    taskId: record.id,
+    startedAt,
+    endedAt: record.endedAt,
+    outcome: record.success ? "done" : "gave-up",
+  });
+  return updateSession(withResult, sessionId, (session) =>
+    (session.tasks ?? []).some((known) => known.id === record.id)
+      ? session
+      : { ...session, tasks: [...(session.tasks ?? []), record] },
+  );
+}
+
+export function answerTask(
+  state: StudyState,
+  sessionId: string,
+  taskId: string,
+  seq: number,
+  notes: TaskNotes,
+): StudyState {
+  return updateSession(state, sessionId, (session) => ({
+    ...session,
+    tasks: (session.tasks ?? []).map((record) =>
+      record.id === taskId ? { ...record, seq, notes } : record,
+    ),
+  }));
+}
+
+export const emptyFinal = (): FinalAnswers => ({
+  sus: Array.from({ length: susItemCount }, () => null),
+  susScore: null,
+  open: {},
+  changes: [],
+  finishedAt: null,
+});
+
+export type FinalPatch = {
+  sus?: (number | null)[] | undefined;
+  open?: Partial<Record<FinalTextKey, string | undefined>> | undefined;
+};
+
+export function answerFinal(
+  state: StudyState,
+  sessionId: string,
+  patch: FinalPatch,
+  at: number,
+): StudyState {
+  return updateSession(state, sessionId, (session) => {
+    const final = session.final ?? emptyFinal();
+    const changes: AnswerChange[] = [];
+    const sus = final.sus.map((before, index) => {
+      const after = patch.sus?.[index] ?? before;
+      if (before !== null && after !== null && after !== before) {
+        changes.push({ key: `sus${index + 1}`, from: before, to: after, at });
+      }
+      return after;
+    });
+    const open = { ...final.open };
+    for (const key of finalTextKeys) {
+      const after = patch.open?.[key];
+      if (after === undefined) continue;
+      const before = open[key];
+      if (before !== undefined && before !== after) {
+        changes.push({ key, from: before, to: after, at });
+      }
+      open[key] = after;
+    }
+    return {
+      ...session,
+      final: {
+        ...final,
+        sus,
+        susScore: susScore(sus),
+        open,
+        changes: [...final.changes, ...changes],
+      },
+    };
+  });
+}
+
+export function finishFinal(state: StudyState, sessionId: string, at: number): StudyState {
+  return updateSession(state, sessionId, (session) => ({
+    ...session,
+    final: { ...(session.final ?? emptyFinal()), finishedAt: at },
+  }));
+}
+
+const notesSchema = z.object({
+  like: z.string().optional(),
+  dislike: z.string().optional(),
+  recommend: z.string().optional(),
+});
+
+const taskRecordSchema = z.object({
+  id: z.string(),
+  idx: z.number(),
+  title: z.string(),
+  goal: z.string(),
+  success: z.boolean(),
+  durationMs: z.number(),
+  clicks: z.number(),
+  deadClicks: z.number(),
+  blocked: z.number(),
+  keys: z.number(),
+  wheels: z.number(),
+  seq: z.number().nullable(),
+  notes: notesSchema.default({}),
+  reason: z.string().nullable(),
+  endedAt: z.number(),
+});
+
+const finalSchema = z.object({
+  sus: z.array(z.number().nullable()),
+  susScore: z.number().nullable(),
+  open: z.object({
+    like: z.string().optional(),
+    dislike: z.string().optional(),
+    missing: z.string().optional(),
+    recommend: z.string().optional(),
+  }),
+  changes: z.array(
+    z.object({
+      key: z.string(),
+      from: z.union([z.string(), z.number()]),
+      to: z.union([z.string(), z.number()]),
+      at: z.number(),
+    }),
+  ),
+  finishedAt: z.number().nullable(),
+});
+
 const stateSchema = z.object({
   rounds: z.array(z.object({ number: z.number().int().positive(), tasks: taskSetSchema })).min(1),
   sessions: z.array(
@@ -415,6 +734,9 @@ const stateSchema = z.object({
       round: z.number().int().positive(),
       participant: z.string(),
       startedAt: z.number(),
+      consentAt: z.number().optional(),
+      tasks: z.array(taskRecordSchema).optional(),
+      final: finalSchema.optional(),
       blocks: z.array(z.object({ taskId: z.string(), at: z.number(), to: z.string() })).default([]),
       results: z.array(
         z.object({

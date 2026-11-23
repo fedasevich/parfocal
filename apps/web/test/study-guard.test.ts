@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  defaultTasks,
-  initialState,
   isBlocked,
+  pilotTasks,
   recordBlock,
   resolveGuard,
   type StudyContext,
@@ -53,7 +52,12 @@ test("a task with no guard has none, and unresolved tokens drop the guard", () =
 });
 
 test("blocked attempts are logged once and counted per task", () => {
-  let state = startSession(initialState(), "P1", "s1", 0);
+  let state = startSession(
+    { rounds: [{ number: 1, tasks: pilotTasks }], sessions: [] },
+    "P1",
+    "s1",
+    0,
+  );
   state = recordBlock(state, "s1", { taskId: "t4", at: 5, to: "/my-work" });
   state = recordBlock(state, "s1", { taskId: "t4", at: 5, to: "/my-work" });
   state = recordBlock(state, "s1", { taskId: "t4", at: 9, to: "/" });
@@ -65,6 +69,6 @@ test("blocked attempts are logged once and counted per task", () => {
 });
 
 test("only the cell tasks carry a guard by default", () => {
-  const guardedIds = defaultTasks.filter((task) => task.guard !== undefined).map((task) => task.id);
+  const guardedIds = pilotTasks.filter((task) => task.guard !== undefined).map((task) => task.id);
   assert.deepEqual(guardedIds, ["t4", "t5", "t6"]);
 });

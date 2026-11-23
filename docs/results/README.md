@@ -180,3 +180,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-21 | [A Best embedding on a cold GPU pool answered in 27.7 s without a wait, on a T4 in AWS us-east](2026-11-21-best-embedding-on-a-cold-pool.md) | OPS-038, AISEG-024 | deployed check with cost |
 | 2026-11-21 | [Both slide buckets carry the tiering rule in R2, and the first live cost report files the EU bucket as unbudgeted](2026-11-21-storage-lifecycle-and-cost-report.md) | OPS-009 | production measurement |
 | 2026-11-23 | [A numbered walkthrough of the whole deployed app in 15 chapters and 162 steps for 7 accounts and a signed-out visitor, all 162 working](2026-11-23-walkthrough.html), with its [steps file](2026-11-23-walkthrough-steps.json) | PILOT-011 | deployed check |
+| 2026-11-23 | [One study participant's project seeds in under 2 s and about 360 statements locally](2026-11-23-participant-seed-time.md) | EXP-016 | local benchmark |
