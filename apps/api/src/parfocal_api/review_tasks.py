@@ -33,6 +33,7 @@ from parfocal_api.display_settings import (
     stored_display,
 )
 from parfocal_api.drawn_sources import drawn_sets, not_drawn
+from parfocal_api.drawn_wording import drawn_only
 from parfocal_api.notifications import deliver_after_commit
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -271,6 +272,7 @@ class ReviewTask(BaseModel):
 
 class ReviewTaskDetail(ReviewTask):
     slides: list[TaskSlide]
+    drawn: bool = False
 
 
 project_router = APIRouter(prefix="/api/projects/{project_id}/review-tasks", tags=["review-tasks"])
@@ -453,7 +455,9 @@ async def detail_of(
     task_slides = await task_slides_of(connection, principal, row, whole)
     people = {user for slide in task_slides for user in slide.reviewer_ids}
     return ReviewTaskDetail(
-        **task_of(row, len(task_slides), len(people)).model_dump(), slides=task_slides
+        **task_of(row, len(task_slides), len(people)).model_dump(),
+        slides=task_slides,
+        drawn=await drawn_only(connection, row.id),
     )
 
 

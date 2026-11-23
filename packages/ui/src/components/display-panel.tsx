@@ -101,19 +101,23 @@ const defaultDisplaySettings: DisplaySettings = {
   buttons: "right",
 };
 
+const drawingOrder = msg`Drawing order`;
+
 function word(key: string, value: string): string {
   const label = displayOptions[key]?.find((option) => option.value === value)?.label;
   return label ? i18n._(label) : value;
 }
 
-function displaySummary(zone: "draw" | "ai" | "move", settings: DisplaySettings) {
+function displaySummary(zone: "draw" | "ai" | "move", settings: DisplaySettings, drawn = false) {
   if (zone === "draw") {
     return t`${word("draw", settings.draw)} ${settings.width} px · by ${settings.colorBy}${settings.opacity < 100 ? ` · ${settings.opacity}%` : ""} · IDs ${settings.ids ? "on" : "off"}`;
   }
   if (zone === "ai") {
     return t`Confidence as a ${settings.confidence} · ${settings.heatmap ? `heatmap ${settings.heatmap}%` : "heatmap off"} · cutoff ${settings.cutoff.toFixed(2)}`;
   }
-  return `${word("order", settings.order)} · ${settings.zoom} · ${settings.auto ? t`moves on by itself` : t`stays after an answer`}`;
+  const order =
+    drawn && settings.order === "ai" ? i18n._(drawingOrder) : word("order", settings.order);
+  return `${order} · ${settings.zoom} · ${settings.auto ? t`moves on by itself` : t`stays after an answer`}`;
 }
 
 type SettingChange = (key: keyof DisplaySettings, value: string | number | boolean) => void;
@@ -124,12 +128,14 @@ function SegRow({
   value,
   lock,
   onChange,
+  drawn = false,
 }: {
   label: string;
   name: string;
   value: string;
   lock?: Lock | undefined;
   onChange?: SettingChange | undefined;
+  drawn?: boolean;
 }) {
   return (
     <ControlRow label={label} locked={lock}>
@@ -147,7 +153,10 @@ function SegRow({
             : { defaultValue: value })}
           options={(displayOptions[name] ?? []).map((option) => ({
             ...option,
-            label: i18n._(option.label),
+            label:
+              drawn && name === "order" && option.value === "ai"
+                ? i18n._(drawingOrder)
+                : i18n._(option.label),
           }))}
         />
       )}
@@ -355,6 +364,7 @@ type DisplayPanelProps = React.ComponentProps<"div"> & {
   onIdsChange?: (on: boolean) => void;
   onSettingChange?: SettingChange;
   classVisibility?: React.ReactNode;
+  drawn?: boolean;
 };
 
 function DisplayPanel({
@@ -369,6 +379,7 @@ function DisplayPanel({
   onIdsChange,
   onSettingChange: onChange,
   classVisibility,
+  drawn = false,
   className,
   ...props
 }: DisplayPanelProps) {
@@ -423,7 +434,7 @@ function DisplayPanel({
         {classVisibility}
       </FoldingZone>
       <FoldingZone
-        title={t`What the AI shows`}
+        title={drawn ? t`What the layers show` : t`What the AI shows`}
         summary={displaySummary("ai", settings)}
         defaultOpen={!folded.includes("ai")}
       >
@@ -467,7 +478,7 @@ function DisplayPanel({
       </FoldingZone>
       <FoldingZone
         title={t`How the review moves`}
-        summary={displaySummary("move", settings)}
+        summary={displaySummary("move", settings, drawn)}
         defaultOpen={!folded.includes("move")}
       >
         {viewer ? (
@@ -481,6 +492,7 @@ function DisplayPanel({
           value={settings.order}
           lock={locks.order}
           onChange={onChange}
+          drawn={drawn}
         />
         <SegRow
           label={t`Zoom around the object`}

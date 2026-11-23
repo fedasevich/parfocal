@@ -3533,6 +3533,10 @@ msgstr ""
 msgid "After this the AI result appears and you can give your decisions."
 msgstr ""
 
+#: src/screens/review/first-read.tsx
+msgid "After this the drawn outlines appear and you can give your decisions."
+msgstr ""
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Agree"
 msgstr ""
@@ -6896,6 +6900,7 @@ msgstr ""
 msgid "Draw the new outline of {0}"
 msgstr ""
 
+#: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Drawing order"
 msgstr ""
@@ -6914,6 +6919,10 @@ msgstr ""
 
 #: src/screens/review/object-card.tsx
 msgid "Drawn outline"
+msgstr ""
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Drawn outlines"
 msgstr ""
 
 #: src/measure/measurement-list.tsx
@@ -13556,6 +13565,10 @@ msgstr ""
 msgid "Read the slide without the AI"
 msgstr ""
 
+#: src/screens/review/first-read.tsx
+msgid "Read the slide without the drawn outlines"
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Read Zarr on the main thread"
 msgstr ""
@@ -17243,6 +17256,14 @@ msgstr ""
 msgid "The draft is saved as you go."
 msgstr ""
 
+#: src/screens/review/first-read.tsx
+msgid "The drawn outlines are hidden until you record your first read. Answer the questions, add what you find, then record. Your first read stays as it is after that."
+msgstr ""
+
+#: src/screens/review/first-read-notice.tsx
+msgid "The drawn outlines stay hidden until your first read"
+msgstr ""
+
 #: src/screens/new-task/modals.tsx
 msgid "The drawn type is hidden in this style"
 msgstr ""
@@ -18201,6 +18222,10 @@ msgstr ""
 
 #: src/screens/review/first-read-notice.tsx
 msgid "This task asks for your own read of the slide before the AI result appears. Record it in guided review."
+msgstr ""
+
+#: src/screens/review/first-read-notice.tsx
+msgid "This task asks for your own read of the slide before the drawn outlines appear. Record it in guided review."
 msgstr ""
 
 #: src/viewer/task-slide-check.tsx
@@ -19467,6 +19492,7 @@ msgstr ""
 msgid "What the experts do"
 msgstr ""
 
+#: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "What the layers show"
 msgstr ""

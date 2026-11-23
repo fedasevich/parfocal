@@ -81447,6 +81447,11 @@
             },
             "type": "array",
             "title": "Slides"
+          },
+          "drawn": {
+            "type": "boolean",
+            "title": "Drawn",
+            "default": false
           }
         },
         "type": "object",

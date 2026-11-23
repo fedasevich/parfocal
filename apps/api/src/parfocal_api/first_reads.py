@@ -12,6 +12,7 @@ from parfocal_api.annotations import Annotation, annotation_of
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.drawn_wording import drawn_only
 from parfocal_api.opinion_questions import asked_in
 from parfocal_api.opinions import opinion_of
 from parfocal_api.permissions import Permission, require
@@ -36,6 +37,10 @@ class FirstRead(BaseModel):
 class NoFirstReadError(ConflictError):
     code = "no-first-read"
     title = "This task shows the AI from the start, so it has no first read"
+
+
+class DrawnNoFirstReadError(NoFirstReadError):
+    title = "This task shows the drawn outlines from the start, so it has no first read"
 
 
 class FirstReadRecordedError(ConflictError):
@@ -124,6 +129,8 @@ async def submit_first_read(
         select(review_tasks.c.ai_hidden_first_read).where(review_tasks.c.id == task_id)
     )
     if not hides:
+        if await drawn_only(connection, task_id):
+            raise DrawnNoFirstReadError
         raise NoFirstReadError
     assignment = (
         await connection.execute(

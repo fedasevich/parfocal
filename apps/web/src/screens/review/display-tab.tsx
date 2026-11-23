@@ -31,7 +31,11 @@ const lowerFirst = (text: string) => `${text.charAt(0).toLowerCase()}${text.slic
 
 export type DisplayLock = { setting: string; value: string; reason: string };
 
-export function displayLocks(display: TaskDisplayView | undefined, extra: DisplayLock[] = []) {
+export function displayLocks(
+  display: TaskDisplayView | undefined,
+  extra: DisplayLock[] = [],
+  drawn = false,
+) {
   const all = [
     ...(display?.locks ?? []).map((lock) => ({
       setting: lock.setting,
@@ -44,7 +48,10 @@ export function displayLocks(display: TaskDisplayView | undefined, extra: Displa
     all.map((lock) => [
       lock.setting,
       {
-        value: lockedText(lock.setting, lock.value),
+        value:
+          drawn && lock.setting === "order" && lock.value === "ai"
+            ? "Drawing order"
+            : lockedText(lock.setting, lock.value),
         reason: `Locked by ${display?.task_code ?? "the task"}: ${lowerFirst(lock.reason)}`,
       },
     ]),
@@ -130,6 +137,7 @@ type DisplayTabProps = {
   overrides?: Partial<DisplaySettings>;
   onSettingChange?: (key: keyof DisplaySettings, value: string | number | boolean) => void;
   classVisibility?: ReactNode;
+  drawn?: boolean;
 };
 
 export function DisplayTab({
@@ -151,6 +159,7 @@ export function DisplayTab({
   overrides = {},
   onSettingChange,
   classVisibility,
+  drawn = false,
 }: DisplayTabProps) {
   const personal = personalPanelValues(useDisplayDefaults());
   const picked = withOverrides(
@@ -170,7 +179,8 @@ export function DisplayTab({
       <DisplayPanel
         key={`${preset ?? "task"}-${extraLocks.length}`}
         settings={settings}
-        locks={displayLocks(display, extraLocks)}
+        locks={displayLocks(display, extraLocks, drawn)}
+        drawn={drawn}
         viewer={viewer}
         resultSets={resultSets}
         aiExtras={aiExtras}

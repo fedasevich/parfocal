@@ -322,8 +322,9 @@ export function AiSays({ setName, objects }: { setName: string; objects: ReviewO
     units,
   );
   const cells = sampledCellsOf(objects);
+  const drawn = objects.some((item) => item.drawn);
   return (
-    <Zone title={t`AI says`}>
+    <Zone title={drawn ? t`Drawn outlines` : t`AI says`}>
       <FactList
         tight
         rows={[

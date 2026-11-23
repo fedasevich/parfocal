@@ -75,6 +75,7 @@ import { addedOn, addObject } from "./added-objects.ts";
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
+import { drawnPage, pageHas } from "./page-flags.ts";
 import { pagedCellSource } from "./paged-cell-source.ts";
 import { toResultSetDetail } from "./project-handlers.ts";
 import {
@@ -151,10 +152,7 @@ const slideSummary = (slideId: string) => {
   };
 };
 
-const pageHas = (request: Request, part: string) =>
-  [request.referrer, request.headers.get("referer") ?? ""].some((url) => url.includes(part));
-
-export const drawnPage = (request: Request) => pageHas(request, "source=drawn");
+export { drawnPage };
 
 const customFormPage = (request: Request) => pageHas(request, "form=custom");
 
@@ -726,7 +724,7 @@ export function reviewHandlers(): RequestHandler[] {
               truncated: false,
             }),
     ),
-    http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
+    http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params, request }) => {
       if (params.taskId === annotateStubTaskId)
         return HttpResponse.json({
           ...toReviewTaskDetail(rt13),
@@ -752,7 +750,9 @@ export function reviewHandlers(): RequestHandler[] {
           })),
         });
       const extra = [rt13, rt16, rt17].find((task) => task.id === params.taskId);
-      return extra ? HttpResponse.json(toReviewTaskDetail(extra)) : undefined;
+      return extra
+        ? HttpResponse.json({ ...toReviewTaskDetail(extra), drawn: drawnPage(request) })
+        : undefined;
     }),
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId/states", ({ params }) =>
       params.taskId === rt13.id ? HttpResponse.json(toTaskStates(rt13)) : undefined,

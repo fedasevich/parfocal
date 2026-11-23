@@ -282,3 +282,15 @@ def test_any_opinion_form_reads_as_drawn_on_a_drawn_task_without_changing_the_fo
         "Did the AI miss a region?",
         "Comment",
     ]
+
+
+def test_a_drawn_task_says_so_and_words_its_refusals_as_drawn(api: ApiAs, database: str) -> None:
+    d = drawn_slide(api, database)
+    task = drawn_task(api, d)
+    detail = ok(api(d.people["owner"]).get(f"/api/review-tasks/{task}")).json()
+    assert detail["drawn"] is True
+    refused = api(d.people["first"]).post(f"/api/review-tasks/{task}/slides/{d.slide}/first-read")
+    assert (refused.status_code, refused.json()["code"]) == (409, "no-first-read")
+    assert refused.json()["title"] == (
+        "This task shows the drawn outlines from the start, so it has no first read"
+    )

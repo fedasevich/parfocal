@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-23
+
+- PROTO-164 Finished the drawn wording sweep. ReviewTaskDetail gains a drawn flag. The first-read panel and notice, the AI says title, the display tab (Drawing order, What the layers show), the methods line and task settings style name read as drawn. Drawn tasks get drawn titles for the first-read refusals in blinding, first_reads and review_states. Emails, audit names and CSV headers were inspected and need nothing, since they are neutral or only about model runs. Left alone: AiHiddenError (slide level, no task), ObjectEditHistory (rendered nowhere), Smart select AI tools, cell-only text, run progress and annotate-task text. Seeded Drawn outline review example in the de-identified study project with rhea and remy disagreeing on one outline and the agent as adjudicator. The guided-review failed-submit test flaked once under load and passed alone.
+
 ## 2026-11-22
 
 - PROTO-163 (drawn objects read as drawn in the queue, sign-off and export) passed the deployed walk on v0.38.1 (release 9e8b419) and is ticked. On drawn review tasks RT-2 and RT-3 in project P04 the wizard, queue, task settings, sign-off, evaluation report and training export read as drawn, with drawn-confirmed and drawn-edited origins (ADR 0433, drawn objects get their own export origins). Two fixes went in after rechecks, in v0.38.0 and v0.38.1. The adjudicator wording is covered only by fake API specs, because the agent account has no second reviewer to send an object to. A form other than the template's default keeps its published wording. Production touches: deploys of v0.38.0 and v0.38.1 to Modal main, cost TODO. An unsent draft task is left in P04.

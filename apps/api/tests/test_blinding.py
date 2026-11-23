@@ -459,6 +459,7 @@ def test_a_first_read_is_refused_where_it_does_not_apply(api: ApiAs, database: s
     shown = study(api, database, blinded=True, hidden=False)
     plain = api(shown.people["first"]).post(f"{shown.base}/first-read")
     assert (plain.status_code, plain.json()["code"]) == (409, "no-first-read")
+    assert plain.json()["title"] == "This task shows the AI from the start, so it has no first read"
     s = study(api, database, blinded=True, hidden=True)
     for who, status, code in (
         ("third", 404, "not-found"),

@@ -1,6 +1,6 @@
 import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useAddReviewObject, useSubmitFirstRead } from "@parfocal/api-client";
+import { useAddReviewObject, useGetReviewTask, useSubmitFirstRead } from "@parfocal/api-client";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -24,6 +24,9 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
   const { t } = useLingui();
   const queryClient = useQueryClient();
   const { answers, change, saving } = useOpinionDraft(session);
+  const task = useGetReviewTask(session.taskId).data;
+  const drawnTask =
+    Boolean(session.task?.drawn) || (task?.status === 200 && task.data.drawn === true);
   const [camera, setCamera] = useState<Camera | null>(null);
   const [draft, setDraft] = useState<PolygonDraft | null>(null);
   const [drawn, setDrawn] = useState<{ id: string; shape: PolygonDraft }[]>([]);
@@ -80,13 +83,24 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
       <div className="grid justify-items-start gap-2">
         <Icon name="eye-off" size="lg" className="text-fg-dim" />
         <h2 className="m-0 text-title-sm font-semibold">
-          <Trans>Read the slide without the AI</Trans>
+          {drawnTask ? (
+            <Trans>Read the slide without the drawn outlines</Trans>
+          ) : (
+            <Trans>Read the slide without the AI</Trans>
+          )}
         </h2>
         <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">
-          <Trans>
-            The AI result is hidden until you record your first read. Answer the questions, add what
-            you find, then record. Your first read stays as it is after that.
-          </Trans>
+          {drawnTask ? (
+            <Trans>
+              The drawn outlines are hidden until you record your first read. Answer the questions,
+              add what you find, then record. Your first read stays as it is after that.
+            </Trans>
+          ) : (
+            <Trans>
+              The AI result is hidden until you record your first read. Answer the questions, add
+              what you find, then record. Your first read stays as it is after that.
+            </Trans>
+          )}
         </p>
       </div>
       <div className="grid gap-4">
@@ -156,7 +170,9 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
                 one: "# required question is not answered.",
                 other: "# required questions are not answered.",
               })
-            : t`After this the AI result appears and you can give your decisions.`}
+            : drawnTask
+              ? t`After this the drawn outlines appear and you can give your decisions.`
+              : t`After this the AI result appears and you can give your decisions.`}
         </span>
       </div>
     </div>

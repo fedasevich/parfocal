@@ -6955,6 +6955,7 @@ export interface ReviewTaskDetail {
   slide_count: number;
   reviewer_count: number;
   slides: TaskSlide[];
+  drawn?: boolean;
 }
 
 export interface ReviewedLayer {

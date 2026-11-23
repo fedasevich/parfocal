@@ -446,6 +446,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               label: t`Display`,
               body: (
                 <DisplayTab
+                  drawn={current?.drawn ?? false}
                   display={display}
                   preset={null}
                   extraLocks={[]}

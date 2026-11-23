@@ -42,6 +42,7 @@ import {
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { withoutDeleted } from "./deleted-result-sets.ts";
 import { taskDisplayFor } from "./display-settings.ts";
+import { drawnPage } from "./page-flags.ts";
 import { queueTaskView } from "./queue-scene.ts";
 import {
   decisionNotesOf,
@@ -667,7 +668,10 @@ export function workHandlers(): RequestHandler[] {
         next_cursor: null,
       };
     }),
-    getGetReviewTaskMockHandler(({ params }) => reviewTaskDetailOf(String(params.taskId))),
+    getGetReviewTaskMockHandler(({ params, request }) => ({
+      ...reviewTaskDetailOf(String(params.taskId)),
+      drawn: drawnPage(request),
+    })),
     getGetReviewTaskStatesMockHandler(({ params }) => {
       const task = [...reviewTasks, rt18].find((candidate) => candidate.id === params.taskId);
       return task

@@ -177,3 +177,32 @@ for (const { source, sees, hidden } of [
     await expect(page.getByText(hidden)).toHaveCount(0);
   });
 }
+
+const rt17 = "00000000-0000-4000-8007-000000000017";
+
+test("the first read of a drawn review hides the drawn outlines, not the AI", async ({ page }) => {
+  await page.goto(`/tasks/${rt17}/guided?slide=${a1}&source=drawn`);
+  const panel = page.getByTestId("first-read-panel");
+  await expect(panel).toContainText("Read the slide without the drawn outlines");
+  await expect(panel).toContainText(
+    "The drawn outlines are hidden until you record your first read.",
+  );
+  await expect(panel).not.toContainText(/\bAI\b/);
+});
+
+test("the display tab of a drawn review orders by drawing, not by the AI", async ({ page }) => {
+  await page.goto(`${rt14}/guided?slide=${a1}&scene=display&source=drawn`);
+  const panel = page.getByRole("tabpanel");
+  await expect(panel.getByRole("button", { name: /What the layers show/ })).toBeVisible();
+  await panel.getByRole("button", { name: /How the review moves/ }).click();
+  await expect(panel.getByText("Drawing order · fit · moves on by itself")).toBeVisible();
+  await expect(panel.getByText(/AI order/)).toHaveCount(0);
+});
+
+test("the guided card of a drawn outline names it as drawn", async ({ page }) => {
+  await page.goto(`${rt14}/guided?slide=${a1}&scene=region&source=drawn`);
+  await expect(
+    page.getByRole("button", { name: "Add something the outlines missed" }),
+  ).toBeVisible();
+  await expect(page.getByText("Add something the AI missed")).toHaveCount(0);
+});

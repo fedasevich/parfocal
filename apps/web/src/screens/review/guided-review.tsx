@@ -1155,6 +1155,7 @@ function GuidedBody({
               label: "Display",
               body: (
                 <DisplayTab
+                  drawn={session.task?.drawn ?? false}
                   display={session.display}
                   preset={choice.preset}
                   extraLocks={extraLocks}

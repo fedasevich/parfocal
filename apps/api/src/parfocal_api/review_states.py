@@ -23,6 +23,7 @@ from parfocal_api.disagreements import (
     queue_of,
     queues_of,
 )
+from parfocal_api.drawn_wording import drawn_only
 from parfocal_api.evaluation_versions import (
     SignOffConfirmation,
     VersionDraft,
@@ -233,8 +234,16 @@ def check_move(move: Move, facts: MoveFacts) -> Refused | None:
             return None if facts.signed_off else Refused.NOT_SIGNED_OFF
 
 
-def problem_for(refused: Refused) -> ProblemError:
+DRAWN_TITLES: Mapping[Refused, str] = {
+    Refused.FIRST_READ_NEEDED: (
+        "Record your first read without the drawn outlines before you submit this slide"
+    ),
+}
+
+
+def problem_for(refused: Refused, drawn: bool = False) -> ProblemError:
     kind, title = REFUSALS[refused]
+    title = DRAWN_TITLES.get(refused, title) if drawn else title
     problem = kind(title)
     problem.code = refused.value
     problem.title = title
@@ -454,7 +463,7 @@ async def apply(
 ) -> None:
     refused = check_move(move, facts)
     if refused is not None:
-        raise problem_for(refused)
+        raise problem_for(refused, await drawn_only(connection, task.id))
     if task.project_archived_at is not None:
         raise ProjectArchivedError
     await record(
@@ -620,7 +629,7 @@ async def task_move(
     )
     refused = check_move(move, facts)
     if refused is not None:
-        raise problem_for(refused)
+        raise problem_for(refused, await drawn_only(connection, task.id))
     if task.project_archived_at is not None:
         raise ProjectArchivedError
     return task

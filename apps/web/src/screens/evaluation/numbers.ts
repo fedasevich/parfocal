@@ -76,6 +76,9 @@ export const styleName = {
   blind: "Pick the class blind",
 } as const;
 
+export const styleNameFor = (kind: keyof typeof styleName, drawn: boolean) =>
+  drawn && kind === "agree" ? "Agree with the outline" : styleName[kind];
+
 const answerName: Record<string, string> = {
   unsure: "Not sure",
   agree: "Agree",
@@ -108,7 +111,7 @@ export function methodsLines(
   const { decisions } = evaluation;
   const style = toReviewStyle({ style: decisions.style, counts_as: decisions.counts_as });
   const lines = [
-    `Reviewers answered in the ${styleName[style.kind]} style. ${countsAsRule(style.kind, style, evaluation.ai_result === false ? "drawn" : "ai")}`,
+    `Reviewers answered in the ${styleNameFor(style.kind, evaluation.ai_result === false)} style. ${countsAsRule(style.kind, style, evaluation.ai_result === false ? "drawn" : "ai")}`,
   ];
   const counted = Object.entries(decisions.counted)
     .map(([value, count]) => `${count} ${countWord[value] ?? value}`)

@@ -23,7 +23,7 @@ import { countsAsRule } from "@parfocal/ui/lib/counts-as-rule";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
-import { styleName } from "../evaluation/numbers.ts";
+import { styleNameFor } from "../evaluation/numbers.ts";
 import { okData } from "../placeholder.tsx";
 import { decisionSettings, toReviewStyle } from "../review/decision-mapping.ts";
 import { type Range, recountOf, recountText, sameRange, splitOf } from "./task-settings-model.ts";
@@ -214,7 +214,7 @@ export function TaskSettingsDrawer({
       ) : (
         <>
           <Zone title={task.name} sub={t`Pinned when the task was sent.`}>
-            <Fact label={t`Decision style`}>{styleName[stored.kind]}</Fact>
+            <Fact label={t`Decision style`}>{styleNameFor(stored.kind, source === "drawn")}</Fact>
             {stored.question ? <Fact label={t`Question`}>{stored.question}</Fact> : null}
             <Hint>
               <Trans>The style cannot change once a decision exists.</Trans>

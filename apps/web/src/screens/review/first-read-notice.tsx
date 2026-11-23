@@ -1,19 +1,33 @@
 import { Trans } from "@lingui/react/macro";
+import { useGetReviewTask } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Link } from "@tanstack/react-router";
+import { okData } from "../placeholder.tsx";
 
 export function FirstReadNotice({ taskId, slideId }: { taskId: string; slideId: string }) {
+  const drawn = okData(useGetReviewTask(taskId).data)?.drawn ?? false;
   return (
     <div className="grid justify-items-start gap-2" data-testid="first-read-notice">
       <Icon name="eye-off" size="lg" className="text-fg-dim" />
       <h2 className="m-0 text-title-sm font-semibold">
-        <Trans>The AI stays hidden until your first read</Trans>
+        {drawn ? (
+          <Trans>The drawn outlines stay hidden until your first read</Trans>
+        ) : (
+          <Trans>The AI stays hidden until your first read</Trans>
+        )}
       </h2>
       <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">
-        <Trans>
-          This task asks for your own read of the slide before the AI result appears. Record it in
-          guided review.
-        </Trans>
+        {drawn ? (
+          <Trans>
+            This task asks for your own read of the slide before the drawn outlines appear. Record
+            it in guided review.
+          </Trans>
+        ) : (
+          <Trans>
+            This task asks for your own read of the slide before the AI result appears. Record it in
+            guided review.
+          </Trans>
+        )}
       </p>
       <Link
         to="/tasks/$taskId/guided"

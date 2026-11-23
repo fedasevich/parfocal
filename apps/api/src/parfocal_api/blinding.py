@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy import ColumnElement, Select, and_, false, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.drawn_wording import drawn_only
 from parfocal_api.permissions import Permission
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError
@@ -31,6 +32,10 @@ class AiHiddenError(ForbiddenError):
 class FirstReadOpenError(ConflictError):
     code = "first-read-open"
     title = "Record your first read before you judge the AI's objects"
+
+
+class DrawnFirstReadOpenError(FirstReadOpenError):
+    title = "Record your first read before you judge the drawn outlines"
 
 
 class FirstReadStartedError(ConflictError):
@@ -148,6 +153,8 @@ async def require_judging_allowed(
     if await first_read_open(connection, principal, task_id, slide_id) or await ai_hidden_on(
         connection, principal, project_id, slide_id
     ):
+        if await drawn_only(connection, task_id):
+            raise DrawnFirstReadOpenError
         raise FirstReadOpenError
 
 

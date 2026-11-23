@@ -7993,6 +7993,7 @@ export const getCreateReviewTaskResponseMock = (
       ).map(() => faker.string.uuid()),
     }),
   ),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -8272,6 +8273,7 @@ export const getGetReviewTaskResponseMock = (
       ).map(() => faker.string.uuid()),
     }),
   ),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -8419,6 +8421,7 @@ export const getChangeReviewTaskResponseMock = (
       ).map(() => faker.string.uuid()),
     }),
   ),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -8596,6 +8599,7 @@ export const getAddTaskReviewerResponseMock = (
       ).map(() => faker.string.uuid()),
     }),
   ),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -8743,6 +8747,7 @@ export const getWithdrawReviewTaskResponseMock = (
       ).map(() => faker.string.uuid()),
     }),
   ),
+  drawn: faker.datatype.boolean(),
   ...overrideResponse,
 });
 

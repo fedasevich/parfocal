@@ -412,6 +412,7 @@ export function useViewerPanels(
       </>
     ) : (
       <DisplayTab
+        drawn={session.task?.drawn ?? false}
         display={display}
         preset={preset}
         extraLocks={extraLocks}
