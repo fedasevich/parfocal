@@ -453,7 +453,7 @@ export function ObjectCard({
         {text.above ? (
           <>
             <small className="text-body-sm font-semibold text-fg-dim">
-              <Trans>AI says</Trans>
+              {object.drawn ? <Trans>Drawn outline</Trans> : <Trans>AI says</Trans>}
             </small>
             <p className="m-0 text-lead text-fg">{text.above}</p>
           </>
@@ -502,7 +502,11 @@ export function ObjectCard({
       {readOnly ? null : (
         <Button className="w-fit" disabled={disabled} onClick={onAddMissed}>
           <Icon name="poly" />
-          <Trans>Add something the AI missed</Trans>
+          {object.drawn ? (
+            <Trans>Add something the outlines missed</Trans>
+          ) : (
+            <Trans>Add something the AI missed</Trans>
+          )}
         </Button>
       )}
     </div>

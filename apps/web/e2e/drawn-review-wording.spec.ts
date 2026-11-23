@@ -154,3 +154,26 @@ test("an AI review keeps its AI wording in the wizard form, outline settle and s
     "A redraw is compared with the AI outline when the other reviewer kept it.",
   );
 });
+
+const a1 = "00000000-0000-4000-8005-000000000001";
+
+for (const { source, sees, hidden } of [
+  {
+    source: "&source=drawn",
+    sees: "Do the drawn outlines miss any tumor on this slide?",
+    hidden: "Does the AI miss any tumor on this slide?",
+  },
+  {
+    source: "",
+    sees: "Does the AI miss any tumor on this slide?",
+    hidden: "Do the drawn outlines miss any tumor on this slide?",
+  },
+]) {
+  test(`a custom opinion form reads ${source ? "as drawn" : "as AI"} on the reviewer's screen`, async ({
+    page,
+  }) => {
+    await page.goto(`${rt14}/guided?slide=${a1}&scene=required&form=custom${source}`);
+    await expect(page.getByRole("radiogroup", { name: sees })).toBeVisible();
+    await expect(page.getByText(hidden)).toHaveCount(0);
+  });
+}

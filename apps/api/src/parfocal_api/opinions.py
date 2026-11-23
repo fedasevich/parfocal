@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.drawn_wording import drawn_only, drawn_questions
 from parfocal_api.opinion_questions import (
     QUESTIONS,
     ChoiceQuestion,
@@ -111,7 +112,10 @@ async def form_of(connection: AsyncConnection, task_id: uuid.UUID) -> tuple[int,
             .where(review_tasks.c.id == task_id)
         )
     ).one()
-    return int(row.version), QUESTIONS.validate_python(row.questions)
+    questions = QUESTIONS.validate_python(row.questions)
+    if await drawn_only(connection, task_id):
+        questions = drawn_questions(questions)
+    return int(row.version), questions
 
 
 async def opinion_of(

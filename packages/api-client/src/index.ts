@@ -1,6 +1,7 @@
 export const packageName = "@parfocal/api-client";
 
 export * from "./draft/index.ts";
+export { drawnText, textFor } from "./drawn-wording.ts";
 export {
   type ApiResponse,
   apiFetch,

@@ -2931,6 +2931,10 @@ msgstr ""
 msgid "A person drew {code} as tumor."
 msgstr ""
 
+#: src/screens/review/guided-review.tsx
+msgid "A person drew this. It is outlined in white."
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "A preset only fills in the options. You can change each of them on the next step."
 msgstr ""
@@ -3382,6 +3386,10 @@ msgstr ""
 
 #: src/screens/review/object-card.tsx
 msgid "Add something the AI missed"
+msgstr ""
+
+#: src/screens/review/object-card.tsx
+msgid "Add something the outlines missed"
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -6902,6 +6910,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Drawn or imported by an expert"
+msgstr ""
+
+#: src/screens/review/object-card.tsx
+msgid "Drawn outline"
 msgstr ""
 
 #: src/measure/measurement-list.tsx

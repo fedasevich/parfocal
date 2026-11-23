@@ -1,4 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
+import { textFor } from "../drawn-wording.ts";
 import {
   getAddReviewObjectMockHandler,
   getClearDecisionBatchMockHandler,
@@ -150,10 +151,12 @@ const slideSummary = (slideId: string) => {
   };
 };
 
-export const drawnPage = (request: Request) =>
-  [request.referrer, request.headers.get("referer") ?? ""].some((url) =>
-    url.includes("source=drawn"),
-  );
+const pageHas = (request: Request, part: string) =>
+  [request.referrer, request.headers.get("referer") ?? ""].some((url) => url.includes(part));
+
+export const drawnPage = (request: Request) => pageHas(request, "source=drawn");
+
+const customFormPage = (request: Request) => pageHas(request, "form=custom");
 
 export const drawnTools = ["hand", "smart-select"] as const;
 
@@ -543,13 +546,30 @@ const firstReadQuestions: Opinion["questions"] = [
   ...opinionQuestions.map((question) => ({ ...question, asked: "aided" as const })),
 ];
 
+const customQuestions: Opinion["questions"] = [
+  {
+    key: "missed",
+    label: "Does the AI miss any tumor on this slide?",
+    kind: "yesno",
+    required: true,
+    asked: "aided",
+  },
+  { key: "comment", label: "Comment", kind: "text", max_length: 2000 },
+];
+
+const formOf = (taskId: string, custom: boolean) =>
+  custom ? customQuestions : taskId === rt17.id ? firstReadQuestions : opinionQuestions;
+
 const problem = (status: number, code: string, title: string) =>
   HttpResponse.json({ type: "about:blank", title, status, code }, { status });
 
-export const toOpinion = (taskId = "", slideId = ""): Opinion => ({
+export const toOpinion = (taskId = "", slideId = "", drawn = false, custom = false): Opinion => ({
   reviewer_id: people[fakeView().viewer].id,
   form_version: 1,
-  questions: taskId === rt17.id ? firstReadQuestions : opinionQuestions,
+  questions: formOf(taskId, custom).map((question) => ({
+    ...question,
+    label: textFor(question.label, drawn),
+  })),
   answers: Object.fromEntries(
     Object.entries({
       ...(fakeView().viewer === "LM" && taskId !== rt17.id ? lenkaOpinion : {}),
@@ -737,8 +757,13 @@ export function reviewHandlers(): RequestHandler[] {
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId/states", ({ params }) =>
       params.taskId === rt13.id ? HttpResponse.json(toTaskStates(rt13)) : undefined,
     ),
-    getGetOpinionMockHandler(({ params }) =>
-      toOpinion(String(params["taskId"]), String(params["slideId"])),
+    getGetOpinionMockHandler(({ params, request }) =>
+      toOpinion(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        drawnPage(request),
+        customFormPage(request),
+      ),
     ),
     getSaveOpinionMockHandler(async ({ request, params }) => {
       const taskId = String(params["taskId"]);

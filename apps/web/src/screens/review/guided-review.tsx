@@ -497,7 +497,9 @@ function GuidedBody({
     setRedrawn((now) => ({ ...now, [currentId]: saved }));
     setRedraw(null);
     showUndoToast({
-      message: `New outline saved for ${currentId}. The AI result is not changed.`,
+      message: current?.drawn
+        ? `New outline saved for ${currentId}. The drawn outline is not changed.`
+        : `New outline saved for ${currentId}. The AI result is not changed.`,
       undo: () => {
         decisions.clearOutline(currentId);
         setRedrawn((now) => {
@@ -1031,7 +1033,11 @@ function GuidedBody({
                 {coachOn ? (
                   <>
                     <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
-                      <Trans>The AI found this. It is outlined in white.</Trans>
+                      {current?.drawn ? (
+                        <Trans>A person drew this. It is outlined in white.</Trans>
+                      ) : (
+                        <Trans>The AI found this. It is outlined in white.</Trans>
+                      )}
                     </CoachTip>
                     <CoachTip n={2} className="absolute bottom-24 left-4 w-85">
                       <Trans>

@@ -27,3 +27,12 @@
 
 - The export format version stays 2, because a reader that knows the old origins still reads every AI object as before.
 - A dataset version frozen before this with an explicit origin list keeps that list, so it leaves drawn objects out if it is exported again. No such version holds drawn objects, because drawn review shipped the same day.
+
+## Addendum 2026-11-23, opinion forms on a drawn task
+
+PROTO-164 (every opinion form and screen reads as drawn on a drawn task) words opinion forms per task when they are read, not when they are stored.
+
+- A project's opinion form keeps the text its author wrote, and AI tasks share it unchanged. No stored label is rewritten and no data is migrated.
+- When every slide of a task is pinned to a drawn snapshot, the API rewords the form's labels as it serves them to that task's reviewers and to its evaluation report, for example "Is the AI result acceptable for this slide?" becomes "Are the drawn outlines acceptable for this slide?". The rules live in `drawn_wording.py` and, for the wizard and the fake API, in `drawn-wording.ts` of the API client.
+- The signed evaluation's checksum does not change, because the evaluation answer holds question keys and counts, not labels.
+- The wizard no longer publishes a reworded copy of the template's form, so a project form never carries drawn wording into a later AI task.

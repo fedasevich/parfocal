@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.drawn_wording import drawn_only, drawn_text
 from parfocal_api.evaluation import EvaluationHiddenError, ai_objects, class_names
 from parfocal_api.evaluation_exports import signed_layout
 from parfocal_api.evaluation_versions import (
@@ -187,7 +188,10 @@ async def opinion_question_of(connection: AsyncConnection, task: Any) -> str:
         form = await form_of(connection, task.project_id, task.opinion_form_version)
     except NotFoundError:
         return ""
-    return form.questions[0].label if form.questions else ""
+    if not form.questions:
+        return ""
+    label = form.questions[0].label
+    return drawn_text(label) if await drawn_only(connection, task.id) else label
 
 
 @router.get(

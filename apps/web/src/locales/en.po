@@ -2933,6 +2933,10 @@ msgstr "A number is outside its allowed range, such as a score above 1."
 msgid "A person drew {code} as tumor."
 msgstr "A person drew {code} as tumor."
 
+#: src/screens/review/guided-review.tsx
+msgid "A person drew this. It is outlined in white."
+msgstr "A person drew this. It is outlined in white."
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "A preset only fills in the options. You can change each of them on the next step."
 msgstr "A preset only fills in the options. You can change each of them on the next step."
@@ -3385,6 +3389,10 @@ msgstr "Add slides, result files or both to go on."
 #: src/screens/review/object-card.tsx
 msgid "Add something the AI missed"
 msgstr "Add something the AI missed"
+
+#: src/screens/review/object-card.tsx
+msgid "Add something the outlines missed"
+msgstr "Add something the outlines missed"
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Add the deposit"
@@ -6908,6 +6916,10 @@ msgstr "Drawn by"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Drawn or imported by an expert"
 msgstr "Drawn or imported by an expert"
+
+#: src/screens/review/object-card.tsx
+msgid "Drawn outline"
+msgstr "Drawn outline"
 
 #: src/measure/measurement-list.tsx
 msgid "Drawn shapes and measurements"

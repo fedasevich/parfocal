@@ -237,3 +237,48 @@ def test_a_review_of_drawn_objects_has_no_ai_result_to_score(api: ApiAs, databas
     task = drawn_task(api, d)
     scored = ok(api(d.people["owner"]).get(f"/api/review-tasks/{task}/evaluation")).json()
     assert scored["ai_result"] is False
+
+
+CUSTOM_FORM = {
+    "questions": [
+        {"kind": "scale", "key": "good", "label": "Is the AI result good enough here?"},
+        {"kind": "yesno", "key": "missed", "label": "Did the AI miss a region?"},
+        {"kind": "text", "key": "comment", "label": "Comment"},
+    ]
+}
+
+
+def test_any_opinion_form_reads_as_drawn_on_a_drawn_task_without_changing_the_form(
+    api: ApiAs, database: str
+) -> None:
+    d = drawn_slide(api, database)
+    as_owner = api(d.people["owner"])
+    form = ok(as_owner.put(f"/api/projects/{d.project}/opinion-form", json=CUSTOM_FORM)).json()
+    created = ok(
+        as_owner.post(
+            f"/api/projects/{d.project}/review-tasks",
+            json={
+                "name": "Drawn task with a form",
+                "slide_ids": [str(d.slide)],
+                "drawn_slide_ids": [str(d.slide)],
+                "reviewer_ids": [str(d.people["first"].user_id)],
+                "split": "everyone",
+                "scope": {"kind": "all-regions"},
+                "opinion_form_version": form["version"],
+            },
+        ),
+        201,
+    ).json()
+    path = f"/api/review-tasks/{created['id']}/slides/{d.slide}/opinion"
+    shown = ok(api(d.people["first"]).get(path)).json()
+    assert [question["label"] for question in shown["questions"]] == [
+        "Are the drawn outlines good enough here?",
+        "Did the drawn outlines miss a region?",
+        "Comment",
+    ]
+    stored = ok(as_owner.get(f"/api/projects/{d.project}/opinion-form")).json()
+    assert [question["label"] for question in stored["questions"]] == [
+        "Is the AI result good enough here?",
+        "Did the AI miss a region?",
+        "Comment",
+    ]
