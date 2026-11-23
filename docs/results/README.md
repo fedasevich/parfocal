@@ -179,4 +179,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-21 | [99 of 105 slides on the deployed app return a thumbnail, and test_065 and Missing file.svs answer 204 in every workspace](2026-11-21-deployed-slide-thumbnails.md) | INGEST-032 | production measurement |
 | 2026-11-21 | [A Best embedding on a cold GPU pool answered in 27.7 s without a wait, on a T4 in AWS us-east](2026-11-21-best-embedding-on-a-cold-pool.md) | OPS-038, AISEG-024 | deployed check with cost |
 | 2026-11-21 | [Both slide buckets carry the tiering rule in R2, and the first live cost report files the EU bucket as unbudgeted](2026-11-21-storage-lifecycle-and-cost-report.md) | OPS-009 | production measurement |
-| 2026-11-23 | [One study participant's project seeds in about 1 s and about 270 statements locally](2026-11-23-participant-seed-time.md) | EXP-016 | local benchmark |
+| 2026-11-23 | [One study participant's project seeds in under 2 s and about 360 statements locally](2026-11-23-participant-seed-time.md) | EXP-016 | local benchmark |

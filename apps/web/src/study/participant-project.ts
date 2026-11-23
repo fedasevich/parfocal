@@ -4,12 +4,14 @@ export const studyTaskNames = {
   review: "Study review",
   queue: "Study disagreement queue",
   annotate: "Study annotation",
+  cells: "Study cell review",
 } as const;
 
 export const studySlideLabels = {
   review: "Study review 1",
   queue: "Study queue 1",
   annotate: "Study annotate",
+  cells: "Study cells",
 } as const;
 
 export type ParticipantProject = {
@@ -20,6 +22,8 @@ export type ParticipantProject = {
   queueSlide: string;
   annotateTask: string;
   annotateSlide: string;
+  cellTask: string;
+  cellSlide: string;
 };
 
 export type ParticipantListing = {
@@ -48,13 +52,17 @@ export function participantProjectOf(
   const queueSlide = slide(studySlideLabels.queue);
   const annotateTask = task(studyTaskNames.annotate);
   const annotateSlide = slide(studySlideLabels.annotate);
+  const cellTask = task(studyTaskNames.cells);
+  const cellSlide = slide(studySlideLabels.cells);
   if (
     reviewTask === undefined ||
     reviewSlide === undefined ||
     queueTask === undefined ||
     queueSlide === undefined ||
     annotateTask === undefined ||
-    annotateSlide === undefined
+    annotateSlide === undefined ||
+    cellTask === undefined ||
+    cellSlide === undefined
   ) {
     return undefined;
   }
@@ -66,6 +74,8 @@ export function participantProjectOf(
     queueSlide,
     annotateTask,
     annotateSlide,
+    cellTask,
+    cellSlide,
   };
 }
 
@@ -82,4 +92,6 @@ export const participantTokens = (
         queueSlide: participant.queueSlide,
         annotateTask: participant.annotateTask,
         annotateSlide: participant.annotateSlide,
+        cellTask: participant.cellTask,
+        cellSlide: participant.cellSlide,
       };

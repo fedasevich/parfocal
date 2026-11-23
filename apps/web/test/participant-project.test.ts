@@ -21,6 +21,8 @@ const listing: ParticipantListing = {
     { id: "r-2", name: studyTaskNames.review, projectId: "p-2" },
     { id: "q-2", name: studyTaskNames.queue, projectId: "p-2" },
     { id: "a-2", name: studyTaskNames.annotate, projectId: "p-2" },
+    { id: "c-1", name: studyTaskNames.cells, projectId: "p-1" },
+    { id: "c-2", name: studyTaskNames.cells, projectId: "p-2" },
   ],
   slides: ["p-1", "p-2"].flatMap((project) =>
     Object.values(studySlideLabels).map((label) => ({
@@ -60,6 +62,11 @@ test("a study task's start path resolves inside the participant's project", () =
     resolveStartPath(annotate, context),
     "/projects/p-2/slides/p-2-Study annotate?task=a-2",
   );
+  const cells = {
+    ...reviewTask,
+    startPath: "/projects/{studyProject}/slides/{cellSlide}?task={cellTask}",
+  };
+  assert.equal(resolveStartPath(cells, context), "/projects/p-2/slides/p-2-Study cells?task=c-2");
 });
 
 test("a participant start path waits until the project is seeded", () => {

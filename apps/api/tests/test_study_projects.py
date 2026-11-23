@@ -16,6 +16,10 @@ from parfocal_api.showcase import PEOPLE
 from parfocal_api.study_projects import (
     ANNOTATE_SLIDE,
     ANNOTATE_TASK,
+    CELL_SLIDE,
+    CELL_TASK,
+    CELLS_CHECKED,
+    ORDER_SEED,
     PROJECT_PREFIX,
     QUEUE_SLIDES,
     QUEUE_TASK,
@@ -32,7 +36,7 @@ from parfocal_common.repository import repository_root
 
 pytestmark = pytest.mark.db
 
-STATEMENT_CEILING = 400
+STATEMENT_CEILING = 450
 LOCAL_SECONDS_CEILING = 10.0
 
 
@@ -106,6 +110,12 @@ def snapshot(url: str, made: StudyProject) -> dict[str, Any]:
         "assignments": assignments,
         "decisions": decisions,
         "edits": edits,
+        "order": query(
+            url,
+            "SELECT o.seed, o.count, t.scope_seed FROM review_order o "
+            "JOIN review_tasks t ON t.id = o.task_id "
+            f"WHERE t.project_id = {project}",
+        ),
         "queue": asyncio.run(queued(url, made, labels)),
     }
 
@@ -175,14 +185,23 @@ def test_a_participant_project_holds_a_review_a_queue_and_an_annotate_slide(
 ) -> None:
     state = seeded.before["P1"]
     assert [label for label, _ in state["slides"]] == sorted(
-        [*REVIEW_SLIDES, *QUEUE_SLIDES, ANNOTATE_SLIDE]
+        [*REVIEW_SLIDES, *QUEUE_SLIDES, ANNOTATE_SLIDE, CELL_SLIDE]
     )
-    assert all(regions > 0 for label, regions in state["slides"] if label != ANNOTATE_SLIDE)
-    assert [name for name, _ in state["tasks"]] == sorted([REVIEW_TASK, QUEUE_TASK, ANNOTATE_TASK])
+    assert all(
+        regions > 0
+        for label, regions in state["slides"]
+        if label not in {ANNOTATE_SLIDE, CELL_SLIDE}
+    )
+    assert [name for name, _ in state["tasks"]] == sorted(
+        [REVIEW_TASK, QUEUE_TASK, ANNOTATE_TASK, CELL_TASK]
+    )
+    assert (ORDER_SEED, CELLS_CHECKED, ORDER_SEED) in state["order"]
+    assert {seed for seed, *_ in state["order"]} == {ORDER_SEED}
     seat_work = {(name, label) for name, label, key, _ in state["assignments"] if key == "seat"}
     assert seat_work == {
         *((REVIEW_TASK, label) for label in REVIEW_SLIDES),
         (ANNOTATE_TASK, ANNOTATE_SLIDE),
+        (CELL_TASK, CELL_SLIDE),
     }
     assert not any(key == "seat" for _, _, key, *_ in state["decisions"])
     assert state["queue"]
@@ -192,12 +211,22 @@ def test_a_participant_project_holds_a_review_a_queue_and_an_annotate_slide(
 def test_the_seeded_ids_point_inside_the_participant_project(seeded: Seeded) -> None:
     made = seeded.made["P2"]
     project = str(made.project_id)
-    for task_id in (made.review_task_id, made.queue_task_id, made.annotate_task_id):
+    for task_id in (
+        made.review_task_id,
+        made.queue_task_id,
+        made.annotate_task_id,
+        made.cell_task_id,
+    ):
         [(owner,)] = query(
             seeded.url, f"SELECT project_id FROM review_tasks WHERE id = '{task_id}'"
         )
         assert str(owner) == project
-    for slide_id in (made.review_slide_id, made.queue_slide_id, made.annotate_slide_id):
+    for slide_id in (
+        made.review_slide_id,
+        made.queue_slide_id,
+        made.annotate_slide_id,
+        made.cell_slide_id,
+    ):
         [(owner,)] = query(seeded.url, f"SELECT project_id FROM slides WHERE id = '{slide_id}'")
         assert str(owner) == project
     [(name,)] = query(seeded.url, f"SELECT name FROM projects WHERE id = '{project}'")
@@ -244,7 +273,7 @@ def test_the_web_finds_the_seeded_names() -> None:
         repository_root(__file__, 3) / "apps/web/src/study/participant-project.ts"
     ).read_text()
     assert f'studyProjectPrefix = "{PROJECT_PREFIX}"' in source
-    for name in (REVIEW_TASK, QUEUE_TASK, ANNOTATE_TASK):
+    for name in (REVIEW_TASK, QUEUE_TASK, ANNOTATE_TASK, CELL_TASK):
         assert re.search(rf': "{re.escape(name)}",', source), name
-    for label in (REVIEW_SLIDES[0], QUEUE_SLIDES[0], ANNOTATE_SLIDE):
+    for label in (REVIEW_SLIDES[0], QUEUE_SLIDES[0], ANNOTATE_SLIDE, CELL_SLIDE):
         assert re.search(rf': "{re.escape(label)}",', source), label

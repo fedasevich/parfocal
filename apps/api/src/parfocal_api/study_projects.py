@@ -1,13 +1,27 @@
 import re
 import uuid
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
+from typing import Any
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.audit import actor_of
 from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.projects import ProjectDeletion, ProjectDraft, create_project, delete_project
+from parfocal_api.result_sets import (
+    ChunkRow,
+    ResultSetDraft,
+    add_chunks,
+    cells_per_class,
+    finish,
+    insert_result_set,
+)
+from parfocal_api.review_order import cancel_order_jobs
+from parfocal_api.review_order_job import order_one_slide
+from parfocal_api.review_tasks import Scope
 from parfocal_api.showcase import (
     FORMAT_GALLERY,
     PEOPLE,
@@ -26,7 +40,7 @@ from parfocal_api.showcase import (
 )
 from parfocal_api.showcase_accounts import SeededAccount, add_account, add_member
 from parfocal_api.showcase_demo import built_in_templates
-from parfocal_api.showcase_results import model_regions
+from parfocal_api.showcase_results import CELLS_FILE, CELLS_MODEL, model_cells, model_regions
 from parfocal_api.showcase_reviews import (
     Seeded,
     agree_on_the_rest,
@@ -43,12 +57,16 @@ from parfocal_api.tables import (
     DecisionValue,
     PrivacyMode,
     ProjectRole,
+    ResultSource,
     Role,
     TaskKind,
+    TaskScope,
     projects,
+    review_tasks,
     tenants,
     users,
 )
+from parfocal_common.chunk_store import build_cells, write_cells
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.result_store import ResultStore
@@ -61,6 +79,10 @@ ANNOTATE_TASK = "Study annotation"
 REVIEW_SLIDES = ("Study review 1", "Study review 2")
 QUEUE_SLIDES = ("Study queue 1", "Study queue 2")
 ANNOTATE_SLIDE = "Study annotate"
+CELL_TASK = "Study cell review"
+CELL_SLIDE = "Study cells"
+CELLS_CHECKED = 12
+ORDER_SEED = 20261123
 STUDY_LOCK = "study-seed"
 CODE_PATTERN = re.compile(r"^[A-Za-z0-9-]{1,32}$")
 PARTICIPANT_SEAT = SeededAccount(
@@ -71,6 +93,11 @@ PARTICIPANT_SEAT = SeededAccount(
 class BadParticipantCodeError(ValueError):
     def __init__(self, code: str) -> None:
         super().__init__(f"a participant code is 1 to 32 letters, digits or dashes, not {code!r}")
+
+
+class NoCellResultError(RuntimeError):
+    def __init__(self, file: str) -> None:
+        super().__init__(f"the fixture slide {file} has no model cells result")
 
 
 class NoOutlineDisagreementError(RuntimeError):
@@ -90,6 +117,8 @@ class StudyProject:
     queue_slide_id: uuid.UUID
     annotate_task_id: uuid.UUID
     annotate_slide_id: uuid.UUID
+    cell_task_id: uuid.UUID
+    cell_slide_id: uuid.UUID
 
     def as_json(self) -> dict[str, str]:
         return {key: str(value) for key, value in asdict(self).items()}
@@ -240,6 +269,77 @@ async def seed_queue(
     return task_id
 
 
+async def cell_set(
+    connection: AsyncConnection,
+    creator: MemberPrincipal,
+    results: ResultStore,
+    slide: Any,
+    file: str,
+) -> uuid.UUID:
+    found = model_cells(file)
+    if found is None:
+        raise NoCellResultError(file)
+    set_id = await insert_result_set(
+        connection,
+        creator.tenant_id,
+        slide,
+        ResultSetDraft(
+            name="Cell typer v1",
+            model_version=CELLS_MODEL,
+            classes=found.classes,
+            source_file=CELLS_FILE,
+        ),
+        ResultSource.IMPORT,
+        actor_of(creator),
+        creator.user_id,
+    )
+    built = build_cells(creator.tenant_id, slide.id, set_id, found.cells, len(found.classes))
+    entries = await write_cells(results, built)
+    await add_chunks(connection, set_id, [ChunkRow.of(entry) for entry in entries])
+    await finish(connection, set_id, cells_per_class(entries))
+    return set_id
+
+
+async def seed_cell_review(
+    connection: AsyncConnection,
+    creator: MemberPrincipal,
+    results: ResultStore,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    set_id: uuid.UUID,
+    seat_id: uuid.UUID,
+    template_id: uuid.UUID,
+) -> uuid.UUID:
+    task_id = await review_task(
+        connection,
+        creator,
+        results,
+        project_id,
+        CELL_TASK,
+        {slide_id: set_id},
+        [seat_id],
+        DecisionStyle.AGREE,
+        template_id=template_id,
+        scope=Scope(kind=TaskScope.RANDOM_CELLS, count=CELLS_CHECKED),
+    )
+    await connection.execute(
+        update(review_tasks).where(review_tasks.c.id == task_id).values(scope_seed=ORDER_SEED)
+    )
+    await fixed_order(connection, results, task_id, [slide_id])
+    return task_id
+
+
+async def fixed_order(
+    connection: AsyncConnection,
+    results: ResultStore,
+    task_id: uuid.UUID,
+    slide_ids: Iterable[uuid.UUID],
+) -> None:
+    for slide_id in slide_ids:
+        await order_one_slide(connection, results, task_id, slide_id, ORDER_SEED)
+    await cancel_order_jobs(connection, task_id)
+
+
 async def seed_study_project(
     connection: AsyncConnection,
     seeded: Seeded,
@@ -259,9 +359,11 @@ async def seed_study_project(
         creator,
         connection,
     )
-    detection = (await built_in_templates(connection, seeded.tenant_id))[BuiltInTemplate.DETECTION]
+    templates = await built_in_templates(connection, seeded.tenant_id)
     await connection.execute(
-        update(projects).where(projects.c.id == project.id).values(study_template_id=detection)
+        update(projects)
+        .where(projects.c.id == project.id)
+        .values(study_template_id=templates[BuiltInTemplate.DETECTION])
     )
     await join(
         connection,
@@ -293,6 +395,8 @@ async def seed_study_project(
         [seat_id],
         DecisionStyle.AGREE,
     )
+    await fixed_order(connection, results, queue_id, queued)
+    await fixed_order(connection, results, review_id, reviewed)
     annotated = await add_slide(
         connection, seeded, project.id, ANNOTATE_SLIDE, sample_facts(pool.next().stored)
     )
@@ -307,6 +411,20 @@ async def seed_study_project(
         DecisionStyle.CERTAINTY,
         TaskKind.ANNOTATE,
     )
+    typed = pool.next()
+    cell_slide = await add_slide(
+        connection, seeded, project.id, CELL_SLIDE, sample_facts(typed.stored)
+    )
+    cell_id = await seed_cell_review(
+        connection,
+        creator,
+        results,
+        project.id,
+        cell_slide.id,
+        await cell_set(connection, creator, results, cell_slide, typed.file),
+        seat_id,
+        templates[BuiltInTemplate.CELL_TYPING],
+    )
     return StudyProject(
         code=checked_code(code),
         tenant_id=seeded.tenant_id,
@@ -318,6 +436,8 @@ async def seed_study_project(
         queue_slide_id=next(iter(queued)),
         annotate_task_id=annotate_id,
         annotate_slide_id=annotated.id,
+        cell_task_id=cell_id,
+        cell_slide_id=cell_slide.id,
     )
 
 
