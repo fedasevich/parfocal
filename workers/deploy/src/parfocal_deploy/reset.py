@@ -155,6 +155,24 @@ def phase(name: str) -> Iterator[None]:
         sys.stderr.flush()
 
 
+def direct_database(target: Environment, tools: Tools, settings: Mapping[str, str]) -> str:
+    project = settings["NEON_PROJECT_ID"]
+    branch = neon.ensure_branch(tools.neon, project, target.neon_branch)
+    database = neon.first_database(tools.neon, project, branch)
+    return neon.owner_uri(tools.neon, project, branch, database, pooled=False)
+
+
+def storage_settings(target: Environment, location: StorageLocation) -> dict[str, str]:
+    return {
+        "APP_ENV": target.app_env,
+        "STORAGE_ENDPOINT": location.endpoint,
+        "STORAGE_REGION": location.region,
+        "STORAGE_BUCKET": location.bucket,
+        "STORAGE_ACCESS_KEY_ID": location.access_key_id,
+        "STORAGE_SECRET_ACCESS_KEY": location.secret_access_key,
+    }
+
+
 def reset(
     target: Environment,
     tools: Tools,
@@ -163,19 +181,9 @@ def reset(
     seed: Callable[[Environment, Mapping[str, str]], None] = seed_in_eu,
 ) -> int:
     settings = required(local, RESET_SETTINGS)
-    project = settings["NEON_PROJECT_ID"]
-    branch = neon.ensure_branch(tools.neon, project, target.neon_branch)
-    database = neon.first_database(tools.neon, project, branch)
-    direct = neon.owner_uri(tools.neon, project, branch, database, pooled=False)
+    direct = direct_database(target, tools, settings)
     location = storage_location(target, settings)
-    storage = {
-        "APP_ENV": target.app_env,
-        "STORAGE_ENDPOINT": location.endpoint,
-        "STORAGE_REGION": location.region,
-        "STORAGE_BUCKET": location.bucket,
-        "STORAGE_ACCESS_KEY_ID": location.access_key_id,
-        "STORAGE_SECRET_ACCESS_KEY": location.secret_access_key,
-    }
+    storage = storage_settings(target, location)
     with phase("migrate"):
         tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
     with phase("publish fixtures"):
@@ -193,6 +201,7 @@ def reset(
                 "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
                 "SEED_VIEWER_EMAILS": local.get("SEED_VIEWER_EMAILS", ""),
                 "SEED_AGENT_EMAILS": local.get("SEED_AGENT_EMAILS", ""),
+                "SEED_ROLE_EMAILS": local.get("SEED_ROLE_EMAILS", ""),
                 **{name: local[name] for name in SEED_PASSED if name in local},
             },
         )

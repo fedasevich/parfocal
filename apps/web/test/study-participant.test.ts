@@ -7,7 +7,6 @@ import {
   finishFinal,
   initialState,
   parseState,
-  participantTokens,
   recordTask,
   resolveStartPath,
   round5Tasks,
@@ -86,7 +85,17 @@ test("final answers log each changed answer, not first answers, and rescore SUS"
 
 test("round 5 tasks start in the participant's seeded project and keep round 4's goals", () => {
   const bare = { slides: [], resume: null };
-  const participant = Object.fromEntries(participantTokens.map((token) => [token, `x-${token}`]));
+  const participant = {
+    projectId: "x-studyProject",
+    reviewTask: "x-reviewTask",
+    reviewSlide: "x-reviewSlide",
+    queueTask: "x-queueTask",
+    queueSlide: "x-queueSlide",
+    annotateTask: "x-annotateTask",
+    annotateSlide: "x-annotateSlide",
+    cellTask: "x-cellTask",
+    cellSlide: "x-cellSlide",
+  };
   for (const task of round5Tasks) {
     assert.equal(resolveStartPath(task, bare), undefined, task.id);
     const path = resolveStartPath(task, { ...bare, participant });
@@ -104,6 +113,12 @@ test("round 5 tasks start in the participant's seeded project and keep round 4's
   assert.equal(
     goal("whole-slide"),
     "Quickly bring up a view of the entire tissue scan, then get back to the close-up you were looking at.",
+  );
+  const cells = round5Tasks.find((task) => task.id === "check-cells");
+  assert.ok(cells);
+  assert.equal(
+    resolveStartPath(cells, { ...bare, participant }),
+    "/projects/x-studyProject/slides/x-cellSlide?task=x-cellTask",
   );
   const queue = round5Tasks.find((task) => task.id === "queue-decision");
   assert.ok(queue);

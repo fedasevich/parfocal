@@ -19,6 +19,7 @@ from parfocal_api.dataset_versions import frozen_parts
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.showcase import DEPLOYED_ENVS, seed, viewer_emails_of
 from parfocal_api.showcase_outcomes import OUTCOME_TASK
+from parfocal_api.showcase_roles import role_emails_of
 from parfocal_api.showcase_timing import took
 from parfocal_api.tables import review_tasks, slides
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
@@ -26,6 +27,7 @@ from parfocal_common.jobs import JobStatus, jobs
 from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_common.settings import AppEnv, StorageSettings
+from parfocal_ingest import study_seed
 from parfocal_ingest.patch_export import PatchWriter, source_of
 
 NOT_FOUND = 404
@@ -160,6 +162,10 @@ async def main() -> None:
         description="Seed the ČVUT workspaces with invented people over every feature",
     )
     parser.parse_args()
+    participant = study_seed.from_environment(os.environ)
+    if participant is not None:
+        await study_seed.run(os.environ, *participant)
+        return
     database_url = os.environ["DATABASE_URL"]
     settings = StorageSettings(app_env=AppEnv(os.environ.get("APP_ENV", AppEnv.DEV)))
     async with httpx2.AsyncClient(timeout=60) as http:
@@ -171,6 +177,7 @@ async def main() -> None:
             os.environ.get("SEED_OWNER_EMAIL") or None,
             viewer_emails=viewer_emails_of(os.environ.get("SEED_VIEWER_EMAILS", "")),
             agent_emails=viewer_emails_of(os.environ.get("SEED_AGENT_EMAILS", "")),
+            role_emails=role_emails_of(os.environ.get("SEED_ROLE_EMAILS", "")),
             require_fixture_folders=settings.app_env in DEPLOYED_ENVS,
         )
         await cut_seeded_exports(

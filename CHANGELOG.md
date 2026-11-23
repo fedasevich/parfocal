@@ -2,6 +2,80 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.45.0 (2026-11-23)
+
+### Features
+
+- EXP-016: Seed a fresh study project per participant code on the EU seed function
+- EXP-016: Add a fixed-order cell review to each participant project
+
+### Docs
+
+- EXP-016: Move the participant seed to review
+
+### Tests
+
+- EXP-016: Require an outline disagreement and test the seed entry hand-off
+
+### Other
+
+- EXP-016: Renumber the study projects ADR to 0435
+- PILOT-011: Claim PILOT-011 for the parallel run
+
+## v0.44.0 (2026-11-23)
+
+### Features
+
+- TEST-059: Seed role test accounts on open work and sign them in with --role
+- TEST-059: Type the Zitadel answers in the role account script
+
+### Fixes
+
+- PROTO-073: Stop guided steps at the scan power and end the Best wait in 90 seconds
+
+### Docs
+
+- TEST-059: Add ADR 0434 and move the role accounts to review
+- PROTO-073: Move the guided and Best bounds to review
+
+## v0.43.2 (2026-11-23)
+
+### Fixes
+
+- PROTO-159: Name cell classes in exports, keep upload in project, guard slides outside tasks
+
+### Docs
+
+- PROTO-159: Move the round six slips to review and add PROTO-166
+
+### Tests
+
+- PROTO-165: Cover the patch export list in the permission matrix
+
+### Other
+
+- PROTO-166: Claim PROTO-166 PROTO-073 for the parallel run
+- PROTO-166: Claim PROTO-166 for the parallel run
+
+## v0.43.1 (2026-11-23)
+
+### Fixes
+
+- PROTO-157: Name devices in words, one version in the Display tab, Cells pill pressed
+- PROTO-104: A search hit without a task now centres the camera and picks the object
+
+### Docs
+
+- PILOT-010: Split the owner's study and walkthrough request into tasks
+- PROTO-165: Tick the patch export list after the deployed download
+- PROTO-157: Tick the round five slips
+- PROTO-104: Move the search hit fix to review
+
+### Other
+
+- TEST-059: Claim TEST-059 EXP-014 EXP-016 for the parallel run
+- PROTO-159: Claim PROTO-159 for the parallel run
+
 ## v0.43.0 (2026-11-23)
 
 ### Features

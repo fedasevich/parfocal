@@ -51,10 +51,12 @@ import { StageCoachAnswerTip, StageCoachOnSlide, StageCoachStepTip } from "./sta
 import { StageFocusCard } from "./stage-focus.tsx";
 import {
   cellsInTissueOrder,
+  guidedZoomLimit,
   nextOpenObject,
   outlineArea,
   outlineCentre,
   placedObjects,
+  reviewMinSide,
 } from "./stage-geometry.ts";
 import { type GuidedFix, StageGuidedCard } from "./stage-guided-card.tsx";
 import { StageGuidedView } from "./stage-guided-view.tsx";
@@ -343,8 +345,9 @@ export function StageReviewObjects({
     const area = outlineArea(
       objects.find((item) => item.object === id)?.outline ??
         rulers.find((item) => item.label === id)?.points,
+      reviewMinSide,
     );
-    if (area !== null) void engine.flyToArea(area);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   };
   const pick = (id: string | null) => {
     if (id === null) return;
@@ -360,7 +363,7 @@ export function StageReviewObjects({
     setDone(false);
     setCurrent(object);
     const area = outlineArea(objects.find((item) => item.object === object)?.outline);
-    if (area !== null) void engine.flyToArea(area);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   }, [object, objects, engine]);
   const stepGoal = useRef<CalmCamera | null>(null);
   const stepTo = (id: string) => {
@@ -417,8 +420,11 @@ export function StageReviewObjects({
       setDone(true);
       return;
     }
-    const area = outlineArea(objects.find((item) => item.object === current)?.outline);
-    if (area !== null) void engine.flyToArea(area);
+    const area = outlineArea(
+      objects.find((item) => item.object === current)?.outline,
+      reviewMinSide,
+    );
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   }, [ready, objects, engine, current, opensOnOpinion]);
   useEffect(() => {
     if (ready) reported.current?.(current);

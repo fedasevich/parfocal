@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { type ParticipantProject, participantTokens } from "./participant-project.ts";
 
 const validPattern = (pattern: string) => {
   try {
@@ -230,23 +231,8 @@ export const pilotTasks: StudyTask[] = [
   },
 ];
 
-export const participantTokens = [
-  "studyProject",
-  "reviewTask",
-  "reviewSlide",
-  "queueTask",
-  "queueSlide",
-  "annotateTask",
-  "annotateSlide",
-  "cellSlide",
-] as const;
-
-export type ParticipantToken = (typeof participantTokens)[number];
-
-export type ParticipantTokens = Partial<Record<ParticipantToken, string | undefined>>;
-
 const reviewOnStudySlide = "/projects/{studyProject}/slides/{reviewSlide}?task={reviewTask}";
-const cellOnStudySlide = "/projects/{studyProject}/slides/{cellSlide}?task={reviewTask}";
+const cellOnStudySlide = "/projects/{studyProject}/slides/{cellSlide}?task={cellTask}";
 const studyCellGuard: TaskGuard = {
   stayOn: ["^/projects/{studyProject}/slides/{cellSlide}(/|$)"],
   where: "This task happens on the slide's cell findings screen. Stay on it until you are done.",
@@ -346,18 +332,18 @@ export const round5Tasks: StudyTask[] = [
 export type StudyContext = {
   slides: { id: string; label: string; project: { id: string } }[];
   resume: { projectId: string; slideId: string; taskId: string } | null;
-  participant?: ParticipantTokens | undefined;
+  participant?: ParticipantProject | null | undefined;
 };
 
 const fillTokens = (template: string, task: StudyTask, context: StudyContext) => {
   const slide = context.slides.find((row) => row.label === task.slide);
   const values: Record<string, string | undefined> = {
-    ...context.participant,
     project: slide?.project.id,
     slide: slide?.id,
     task: context.resume?.taskId,
     taskProject: context.resume?.projectId,
     taskSlide: context.resume?.slideId,
+    ...participantTokens(context.participant),
   };
   let missing = false;
   const filled = template.replace(/\{(\w+)\}/g, (token, name: string) => {

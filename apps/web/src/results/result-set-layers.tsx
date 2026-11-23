@@ -5,6 +5,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
 import { okData } from "../screens/placeholder.tsx";
+import { resultSetNote } from "../screens/viewer/result-set-name.ts";
 import { heatmapColormaps, isHeatmapColormap } from "../viewer/viewer-engine.ts";
 import { type HeatmapChoices, useSetHeatmap } from "./heatmap-layer.tsx";
 
@@ -59,9 +60,9 @@ export function ResultSetLayers({ slideId, adding, onAdd, heatmaps }: ResultSetL
             <span className="min-w-0 break-words" title={set.name} data-testid="result-set-name">
               {set.name}
             </span>
-            {(set.model_version ?? set.source_file) ? (
+            {resultSetNote(set.name, set.model_version, set.source_file) ? (
               <span className="min-w-0 truncate text-caption text-fg-dim">
-                {set.model_version ?? set.source_file}
+                {resultSetNote(set.name, set.model_version, set.source_file)}
               </span>
             ) : null}
           </div>

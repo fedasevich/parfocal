@@ -86,6 +86,10 @@ export interface SlidePointerEvent {
   readonly source: Event;
 }
 
+export interface FlyToAreaLimit {
+  readonly fallbackMagnification: number;
+}
+
 export interface SlideInfo {
   readonly id: string;
   readonly width: number;
@@ -150,7 +154,7 @@ export interface ViewerEngine {
   readonly dragTo: (at: ClientPoint, ageMs?: number) => void;
   readonly endDrag: () => void;
   readonly flyTo: (target: Camera) => Promise<FlightEnd>;
-  readonly flyToArea: (area: SlideArea) => Promise<FlightEnd>;
+  readonly flyToArea: (area: SlideArea, limit?: FlyToAreaLimit) => Promise<FlightEnd>;
   readonly flyToSelection: (area: SlideArea, marginPx?: number) => Promise<FlightEnd>;
   readonly subscribeCamera: (listener: () => void) => Unsubscribe;
   readonly on: <Name extends keyof EngineEvents>(

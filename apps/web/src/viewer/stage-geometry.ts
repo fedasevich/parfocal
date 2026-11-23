@@ -29,7 +29,14 @@ export function viewportRect(
   return [camera.x - width / 2, camera.y - height / 2, width, height];
 }
 
-export function outlineArea(outline: readonly number[] | null | undefined): StageArea | null {
+export const reviewMinSide = 768;
+
+export const guidedZoomLimit = { fallbackMagnification: 40 } as const;
+
+export function outlineArea(
+  outline: readonly number[] | null | undefined,
+  minSide = 0,
+): StageArea | null {
   if (!outline || outline.length < 4) return null;
   let left = Number.POSITIVE_INFINITY;
   let top = Number.POSITIVE_INFINITY;
@@ -43,7 +50,7 @@ export function outlineArea(outline: readonly number[] | null | undefined): Stag
     top = Math.min(top, y);
     bottom = Math.max(bottom, y);
   }
-  const side = Math.max(right - left, bottom - top, 1) * 2;
+  const side = Math.max(Math.max(right - left, bottom - top, 1) * 2, minSide);
   return {
     x: (left + right) / 2 - side / 2,
     y: (top + bottom) / 2 - side / 2,

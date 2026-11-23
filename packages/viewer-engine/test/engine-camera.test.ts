@@ -218,3 +218,31 @@ test("unmounting mid-flight lands on the target and disposing cancels", async ()
   assert.throws(() => gone.engine.flyTo({ x: 0, y: 0, zoom: 0 }), EngineDisposedError);
   assert.throws(() => gone.engine.panBy(1, 1), EngineDisposedError);
 });
+
+const tinyArea = { x: 5000, y: 5000, width: 100, height: 100 };
+
+test("a flight to a tiny area stops at the scan power when it is limited to it", async () => {
+  const { engine, container, frames, clock } = setup();
+  engine.mount(container);
+  await engine.openSlide({ id: "a" });
+  runFrames(frames, clock);
+  void engine.flyToArea(tinyArea);
+  runFrames(frames, clock);
+  assert.equal(engine.getCamera().zoom, 2);
+  void engine.flyToArea(tinyArea, { fallbackMagnification: 80 });
+  runFrames(frames, clock);
+  assert.equal(engine.getCamera().zoom, 0);
+});
+
+test("a slide with no known scan power is limited to the fallback magnification", async () => {
+  const { engine, container, frames, clock, source } = setup();
+  engine.mount(container);
+  await engine.openSlide({ id: "a" });
+  const slide = source.opened[0];
+  assert.ok(slide);
+  Object.assign(slide, { micronsPerPixel: 0.37 });
+  runFrames(frames, clock);
+  void engine.flyToArea(tinyArea, { fallbackMagnification: 20 });
+  runFrames(frames, clock);
+  assert.ok(Math.abs(engine.getCamera().zoom - Math.log2((0.37 * 20) / 10)) < 1e-9);
+});
