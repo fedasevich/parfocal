@@ -1,8 +1,5 @@
-import argparse
 import asyncio
 import json
-import os
-import sys
 import time
 import uuid
 from collections.abc import Coroutine, Iterable, Mapping, Sequence
@@ -11,7 +8,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-import httpx2
 from fastapi import BackgroundTasks
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
@@ -71,6 +67,7 @@ from parfocal_api.showcase_reviews import (
     submit,
 )
 from parfocal_api.showcase_samples import SamplePool, sample_pool
+from parfocal_api.showcase_timing import Timed, took
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     AnalysisTemplate,
@@ -106,8 +103,8 @@ from parfocal_common.ingest import (
 from parfocal_common.jobs import JobStatus, jobs
 from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.repository import repository_root
-from parfocal_common.result_store import ObjectResultStore, ResultStore
-from parfocal_common.settings import AppEnv, StorageSettings
+from parfocal_common.result_store import ResultStore
+from parfocal_common.settings import AppEnv
 
 ORGANISATION_SLUG = "cvut"
 ORGANISATION_NAME = "ČVUT"
@@ -1023,23 +1020,6 @@ async def seed(
 ACTING_PEOPLE = ("ada", "rui", "rhea", "remy")
 
 
-def took(name: str, started: float) -> None:
-    sys.stderr.write(f"seed: {name} took {time.monotonic() - started:.0f} s\n")
-    sys.stderr.flush()
-
-
-class Timed:
-    def __init__(self, name: str) -> None:
-        self.name = name
-        self.started = time.monotonic()
-
-    def __enter__(self) -> None:
-        self.started = time.monotonic()
-
-    def __exit__(self, *_: object) -> None:
-        took(self.name, self.started)
-
-
 def shared_actors(owned: bool) -> list[str]:
     acting = [person.subject for person in PEOPLE if person.key in ACTING_PEOPLE]
     return [*acting, OWNER_SUBJECT] if owned else acting
@@ -1205,29 +1185,3 @@ async def people_of(engine: Any, tenant_id: uuid.UUID) -> dict[str, uuid.UUID]:
         )
         by_subject = {row.subject: row.id for row in rows}
     return {person.key: by_subject[person.subject] for person in PEOPLE}
-
-
-async def main() -> None:
-    parser = argparse.ArgumentParser(
-        prog="parfocal_api.showcase",
-        description="Seed the ČVUT workspaces with invented people over every feature",
-    )
-    parser.parse_args()
-    database_url = os.environ["DATABASE_URL"]
-    settings = StorageSettings(app_env=AppEnv(os.environ.get("APP_ENV", AppEnv.DEV)))
-    async with httpx2.AsyncClient(timeout=60) as http:
-        store = ObjectStore(settings.storage(), http)
-        tenant_ids = await seed(
-            database_url,
-            store,
-            ObjectResultStore(store),
-            os.environ.get("SEED_OWNER_EMAIL") or None,
-            viewer_emails=viewer_emails_of(os.environ.get("SEED_VIEWER_EMAILS", "")),
-            agent_emails=viewer_emails_of(os.environ.get("SEED_AGENT_EMAILS", "")),
-            require_fixture_folders=settings.app_env in DEPLOYED_ENVS,
-        )
-    print(f"seeded {len(tenant_ids)} ČVUT workspaces")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

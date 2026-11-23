@@ -113,7 +113,7 @@ EVENTS_OPTIONS: dict[str, Any] = {
     "max_containers": 1,
     "timeout": 600,
 }
-SEED_ARGUMENTS = ("-m", "parfocal_api.showcase")
+SEED_ARGUMENTS = ("-m", "parfocal_ingest.showcase_seed")
 SEED_ROOT = "/repo"
 SEED_DATA = ("packages/test-fixtures/fixtures.json", "packages/test-fixtures/model-results")
 SEED_OPTIONS: dict[str, Any] = {

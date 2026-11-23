@@ -255,7 +255,9 @@ def test_a_new_preview_gets_a_branch_environment_secrets_deploy_and_seed() -> No
     assert "--var STORAGE_PREFIX:previews/pr-7/" in edge
     bulk = next(line for line in commands if "secret bulk" in line)
     assert bulk.endswith("--name parfocal-edge-pr-7")
-    seed_extra = next(extra for argv, extra in cloud.commands if "parfocal_api.showcase" in argv)
+    seed_extra = next(
+        extra for argv, extra in cloud.commands if "parfocal_ingest.showcase_seed" in argv
+    )
     assert seed_extra["STORAGE_KEY_PREFIX"] == "previews/pr-7/"
     assert seed_extra["APP_ENV"] == "preview"
 
@@ -296,7 +298,7 @@ def test_a_push_to_an_open_preview_moves_the_expiry_keeps_the_keys_and_seeds_aga
     )
     assert [call[0] for call in cloud.neon_calls if call[0] in {"POST", "PATCH"}] == ["PATCH"]
     assert cloud.secrets["pr-7"][KEYS_SECRET] == first_keys
-    assert any("parfocal_api.showcase" in argv for argv, _ in cloud.commands)
+    assert any("parfocal_ingest.showcase_seed" in argv for argv, _ in cloud.commands)
     assert not any("environment create" in line for line in lines(cloud))
     assert not any("secret delete" in line for line in lines(cloud))
 

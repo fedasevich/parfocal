@@ -83,7 +83,7 @@ uv run --frozen --package parfocal-api python -m parfocal_common.local_bucket
 
 step "Seeding the ČVUT workspaces"
 DATABASE_URL="$MIGRATION_DATABASE_URL" SEED_OWNER_EMAIL="${SEED_OWNER_EMAIL:-${ZITADEL_TEST_USERNAME:-}}" \
-  uv run --frozen --package parfocal-api python -m parfocal_api.showcase
+  uv run --frozen --package parfocal-ingest python -m parfocal_ingest.showcase_seed
 
 export PARFOCAL_EDGE_DEV="${PARFOCAL_EDGE_DEV:-on}"
 if [ "$PARFOCAL_EDGE_DEV" = on ]; then

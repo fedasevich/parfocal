@@ -41,7 +41,15 @@ DELETE_CONCURRENCY = 32
 LOCK_AGE = timedelta(days=7)
 metadata = slides.metadata
 SEED_PASSED = ("PUBLIC_ORIGIN",)
-SEED = ("uv", "run", "--package", "parfocal-api", "python", "-m", "parfocal_api.showcase")
+SEED = (
+    "uv",
+    "run",
+    "--package",
+    "parfocal-ingest",
+    "python",
+    "-m",
+    "parfocal_ingest.showcase_seed",
+)
 PUBLISH_FIXTURES = (
     "uv",
     "run",
