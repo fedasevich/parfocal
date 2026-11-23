@@ -247,12 +247,14 @@ test("the estimate adds the queue on the Parfocal GPU and none on the lab server
 
 test("the estimate adds the measured GPU start and names it", () => {
   const cold = runEstimate(model({ start_minutes: 3 }), [{ width: 2220, height: 2967 }], today);
-  assert.equal(cold.total, 2);
+  assert.equal(cold.total, 5);
   assert.equal(cold.doneAround, "14:43");
   assert.equal(
     cold.perSlide,
-    "About 2 min a slide on the Parfocal GPU. One run is ahead of yours, about 8 min. A GPU has lately taken about 3 min to start.",
+    "About 2 min a slide on the Parfocal GPU. One run is ahead of yours, about 8 min. About 3 min of the estimate is waiting for a GPU to start.",
   );
+  const lab = runEstimate(model({ start_minutes: 3, host: "lab", latency_ms: 210 }), [{}], today);
+  assert.equal(lab.total, 17);
 });
 
 test("a queued run says why it waits", () => {

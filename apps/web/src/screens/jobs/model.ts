@@ -328,20 +328,19 @@ export function runEstimate(model: ProjectModel, sizes: SlideSize[], now: Date):
   const total = each.reduce((sum, minutes) => sum + minutes, 0);
   const least = each.length ? Math.min(...each) : model.minutes_per_slide;
   const most = each.length ? Math.max(...each) : model.minutes_per_slide;
-  const wait = model.host === "lab" ? 0 : model.queue_minutes + model.start_minutes;
+  const gpuStart = model.host === "lab" ? 0 : model.start_minutes;
+  const wait = model.host === "lab" ? 0 : model.queue_minutes + gpuStart;
   const doneAround = formatClock(new Date(now.getTime() + (total + wait) * 60000));
   const range = least === most ? `${least}` : `${least} to ${most}`;
   const start =
-    model.start_minutes > 0
-      ? ` A GPU has lately taken about ${model.start_minutes} min to start.`
-      : "";
+    gpuStart > 0 ? ` About ${gpuStart} min of the estimate is waiting for a GPU to start.` : "";
   const perSlide =
     model.serving === "offline"
       ? `${model.server} is not answering right now, so this run cannot start.`
       : model.host === "lab"
         ? `About ${range} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
         : `About ${range} min a slide on the ${model.server}. ${queueAhead(model)}${start}`;
-  return { total, doneAround, perSlide };
+  return { total: total + gpuStart, doneAround, perSlide };
 }
 
 export const makesLabel = { regions: "Regions", cells: "Cells", heatmap: "Heatmap" } as const;

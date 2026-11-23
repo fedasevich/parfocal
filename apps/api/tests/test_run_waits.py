@@ -17,14 +17,16 @@ pytestmark = pytest.mark.db
 
 
 class LoadedPool:
-    def __init__(self, backlog: int, runners: int) -> None:
+    def __init__(self, backlog: int, runners: int, counts_spawns: bool = True) -> None:
         self.current = PoolLoad(backlog=backlog, runners=runners)
+        self.counts_spawns = counts_spawns
         self.spawned: list[tuple[str, dict[str, object]]] = []
         self.reads = 0
 
     def spawn(self, function_name: str, call: dict[str, object]) -> None:
         self.spawned.append((function_name, call))
-        self.current = PoolLoad(backlog=self.current.backlog + 1, runners=self.current.runners)
+        if self.counts_spawns:
+            self.current = PoolLoad(backlog=self.current.backlog + 1, runners=self.current.runners)
 
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
         return {}
@@ -100,10 +102,29 @@ def test_a_lost_wake_wakes_the_pool_again_once(api: ApiAs, database: str, pool: 
     second = only(api, s)
 
     assert pool.spawned == [(NUCLEI_POOL_FUNCTION, {"kind": "detect"})]
-    assert isinstance(first["wait"], dict)
-    assert first["wait"]["reason"] == "woken-again"
-    assert isinstance(second["wait"], dict)
-    assert second["wait"]["reason"] == "waiting-for-gpu"
+    assert cast("dict[str, str]", first["wait"])["reason"] == "woken-again"
+    assert cast("dict[str, str]", second["wait"])["reason"] == "waiting-for-gpu"
+
+
+def test_a_run_waiting_ten_minutes_on_an_empty_pool_is_woken_again_exactly_once(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    uncounted = LoadedPool(backlog=0, runners=0, counts_spawns=False)
+    api.app.state.gpu_pools = uncounted
+    try:
+        queued_run(database, s, "10 minutes")
+        reasons: list[str] = []
+        for _ in range(4):
+            if hasattr(api.app.state, "pool_watch"):
+                del api.app.state.pool_watch
+            reasons.append(cast("dict[str, str]", only(api, s)["wait"])["reason"])
+    finally:
+        del api.app.state.gpu_pools
+        del api.app.state.pool_watch
+
+    assert uncounted.spawned == [(NUCLEI_POOL_FUNCTION, {"kind": "detect"})]
+    assert reasons == ["woken-again"] * 4
 
 
 def test_a_fresh_run_is_not_woken_again(api: ApiAs, database: str, pool: LoadedPool) -> None:
@@ -157,28 +178,30 @@ def test_the_pool_is_read_at_most_once_per_freshness_window() -> None:
     now = [100.0]
     watch = PoolWatch(pool, pool, clock=lambda: now[0])
 
-    watch.reason(600.0)
-    watch.reason(600.0)
+    watch.load()
+    watch.load()
     now[0] += 11.0
-    watch.reason(600.0)
+    watch.load()
 
     assert pool.reads == 2
 
 
-def test_a_failed_wake_is_tried_again_after_the_gap() -> None:
+def test_a_failed_wake_leaves_the_run_free_to_be_woken_later(api: ApiAs, database: str) -> None:
     class Refusing(LoadedPool):
         def spawn(self, function_name: str, call: dict[str, object]) -> None:
             self.spawned.append((function_name, call))
             raise RuntimeError("app is being redeployed")
 
-    pool = Refusing(backlog=0, runners=0)
-    now = [100.0]
-    watch = PoolWatch(pool, pool, clock=lambda: now[0])
+    s = study(database)
+    refusing = Refusing(backlog=0, runners=0)
+    api.app.state.gpu_pools = refusing
+    try:
+        queued_run(database, s, "5 minutes")
+        assert only(api, s)["wait"] is None
+        del api.app.state.pool_watch
+        assert only(api, s)["wait"] is None
+    finally:
+        del api.app.state.gpu_pools
+        del api.app.state.pool_watch
 
-    assert watch.reason(600.0) is None
-    now[0] += 30.0
-    watch.reason(600.0)
-    now[0] += 31.0
-    watch.reason(600.0)
-
-    assert len(pool.spawned) == 2
+    assert len(refusing.spawned) == 2

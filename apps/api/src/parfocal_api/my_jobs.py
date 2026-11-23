@@ -16,7 +16,14 @@ from parfocal_api.notifications import member_of
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ProblemError
 from parfocal_api.projects import code_of as project_code
-from parfocal_api.run_waits import PoolWatch, RunWait, pool_watch_of, run_waits
+from parfocal_api.run_waits import (
+    WOKEN_AGAIN,
+    PoolWatch,
+    QueuedRun,
+    RunWait,
+    pool_watch_of,
+    run_waits,
+)
 from parfocal_api.tables import project_members, projects, result_sets, slides, uploads
 from parfocal_common.jobs import JobStatus, job_steps, job_units, jobs
 from parfocal_common.model_runs import KIND as MODEL_RUN
@@ -191,16 +198,14 @@ async def readable(connection: AsyncConnection, principal: MemberPrincipal, row:
     return True
 
 
-async def queued_on_the_pool(
-    connection: AsyncConnection, rows: Sequence[Any]
-) -> list[tuple[uuid.UUID, datetime]]:
+async def queued_on_the_pool(connection: AsyncConnection, rows: Sequence[Any]) -> list[QueuedRun]:
     candidates = [
         row.id for row in rows if row.kind == MyJobKind.MODEL_RUN and row.status == JobStatus.QUEUED
     ]
     if not candidates:
         return []
     found = await connection.execute(
-        select(jobs.c.id, jobs.c.created_at)
+        select(jobs.c.id, jobs.c.created_at, jobs.c.input.has_key(WOKEN_AGAIN).label("woken"))
         .join(model_runs, model_runs.c.job_id == jobs.c.id)
         .where(
             jobs.c.id.in_(candidates),
@@ -208,7 +213,7 @@ async def queued_on_the_pool(
             model_runs.c.detector.in_(NUCLEI_DETECTORS),
         )
     )
-    return [(row.id, row.created_at) for row in found]
+    return [QueuedRun(row.id, row.created_at, bool(row.woken)) for row in found]
 
 
 @router.get("/jobs", operation_id="listMyJobs")
@@ -254,7 +259,8 @@ async def list_my_jobs(
             .limit(RECENT)
         )
     ).all()
-    waits = await run_waits(watch, await queued_on_the_pool(connection, rows), datetime.now(UTC))
+    queued = await queued_on_the_pool(connection, rows)
+    waits = await run_waits(connection, watch, queued, datetime.now(UTC))
     found: list[MyJob] = []
     for row in rows:
         if not await readable(connection, person, row):

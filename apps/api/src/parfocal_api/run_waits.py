@@ -6,12 +6,15 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
-from typing import cast
+from typing import NamedTuple, cast
 
 from fastapi import Request
 from pydantic import BaseModel
+from sqlalchemy import func, update
+from sqlalchemy.ext.asyncio import AsyncConnection
 from starlette.concurrency import run_in_threadpool
 
+from parfocal_common.jobs import JobStatus, jobs
 from parfocal_common.model_runs import NUCLEI_POOL_FUNCTION, wake_nuclei_pool
 from parfocal_common.warm_gate import PoolLoad, PoolLoads, Pools
 
@@ -19,6 +22,7 @@ logger = logging.getLogger("parfocal.api.run_waits")
 
 LOAD_FRESH_SECONDS = 10.0
 WAKE_AGAIN_AFTER_SECONDS = 60.0
+WOKEN_AGAIN = "woken_again_at"
 
 
 class RunWaitReason(StrEnum):
@@ -32,6 +36,12 @@ class RunWait(BaseModel):
     since: datetime
 
 
+class QueuedRun(NamedTuple):
+    job_id: uuid.UUID
+    created_at: datetime
+    woken_again: bool
+
+
 @dataclass
 class PoolWatch:
     loads: PoolLoads
@@ -41,8 +51,6 @@ class PoolWatch:
     lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
     read_at: float | None = field(default=None, init=False)
     last: PoolLoad | None = field(default=None, init=False)
-    woken_at: float | None = field(default=None, init=False)
-    woke: bool = field(default=False, init=False)
 
     def load(self) -> PoolLoad | None:
         now = self.clock()
@@ -59,29 +67,11 @@ class PoolWatch:
         return found
 
     def wake_again(self) -> bool:
-        now = self.clock()
         with self.lock:
-            if self.woken_at is not None and now - self.woken_at < WAKE_AGAIN_AFTER_SECONDS:
-                return self.woke
-            self.woken_at = now
             self.read_at = None
         woken = wake_nuclei_pool(self.pools)
         logger.info("queued model run woke its pool again", extra={"woken": woken})
-        with self.lock:
-            self.woke = woken
         return woken
-
-    def reason(self, waited_seconds: float) -> RunWaitReason | None:
-        load = self.load()
-        if load is None:
-            return None
-        if load.runners > 0:
-            return RunWaitReason.GPU_BUSY
-        if load.backlog > 0:
-            return RunWaitReason.WAITING_FOR_GPU
-        if waited_seconds < WAKE_AGAIN_AFTER_SECONDS:
-            return None
-        return RunWaitReason.WOKEN_AGAIN if self.wake_again() else None
 
 
 def pool_watch_of(request: Request) -> PoolWatch | None:
@@ -96,13 +86,64 @@ def pool_watch_of(request: Request) -> PoolWatch | None:
     return watch
 
 
+async def mark_woken(connection: AsyncConnection, job_ids: list[uuid.UUID]) -> list[uuid.UUID]:
+    marker = func.jsonb_build_object(WOKEN_AGAIN, func.now())
+    marked = await connection.scalars(
+        update(jobs)
+        .where(
+            jobs.c.id.in_(job_ids),
+            jobs.c.status == JobStatus.QUEUED,
+            ~jobs.c.input.has_key(WOKEN_AGAIN),
+        )
+        .values(input=jobs.c.input.op("||")(marker))
+        .returning(jobs.c.id)
+    )
+    return list(marked)
+
+
+async def unmark_woken(connection: AsyncConnection, job_ids: list[uuid.UUID]) -> None:
+    await connection.execute(
+        update(jobs).where(jobs.c.id.in_(job_ids)).values(input=jobs.c.input.op("-")(WOKEN_AGAIN))
+    )
+
+
+async def woken_again(
+    connection: AsyncConnection, watch: PoolWatch, due: list[uuid.UUID]
+) -> set[uuid.UUID]:
+    if not due:
+        return set()
+    marked = await mark_woken(connection, due)
+    if not marked:
+        return set()
+    if await run_in_threadpool(watch.wake_again):
+        return set(marked)
+    await unmark_woken(connection, marked)
+    return set()
+
+
 async def run_waits(
-    watch: PoolWatch | None, queued: Sequence[tuple[uuid.UUID, datetime]], now: datetime
+    connection: AsyncConnection,
+    watch: PoolWatch | None,
+    queued: Sequence[QueuedRun],
+    now: datetime,
 ) -> dict[uuid.UUID, RunWait]:
     if watch is None or not queued:
         return {}
-    oldest = min(created for _, created in queued)
-    reason = await run_in_threadpool(watch.reason, (now - oldest).total_seconds())
-    if reason is None:
+    load = await run_in_threadpool(watch.load)
+    if load is None:
         return {}
-    return {job_id: RunWait(reason=reason, since=created) for job_id, created in queued}
+    if load.runners > 0 or load.backlog > 0:
+        reason = RunWaitReason.GPU_BUSY if load.runners > 0 else RunWaitReason.WAITING_FOR_GPU
+        return {run.job_id: RunWait(reason=reason, since=run.created_at) for run in queued}
+    due = [
+        run.job_id
+        for run in queued
+        if not run.woken_again
+        and (now - run.created_at).total_seconds() >= WAKE_AGAIN_AFTER_SECONDS
+    ]
+    woken = await woken_again(connection, watch, due)
+    return {
+        run.job_id: RunWait(reason=RunWaitReason.WOKEN_AGAIN, since=run.created_at)
+        for run in queued
+        if run.woken_again or run.job_id in woken
+    }
