@@ -35,7 +35,7 @@ test("a guard blocks a wrong destination with its message, lets the completing o
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.goto("/study");
+  await page.goto("/study/console");
   await page.getByLabel("Task set JSON").fill(JSON.stringify(tasks));
   await page.getByRole("button", { name: "Save tasks" }).click();
   await page.getByLabel("Participant code").fill("P1");

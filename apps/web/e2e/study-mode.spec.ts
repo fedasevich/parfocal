@@ -1,6 +1,13 @@
+import { pilotTasks } from "../src/study/study-model.ts";
 import { expect, type Page, test } from "./a11y.ts";
 
 test.use({ viewport: { width: 1280, height: 900 } });
+
+async function openWithPilotTasks(page: Page) {
+  await page.goto("/study/console");
+  await page.getByLabel("Task set JSON").fill(JSON.stringify(pilotTasks));
+  await page.getByRole("button", { name: "Save tasks" }).click();
+}
 
 const card = (page: Page) => page.getByTestId("study-task-card");
 const step = (page: Page, index: number) =>
@@ -32,7 +39,7 @@ test("the ten pilot tasks run end to end, three end by their checks and none fir
   page,
 }) => {
   test.setTimeout(300_000);
-  await page.goto("/study");
+  await openWithPilotTasks(page);
   await startSessionFor(page, "P1");
 
   const popup = page.waitForEvent("popup");
@@ -119,7 +126,7 @@ test("a moderator runs the ten tasks, then the round is frozen and the next roun
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.goto("/study");
+  await openWithPilotTasks(page);
   await expect(page.getByTestId("study-round")).toHaveAttribute("data-frozen", "false");
   await expect(page.getByTestId("study-summary").locator("tbody tr")).toHaveCount(10);
 
