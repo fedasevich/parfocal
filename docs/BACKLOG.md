@@ -4718,6 +4718,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a unit test covers the reset calling the remote seed, a deployed reset from a release tag logs the seed's phases from the EU function with the whole reset under 15 minutes, the cost of one reseed is logged, and PROTO-139 (the production reseed finishes in under 15 minutes) and TEST-057 hold on that run.
   Depends on TEST-057. Size: M.
 
+- [x] OPS-041 · Merged agent worktrees are pruned after every lead push
+  On 2026-11-24 107 agent worktrees under .claude/worktrees held 224 GB and the disk reached 97%. scripts/lead/prune-worktrees.sh removes every clean worktree whose HEAD is on origin/main and that has not changed for an hour, and push.sh runs it in the background after each push. AGENTS.md and agent-workflow.md state the rule.
+  Done when the script runs after a push and the worktree count stays near the number of live agents.
+  Depends on nothing. Size: S.
 ---
 
 ## 35 TEST · Test infrastructure
@@ -7266,6 +7270,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
   Done when an API test seeds and removes a participant project through the new route, a Playwright spec on the fake API prepares a participant and starts task 1, and a deployed dry run as one code goes from Prepare to the thank-you page, recorded in a result file.
   Depends on EXP-015, EXP-017. Size: M.
+- [ ] EXP-019 · Round 5 measures dead clicks and time to first action exactly as round 4 did
+  PILOT-012 and EXP-015 found that round 5 counts dead clicks under its own rule and defines time to first action as task start to the first press, key or wheel, while nobody checked how round 4 got its 15% dead clicks (42 of 277) and 4.8 s median. Round 4's recorder in /Users/yuriifedas/WebstormProjects/poc/study counts a dead click as a click inside the app on nothing clickable (proto.js calls studyHook deadclick when the target has no data-act, data-go, data-tool, data-cell or open popover), and its dashboard (public/index.html and results.js) computes the time to first action. Read both, write the exact round 4 definitions into docs/project/study-round-5.md with file and line, and change the round 5 recorder and scripts/study so both numbers are computed the same way on the real app, with a clickable rule that matches round 4's intent (a click on nothing that reacts). Keep the old round 5 values as extra columns if they differ. Then the round 4 against round 5 table can drop its not comparable labels, or keep them only where a real difference remains, stated in one sentence each.
+  Done when the protocol cites round 4's definitions, unit tests show both metrics on a fixed trace match a hand count by round 4's rule, and the comparison table labels say exactly what still differs.
+  Depends on EXP-015, PILOT-012. Size: M.
 ---
 
 ## Later epics (not in v1, kept for planning)
