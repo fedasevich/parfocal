@@ -14126,6 +14126,11 @@ msgstr "Request sent"
 msgid "Requested by"
 msgstr "Requested by"
 
+#. placeholder {0}: caseDetail.requested_by
+#: src/viewer/live-slides-popover.tsx
+msgid "Requested by {0}"
+msgstr "Requested by {0}"
+
 #: ../../packages/ui/src/components/form-field.tsx
 #: ../../packages/ui/src/components/slide-done-card.tsx
 #: src/screens/new-task/check-step.tsx

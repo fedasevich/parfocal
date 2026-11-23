@@ -75,6 +75,7 @@ import {
 import { annotateStubTaskId, rt13, rt18 } from "./scenario-review.ts";
 import { opinionForms, studyTemplates, taskSlides } from "./scenario-task.ts";
 import { annotateTaskClasses, annotateTaskSlides } from "./shared-layer-handlers.ts";
+import { withParticipantTasks } from "./study-participant.ts";
 import { outlineOverlapOf } from "./task-outline-overlap.ts";
 import { addedResultSets } from "./upload-handlers.ts";
 import { toSlideRow } from "./work-handlers.ts";
@@ -547,7 +548,12 @@ export function projectHandlers(): RequestHandler[] {
     ...watchHandlers(),
     getGetProjectImportsMockHandler(({ params }) => toProjectImports(String(params.projectId))),
     getGetOpinionFormMockHandler(({ params }) => toOpinionForm(String(params.projectId))),
-    getListReviewTasksMockHandler(({ params }) => toProjectReviewTasks(String(params.projectId))),
+    getListReviewTasksMockHandler(({ params }) =>
+      withParticipantTasks(
+        String(params.projectId),
+        toProjectReviewTasks(String(params.projectId)),
+      ),
+    ),
     getListSlideResultSetsMockHandler(({ params, request }) => {
       const slideId = String(params.slideId);
       const sets = toSlideResultSets(slideId, runsToAddInAnnotateTask(request, slideId));

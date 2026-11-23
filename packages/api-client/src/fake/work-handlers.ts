@@ -71,6 +71,7 @@ import {
 import { assignedTo, toAnnouncement, toProjectRef } from "./scenario-handlers.ts";
 import { rt18 } from "./scenario-review.ts";
 import { type SentTask, sentTasks } from "./sent-tasks.ts";
+import { withParticipantSlides } from "./study-participant.ts";
 import { outlineOverlapOf } from "./task-outline-overlap.ts";
 import { fakeView } from "./view.ts";
 
@@ -655,7 +656,10 @@ export function workHandlers(): RequestHandler[] {
       const reviewer = params.get("reviewer_id");
       const storage = params.get("storage");
       const scenarioRows = myWorkSlideIds.map(toSlideRow);
-      const rows = [...scenarioRows, ...bulkSlideRows(scenarioRows, bulkSlideCount)];
+      const rows = withParticipantSlides(
+        [...scenarioRows, ...bulkSlideRows(scenarioRows, bulkSlideCount)],
+        toSlideRow,
+      );
       return {
         slides: rows.filter(
           (row) =>

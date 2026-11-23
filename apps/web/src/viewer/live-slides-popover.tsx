@@ -104,7 +104,13 @@ export function LiveSlidesPopover({
   return (
     <SlidesPopover
       caseTitle={grouped && load?.case ? t`Case ${load.case.label}` : undefined}
-      caseSub={[specimen, load?.project.name].filter(Boolean).join(" · ")}
+      caseSub={[
+        specimen,
+        caseDetail?.requested_by ? t`Requested by ${caseDetail.requested_by}` : undefined,
+        load?.project.name,
+      ]
+        .filter(Boolean)
+        .join(" · ")}
       onOpenCase={() => void goTo(destinations.project(projectId))}
       caseHeading={grouped ? scopeHeading.case : scopeHeading[list.scope]}
       caseSlides={rowsOf(groups.caseRows)}

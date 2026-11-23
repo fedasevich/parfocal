@@ -52,6 +52,7 @@ import {
   workspaces,
 } from "./scenario.ts";
 import { adminRightsHolders, workspaceBrands } from "./scenario-admin.ts";
+import { withParticipantProjectName } from "./study-participant.ts";
 import { submittedThisSession } from "./submitted-slides.ts";
 import { fakeView } from "./view.ts";
 import { toReviewTaskDetail } from "./work-handlers.ts";
@@ -443,6 +444,7 @@ export function scenarioHandlers(): RequestHandler[] {
                   !deletedProjects.has(project.id) && archivedProjects.has(project.id) === archived,
               )
               .map(toProject)
+              .map(withParticipantProjectName)
           : [],
       );
     }),

@@ -11,6 +11,7 @@ import type {
 import { clinicalCaseOf } from "./case-report-handlers.ts";
 import { cases, projects, type ScenarioSlide, scenarioNow, slides } from "./scenario.ts";
 import { clinicalCases, clinicalProject } from "./scenario-clinical.ts";
+import { participantRequester } from "./study-participant.ts";
 
 type SlideEdit = Partial<Pick<SlideDetail, "label" | "stain" | "block_id" | "level">>;
 
@@ -124,7 +125,7 @@ export const toCaseDetail = (caseId: string): CaseDetail | null => {
           }
         : null,
     clinical_note: project.privacy === "clinical" ? clinicalNoteOf(caseId, found.label) : null,
-    requested_by: requesters.get(caseId) ?? null,
+    requested_by: requesters.get(caseId) ?? participantRequester(found.label),
     specimens: specimensOf(clinicalCaseOf(caseId)?.label ?? found.label),
     slides: slidesOfCase(caseId).map(toSlideDetail),
   };
