@@ -27,6 +27,7 @@ test("the case details carry each field from the case, project and task", () => 
     ],
     taskTitle: "RT-1 · First read",
     researcher: "Demo Researcher",
+    requestedBy: "Dr. Fake Requester, surgery",
   });
   assert.deepEqual(details, {
     project: "Demo project",
@@ -35,6 +36,7 @@ test("the case details carry each field from the case, project and task", () => 
     blocks: ["A1", "A2", "B1"],
     task: "RT-1 · First read",
     researcher: "Demo Researcher",
+    requestedBy: "Dr. Fake Requester, surgery",
     clinical: false,
     clinicalNote: undefined,
   });

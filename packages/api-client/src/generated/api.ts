@@ -1285,6 +1285,7 @@ export interface CaseDetail {
   source: CaseSource;
   patient: PatientDetail | null;
   clinical_note: string | null;
+  requested_by: string | null;
   specimens: SpecimenDetail[];
   slides: SlideDetail[];
 }
@@ -1323,6 +1324,7 @@ export interface CaseDraft {
   label: string;
   patient_id?: string | null;
   patient?: NewPatient | null;
+  requested_by?: Text200 | null;
   /** @maxItems 26 */
   specimens?: SpecimenDraft[];
 }
@@ -6554,6 +6556,10 @@ export interface ReportPreview {
   sample: boolean;
   offset?: number;
   pages: string[];
+}
+
+export interface RequestedByChange {
+  requested_by: string | null;
 }
 
 export interface Resolved {
@@ -29987,6 +29993,178 @@ export const useSetCaseClinicalNote = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSetCaseClinicalNoteMutationOptions(options), queryClient);
+};
+
+export type setCaseRequestedByResponse200 = {
+  data: CaseDetail;
+  status: 200;
+};
+
+export type setCaseRequestedByResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setCaseRequestedByResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setCaseRequestedByResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setCaseRequestedByResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setCaseRequestedByResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setCaseRequestedByResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setCaseRequestedByResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setCaseRequestedByResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setCaseRequestedByResponseSuccess = setCaseRequestedByResponse200 & {
+  headers: Headers;
+};
+export type setCaseRequestedByResponseError = (
+  | setCaseRequestedByResponse400
+  | setCaseRequestedByResponse401
+  | setCaseRequestedByResponse403
+  | setCaseRequestedByResponse404
+  | setCaseRequestedByResponse409
+  | setCaseRequestedByResponse422
+  | setCaseRequestedByResponse429
+  | setCaseRequestedByResponse500
+) & {
+  headers: Headers;
+};
+
+export type setCaseRequestedByResponse =
+  | setCaseRequestedByResponseSuccess
+  | setCaseRequestedByResponseError;
+
+export const getSetCaseRequestedByUrl = (caseId: string) => {
+  return `/api/cases/${caseId}/requested-by`;
+};
+
+/**
+ * @summary Set Case Requested By
+ */
+export const setCaseRequestedBy = async (
+  caseId: string,
+  requestedByChange: RequestedByChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setCaseRequestedByResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setCaseRequestedByResponse>(getSetCaseRequestedByUrl(caseId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestedByChange),
+  });
+};
+
+export const getSetCaseRequestedByMutationKey = () => ["setCaseRequestedBy"] as const;
+
+export const getSetCaseRequestedByMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setCaseRequestedBy>>,
+    TError,
+    SetCaseRequestedByMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setCaseRequestedBy>>,
+  TError,
+  SetCaseRequestedByMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetCaseRequestedByMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setCaseRequestedBy>>,
+    SetCaseRequestedByMutationVariables
+  > = (props) => {
+    const { caseId, data } = props ?? {};
+
+    return setCaseRequestedBy(caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetCaseRequestedByMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setCaseRequestedBy>>
+>;
+export type SetCaseRequestedByMutationBody = RequestedByChange;
+export type SetCaseRequestedByMutationError = Problem;
+export type SetCaseRequestedByMutationVariables = { caseId: string; data: RequestedByChange };
+
+/**
+ * @summary Set Case Requested By
+ */
+export const useSetCaseRequestedBy = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setCaseRequestedBy>>,
+      TError,
+      SetCaseRequestedByMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setCaseRequestedBy>>,
+  TError,
+  SetCaseRequestedByMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetCaseRequestedByMutationOptions(options), queryClient);
 };
 
 export type moveSlideResponse200 = {

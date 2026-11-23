@@ -302,6 +302,7 @@ cases = Table(
         info=PERSONAL,
     ),
     Column("clinical_note_ciphertext", LargeBinary, nullable=True, info=PHI),
+    Column("requested_by", String(200), nullable=True, info=PERSONAL),
     *case_timestamps(),
     UniqueConstraint("project_id", "label"),
     UniqueConstraint("id", "tenant_id"),

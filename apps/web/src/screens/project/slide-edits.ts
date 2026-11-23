@@ -66,6 +66,16 @@ export const orderChanged = (before: SlideDetail[], drafts: SlideDraft[]) =>
 
 export const CLINICAL_NOTE_MAX = 4000;
 
+export const REQUESTED_BY_MAX = 200;
+
+export function requesterChange(
+  before: string | null | undefined,
+  draft: string,
+): { requested_by: string | null } | null {
+  const requested = draft.trim() || null;
+  return requested === (before?.trim() || null) ? null : { requested_by: requested };
+}
+
 export function noteChange(before: string | null, draft: string): { note: string | null } | null {
   const note = draft.trim() || null;
   return note === (before?.trim() || null) ? null : { note };

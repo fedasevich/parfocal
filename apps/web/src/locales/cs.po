@@ -14111,6 +14111,12 @@ msgstr ""
 msgid "Request sent"
 msgstr ""
 
+#: ../../packages/ui/src/components/new-forms.tsx
+#: ../../packages/ui/src/components/review-popovers.tsx
+#: src/screens/project/case-slides-editor.tsx
+msgid "Requested by"
+msgstr ""
+
 #: ../../packages/ui/src/components/form-field.tsx
 #: ../../packages/ui/src/components/slide-done-card.tsx
 #: src/screens/new-task/check-step.tsx
@@ -17426,6 +17432,11 @@ msgstr ""
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
 msgid "The clinician who requested it"
+msgstr ""
+
+#: ../../packages/ui/src/components/new-forms.tsx
+#: src/screens/project/case-slides-editor.tsx
+msgid "The clinician who sent the case in"
 msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx

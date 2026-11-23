@@ -14120,6 +14120,12 @@ msgstr "Request"
 msgid "Request sent"
 msgstr "Request sent"
 
+#: ../../packages/ui/src/components/new-forms.tsx
+#: ../../packages/ui/src/components/review-popovers.tsx
+#: src/screens/project/case-slides-editor.tsx
+msgid "Requested by"
+msgstr "Requested by"
+
 #: ../../packages/ui/src/components/form-field.tsx
 #: ../../packages/ui/src/components/slide-done-card.tsx
 #: src/screens/new-task/check-step.tsx
@@ -17436,6 +17442,11 @@ msgstr "The clinician and {0}, the co-signer"
 #: src/screens/clinical-report/report-screen.tsx
 msgid "The clinician who requested it"
 msgstr "The clinician who requested it"
+
+#: ../../packages/ui/src/components/new-forms.tsx
+#: src/screens/project/case-slides-editor.tsx
+msgid "The clinician who sent the case in"
+msgstr "The clinician who sent the case in"
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "the co-sign request"

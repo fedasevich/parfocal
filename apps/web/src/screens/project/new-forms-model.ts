@@ -34,6 +34,7 @@ export const caseDraft = (projectId: string, values: NewCaseValues): CaseDraft =
   project_id: projectId,
   label: values.label,
   specimens: values.specimen === "" ? [] : [{ letter: "A", type: values.specimen }],
+  ...(values.requestedBy ? { requested_by: values.requestedBy } : {}),
   ...(values.patient
     ? {
         patient: {

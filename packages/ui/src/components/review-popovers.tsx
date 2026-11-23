@@ -226,6 +226,7 @@ type CaseDetailsData = {
   blocks?: string[] | undefined;
   task?: string | undefined;
   researcher?: string | undefined;
+  requestedBy?: string | undefined;
   clinical?: boolean | undefined;
   clinicalNote?: string | undefined;
 };
@@ -241,6 +242,7 @@ function CaseDetails({ details }: { details: CaseDetailsData }) {
     ["blocks", t`Blocks`, blocks.length > 0 ? blocks.join(", ") : undefined, t`No blocks recorded`],
     ["task", t`Task`, details.task, t`Not part of a task`],
     ["researcher", t`Researcher`, details.researcher, t`Not known`],
+    ["requested-by", t`Requested by`, details.requestedBy, t`Not recorded`],
   ];
   if (details.clinical) {
     rows.push(["clinical-note", t`Clinical note`, details.clinicalNote, t`No clinical note`]);

@@ -4,10 +4,12 @@ from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from fastapi import Response
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import actor_of
+from parfocal_api.case_creation import BlockDraft, CaseDraft, SpecimenDraft, create_case
 from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.projects import ProjectDeletion, ProjectDraft, create_project, delete_project
@@ -22,6 +24,7 @@ from parfocal_api.result_sets import (
 from parfocal_api.review_order import cancel_order_jobs
 from parfocal_api.review_order_job import order_one_slide
 from parfocal_api.review_tasks import Scope
+from parfocal_api.sample_files import stored_facts
 from parfocal_api.showcase import (
     FORMAT_GALLERY,
     PEOPLE,
@@ -39,6 +42,7 @@ from parfocal_api.showcase import (
     shared_actors,
 )
 from parfocal_api.showcase_accounts import SeededAccount, add_account, add_member
+from parfocal_api.showcase_case import SPECIMEN, seed_http
 from parfocal_api.showcase_demo import built_in_templates
 from parfocal_api.showcase_results import CELLS_FILE, CELLS_MODEL, model_cells, model_regions
 from parfocal_api.showcase_reviews import (
@@ -49,7 +53,7 @@ from parfocal_api.showcase_reviews import (
     review_task,
     submit,
 )
-from parfocal_api.showcase_samples import sample_pool
+from parfocal_api.showcase_samples import PoolSlide, SamplePool, sample_pool
 from parfocal_api.tables import (
     BuiltInTemplate,
     DecisionReason,
@@ -68,6 +72,7 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import build_cells, write_cells
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.ingest import fixture_folder
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.result_store import ResultStore
 
@@ -79,8 +84,11 @@ ANNOTATE_TASK = "Study annotation"
 REVIEW_SLIDES = ("Study review 1", "Study review 2")
 QUEUE_SLIDES = ("Study queue 1", "Study queue 2")
 ANNOTATE_SLIDE = "Study annotate"
+CASE_LABEL = "Study case"
+REQUESTED_BY = "Dr. Jana Horáková, surgery"
 CELL_TASK = "Study cell review"
 CELL_SLIDE = "Study cells"
+CELL_FILES = ("CMU-1.tiff", "CMU-1-JP2K-33005.svs", "CMU-1.ndpi")
 CELLS_CHECKED = 12
 ORDER_SEED = 20261123
 STUDY_LOCK = "study-seed"
@@ -113,6 +121,7 @@ class StudyProject:
     seat_id: uuid.UUID
     review_task_id: uuid.UUID
     review_slide_id: uuid.UUID
+    case_id: uuid.UUID
     queue_task_id: uuid.UUID
     queue_slide_id: uuid.UUID
     annotate_task_id: uuid.UUID
@@ -340,6 +349,32 @@ async def fixed_order(
     await cancel_order_jobs(connection, task_id)
 
 
+async def cell_pick(store: ObjectStore, pool: SamplePool) -> PoolSlide:
+    for file in CELL_FILES:
+        stored = await stored_facts(store, fixture_folder(file))
+        if stored is not None:
+            return PoolSlide(file, stored)
+    return pool.next()
+
+
+async def study_case(
+    connection: AsyncConnection, creator: MemberPrincipal, project_id: uuid.UUID
+) -> uuid.UUID:
+    made = await create_case(
+        CaseDraft(
+            project_id=project_id,
+            label=CASE_LABEL,
+            requested_by=REQUESTED_BY,
+            specimens=[SpecimenDraft(letter="A", site=SPECIMEN, blocks=[BlockDraft(number=1)])],
+        ),
+        seed_http(),
+        Response(),
+        creator,
+        connection,
+    )
+    return made.id
+
+
 async def seed_study_project(
     connection: AsyncConnection,
     seeded: Seeded,
@@ -375,16 +410,22 @@ async def seed_study_project(
         store, [slide.file for slide in FORMAT_GALLERY if model_regions(slide.file) is not None]
     )
 
-    async def with_result(label: str) -> tuple[uuid.UUID, uuid.UUID]:
+    async def with_result(
+        label: str, case_id: uuid.UUID | None = None
+    ) -> tuple[uuid.UUID, uuid.UUID]:
         taken = pool.next()
-        slide = await add_slide(connection, seeded, project.id, label, sample_facts(taken.stored))
+        facts = sample_facts(taken.stored)
+        if case_id is not None:
+            facts["case_id"] = case_id
+        slide = await add_slide(connection, seeded, project.id, label, facts)
         return slide.id, await ready_set(
             connection, creator, slide, taken.file, "regions.parfocal.json"
         )
 
     queued = dict([await with_result(label) for label in QUEUE_SLIDES])
     queue_id = await seed_queue(connection, seeded, creator, results, project.id, queued)
-    reviewed = dict([await with_result(label) for label in REVIEW_SLIDES])
+    case_id = await study_case(connection, creator, project.id)
+    reviewed = dict([await with_result(label, case_id) for label in REVIEW_SLIDES])
     review_id = await review_task(
         connection,
         creator,
@@ -411,7 +452,7 @@ async def seed_study_project(
         DecisionStyle.CERTAINTY,
         TaskKind.ANNOTATE,
     )
-    typed = pool.next()
+    typed = await cell_pick(store, pool)
     cell_slide = await add_slide(
         connection, seeded, project.id, CELL_SLIDE, sample_facts(typed.stored)
     )
@@ -432,6 +473,7 @@ async def seed_study_project(
         seat_id=seat_id,
         review_task_id=review_id,
         review_slide_id=next(iter(reviewed)),
+        case_id=case_id,
         queue_task_id=queue_id,
         queue_slide_id=next(iter(queued)),
         annotate_task_id=annotate_id,

@@ -4,6 +4,7 @@ import {
   changeSlideDetails,
   reorderCaseSlides,
   setCaseClinicalNote,
+  setCaseRequestedBy,
   useGetCase,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -22,6 +23,8 @@ import {
   moveSlide,
   noteChange,
   orderChanged,
+  REQUESTED_BY_MAX,
+  requesterChange,
   type SlideDraft,
   slideChange,
   slideErrors,
@@ -63,6 +66,7 @@ function EditorBody({
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<SlideDraft[]>(() => detail.slides.map(draftOf));
   const [note, setNote] = useState(detail.clinical_note ?? "");
+  const [requestedBy, setRequestedBy] = useState(detail.requested_by ?? "");
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | undefined>();
@@ -91,6 +95,8 @@ function EditorBody({
         await reorderCaseSlides(detail.id, { slide_ids: drafts.map((draft) => draft.id) });
       const changedNote = clinical ? noteChange(detail.clinical_note, note) : null;
       if (changedNote) await setCaseClinicalNote(detail.id, changedNote);
+      const changedRequester = requesterChange(detail.requested_by, requestedBy);
+      if (changedRequester) await setCaseRequestedBy(detail.id, changedRequester);
       await queryClient.invalidateQueries();
       onClose();
     } catch (error) {
@@ -182,6 +188,19 @@ function EditorBody({
           </li>
         ))}
       </ol>
+      <div className="mt-3 grid gap-1 text-body-sm text-fg">
+        <label htmlFor="case-requested-by">
+          <Trans>Requested by</Trans>
+        </label>
+        <Input
+          id="case-requested-by"
+          value={requestedBy}
+          maxLength={REQUESTED_BY_MAX}
+          placeholder={t`The clinician who sent the case in`}
+          className="h-7 text-body-sm"
+          onChange={(event) => setRequestedBy(event.target.value)}
+        />
+      </div>
       {clinical ? (
         <div className="mt-3 grid gap-1 text-body-sm text-fg">
           <label htmlFor="case-clinical-note">

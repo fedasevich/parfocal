@@ -16,6 +16,7 @@ export type NewProjectValues = {
 export type NewCaseValues = {
   label: string;
   specimen: string;
+  requestedBy?: string | undefined;
   patient: { name: string; birthNumber: string } | null;
 };
 

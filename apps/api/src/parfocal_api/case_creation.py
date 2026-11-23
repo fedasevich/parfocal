@@ -94,6 +94,7 @@ class CaseDraft(BaseModel):
     ]
     patient_id: uuid.UUID | None = None
     patient: NewPatient | None = None
+    requested_by: Text200 | None = None
     specimens: Annotated[list[SpecimenDraft], Field(max_length=26)] = []
 
     @model_validator(mode="after")
@@ -290,6 +291,7 @@ async def create_case(
             label=await label_for(connection, draft),
             source=CaseSource.MANUAL,
             created_by_user_id=creator.user_id,
+            requested_by=draft.requested_by,
         )
     )
     await insert_specimens(connection, tenant_id, case_id, draft)

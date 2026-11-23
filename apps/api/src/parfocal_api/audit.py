@@ -103,6 +103,7 @@ class AuditAction(StrEnum):
     CASE_SLIDES_REORDERED = "case.slides-reordered"
     CASE_SLIDE_MOVED = "case.slide-moved"
     CASE_CLINICAL_NOTE_CHANGED = "case.clinical-note-changed"
+    CASE_REQUESTED_BY_CHANGED = "case.requested-by-changed"
     TASK_CREATED = "task.created"
     TASK_CHANGED = "task.changed"
     TASK_NUDGED = "task.nudged"

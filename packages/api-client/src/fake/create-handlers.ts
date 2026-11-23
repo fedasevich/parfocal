@@ -1,6 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type { CaseDraft, ProjectDraft, Workspace } from "../generated/api.ts";
-import { toCaseDetail } from "./case-handlers.ts";
+import { setFakeRequester, toCaseDetail } from "./case-handlers.ts";
 import { liveSecurityContact } from "./console-handlers.ts";
 import {
   cases,
@@ -116,6 +116,7 @@ export const createdRecordHandlers = (): RequestHandler[] => [
       folder: "",
     };
     cases.push(created);
+    setFakeRequester(created.id, draft.requested_by);
     project.counts.cases += 1;
     const detail = toCaseDetail(created.id);
     return detail === null

@@ -177,6 +177,7 @@ function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: N
   const clinical = project.privacy === "clinical";
   const [label, setLabel] = useState("");
   const [specimen, setSpecimen] = useState("");
+  const [requestedBy, setRequestedBy] = useState("");
   const [patientName, setPatientName] = useState("");
   const [birthNumber, setBirthNumber] = useState("");
   const [tried, setTried] = useState(false);
@@ -188,6 +189,7 @@ function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: N
       onCreate({
         label: label.trim(),
         specimen: specimen.trim(),
+        requestedBy: requestedBy.trim(),
         patient: casePatient(patient, clinical),
       });
     }
@@ -242,6 +244,14 @@ function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: N
               maxLength={200}
               placeholder={t`Sentinel lymph node, left`}
               onChange={(event) => setSpecimen(event.target.value)}
+            />
+          </FormField>
+          <FormField label={t`Requested by`} className="col-span-2">
+            <TextFieldInput
+              value={requestedBy}
+              maxLength={200}
+              placeholder={t`The clinician who sent the case in`}
+              onChange={(event) => setRequestedBy(event.target.value)}
             />
           </FormField>
         </div>

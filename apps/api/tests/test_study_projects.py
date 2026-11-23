@@ -13,9 +13,12 @@ from test_showcase import EmptyStore, MemoryResults, PublishedStore
 
 from parfocal_api.disagreements import queue_of
 from parfocal_api.showcase import PEOPLE
+from parfocal_api.showcase_results import model_cells
 from parfocal_api.study_projects import (
     ANNOTATE_SLIDE,
     ANNOTATE_TASK,
+    CASE_LABEL,
+    CELL_FILES,
     CELL_SLIDE,
     CELL_TASK,
     CELLS_CHECKED,
@@ -23,6 +26,7 @@ from parfocal_api.study_projects import (
     PROJECT_PREFIX,
     QUEUE_SLIDES,
     QUEUE_TASK,
+    REQUESTED_BY,
     REVIEW_SLIDES,
     REVIEW_TASK,
     BadParticipantCodeError,
@@ -38,6 +42,7 @@ pytestmark = pytest.mark.db
 
 STATEMENT_CEILING = 450
 LOCAL_SECONDS_CEILING = 10.0
+TUMOUR_SHARE = 0.15
 
 
 @dataclass
@@ -266,6 +271,79 @@ def test_a_full_sample_pool_still_seeds_an_outline_disagreement(seeded: Seeded) 
     state = snapshot(seeded.url, made)
     assert "outlines-differ" in {why for *_, why in state["queue"]}
     assert asyncio.run(remove_participant(seeded.url, "P9")) == 1
+
+
+def test_every_round_5_task_has_what_it_asks_for(seeded: Seeded) -> None:
+    made = seeded_one(seeded, "P7", PublishedStore())
+    url = seeded.url
+    state = snapshot(url, made)
+    seat = str(made.seat_id)
+
+    def one(sql: str) -> Any:
+        [(value,)] = query(url, sql)
+        return value
+
+    def assigned(task_id: object, slide_id: object) -> bool:
+        return (
+            one(
+                "SELECT count(*) FROM review_assignments "
+                f"WHERE task_id = '{task_id}' AND slide_id = '{slide_id}' "
+                f"AND user_id = '{seat}' AND submitted_at IS NULL"
+            )
+            == 1
+        )
+
+    assert one(f"SELECT role FROM project_members WHERE user_id = '{seat}'") == "owner"
+    for slide_id in (
+        made.review_slide_id,
+        made.queue_slide_id,
+        made.annotate_slide_id,
+        made.cell_slide_id,
+    ):
+        assert one(f"SELECT published_at IS NOT NULL FROM slides WHERE id = '{slide_id}'")
+    assert assigned(made.review_task_id, made.review_slide_id)
+    assert one(f"SELECT case_id FROM slides WHERE id = '{made.review_slide_id}'") == made.case_id
+    assert one(f"SELECT requested_by FROM cases WHERE id = '{made.case_id}'") == REQUESTED_BY
+    assert one(f"SELECT label FROM cases WHERE id = '{made.case_id}'") == CASE_LABEL
+    case_slides = query(
+        url, f"SELECT label FROM slides WHERE case_id = '{made.case_id}' ORDER BY label"
+    )
+    assert [label for (label,) in case_slides] == list(REVIEW_SLIDES)
+    assert assigned(made.cell_task_id, made.cell_slide_id)
+    assert (ORDER_SEED, CELLS_CHECKED, ORDER_SEED) in state["order"]
+    assert CELLS_CHECKED >= 4
+    tumour_cells = one(
+        "SELECT coalesce(sum(c.object_count), 0) FROM result_set_classes c "
+        "JOIN result_sets r ON r.id = c.result_set_id "
+        f"WHERE r.slide_id = '{made.cell_slide_id}' AND c.source_name = 'Tumor'"
+    )
+    assert tumour_cells > 0, query(
+        url,
+        "SELECT s.original_key, c.source_name, c.object_count FROM result_set_classes c "
+        "JOIN result_sets r ON r.id = c.result_set_id JOIN slides s ON s.id = r.slide_id "
+        f"WHERE r.slide_id = '{made.cell_slide_id}'",
+    )
+    assert (
+        one(
+            f"SELECT count(*) FROM result_sets WHERE slide_id = '{made.review_slide_id}' "
+            "AND region_count > 0"
+        )
+        == 1
+    )
+    assert any(label == QUEUE_SLIDES[0] for label, *_ in state["queue"])
+    assert one(f"SELECT kind FROM review_tasks WHERE id = '{made.annotate_task_id}'") == "annotate"
+    assert assigned(made.annotate_task_id, made.annotate_slide_id)
+    assert asyncio.run(remove_participant(url, "P7")) == 1
+
+
+def test_the_cell_slide_has_tumour_cells_to_retype() -> None:
+    for file in CELL_FILES:
+        found = model_cells(file)
+        assert found is not None, file
+        tumour = found.classes.index("Tumor")
+        share = sum(cell.class_index == tumour for cell in found.cells) / len(found.cells)
+        assert share >= TUMOUR_SHARE, file
+        assert (1 - share) ** CELLS_CHECKED < 0.1, file
 
 
 def test_the_web_finds_the_seeded_names() -> None:

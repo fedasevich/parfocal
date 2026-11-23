@@ -368,7 +368,7 @@ async def get_clinical_report(
             site=(specimen.site if specimen else None) or report.specimen or detail.label,
             clinical_history=detail.clinical_note or "",
             received=received.isoformat() if received else "",
-            requested_by="",
+            requested_by=detail.requested_by or "",
             assigned_user_ids=await assigned_of(connection, case_id),
             examined=report.nodes_examined,
             cells=None,

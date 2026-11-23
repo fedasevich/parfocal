@@ -19,6 +19,7 @@ from parfocal_common.structured_logging import register_sensitive
 NOTE_MAX_LENGTH = 4000
 
 NoteText = Annotated[str, StringConstraints(strip_whitespace=True, max_length=NOTE_MAX_LENGTH)]
+RequesterText = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
 
 
 class ClinicalNoteChange(BaseModel):
@@ -74,6 +75,53 @@ async def set_case_clinical_note(
             case_id,
             tenant_id=tenant_id,
             details={"cleared": note is None},
+        )
+    return await case_detail(
+        connection, keyring_of(request), principal, case_id, patient_viewed=False
+    )
+
+
+class RequestedByChange(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    requested_by: RequesterText | None
+
+
+@router.put(
+    "/api/cases/{case_id}/requested-by",
+    operation_id="setCaseRequestedBy",
+    **require(Permission.CREATE_CASES, write=True),
+)
+async def set_case_requested_by(
+    case_id: uuid.UUID,
+    change: RequestedByChange,
+    request: Request,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> CaseDetail:
+    requested_by = change.requested_by or None
+    row = (
+        await connection.execute(
+            select(cases.c.project_id, cases.c.requested_by).where(
+                cases.c.id == case_id, cases.c.deleted_at.is_(None)
+            )
+        )
+    ).one_or_none()
+    if row is None:
+        raise NotFoundError("Case not found")
+    await require_owner(connection, principal, row.project_id)
+    if requested_by != row.requested_by:
+        await connection.execute(
+            update(cases).where(cases.c.id == case_id).values(requested_by=requested_by)
+        )
+        await record(
+            connection,
+            actor_of(principal),
+            AuditAction.CASE_REQUESTED_BY_CHANGED,
+            AuditTarget.CASE,
+            case_id,
+            tenant_id=database_scope(principal).tenant_id,
+            details={"cleared": requested_by is None},
         )
     return await case_detail(
         connection, keyring_of(request), principal, case_id, patient_viewed=False

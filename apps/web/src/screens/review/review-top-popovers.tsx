@@ -202,6 +202,7 @@ export function useReviewTopPopovers({
     specimens: caseDetail?.specimens,
     taskTitle: task ? `${task.code} · ${task.name}` : undefined,
     researcher: person(task?.created_by_user_id)?.name,
+    requestedBy: caseDetail?.requested_by ?? undefined,
     clinicalNote: caseDetail?.clinical_note ?? undefined,
   });
   const compareStub = "Opens the compare view with the right side picker open";

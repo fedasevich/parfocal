@@ -10,6 +10,7 @@ type Source = {
     | undefined;
   taskTitle?: string | undefined;
   researcher?: string | undefined;
+  requestedBy?: string | undefined;
   clinicalNote?: string | undefined;
 };
 
@@ -43,6 +44,7 @@ export function caseDetailsOf(source: Source): CaseDetailsData {
     blocks,
     task: source.taskTitle,
     researcher: source.researcher,
+    requestedBy: source.requestedBy,
     clinical: source.clinical,
     clinicalNote: source.clinicalNote,
   };

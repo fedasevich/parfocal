@@ -18,11 +18,19 @@ const slideEdits = new Map<string, SlideEdit>();
 const caseOrders = new Map<string, string[]>();
 const movedFrom = new Map<string, string | null>();
 const clinicalNotes = new Map<string, string | null>();
+const requesters = new Map<string, string>();
+
+export const setFakeRequester = (caseId: string, requestedBy: string | null | undefined) => {
+  const trimmed = requestedBy?.trim();
+  if (trimmed) requesters.set(caseId, trimmed);
+  else requesters.delete(caseId);
+};
 
 export const resetSlideEdits = () => {
   slideEdits.clear();
   caseOrders.clear();
   clinicalNotes.clear();
+  requesters.clear();
   for (const [id, label] of movedFrom) {
     const slide = slides.find((item) => item.id === id);
     if (slide !== undefined) slide.caseLabel = label;
@@ -116,6 +124,7 @@ export const toCaseDetail = (caseId: string): CaseDetail | null => {
           }
         : null,
     clinical_note: project.privacy === "clinical" ? clinicalNoteOf(caseId, found.label) : null,
+    requested_by: requesters.get(caseId) ?? null,
     specimens: specimensOf(clinicalCaseOf(caseId)?.label ?? found.label),
     slides: slidesOfCase(caseId).map(toSlideDetail),
   };
@@ -223,6 +232,14 @@ export const caseHandlers = (): RequestHandler[] => [
       return problem(400, "A de-identified project holds no patient data", "de-identified-project");
     const { note } = (await request.json()) as { note: string | null };
     clinicalNotes.set(params.caseId, note?.trim() || null);
+    return HttpResponse.json(toCaseDetail(params.caseId));
+  }),
+  http.put<{ caseId: string }>("*/api/cases/:caseId/requested-by", async ({ params, request }) => {
+    if (toCaseDetail(params.caseId) === null) return problem(404, "Case not found", "not-found");
+    const { requested_by: requestedBy } = (await request.json()) as {
+      requested_by: string | null;
+    };
+    setFakeRequester(params.caseId, requestedBy);
     return HttpResponse.json(toCaseDetail(params.caseId));
   }),
 ];

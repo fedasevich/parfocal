@@ -123,6 +123,40 @@ def test_a_case_without_a_patient_works_in_both_privacy_modes(api: ApiAs, databa
         assert (response.json()["project_id"], response.json()["patient"]) == (str(project), None)
 
 
+def test_a_case_names_who_requested_it_in_both_privacy_modes(api: ApiAs, database: str) -> None:
+    lab = make_lab(database)
+    researcher = lab.people["researcher"]
+    for project in (lab.clinical, lab.de_identified):
+        made = create(
+            api,
+            researcher,
+            draft(lab, project_id=str(project), patient=None, requested_by="  Dr. Fake One  "),
+        )
+        assert made.status_code == 201, made.text
+        case_id = made.json()["id"]
+        assert made.json()["requested_by"] == "Dr. Fake One"
+        path = f"/api/cases/{case_id}/requested-by"
+        changed = api(researcher).put(path, json={"requested_by": "Dr. Fake Two, surgery"})
+        assert changed.status_code == 200, changed.text
+        assert api(researcher).get(f"/api/cases/{case_id}").json()["requested_by"] == (
+            "Dr. Fake Two, surgery"
+        )
+        cleared = api(researcher).put(path, json={"requested_by": "  "})
+        assert cleared.json()["requested_by"] is None
+        audit = owner(
+            database,
+            f"SELECT details FROM audit_events WHERE target_id = '{case_id}' "
+            "AND action = 'case.requested-by-changed' ORDER BY occurred_at",
+        )
+        assert audit == [('{"cleared":false}',), ('{"cleared":true}',)]
+    plain = create(api, researcher, draft(lab, patient=None)).json()
+    assert plain["requested_by"] is None
+    too_long = api(researcher).put(
+        f"/api/cases/{plain['id']}/requested-by", json={"requested_by": "x" * 201}
+    )
+    assert too_long.status_code == 422
+
+
 def test_a_de_identified_project_refuses_patient_data(api: ApiAs, database: str) -> None:
     lab = make_lab(database)
     existing = create(api, lab.people["researcher"], draft(lab)).json()["patient"]["id"]

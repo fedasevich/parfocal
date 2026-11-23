@@ -86,6 +86,7 @@ class CaseDetail(BaseModel):
     source: CaseSource
     patient: PatientDetail | None
     clinical_note: str | None
+    requested_by: str | None
     specimens: list[SpecimenDetail]
     slides: list[SlideDetail]
 
@@ -243,6 +244,7 @@ async def case_detail(
         source=CaseSource(row.source),
         patient=patient,
         clinical_note=clinical_note,
+        requested_by=row.requested_by,
         specimens=await specimen_details(connection, case_id),
         slides=[
             SlideDetail(

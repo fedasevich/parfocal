@@ -13,6 +13,7 @@ from workspace_support import owner
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
 NOTE = "Known lobular carcinoma, sentinel node biopsy"
+REQUESTER = "Dr. Fake Requester, surgery"
 
 
 @pytest.fixture
@@ -125,10 +126,15 @@ def test_the_clinical_report_reads_the_case_of_the_slide(
     ready(api, clinic)
     noted = api(clinic.lead).put(f"/api/cases/{clinic.case}/clinical-note", json={"note": NOTE})
     assert noted.status_code == 200, noted.text
+    requested = api(clinic.lead).put(
+        f"/api/cases/{clinic.case}/requested-by", json={"requested_by": REQUESTER}
+    )
+    assert requested.status_code == 200, requested.text
     response = api(clinic.lead).get(report_url(clinic))
     assert response.status_code == 200, response.text
     report = response.json()
     assert report["case"]["clinical_history"] == NOTE
+    assert report["case"]["requested_by"] == REQUESTER
     assert report["template"]["version"] == "v1"
     assert [step["key"] for step in report["template"]["steps"]] == [
         "findings",

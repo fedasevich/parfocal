@@ -13,7 +13,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 53 |
-| `personal` | 108 |
+| `personal` | 109 |
 | `secret` | 15 |
 | `operational` | 938 |
 | `public` | 0 |
@@ -180,6 +180,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `source` | operational |
 | `created_by_user_id` | personal |
 | `clinical_note_ciphertext` | phi |
+| `requested_by` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
