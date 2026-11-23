@@ -1012,9 +1012,12 @@ async def seed(
         await engine.dispose()
 
 
+ACTING_PEOPLE = ("ada", "rui", "rhea", "remy")
+
+
 def shared_actors(owned: bool) -> list[str]:
-    ada = next(person.subject for person in PEOPLE if person.key == "ada")
-    return [ada, OWNER_SUBJECT] if owned else [ada]
+    acting = [person.subject for person in PEOPLE if person.key in ACTING_PEOPLE]
+    return [*acting, OWNER_SUBJECT] if owned else acting
 
 
 async def pseudonymise(connection: AsyncConnection, subjects: Iterable[str]) -> None:

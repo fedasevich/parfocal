@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from db_support import OWNER_URL, migrated_database, with_database
+from db_support import OWNER_URL, migrated_database, query, with_database
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -26,6 +26,7 @@ class Tally:
         self.project_connections: set[Any] = set()
         self.open = 0
         self.most_open = 0
+        self.url = ""
 
     def executed(self, connection: Any, *_: Any) -> None:
         self.statements += 1
@@ -45,10 +46,10 @@ def tally() -> Iterator[Tally]:
     counted = Tally()
     original = showcase.seed_projects
 
-    async def projects(connection: AsyncConnection, *args: Any) -> None:
+    async def projects(connection: AsyncConnection, *args: Any) -> Any:
         counted.project_connections.add(connection.sync_connection)
         try:
-            await original(connection, *args)
+            return await original(connection, *args)
         finally:
             counted.project_connections.discard(connection.sync_connection)
 
@@ -58,6 +59,7 @@ def tally() -> Iterator[Tally]:
         (Pool, "checkin", counted.checked_in),
     )
     with migrated_database() as name, pytest.MonkeyPatch.context() as patch:
+        counted.url = with_database(OWNER_URL, name)
         patch.setattr(showcase, "seed_projects", projects)
         for target, name_of_event, listener in hooks:
             event.listen(target, name_of_event, listener)
@@ -88,3 +90,11 @@ def test_the_project_phase_of_one_workspace_stays_under_its_statement_ceiling(
 
 def test_the_workspaces_seed_side_by_side(tally: Tally) -> None:
     assert tally.most_open >= len(WORKSPACES)
+
+
+def test_every_seeded_actor_has_a_pseudonym_before_the_workspaces_run(tally: Tally) -> None:
+    seeded = ", ".join(f"'{person.subject}'" for person in showcase.PEOPLE)
+    acting = query(
+        tally.url, f"SELECT subject FROM audit_people WHERE subject IN ({seeded}) ORDER BY subject"
+    )
+    assert {subject for (subject,) in acting} <= set(showcase.shared_actors(True))
