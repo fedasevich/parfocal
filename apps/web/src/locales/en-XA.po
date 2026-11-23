@@ -3027,6 +3027,10 @@ msgstr ""
 msgid "A server your lab runs, next to Parfocal's models"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "a service"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "A short note everyone in the workspace sees on Home until it ends."
 msgstr ""
@@ -5421,6 +5425,7 @@ msgstr ""
 msgid "Class lists"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
 #: src/viewer/patch-export-dialog.tsx
 msgid "Class masks"
 msgstr ""
@@ -6289,6 +6294,10 @@ msgstr ""
 
 #: src/viewer/patch-export-dialog.tsx
 msgid "Cuts image tiles and class masks from the stored GeoJSON of this frozen version. It runs as a job and downloads when it is done."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Cutting"
 msgstr ""
 
 #: src/viewer/patch-export-dialog.tsx
@@ -7635,6 +7644,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Fade"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Failed"
 msgstr ""
 
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -10113,6 +10126,7 @@ msgstr ""
 msgid "Marker"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
 #: src/viewer/patch-export-dialog.tsx
 msgid "Masks and COCO"
 msgstr ""
@@ -11049,6 +11063,10 @@ msgstr ""
 msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "No patches are cut yet."
+msgstr ""
+
 #: src/screens/project/settings-tab.tsx
 msgid "No patient fields anywhere. Names are removed from file metadata and labels on upload."
 msgstr ""
@@ -11857,6 +11875,15 @@ msgstr ""
 #. placeholder {0}: tb(totalTb)
 #: ../../packages/ui/src/components/admin.tsx
 msgid "of {0} used"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Of {version}, started by {who} on {started}"
+msgstr ""
+
+#. placeholder {0}: whenText(entry.finished_at)
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Of {version}, started by {who} on {started}, finished on {0}"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -12769,6 +12796,10 @@ msgstr ""
 msgid "Password strength"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Patch exports"
+msgstr ""
+
 #: src/viewer/patch-export-dialog.tsx
 msgid "Patches of version {datasetVersion}"
 msgstr ""
@@ -13588,6 +13619,10 @@ msgstr ""
 
 #: src/screens/my-work/all-slides-tab.tsx
 msgid "ready"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Ready"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -17212,6 +17247,10 @@ msgstr ""
 msgid "The CSV files still download."
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "the current data"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "The cutoff is {value}%."
 msgstr ""
@@ -19124,6 +19163,11 @@ msgstr ""
 #: src/screens/admin/connect-model.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Version"
+msgstr ""
+
+#. placeholder {0}: entry.dataset_version
+#: src/screens/dataset/dataset-screen.tsx
+msgid "version {0}"
 msgstr ""
 
 #. placeholder {0}: item.version

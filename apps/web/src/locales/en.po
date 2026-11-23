@@ -3029,6 +3029,10 @@ msgstr "A sentinel node is staged by the size of its largest deposit, so this st
 msgid "A server your lab runs, next to Parfocal's models"
 msgstr "A server your lab runs, next to Parfocal's models"
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "a service"
+msgstr "a service"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "A short note everyone in the workspace sees on Home until it ends."
 msgstr "A short note everyone in the workspace sees on Home until it ends."
@@ -5423,6 +5427,7 @@ msgstr "Class list of new projects"
 msgid "Class lists"
 msgstr "Class lists"
 
+#: src/screens/dataset/dataset-screen.tsx
 #: src/viewer/patch-export-dialog.tsx
 msgid "Class masks"
 msgstr "Class masks"
@@ -6295,6 +6300,10 @@ msgstr "Cuts image tiles and class masks from the signed off slides. It runs as 
 #: src/viewer/patch-export-dialog.tsx
 msgid "Cuts image tiles and class masks from the stored GeoJSON of this frozen version. It runs as a job and downloads when it is done."
 msgstr "Cuts image tiles and class masks from the stored GeoJSON of this frozen version. It runs as a job and downloads when it is done."
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Cutting"
+msgstr "Cutting"
 
 #: src/viewer/patch-export-dialog.tsx
 msgid "Cutting the patches"
@@ -7641,6 +7650,10 @@ msgstr "Extranodal extension"
 #: src/screens/developer/developer-screen.tsx
 msgid "Fade"
 msgstr "Fade"
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Failed"
+msgstr "Failed"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "False negatives"
@@ -10118,6 +10131,7 @@ msgstr "Marked not tumor by you"
 msgid "Marker"
 msgstr "Marker"
 
+#: src/screens/dataset/dataset-screen.tsx
 #: src/viewer/patch-export-dialog.tsx
 msgid "Masks and COCO"
 msgstr "Masks and COCO"
@@ -11054,6 +11068,10 @@ msgstr "No other task to compare"
 msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
 msgstr "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "No patches are cut yet."
+msgstr "No patches are cut yet."
+
 #: src/screens/project/settings-tab.tsx
 msgid "No patient fields anywhere. Names are removed from file metadata and labels on upload."
 msgstr "No patient fields anywhere. Names are removed from file metadata and labels on upload."
@@ -11863,6 +11881,15 @@ msgstr "Objects you found"
 #: ../../packages/ui/src/components/admin.tsx
 msgid "of {0} used"
 msgstr "of {0} used"
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Of {version}, started by {who} on {started}"
+msgstr "Of {version}, started by {who} on {started}"
+
+#. placeholder {0}: whenText(entry.finished_at)
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Of {version}, started by {who} on {started}, finished on {0}"
+msgstr "Of {version}, started by {who} on {started}, finished on {0}"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Off"
@@ -12774,6 +12801,10 @@ msgstr "Password for {email}"
 msgid "Password strength"
 msgstr "Password strength"
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Patch exports"
+msgstr "Patch exports"
+
 #: src/viewer/patch-export-dialog.tsx
 msgid "Patches of version {datasetVersion}"
 msgstr "Patches of version {datasetVersion}"
@@ -13598,6 +13629,10 @@ msgstr "reading"
 #: src/screens/my-work/all-slides-tab.tsx
 msgid "ready"
 msgstr "ready"
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Ready"
+msgstr "Ready"
 
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Ready to sign"
@@ -17221,6 +17256,10 @@ msgstr "The copy could not be started. Try again."
 msgid "The CSV files still download."
 msgstr "The CSV files still download."
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "the current data"
+msgstr "the current data"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "The cutoff is {value}%."
 msgstr "The cutoff is {value}%."
@@ -19134,6 +19173,11 @@ msgstr "Value"
 #: src/screens/upload/viewer-flow.tsx
 msgid "Version"
 msgstr "Version"
+
+#. placeholder {0}: entry.dataset_version
+#: src/screens/dataset/dataset-screen.tsx
+msgid "version {0}"
+msgstr "version {0}"
 
 #. placeholder {0}: item.version
 #. placeholder {0}: version.number

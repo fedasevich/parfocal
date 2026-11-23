@@ -121,6 +121,17 @@ export async function downloadDatasetVersion(
   };
 }
 
+export async function downloadPatchExportFile(
+  taskId: string,
+  jobId: string,
+): Promise<TaskExportResult> {
+  const response = await fetch(getDownloadPatchExportUrl(taskId, jobId), {
+    credentials: "same-origin",
+  });
+  if (!response.ok) return { state: "refused", code: await problemCodeOf(response) };
+  return { state: "saved", name: await saveResponse(response, "parfocal-patches.zip") };
+}
+
 export type PatchPoll =
   | { readonly state: "cutting" }
   | { readonly state: "saved"; readonly name: string }

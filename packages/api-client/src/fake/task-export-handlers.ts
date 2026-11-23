@@ -8,8 +8,58 @@ const zipHeaders = (name: string) => ({
 });
 
 const cuttingPolls = 1;
-const polled = new Map<string, number>();
-const formats = new Map<string, string>();
+const storageKey = "parfocal.fake.patch-exports";
+
+type StoredExport = {
+  job_id: string;
+  task_id: string;
+  format: "masks" | "coco";
+  dataset_version: number | null;
+  polls: number;
+  started_at: string;
+  finished_at: string | null;
+};
+
+let memory: StoredExport[] = [];
+
+const session = (): Storage | null =>
+  typeof sessionStorage === "undefined" ? null : sessionStorage;
+
+function readExports(): StoredExport[] {
+  const stored = session()?.getItem(storageKey);
+  if (stored === null || stored === undefined) return memory;
+  return JSON.parse(stored) as StoredExport[];
+}
+
+function writeExports(next: StoredExport[]): void {
+  memory = next;
+  session()?.setItem(storageKey, JSON.stringify(next));
+}
+
+const exportOf = (jobId: string) => readExports().find((item) => item.job_id === jobId);
+
+const pollOnce = (jobId: string): StoredExport | undefined => {
+  const all = readExports();
+  const found = all.find((item) => item.job_id === jobId);
+  if (found === undefined) return undefined;
+  found.polls += 1;
+  if (found.polls > cuttingPolls && found.finished_at === null) {
+    found.finished_at = new Date().toISOString();
+  }
+  writeExports(all);
+  return found;
+};
+
+const entryOf = (item: StoredExport) => ({
+  job_id: item.job_id,
+  started_by: "Dana Hale",
+  dataset_version: item.dataset_version,
+  format: item.format,
+  state: item.finished_at === null ? "cutting" : "done",
+  bytes: item.finished_at === null ? null : 48_213,
+  started_at: item.started_at,
+  finished_at: item.finished_at,
+});
 
 const refused = (code: string, title: string) =>
   HttpResponse.json(
@@ -37,28 +87,46 @@ export const taskExportHandlers = (): RequestHandler[] => [
     "*/api/review-tasks/:taskId/patch-exports",
     async ({ params, request }) => {
       if (unsigned(params.taskId)) return nothingSignedOff();
-      const body = (await request.json()) as { format?: string };
+      const body = (await request.json()) as { format?: string; dataset_version?: number };
       const jobId = crypto.randomUUID();
-      formats.set(jobId, body.format ?? "masks");
+      writeExports([
+        ...readExports(),
+        {
+          job_id: jobId,
+          task_id: params.taskId,
+          format: body.format === "coco" ? "coco" : "masks",
+          dataset_version: body.dataset_version ?? null,
+          polls: 0,
+          started_at: new Date().toISOString(),
+          finished_at: null,
+        },
+      ]);
       return HttpResponse.json({ job_id: jobId }, { status: 202 });
     },
+  ),
+  http.get<{ taskId: string }>("*/api/review-tasks/:taskId/patch-exports", ({ params }) =>
+    HttpResponse.json(
+      readExports()
+        .filter((item) => item.task_id === params.taskId)
+        .reverse()
+        .map(entryOf),
+    ),
   ),
   http.get<{ taskId: string; jobId: string }>(
     "*/api/review-tasks/:taskId/patch-exports/:jobId/status",
     ({ params }) => {
-      const seen = (polled.get(params.jobId) ?? 0) + 1;
-      polled.set(params.jobId, seen);
-      const state = seen <= cuttingPolls ? "cutting" : "done";
+      const state = pollOnce(params.jobId)?.finished_at === null ? "cutting" : "done";
       return HttpResponse.json({ job_id: params.jobId, state });
     },
   ),
   http.get<{ taskId: string; jobId: string }>(
     "*/api/review-tasks/:taskId/patch-exports/:jobId",
     ({ params }) => {
-      if ((polled.get(params.jobId) ?? 0) <= cuttingPolls) {
+      const found = exportOf(params.jobId);
+      if (found === undefined || found.finished_at === null) {
         return refused("patch-export-not-ready", "The patches of this task are still being cut");
       }
-      const coco = formats.get(params.jobId) === "coco";
+      const coco = found.format === "coco";
       return new HttpResponse(
         `PK fake patches of ${params.taskId}${coco ? " with annotations.json" : ""}`,
         {
