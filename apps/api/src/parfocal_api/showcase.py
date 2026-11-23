@@ -15,6 +15,7 @@ from sqlalchemy import func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api import showcase_outcomes as outcomes
 from parfocal_api.audit import actor_of, pseudonym_of
 from parfocal_api.auth import SEEDED_SUBJECT_PREFIX
 from parfocal_api.class_templates import TaxonomyTemplate
@@ -40,7 +41,11 @@ from parfocal_api.showcase_accounts import (
     add_owner,
     seat_accounts,
 )
-from parfocal_api.showcase_annotation import seed_annotation_example
+from parfocal_api.showcase_annotation import (
+    seed_annotation_example,
+    seed_checked_example,
+    sign_off_example,
+)
 from parfocal_api.showcase_case import CASE_FILES, agent_principals, seed_showcase_case
 from parfocal_api.showcase_demo import (
     DemoSets,
@@ -676,6 +681,27 @@ async def seed_styles(
     )
 
 
+async def seed_outcome_review(
+    connection: AsyncConnection,
+    seeded: Seeded,
+    principal: MemberPrincipal,
+    results: ResultStore,
+    store: ObjectStore,
+    project_id: uuid.UUID,
+    pool: SamplePool,
+) -> None:
+    made: list[tuple[uuid.UUID, uuid.UUID]] = []
+    for label in outcomes.SLIDE_LABELS:
+        taken = pool.next()
+        slide = await add_slide(connection, seeded, project_id, label, sample_facts(taken.stored))
+        set_id = await ready_set(connection, principal, slide, taken.file, "regions.parfocal.json")
+        made.append((slide.id, set_id))
+    first, second = (principal_of(seeded, key, Role.REVIEWER, False) for key in ("rhea", "remy"))
+    judge = principal_of(seeded, "rui", Role.RESEARCHER, False)
+    crew = outcomes.Crew(principal, first, second, judge)
+    await outcomes.seed_outcomes(connection, crew, results, store, project_id, made)
+
+
 async def seed_gallery(
     connection: AsyncConnection,
     seeded: Seeded,
@@ -797,6 +823,12 @@ async def seed_gallery_tour(
         scope=Scope(kind=TaskScope.RANDOM_CELLS, count=CELLS_CHECKED),
     )
     await order_now(connection, results, cell_tour, list(demo.cells))
+    scoped = [(slide_id, set_id) for slide_id, set_id in demo.cells.items() if set_id]
+    if scoped:
+        cells = templates[BuiltInTemplate.CELL_TYPING]
+        await outcomes.seed_scoped_review(
+            connection, principal, seeded.owner, results, project_id, *scoped[0], cells
+        )
     ordered = list(regions_of)
     half_done = await review_task(
         connection,
@@ -899,6 +931,9 @@ async def seed_projects(
             job_ids = await add_jobs(connection, seeded, project.id)
             await seed_states(connection, seeded, principal, results, project.id, pool, job_ids)
             await seed_styles(connection, seeded, principal, results, project.id, pool)
+            await seed_outcome_review(
+                connection, seeded, principal, results, store, project.id, pool
+            )
     await seed_gallery(connection, seeded, principal, store, manifest, workspace.gallery)
 
 
@@ -1096,6 +1131,10 @@ async def seed_example(
             connection, creator, owner, results, workspace.gallery, [seeded.owner, *agents[:1]]
         )
         if agents:
+            await sign_off_example(connection, owner, seats[0], workspace.gallery)
+            await seed_checked_example(
+                connection, creator, owner, seats[0], results, workspace.gallery
+            )
             await seed_adjudication(connection, creator, agents[0])
             await seed_adjudication(connection, creator, agents[0], DRAWN_TASK)
             await seat_on_cell_tour(connection, creator, workspace.gallery, agents[0])

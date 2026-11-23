@@ -2,7 +2,6 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncIterator, Iterator
-from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -14,9 +13,7 @@ from test_showcase import RESULTS, EmptyStore
 from parfocal_api.annotate_import import LayerImport, import_shared_objects
 from parfocal_api.annotate_layer import get_shared_layer, list_shared_object_history
 from parfocal_api.annotate_sign_off import (
-    check_annotate_slide,
     get_annotate_slide_status,
-    sign_off_annotate_slide,
 )
 from parfocal_api.annotation_exports import ExportFormat, export_slide_objects
 from parfocal_api.dataset_versions import get_task_dataset
@@ -214,6 +211,7 @@ async def test_each_export_downloads_and_imports_back_cleanly(
             connection,
             BackgroundTasks(),
             NoRealtime(),
+            reason="Import test on the signed example",
         )
         await savepoint.rollback()
         assert imported.skipped == []
@@ -241,19 +239,15 @@ async def rolled_back(url: str, principal: MemberPrincipal) -> AsyncIterator[Asy
         await engine.dispose()
 
 
-async def test_the_agent_finishes_the_example_alone_and_reaches_its_dataset(example: str) -> None:
+async def test_the_agent_checked_and_the_owner_signed_the_example_into_its_dataset(
+    example: str,
+) -> None:
     task_id, slide_id, _, agent = await person(example, AGENT)
     async for connection in rolled_back(example, agent):
-        before = await get_annotate_slide_status(task_id, slide_id, agent, connection)
-        waiting = [item.user_id for item in before.experts if item.checked_at is None]
-        assert (len(before.experts), waiting) == (2, [agent.user_id])
-        await check_annotate_slide(
-            task_id, slide_id, agent, connection, BackgroundTasks(), NoRealtime()
-        )
-        signed = await sign_off_annotate_slide(
-            task_id, slide_id, agent, connection, datetime.now(UTC)
-        )
-        assert signed.signed_off_at is not None
+        status = await get_annotate_slide_status(task_id, slide_id, agent, connection)
+        assert len(status.experts) == 2
+        assert all(item.checked_at is not None for item in status.experts)
+        assert status.signed_off_at is not None
         summary = await get_task_dataset(
             task_id,
             agent,

@@ -652,6 +652,7 @@ async def test_the_demo_tasks_use_templates_that_match_their_results(seeded: str
     assert {(str(scope), str(study)) for scope, study in every} == {
         ("all-regions", "regions"),
         ("random-cells", "cells"),
+        ("cells-below-score", "cells"),
     }
     unset = await values(seeded, "SELECT count(*) FROM projects WHERE study_template_id IS NULL")
     assert unset == {"0"}

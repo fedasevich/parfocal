@@ -1,6 +1,7 @@
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import BackgroundTasks
@@ -20,14 +21,21 @@ from parfocal_api.annotate_layer import (
     delete_shared_object,
     list_shared_ai_objects,
 )
-from parfocal_api.annotate_sign_off import check_annotate_slide
+from parfocal_api.annotate_sign_off import (
+    CheckDraft,
+    check_annotate_slide,
+    get_annotate_slide_status,
+    sign_off_annotate_slide,
+)
 from parfocal_api.annotations import AnnotationDraft, AnnotationEdit, Geometry
+from parfocal_api.check_options import CheckPreset
 from parfocal_api.evaluation import class_names
 from parfocal_api.layer_groups import LayerGroup, LayerGroups, LayerMember, set_shared_layer_groups
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.realtime import NoRealtime
 from parfocal_api.review_tasks import SlideSet, TaskDraft, create_review_task
 from parfocal_api.seed_request import seed_request
+from parfocal_api.showcase_demo import order_now
 from parfocal_api.tables import (
     AnnotationKind,
     ResultStatus,
@@ -35,6 +43,7 @@ from parfocal_api.tables import (
     TaskSplit,
     projects,
     result_sets,
+    review_task_slides,
     review_tasks,
     slides,
 )
@@ -340,4 +349,154 @@ async def seed_annotation_example(
     await check_annotate_slide(
         task.id, slide_id, owner, connection, BackgroundTasks(), NoRealtime()
     )
+    return task.id
+
+
+CHECKED_TASK = "Checked annotation example"
+CHECKED_SET_LIMIT = 50
+
+
+async def slide_signed(connection: AsyncConnection, task_id: uuid.UUID) -> bool:
+    signed = await connection.scalar(
+        select(func.count())
+        .select_from(review_task_slides)
+        .where(
+            review_task_slides.c.task_id == task_id,
+            review_task_slides.c.signed_off_at.is_not(None),
+        )
+    )
+    return bool(signed)
+
+
+async def check_as(
+    connection: AsyncConnection,
+    expert: MemberPrincipal,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    nothing_to_mark: bool = False,
+) -> None:
+    status = await get_annotate_slide_status(task_id, slide_id, expert, connection)
+    mine = next((item for item in status.experts if item.user_id == expert.user_id), None)
+    if mine is None or mine.checked_at is not None:
+        return
+    await check_annotate_slide(
+        task_id,
+        slide_id,
+        expert,
+        connection,
+        BackgroundTasks(),
+        NoRealtime(),
+        CheckDraft(nothing_to_mark=nothing_to_mark),
+    )
+
+
+async def sign_off_example(
+    connection: AsyncConnection,
+    owner: MemberPrincipal,
+    second: MemberPrincipal,
+    gallery: str,
+) -> uuid.UUID | None:
+    project_id = await connection.scalar(
+        select(projects.c.id).where(
+            projects.c.tenant_id == owner.tenant_id, projects.c.name == gallery
+        )
+    )
+    task_id = None if project_id is None else await example_task(connection, project_id)
+    if task_id is None or await slide_signed(connection, task_id):
+        return None
+    slide_id = await connection.scalar(
+        select(review_task_slides.c.slide_id).where(review_task_slides.c.task_id == task_id)
+    )
+    assert slide_id is not None
+    await check_as(connection, second, task_id, slide_id)
+    await sign_off_annotate_slide(task_id, slide_id, owner, connection, datetime.now(UTC))
+    return task_id
+
+
+async def small_region_set(
+    connection: AsyncConnection, project_id: uuid.UUID
+) -> tuple[uuid.UUID, uuid.UUID] | None:
+    found = (
+        await connection.execute(
+            select(result_sets.c.slide_id, result_sets.c.id)
+            .join(slides, slides.c.id == result_sets.c.slide_id)
+            .where(
+                slides.c.project_id == project_id,
+                result_sets.c.status == ResultStatus.READY,
+                result_sets.c.region_count > 0,
+                result_sets.c.region_count <= CHECKED_SET_LIMIT,
+                result_sets.c.cell_count == 0,
+            )
+            .order_by(result_sets.c.region_count, slides.c.label)
+            .limit(1)
+        )
+    ).one_or_none()
+    return None if found is None else (found.slide_id, found.id)
+
+
+async def seed_checked_example(
+    connection: AsyncConnection,
+    creator: MemberPrincipal,
+    owner: MemberPrincipal,
+    second: MemberPrincipal,
+    results: ResultStore,
+    gallery: str,
+) -> uuid.UUID | None:
+    project_id = await connection.scalar(
+        select(projects.c.id).where(
+            projects.c.tenant_id == creator.tenant_id, projects.c.name == gallery
+        )
+    )
+    if project_id is None:
+        return None
+    made = await connection.scalar(
+        select(review_tasks.c.id).where(
+            review_tasks.c.project_id == project_id, review_tasks.c.name == CHECKED_TASK
+        )
+    )
+    if made is not None:
+        return None
+    picked = await small_region_set(connection, project_id)
+    empty = await connection.scalar(
+        select(slides.c.id)
+        .where(
+            slides.c.project_id == project_id,
+            ~select(result_sets.c.id).where(result_sets.c.slide_id == slides.c.id).exists(),
+        )
+        .order_by(slides.c.label)
+        .limit(1)
+    )
+    if picked is None or empty is None:
+        return None
+    slide_id, set_id = picked
+    task = await create_review_task(
+        project_id,
+        TaskDraft(
+            name=CHECKED_TASK,
+            kind=TaskKind.ANNOTATE,
+            slide_ids=[slide_id, empty],
+            result_sets=[SlideSet(slide_id=slide_id, result_set_id=set_id)],
+            reviewer_ids=[owner.user_id, second.user_id],
+            split=TaskSplit.EVERYONE,
+            blinded=False,
+            blind_first=True,
+            preset=CheckPreset.WHOLE_SLIDE_RUN,
+        ),
+        creator,
+        connection,
+        results,
+        NoRealtime(),
+        BackgroundTasks(),
+        seed_request(),
+    )
+    await order_now(connection, results, task.id, [slide_id])
+    layer = Layer(connection, owner, results, task.id, slide_id)
+    listed = await list_shared_ai_objects(task.id, slide_id, owner, connection, results, 0, 50)
+    for found in listed.objects:
+        await layer.confirm(found)
+    for expert in (owner, second):
+        await check_as(connection, expert, task.id, slide_id)
+        await check_as(connection, expert, task.id, empty, nothing_to_mark=True)
+    for signed in (slide_id, empty):
+        await sign_off_annotate_slide(task.id, signed, owner, connection, datetime.now(UTC))
     return task.id
