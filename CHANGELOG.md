@@ -2,6 +2,30 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.40.0 (2026-11-23)
+
+### Features
+
+- TEST-057: Seed every review outcome from queue to frozen dataset
+
+### Fixes
+
+- PROTO-161: Walk the explainer table cells without an assignment in a loop test
+- PROTO-164: Batch the drawn review decisions and keep drawn sets out of AI seed checks
+- ci: Wait for the overview map to stop moving before checking its corner
+
+### Docs
+
+- PROTO-164: Tick the drawn wording everywhere after the deployed walk
+- Log the green CI after the drawn review work
+- TEST-057: Add the task to seed every review outcome
+- TEST-057: Log the refused reseed from main
+
+### Tests
+
+- PROTO-161: Keep a reviewer's type on its own queued object in the permission matrix
+- PROTO-160: Expect the drawn outline count in the project slides list
+
 ## v0.39.1 (2026-11-23)
 
 ### Fixes
