@@ -19,7 +19,7 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Open questions
 
-None right now.
+- **How the next usability round runs** (EXP-014, the study runs for the participant in one tab, and PILOT-005, the moderated second round). Recommended: moderated, on a browser the lead prepares and signs in to the participant's fresh study project, as round 4 and PILOT-005 planned. It needs no participant accounts and lets you hear them think aloud. The other choice is remote and unmoderated through a link, which reaches more people but needs a sign-in account per participant and loses the think-aloud. Reply with "moderated" or "remote". Until you answer, agents build the moderated way, which the remote way can reuse.
 
 ## The review column, what each task waits for
 
