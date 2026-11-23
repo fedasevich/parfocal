@@ -133,6 +133,7 @@ from parfocal_api import (
     tenants,
     threads,
     tile_access,
+    tour_switch,
     track_record,
     training_exports,
     tumor_maps,
@@ -144,6 +145,7 @@ from parfocal_api import (
 from parfocal_api.observability import SliMiddleware, drill_router, rum_router, sli_emitter
 from parfocal_api.oidc import OidcClient
 from parfocal_api.origin_check import OriginCheck
+from parfocal_api.private_cache import PrivateByDefault
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
 from parfocal_api.rate_limits import RateLimits
 from parfocal_api.realtime import realtime_for
@@ -243,6 +245,7 @@ def create_app(
     app.add_middleware(OriginCheck, origin=public_origin(resolved))
     app.add_middleware(RequestLogging)
     app.add_middleware(SliMiddleware, emitter=app.state.sli)
+    app.add_middleware(PrivateByDefault)
 
     @app.get("/api/health", operation_id="getHealth")
     async def health() -> Health:
@@ -261,6 +264,7 @@ def create_app(
     app.include_router(project_uploads.router)
     app.include_router(sample_project.router)
     app.include_router(sign_out.router)
+    app.include_router(tour_switch.router)
     app.include_router(clinical_reports.router)
     app.include_router(clinical_reports.me_router)
     app.include_router(clinical_report_views.router)

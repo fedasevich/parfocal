@@ -1,8 +1,8 @@
 {
   "origin": "https://app.parfocal.eu",
   "workspace": "cvut-biomedical",
-  "checked_at": "2026-11-23 21:37 UTC",
-  "release": "ea87be4",
+  "checked_at": "2026-11-23 22:20 UTC",
+  "release": "4f3491e",
   "sign_in_problems": [],
   "chapters": [
     {
@@ -3203,12 +3203,12 @@
           "why": "Anyone can see what a job did and jump to its result.",
           "gpu": false,
           "state": "",
-          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/jobs/da8d6d02-a4fd-40f4-9980-8b3a87da5d1a",
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/jobs/7e791c6e-5555-459f-9d4a-b8a6150da6b3",
           "status": "working",
           "reason": "",
           "calls": [
             {
-              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/jobs/da8d6d02-a4fd-40f4-9980-8b3a87da5d1a",
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/jobs/7e791c6e-5555-459f-9d4a-b8a6150da6b3",
               "expected": 200,
               "got": 200
             },
@@ -3218,7 +3218,7 @@
               "got": 200
             },
             {
-              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/jobs/da8d6d02-a4fd-40f4-9980-8b3a87da5d1a",
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/jobs/7e791c6e-5555-459f-9d4a-b8a6150da6b3",
               "expected": 200,
               "got": 200
             }
@@ -4281,7 +4281,7 @@
           "title": "Admin refused without admin rights",
           "click": "Sign in as role-researcher@parfocal.eu and open the link.",
           "expect": "You do not have admin rights in this workspace.",
-          "why": "A researcher runs studies, not the workspace.",
+          "why": "A researcher runs studies, not the workspace, and the API refuses every admin read.",
           "gpu": false,
           "state": "refused",
           "link": "/admin",
@@ -4295,6 +4295,31 @@
             },
             {
               "path": "/api/tenant/audit-events",
+              "expected": 403,
+              "got": 403
+            },
+            {
+              "path": "/api/tenant/overview",
+              "expected": 403,
+              "got": 403
+            },
+            {
+              "path": "/api/tenant/storage",
+              "expected": 403,
+              "got": 403
+            },
+            {
+              "path": "/api/tenant/webhooks",
+              "expected": 403,
+              "got": 403
+            },
+            {
+              "path": "/api/tenant/security",
+              "expected": 403,
+              "got": 403
+            },
+            {
+              "path": "/api/tenant/retention",
               "expected": 403,
               "got": 403
             }
@@ -4429,7 +4454,7 @@
           "account": "agent-walk@parfocal.eu",
           "title": "Edit the tasks and start the next round",
           "click": "Change the task list in the editor and save it, then press Start next round. A round that already has sessions keeps its tasks frozen.",
-          "expect": "The new round uses the saved tasks. Round 5 starts with eleven tasks that mirror round 4's, plus one queue task and one annotate task.",
+          "expect": "The new round uses the saved tasks. Round 5 has eleven tasks: nine that match round 4's goals, one in the disagreement queue and one in an annotate task.",
           "why": "Rounds only compare when their tasks stay the same, and each new round tests the app after the last round's fixes.",
           "gpu": false,
           "state": "",
@@ -4482,7 +4507,7 @@
           "role_name": "Owner and admin",
           "account": "agent-walk@parfocal.eu",
           "title": "A task card and the pinned goal",
-          "click": "Read the task card, Task 1 of 13, and its goal. Start task unlocks after five seconds of reading. Work in the real app. The goal stays at the bottom of the screen while you work.",
+          "click": "Read the task card, Task 1 of 11, and its goal. Start task unlocks after five seconds of reading. Work in the real app. The goal stays at the bottom of the screen while you work.",
           "expect": "The app opens at the task's start page inside the participant's own project. The task ends by itself when the goal is reached, or with I'm done.",
           "why": "The same start and the same goal for everyone make the times and clicks comparable.",
           "gpu": false,

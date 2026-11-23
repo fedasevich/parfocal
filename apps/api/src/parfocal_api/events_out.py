@@ -181,7 +181,7 @@ async def audited(
     )
 
 
-@router.get("", operation_id="listEventTargets", **require(Permission.INTEGRATIONS))
+@router.get("", operation_id="listEventTargets", **require(Permission.INTEGRATIONS, admin=True))
 async def list_event_targets(project_id: uuid.UUID, connection: TenantConnection) -> EventTargets:
     await live_project(connection, project_id)
     rows = (
@@ -253,7 +253,7 @@ async def delete_event_target(
 @router.get(
     "/{target_id}/events",
     operation_id="listEventDeliveries",
-    **require(Permission.INTEGRATIONS),
+    **require(Permission.INTEGRATIONS, admin=True),
 )
 async def list_event_deliveries(
     project_id: uuid.UUID, target_id: TargetId, connection: TenantConnection

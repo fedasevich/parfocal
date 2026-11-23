@@ -14,6 +14,7 @@ class Environment:
     slide_bucket: str
     storage_prefix: str = ""
     storage_jurisdiction: str = ""
+    development: bool = False
 
     @property
     def origin(self) -> str:
@@ -40,6 +41,7 @@ ENVIRONMENTS = {
             tofu_root="prod",
             slide_bucket="parfocal-dev-eu",
             storage_jurisdiction="eu",
+            development=True,
         ),
         Environment(
             name="staging",

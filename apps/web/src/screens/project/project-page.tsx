@@ -233,6 +233,7 @@ export function ProjectPage({
           <div className="flex flex-none flex-wrap items-center gap-2">
             <Button
               nativeButton={false}
+              data-tour="project-upload"
               render={<Link to="/projects/$projectId/upload" params={{ projectId }} />}
             >
               <Icon name="upload" />
@@ -248,6 +249,7 @@ export function ProjectPage({
             </Button>
             <Button
               nativeButton={false}
+              data-tour="project-new-task"
               render={<Link to="/projects/$projectId/tasks/new" params={{ projectId }} />}
             >
               <Icon name="users" />

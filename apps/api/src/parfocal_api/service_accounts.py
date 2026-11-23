@@ -133,7 +133,7 @@ async def issue_token(
     return IssuedToken(id=row.id, token=token, expires_at=row.expires_at)
 
 
-@router.get("", operation_id="listServiceAccounts", **require(Permission.INTEGRATIONS))
+@router.get("", operation_id="listServiceAccounts", **require(Permission.INTEGRATIONS, admin=True))
 async def list_service_accounts(connection: TenantConnection) -> list[ServiceAccount]:
     ids = await connection.scalars(
         select(service_accounts.c.id).where(IN_THIS_TENANT).order_by(service_accounts.c.name)

@@ -34,6 +34,7 @@ Write an ADR for every choice between real alternatives that is costly to undo. 
 - Commit messages are Conventional Commits with the task ID as scope, such as `feat(FOUND-017): Add release versioning` ([ADR 0014](docs/adr/0014-conventional-commits-and-releases.md)). No attribution lines.
 - Respect the plan usage hook. Wrap up at 90% and stop cleanly at 95% of the 5-hour or weekly limit unless the owner turned on the override ([agent-workflow.md](docs/knowledge/agent-workflow.md#plan-usage-limits)).
 - Keep tokens low. One task per fresh subagent, two alive by default and up to five when the owner asks to use up a limit in a [parallel run](docs/knowledge/agent-workflow.md#parallel-runs), about 120 turns each. Use Fable only for truly heavy tasks, because its limit is separate and kept for advising. Run checks two or three times per task and pipe long output through `tail`. Take few screenshots, compare them by number (`shot --against`) and open an image only when the number looks wrong. A hook allows 5 images per agent. Details are in [agent-workflow.md](docs/knowledge/agent-workflow.md).
+- Delete an agent's worktree as soon as its branch is merged, because each one holds its own node_modules and .venv (107 of them filled 224 GB on 2026-11-24). `scripts/lead/push.sh` runs `scripts/lead/prune-worktrees.sh` after every push, which removes every clean worktree under `.claude/worktrees` whose HEAD is on origin/main and that has not changed for an hour.
 
 ## Real infrastructure and production
 

@@ -95,7 +95,9 @@ def hold_of(row: Any) -> LegalHold:
 
 
 @router.get(
-    "/retention", operation_id="getRetentionPolicy", **require(Permission.WORKSPACE_SETTINGS)
+    "/retention",
+    operation_id="getRetentionPolicy",
+    **require(Permission.WORKSPACE_SETTINGS, admin=True),
 )
 async def get_retention_policy(connection: TenantConnection) -> RetentionPolicy:
     row = (await connection.execute(select(retention_policies))).one_or_none()
@@ -133,7 +135,11 @@ async def set_retention_policy(
     return policy
 
 
-@router.get("/legal-holds", operation_id="listLegalHolds", **require(Permission.WORKSPACE_SETTINGS))
+@router.get(
+    "/legal-holds",
+    operation_id="listLegalHolds",
+    **require(Permission.WORKSPACE_SETTINGS, admin=True),
+)
 async def list_legal_holds(connection: TenantConnection) -> list[LegalHold]:
     rows = await connection.execute(
         select(legal_holds).order_by(legal_holds.c.created_at.desc(), legal_holds.c.id)

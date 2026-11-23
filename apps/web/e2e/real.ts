@@ -45,8 +45,19 @@ export function credentials(): { email: string; password: string } {
   return { email: "rui.researcher@parfocal.test", password: "correct-horse-staple" };
 }
 
-export async function signIn(page: Page, returnTo: string): Promise<void> {
-  const { email, password } = credentials();
+export function roleCredentials(role: string): { email: string; password: string } | null {
+  const stem = `PARFOCAL_ROLE_${role.toUpperCase().replaceAll("-", "_")}`;
+  const email = process.env[`${stem}_EMAIL`];
+  const password = process.env[`${stem}_PASSWORD`];
+  return email && password ? { email, password } : null;
+}
+
+export async function signIn(
+  page: Page,
+  returnTo: string,
+  account: { email: string; password: string } = credentials(),
+): Promise<void> {
+  const { email, password } = account;
   await page.goto(`/sign-in?return_to=${encodeURIComponent(returnTo)}`);
   await page.getByRole("textbox", { name: "Work email" }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);

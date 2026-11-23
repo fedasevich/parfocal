@@ -188,7 +188,7 @@ export function PreviewPanel({
       {progress ? <ProgressSummary progress={progress} /> : null}
       <FactList tight rows={facts} className="grid-cols-[124px_minmax(0,1fr)] gap-x-3 gap-y-2" />
       <div className="grid gap-2">
-        <Button variant="primary" block onClick={main.run}>
+        <Button variant="primary" block data-tour="preview-main" onClick={main.run}>
           {main.label} <Keycap keys="↵" />
         </Button>
         {full ? (

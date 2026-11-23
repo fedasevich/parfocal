@@ -145,7 +145,7 @@ function TopBar({
         <Icon name="folder" />
         <Trans>New project</Trans>
       </Button>
-      <Button variant="ghost" onClick={onUpload}>
+      <Button variant="ghost" data-tour="top-upload" onClick={onUpload}>
         <Icon name="upload" />
         <Trans>Upload</Trans>
       </Button>

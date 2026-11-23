@@ -2,6 +2,38 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.47.0 (2026-11-23)
+
+### Features
+
+- PILOT-011: Add the walkthrough script, its 162 steps and the generated page
+- PILOT-011: Check every walkthrough step as its role account after the reseed
+- PILOT-012: Add the round 5 study protocol and the tables against round 4
+- PILOT-012: Label comparability per task and partial moderator scoring
+
+### Fixes
+
+- PILOT-011: Correct the walkthrough wording and point each check at the call its page makes
+- SEC-053: Keep API answers out of shared caches
+- SEC-052: Require admin rights for every read only the admin page makes
+
+### Docs
+
+- PILOT-011: Publish the walkthrough and add SEC-052
+- PILOT-011: Show the participant study in the walkthrough
+- PILOT-011: Tick the per-role walkthrough
+- PILOT-012: Add the round 5 protocol and thesis tables task
+- PILOT-013: Add the guided tour over the real app
+- PILOT-012: Tick the round 5 protocol and add EXP-017
+- SEC-053: Record the cache fix and the admin reads
+
+### Other
+
+- EXP-015: Claim EXP-015 for the parallel run
+- SEC-052: Claim SEC-052 for the parallel run
+- PILOT-012: Claim PILOT-012 for the parallel run
+- EXP-017: Claim EXP-017 for the parallel run
+
 ## v0.46.0 (2026-11-23)
 
 ### Features
@@ -40,8 +72,8 @@ Every release of Parfocal, generated from Conventional Commits by git-cliff. Run
 
 ### Other
 
-- EXP-016: Renumber the study projects ADR to 0435
 - PILOT-011: Claim PILOT-011 for the parallel run
+- EXP-016: Renumber the study projects ADR to 0435
 
 ## v0.44.0 (2026-11-23)
 

@@ -480,6 +480,7 @@ function FilesStep({
   const formats = (
     <button
       type="button"
+      data-tour="upload-formats"
       onClick={() =>
         void navigate({
           to: "/projects/$projectId/upload",
@@ -494,7 +495,7 @@ function FilesStep({
     </button>
   );
   const sourceSwitch = (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3" data-tour="upload-source">
       <SegmentedControl
         aria-label={t`Where the files are`}
         value={source}
@@ -523,6 +524,7 @@ function FilesStep({
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] items-stretch gap-(--space-zone)">
           <div
             data-testid="drop-area"
+            data-tour="upload-drop"
             className={cn(
               "grid min-h-95 content-center justify-items-center gap-2.5 rounded-[10px] border-[1.5px] border-dashed bg-surf-panel px-5 py-6 text-center text-body-sm leading-[1.45] text-fg-dim",
               dragging ? "border-accent" : "border-line-strong",

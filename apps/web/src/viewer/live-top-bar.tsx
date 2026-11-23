@@ -315,6 +315,7 @@ function TopBar({
         <SegmentedControl
           aria-label={t`Mode`}
           data-testid="mode-switch"
+          data-tour="mode-switch"
           className="shrink-0"
           {...(guided ? { size: "lg" as const } : {})}
           value={choice}

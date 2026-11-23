@@ -53,7 +53,9 @@ async def require_security_contact(connection: AsyncConnection) -> None:
         )
 
 
-@router.get("", operation_id="getSecurityContact", **require(Permission.WORKSPACE_SETTINGS))
+@router.get(
+    "", operation_id="getSecurityContact", **require(Permission.WORKSPACE_SETTINGS, admin=True)
+)
 async def get_security_contact(connection: TenantConnection) -> SecurityContact:
     return SecurityContact(email=await security_contact_of(connection))
 
