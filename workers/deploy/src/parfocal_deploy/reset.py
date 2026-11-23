@@ -21,7 +21,7 @@ from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.deploy import MIGRATE
 from parfocal_deploy.environments import Environment, environment
-from parfocal_deploy.modal_app import APP_NAME, INGEST_FUNCTION
+from parfocal_deploy.modal_app import APP_NAME, INGEST_FUNCTION, SEED_FUNCTION
 from parfocal_deploy.tools import Tools, fetch, read, required, run, sql
 
 RESET_SETTINGS = (
@@ -40,6 +40,7 @@ AUDIT_TRUNCATE_GUARD = "audit_events_no_truncate"
 DELETE_CONCURRENCY = 32
 LOCK_AGE = timedelta(days=7)
 metadata = slides.metadata
+SEED_PASSED = ("PUBLIC_ORIGIN",)
 SEED = ("uv", "run", "--package", "parfocal-api", "python", "-m", "parfocal_api.showcase")
 PUBLISH_FIXTURES = (
     "uv",
@@ -117,6 +118,17 @@ def storage_location(target: Environment, settings: Mapping[str, str]) -> Storag
     )
 
 
+def seed_in_eu(target: Environment, settings: Mapping[str, str]) -> None:
+    import modal
+
+    seed = modal.Function.from_name(
+        APP_NAME, SEED_FUNCTION, environment_name=target.modal_environment
+    )
+    for line in seed.remote_gen(dict(settings)):
+        sys.stderr.write(f"{line}\n")
+        sys.stderr.flush()
+
+
 def start_ingest(target: Environment) -> None:
     import modal
 
@@ -140,6 +152,7 @@ def reset(
     tools: Tools,
     local: Mapping[str, str],
     drain_jobs: Callable[[Environment], None] = start_ingest,
+    seed: Callable[[Environment, Mapping[str, str]], None] = seed_in_eu,
 ) -> int:
     settings = required(local, RESET_SETTINGS)
     project = settings["NEON_PROJECT_ID"]
@@ -164,15 +177,15 @@ def reset(
     with phase("empty tenant objects"):
         removed = asyncio.run(empty_tenant_objects(location))
     with phase("seed"):
-        tools.run(
-            SEED,
-            None,
+        seed(
+            target,
             {
                 **storage,
                 "DATABASE_URL": neon.engine_uri(direct),
                 "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
                 "SEED_VIEWER_EMAILS": local.get("SEED_VIEWER_EMAILS", ""),
                 "SEED_AGENT_EMAILS": local.get("SEED_AGENT_EMAILS", ""),
+                **{name: local[name] for name in SEED_PASSED if name in local},
             },
         )
     drain_jobs(target)

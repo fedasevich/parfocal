@@ -62,6 +62,10 @@ The owner's yes is a deploy by hand that names the revisions: `gh workflow run d
 uv run --package parfocal-deploy python -c "from parfocal_deploy import migrations as m; print(m.load(m.VERSIONS)['0111'].findings)"
 ```
 
+## Reset production
+
+The Reset production workflow runs `parfocal_deploy.reset` on a GitHub runner, which can land in any US region. It migrates, publishes fixtures, truncates and empties tenant objects from the runner. Since OPS-039 (the reseed runs next to the database) it then calls the `seed` function of the `parfocal-api` Modal app in the `eu` region, beside Neon in Frankfurt. The seed's round trips no longer cross the Atlantic. Before, the seed took 468 s from us-east-1 and 980 s from us-west-2 ([results/2026-11-23-outcome-seed-time.md](../results/2026-11-23-outcome-seed-time.md)). The function gets the database URL, storage settings and seed emails as one argument and starts `python -m parfocal_api.showcase` in its container. It streams every line back, so the reset log shows the seed's `seed: <phase> took N s` lines. It has no schedule, one container at most and no warm container. Its image carries `packages/test-fixtures/fixtures.json` and `model-results` under `/repo`, and `PARFOCAL_REPOSITORY_ROOT=/repo` points `repository_root` there. The function must be deployed (any release deploy does it) before a reset can call it. The workflow only runs from release tags, which the production environment enforces.
+
 ## Rollback
 
 `gh workflow run deploy.yml --ref main -f rollback_to=<commit or tag>` checks out that ref and deploys its Modal apps, web build and Worker. It runs no migration and makes no database or Neon call, so the schema stays ahead of the code, which expand-only migrations keep safe.

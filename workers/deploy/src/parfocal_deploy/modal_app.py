@@ -4,14 +4,14 @@ import os
 import subprocess
 import time
 import tomllib
-from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator, Mapping
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 from typing import Any
 
 import modal
 
-from parfocal_common.repository import repository_root
+from parfocal_common.repository import ROOT_VARIABLE, repository_root
 from parfocal_deploy.image_locks import APP_LOCK
 from parfocal_deploy.parse_sandbox import PARSE_SANDBOX_OPTIONS
 from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
@@ -26,6 +26,7 @@ EVENTS_FUNCTION = "events"
 BACKFILL_FUNCTION = "backfill_thumbnails"
 CROPS_BACKFILL_FUNCTION = "backfill_cell_crops"
 LEVELS_BACKFILL_FUNCTION = "backfill_level_directories"
+SEED_FUNCTION = "seed"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
@@ -37,6 +38,7 @@ FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
     BACKFILL_FUNCTION: SECRETS,
     CROPS_BACKFILL_FUNCTION: SECRETS,
     LEVELS_BACKFILL_FUNCTION: SECRETS,
+    SEED_FUNCTION: SECRETS,
 }
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
@@ -111,6 +113,18 @@ EVENTS_OPTIONS: dict[str, Any] = {
     "max_containers": 1,
     "timeout": 600,
 }
+SEED_ARGUMENTS = ("-m", "parfocal_api.showcase")
+SEED_ROOT = "/repo"
+SEED_DATA = ("packages/test-fixtures/fixtures.json", "packages/test-fixtures/model-results")
+SEED_OPTIONS: dict[str, Any] = {
+    "name": SEED_FUNCTION,
+    "region": WORKER_REGION,
+    "cpu": 1.0,
+    "memory": 1024,
+    "min_containers": 0,
+    "max_containers": 1,
+    "timeout": 1800,
+}
 __all__ = ["PARSE_SANDBOX_OPTIONS"]
 
 
@@ -162,6 +176,46 @@ def web_image(image: modal.Image) -> modal.Image:
     if release:
         settings[RELEASE_VARIABLE] = release
     return image.env(settings)
+
+
+def seed_image(image: modal.Image) -> modal.Image:
+    seeded = image.env({ROOT_VARIABLE: SEED_ROOT})
+    if not modal.is_local():
+        return seeded
+    for relative in SEED_DATA:
+        source = REPOSITORY / relative
+        remote = f"{SEED_ROOT}/{relative}"
+        if source.is_dir():
+            seeded = seeded.add_local_dir(source, remote, copy=True)
+        else:
+            seeded = seeded.add_local_file(source, remote, copy=True)
+    return seeded
+
+
+class SeedFailedError(RuntimeError):
+    pass
+
+
+def source_path() -> str:
+    copied = str(Path(__file__).resolve().parent.parent)
+    return os.pathsep.join(filter(None, [copied, os.environ.get("PYTHONPATH")]))
+
+
+def run_seed(settings: dict[str, str]) -> Iterator[str]:
+    import sys
+
+    process = subprocess.Popen(
+        [sys.executable, *SEED_ARGUMENTS],
+        env={**os.environ, **settings, "PYTHONUNBUFFERED": "1", "PYTHONPATH": source_path()},
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    assert process.stdout is not None
+    for line in process.stdout:
+        yield line.rstrip("\n")
+    if process.wait() != 0:
+        raise SeedFailedError(f"the seed exited with {process.returncode}")
 
 
 def preload(
@@ -338,6 +392,9 @@ backfill_level_directories = app.function(
     timeout=3600,
     secrets=secrets_of(LEVELS_BACKFILL_FUNCTION),
 )(run_level_directories_backfill)
+seed = app.function(**SEED_OPTIONS, image=seed_image(IMAGE), secrets=secrets_of(SEED_FUNCTION))(
+    run_seed
+)
 FUNCTIONS: dict[str, modal.Function] = {
     WEB_FUNCTION: web,
     INGEST_FUNCTION: ingest,
@@ -345,4 +402,5 @@ FUNCTIONS: dict[str, modal.Function] = {
     BACKFILL_FUNCTION: backfill_thumbnails,
     CROPS_BACKFILL_FUNCTION: backfill_cell_crops,
     LEVELS_BACKFILL_FUNCTION: backfill_level_directories,
+    SEED_FUNCTION: seed,
 }

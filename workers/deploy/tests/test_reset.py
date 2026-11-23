@@ -1,10 +1,11 @@
 import asyncio
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx2
+import modal
 import pytest
 
 from parfocal_api.showcase import FORMAT_GALLERY
@@ -12,6 +13,7 @@ from parfocal_common.object_store import ListedObject, ObjectStore, StorageError
 from parfocal_deploy import reset as reset_module
 from parfocal_deploy.deploy import MIGRATE
 from parfocal_deploy.environments import Environment, environment
+from parfocal_deploy.modal_app import APP_NAME, SEED_FUNCTION
 from parfocal_deploy.reset import (
     BUCKET_LOCKED,
     DELETE_CONCURRENCY,
@@ -142,15 +144,55 @@ def test_the_reset_publishes_fixtures_first_and_starts_the_ingest_worker_after_t
     def drained(target: Environment) -> None:
         steps.append(f"start ingest in {target.modal_environment}")
 
-    reset_module.reset(environment("production"), tools, settings, drained)
+    seeded_with: list[Mapping[str, str]] = []
+
+    def seeded(target: Environment, passed: Mapping[str, str]) -> None:
+        steps.append(f"seed in {target.modal_environment}")
+        seeded_with.append(passed)
+
+    settings["PUBLIC_ORIGIN"] = "https://app.parfocal.eu"
+    reset_module.reset(environment("production"), tools, settings, drained, seeded)
     assert steps == [
         MIGRATE[-1],
         "parfocal_ingest.fixture_slides",
         "truncate",
         "empty objects",
-        "parfocal_api.showcase",
+        "seed in main",
         "start ingest in main",
     ]
+    [passed] = seeded_with
+    assert passed["DATABASE_URL"].endswith("//direct")
+    assert passed["STORAGE_BUCKET"] == environment("production").slide_bucket
+    assert passed["APP_ENV"] == "prod"
+    assert passed["SEED_OWNER_EMAIL"] == "x"
+    assert passed["PUBLIC_ORIGIN"] == "https://app.parfocal.eu"
+
+
+class RemoteSeed:
+    def __init__(self, lines: Sequence[str]) -> None:
+        self.lines = lines
+        self.called: list[dict[str, str]] = []
+
+    def remote_gen(self, settings: dict[str, str]) -> Iterator[str]:
+        self.called.append(settings)
+        yield from self.lines
+
+
+def test_the_reset_seeds_through_the_eu_function_and_streams_its_lines(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    remote = RemoteSeed(["seed: cvut-a projects took 12 s", "seeded 3 ČVUT workspaces"])
+    found: list[tuple[str, str, str]] = []
+
+    def from_name(app: str, name: str, environment_name: str) -> RemoteSeed:
+        found.append((app, name, environment_name))
+        return remote
+
+    monkeypatch.setattr(modal.Function, "from_name", from_name)
+    reset_module.seed_in_eu(environment("production"), {"DATABASE_URL": "postgres://direct"})
+    assert found == [(APP_NAME, SEED_FUNCTION, "main")]
+    assert remote.called == [{"DATABASE_URL": "postgres://direct"}]
+    assert capsys.readouterr().err.splitlines() == list(remote.lines)
 
 
 def test_the_truncate_keeps_migrations_and_operators() -> None:

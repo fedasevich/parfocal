@@ -38,6 +38,10 @@ from parfocal_deploy.modal_app import (
     PARSE_SANDBOX_OPTIONS,
     PRELOAD_VARIABLE,
     SECRETS,
+    SEED_DATA,
+    SEED_FUNCTION,
+    SEED_OPTIONS,
+    SEED_ROOT,
     WEB_CONCURRENCY,
     WEB_ENDPOINT,
     WEB_FUNCTION,
@@ -71,6 +75,7 @@ def test_the_app_registers_the_web_and_ingest_functions() -> None:
             BACKFILL_FUNCTION,
             CROPS_BACKFILL_FUNCTION,
             LEVELS_BACKFILL_FUNCTION,
+            SEED_FUNCTION,
         ]
     )
     assert all(function.app is app for function in FUNCTIONS.values())
@@ -82,7 +87,7 @@ def test_ingest_memory_comes_from_the_ingest_settings() -> None:
 
 
 def test_nothing_is_kept_warm_and_every_function_is_bounded() -> None:
-    for options in (WEB_OPTIONS, INGEST_OPTIONS, EVENTS_OPTIONS):
+    for options in (WEB_OPTIONS, INGEST_OPTIONS, EVENTS_OPTIONS, SEED_OPTIONS):
         assert options["min_containers"] == 0
         assert "buffer_containers" not in options
         assert options["max_containers"] <= 4
@@ -109,6 +114,7 @@ def test_every_function_the_app_registers_is_pinned_to_an_eu_region() -> None:
         WEB_FUNCTION: WEB_OPTIONS,
         INGEST_FUNCTION: INGEST_OPTIONS,
         EVENTS_FUNCTION: EVENTS_OPTIONS,
+        SEED_FUNCTION: SEED_OPTIONS,
     }
     for name in FUNCTIONS:
         region = options[name]["region"] if name in options else WORKER_REGION
@@ -470,3 +476,34 @@ def test_the_web_image_carries_the_release_the_checkout_describes() -> None:
 
     assert release_of(lambda: "v0.29.2-4-gabc123\n") == "v0.29.2-4-gabc123"
     assert release_of(lambda: " \n") is None
+
+
+def test_the_seed_runs_on_demand_in_the_eu_beside_the_database() -> None:
+    assert SEED_OPTIONS["region"] == WORKER_REGION
+    assert "schedule" not in SEED_OPTIONS
+    assert SEED_OPTIONS["max_containers"] == 1
+    assert "gpu" not in SEED_OPTIONS
+
+
+def test_the_seed_image_carries_the_fixture_data_the_seed_reads() -> None:
+    root = repository_root(__file__, depth=3)
+    assert all((root / relative).exists() for relative in SEED_DATA)
+    assert SEED_ROOT == "/repo"
+
+
+def test_the_seed_function_streams_every_line_the_seed_prints(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    script = (
+        "import os, sys; print(os.environ['SEED_OWNER_EMAIL']); "
+        "print('seed: x took 1 s', file=sys.stderr)"
+    )
+    monkeypatch.setattr(modal_app, "SEED_ARGUMENTS", ("-c", script))
+    lines = list(modal_app.run_seed({"SEED_OWNER_EMAIL": "owner@example.test"}))
+    assert sorted(lines) == sorted(["owner@example.test", "seed: x took 1 s"])
+
+
+def test_a_failed_seed_fails_the_function(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(modal_app, "SEED_ARGUMENTS", ("-c", "print('half'); raise SystemExit(3)"))
+    with pytest.raises(modal_app.SeedFailedError, match="3"):
+        list(modal_app.run_seed({}))
