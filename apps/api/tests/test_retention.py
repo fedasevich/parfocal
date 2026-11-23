@@ -363,7 +363,7 @@ def test_retention_settings_are_checked_and_only_admins_change_them(
         .status_code
         == 422
     )
-    assert api(w.people["researcher"]).get("/api/tenant/retention").status_code == 200
+    assert api(w.people["researcher"]).get("/api/tenant/retention").status_code == 403
     assert api(w.people["researcher"]).put("/api/tenant/retention", json={}).status_code == 403
     assert (
         api(w.people["researcher"])

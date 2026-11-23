@@ -137,8 +137,7 @@ def test_the_report_shows_only_this_workspace(api: ApiAs, database: str, lab: La
     assert ok(usage(api, other))["gpu_seconds"] == 9.0
 
 
-def test_reviewers_cannot_read_usage_and_researchers_only_view_it(
-    api: ApiAs, database: str, lab: Lab
-) -> None:
-    assert usage(api, lab, who="viewer").status_code == 200
+def test_only_admin_rights_read_usage(api: ApiAs, database: str, lab: Lab) -> None:
+    assert usage(api, lab).status_code == 200
+    assert usage(api, lab, who="viewer").status_code == 403
     assert usage(api, lab, who="reader").status_code == 403

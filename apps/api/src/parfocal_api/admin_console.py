@@ -247,7 +247,11 @@ async def model_count(connection: AsyncConnection) -> int:
     return shown + int(labbed or 0)
 
 
-@router.get("/overview", operation_id="getAdminOverview", **require(Permission.WORKSPACE_SETTINGS))
+@router.get(
+    "/overview",
+    operation_id="getAdminOverview",
+    **require(Permission.WORKSPACE_SETTINGS, admin=True),
+)
 async def get_admin_overview(connection: TenantConnection) -> AdminOverview:
     seats = (
         await connection.execute(
@@ -294,7 +298,9 @@ async def get_admin_overview(connection: TenantConnection) -> AdminOverview:
     )
 
 
-@router.get("/storage", operation_id="getStorageUsage", **require(Permission.INTEGRATIONS))
+@router.get(
+    "/storage", operation_id="getStorageUsage", **require(Permission.INTEGRATIONS, admin=True)
+)
 async def get_storage_usage(connection: TenantConnection) -> StorageUsage:
     copied, in_place = await slide_bytes(connection)
     size = bytes_where(COPIED)
@@ -381,7 +387,9 @@ async def storage_sources(connection: AsyncConnection) -> list[StorageSource]:
 
 
 @router.get(
-    "/security", operation_id="getSecuritySettings", **require(Permission.WORKSPACE_SETTINGS)
+    "/security",
+    operation_id="getSecuritySettings",
+    **require(Permission.WORKSPACE_SETTINGS, admin=True),
 )
 async def get_security_settings(request: Request, connection: TenantConnection) -> SecuritySettings:
     domains = await connection.scalar(
@@ -424,7 +432,9 @@ def host_of(address: str) -> str:
     return urlsplit(address).hostname or address
 
 
-@router.get("/webhooks", operation_id="listWebhooks", **require(Permission.INTEGRATIONS))
+@router.get(
+    "/webhooks", operation_id="listWebhooks", **require(Permission.INTEGRATIONS, admin=True)
+)
 async def list_webhooks(connection: TenantConnection) -> list[Webhook]:
     incoming = await incoming_counts(connection)
     outgoing = await outgoing_counts(connection)

@@ -80,7 +80,9 @@ def job_of(row: Any) -> AiUsageJob:
     )
 
 
-@router.get("/ai-usage", operation_id="getAiUsage", **require(Permission.WORKSPACE_SETTINGS))
+@router.get(
+    "/ai-usage", operation_id="getAiUsage", **require(Permission.WORKSPACE_SETTINGS, admin=True)
+)
 async def get_ai_usage(
     connection: TenantConnection,
     since: datetime | None = None,

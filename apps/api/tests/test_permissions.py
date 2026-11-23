@@ -1774,6 +1774,41 @@ def writes() -> set[str]:
     return {name for name, operation in operations().items() if operation.get("x-permission-write")}
 
 
+ADMIN_READS = {
+    "getAdminOverview",
+    "getStorageUsage",
+    "getSecuritySettings",
+    "listWebhooks",
+    "listAiModels",
+    "getLabModelConnection",
+    "getLabModel",
+    "getProjectWebhook",
+    "listEventTargets",
+    "listEventDeliveries",
+    "getRetentionPolicy",
+    "listLegalHolds",
+    "getAiUsage",
+    "getJoinSettings",
+    "listServiceAccounts",
+    "getSecurityContact",
+}
+
+VIEW_ONLY_READS = {"listImportSources", "getAiCorrections", "getTaskTiming"}
+
+
+def admin_reads() -> set[str]:
+    return {name for name, operation in operations().items() if operation.get("x-permission-admin")}
+
+
+def test_admin_rights_gate_every_admin_read() -> None:
+    assert admin_reads() == ADMIN_READS
+    assert not ADMIN_READS & WRITES
+    setup = {Permission.WORKSPACE_SETTINGS.value, Permission.INTEGRATIONS.value}
+    guarded = guarded_operations()
+    setup_reads = {name for name, permission in guarded.items() if permission in setup} - WRITES
+    assert setup_reads == ADMIN_READS | VIEW_ONLY_READS
+
+
 def test_the_matrix_covers_every_permission_for_every_role() -> None:
     assert set(COLUMNS) == set(Role) == {Role.RESEARCHER, Role.REVIEWER}
     assert set(MATRIX) == set(Permission)
@@ -3090,7 +3125,7 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
     if (
         (grant is Grant.ASSIGNED and operation in NEEDS_A_TASK)
         or grant is Grant.NONE
-        or (operation in WRITES and grant is Grant.VIEW_ONLY)
+        or (operation in WRITES | ADMIN_READS and grant is Grant.VIEW_ONLY)
     ):
         assert status == 403
     else:
