@@ -1,4 +1,4 @@
-# XXXX. Study sessions and traces upload to the API, and the results page reads them there
+# 0438. Study sessions and traces upload to the API, and the results page reads them there
 
 - Date: 2026-11-23
 - Status: Accepted
