@@ -55,6 +55,7 @@ import {
   outlineArea,
   outlineCentre,
   placedObjects,
+  reviewMinSide,
 } from "./stage-geometry.ts";
 import { type GuidedFix, StageGuidedCard } from "./stage-guided-card.tsx";
 import { StageGuidedView } from "./stage-guided-view.tsx";
@@ -343,6 +344,7 @@ export function StageReviewObjects({
     const area = outlineArea(
       objects.find((item) => item.object === id)?.outline ??
         rulers.find((item) => item.label === id)?.points,
+      reviewMinSide,
     );
     if (area !== null) void engine.flyToArea(area);
   };
@@ -417,7 +419,10 @@ export function StageReviewObjects({
       setDone(true);
       return;
     }
-    const area = outlineArea(objects.find((item) => item.object === current)?.outline);
+    const area = outlineArea(
+      objects.find((item) => item.object === current)?.outline,
+      reviewMinSide,
+    );
     if (area !== null) void engine.flyToArea(area);
   }, [ready, objects, engine, current, opensOnOpinion]);
   useEffect(() => {

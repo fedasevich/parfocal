@@ -891,6 +891,24 @@ def test_the_starter_hears_when_a_run_is_done_and_when_it_fails(
     ]
 
 
+def test_the_run_notice_names_the_model_as_every_other_screen_does(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    owner(
+        database,
+        f"UPDATE model_runs SET started_by_user_id = '{lab.people['owner'].user_id}', "
+        f"detector = 'pathosam-hovernext', detector_version = 'v1.2' WHERE job_id = '{run['id']}'",
+    )
+    settle(database, claim(database, lab, Tiles().plan()))
+    (detail,) = owner(
+        database,
+        "SELECT payload->>'detail' FROM notifications "
+        f"WHERE tenant_id = '{lab.tenant}' AND kind = 'model-run-finished'",
+    )
+    assert detail[0] == "PathoSAM + HoVer-NeXt v1.2 finished on its slide."
+
+
 def test_a_cancelled_run_and_a_turned_off_notice_send_nothing(
     api: ApiAs, database: str, lab: Lab
 ) -> None:
