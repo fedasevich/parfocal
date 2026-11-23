@@ -1316,7 +1316,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "keepReviewerType": lambda w: Call(
         "PUT",
-        f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T4/kept-type",
+        f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T12/kept-type",
         {"class_id": str(w.project_class)},
     ),
     "askReviewersToLookAgain": lambda w: Call(
@@ -2478,7 +2478,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         "answer": "1",
                         "reasons": ["not_class"],
                     }
-                    for number in (1, 2, 3, 4, 10, 11)
+                    for number in (1, 2, 3, 4, 10, 11, 12)
                 ],
             )
             sends = [
@@ -2534,7 +2534,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     slide_id=case.loose_slide_id,
                     user_id=people[lead],
                     kind="region",
-                    number=4,
+                    number=12,
                     class_id=project_class,
                 )
             )
