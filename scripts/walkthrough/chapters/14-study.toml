@@ -1,49 +1,85 @@
 [[chapter]]
 title = "The study"
 group = "research"
-intro = "Study mode runs usability sessions for the thesis. A facilitator starts a session, gives a participant tasks one at a time, times them and downloads the results. Everything is kept in this browser only."
+intro = "Study mode runs the usability sessions for the thesis on the real app. The moderator uses the console at /study/console to prepare the tasks and read the results. The participant uses /study in the same tab: a consent page, one task at a time with the goal pinned at the bottom, a short rating after each task in the round 4 and nur format, and the ten SUS statements with open questions at the end. Each participant works in a fresh project of their own, seeded for their code. Sessions upload to the server once EXP-015 lands, and until then they stay in this browser."
 
 [[chapter.step]]
-role = "researcher"
-title = "Open study mode"
-url = "/study"
-click = "Open the link. Read the session list and press Run a session."
-expect = "The study page with its tasks and past rounds."
-why = "Measured sessions are the evidence that the app is fast and clear to use."
+role = "owner"
+title = "The moderator console"
+url = "/study/console"
+click = "Sign in as agent-walk@parfocal.eu. Open the console from the app menu or the link. Read the round, its tasks and the past sessions. Use the link to the participant page to start a session."
+expect = "The console shows the current round with its tasks, the results table with Answered, Done, Median seconds and Blocked per task, Replay per session and a download of the round as JSON."
+why = "The moderator prepares a round here and reads its numbers afterwards, so every participant gets the same tasks."
 api = ["/api/me/home"]
 
 [[chapter.step]]
-role = "researcher"
-title = "Run a session"
-url = "/study"
-click = "Press Start session, then Start task for the first task. Mark it done, or use Skip or Gave up."
-expect = "Each task is timed from Start task to its end."
-why = "The times are compared across rounds."
-api = ["/api/me/slides"]
-
-[[chapter.step]]
-role = "researcher"
+role = "owner"
 title = "Edit the tasks and start the next round"
-url = "/study"
-click = "Change the task list and press Save tasks, then Start next round."
-expect = "The new round uses the saved tasks."
-why = "Each round tests the app after the fixes from the last one."
+url = "/study/console"
+click = "Change the task list in the editor and save it, then press Start next round. A round that already has sessions keeps its tasks frozen."
+expect = "The new round uses the saved tasks. Round 5 starts with eleven tasks that mirror round 4's, plus one queue task and one annotate task."
+why = "Rounds only compare when their tasks stay the same, and each new round tests the app after the last round's fixes."
 api = ["/api/me/home"]
 
 [[chapter.step]]
-role = "researcher"
-title = "Download and replay"
+role = "owner"
+title = "Consent and the anonymous code"
 url = "/study"
-click = "Press Download results. Press Replay on a past session, then Play and Pause."
-expect = "A results file downloads. The replay shows what the participant did, step by step."
+click = "Open the participant page in the browser the participant will use. Read Help us test Parfocal: We test the app, not you, Think aloud, This tab is recorded and You stay anonymous. Press I agree and start."
+expect = "The page gives the participant an anonymous code such as P-4K2M and moves to the first task card. Nothing is recorded before I agree and start."
+why = "Participants agree to the recording first and are never named in the results."
+api = ["/api/me/home"]
+
+[[chapter.step]]
+role = "owner"
+title = "A task card and the pinned goal"
+url = "/study"
+click = "Read the task card, Task 1 of 13, and its goal. Start task unlocks after five seconds of reading. Work in the real app. The goal stays at the bottom of the screen while you work."
+expect = "The app opens at the task's start page inside the participant's own project. The task ends by itself when the goal is reached, or with I'm done."
+why = "The same start and the same goal for everyone make the times and clicks comparable."
+api = ["/api/projects"]
+
+[[chapter.step]]
+role = "owner"
+title = "Giving up on a task"
+url = "/study"
+click = "Wait twenty seconds in a task. Press I can't find it, then pick what got in the way, or Back to the task."
+expect = "The task ends as given up with the reason, and the questions after the task follow."
+why = "Where people give up is the most useful finding of a usability round."
+api = ["/api/me/home"]
+
+[[chapter.step]]
+role = "owner"
+title = "The questions after each task"
+url = "/study"
+click = "After a task, answer Overall, how difficult or easy was this task to complete? on 1 Very difficult to 7 Very easy. Next stays off until a rating is picked. Then the optional What did you like in this task?, What did you dislike? and What would you recommend?"
+expect = "Task complete, or Thank you for telling us after a give-up, then the rating and the three notes, then Next task."
+why = "The rating is round 4's single ease question word for word, and the notes are nur's, so the thesis can compare rounds."
+api = ["/api/me/home"]
+
+[[chapter.step]]
+role = "owner"
+title = "Last questions, with Back"
+url = "/study"
+click = "After the last task, rate the ten statements under For each statement, pick how much you agree. Go with your first reaction. Then answer like, dislike, Was there anything you expected to find but could not? and recommend. Press Back to change an earlier answer, then Next and Finish."
+expect = "Back moves only inside these last questions, never back into a task. A changed answer is logged with its old and new value. Finish shows Thank you! Your answers are saved."
+why = "The SUS score compares with round 4's mean of 83.8, and letting people revise their final answers gives truer scores."
+api = ["/api/me/home"]
+
+[[chapter.step]]
+role = "owner"
+title = "The next participant"
+url = "/study"
+click = "Press Start the next participant on the thank you page."
+expect = "A fresh consent page with a new code. The moderator seeds a fresh project for the new code first, so every participant starts from the same state."
+why = "Tasks submit and sign off real data, so nobody may start from another participant's leftovers."
+api = ["/api/me/home"]
+
+[[chapter.step]]
+role = "owner"
+title = "Download and replay"
+url = "/study/console"
+click = "Back in the console, press Download results. Press Replay on a session, then Play and Pause."
+expect = "A results file with every task's time, clicks, dead clicks, rating and notes, and the SUS answers. The replay shows what the participant did, step by step."
 why = "The results go into the thesis, and the replay shows where people got stuck."
 api = ["/api/me/home"]
-
-[[chapter.step]]
-role = "reviewer-a"
-title = "A reviewer as participant"
-url = "/study"
-click = "Sign in as role-reviewer-a@parfocal.eu in the participant's browser and run one task."
-expect = "The same page works for a reviewer, with their own slides."
-why = "Participants in the study are reviewers, not researchers."
-api = ["/api/me/slides"]
