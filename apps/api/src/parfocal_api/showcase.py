@@ -51,6 +51,7 @@ from parfocal_api.showcase_demo import (
 )
 from parfocal_api.showcase_results import REGIONS_MODEL, gallery_label, model_regions
 from parfocal_api.showcase_reviews import (
+    DRAWN_TASK,
     QUEUE_TASK,
     Seeded,
     agree_and_submit,
@@ -59,6 +60,7 @@ from parfocal_api.showcase_reviews import (
     redraw_apart,
     review_task,
     seed_adjudication,
+    seed_drawn_review,
     submit,
 )
 from parfocal_api.showcase_samples import SamplePool, sample_pool
@@ -222,6 +224,7 @@ HALF_DONE = "Half done review"
 SUBMITTED = "Submitted review"
 ANNOTATE_DEMO = "Tumour outline practice"
 QUEUE_SLIDES = ("Case queue 1", "Case queue 2")
+DRAWN_SLIDE = "Case drawn outlines"
 DEMO_TASKS = (GALLERY_TOUR, CELL_TOUR, HALF_DONE, SUBMITTED, ANNOTATE_DEMO)
 CELLS_CHECKED = 12
 OWNER_SUBJECT = f"{PLACEHOLDER_PREFIX}owner"
@@ -616,6 +619,10 @@ async def seed_queue(
     await agree_on_the_rest(connection, seeded, project_id, task_id, decided)
     for slide_id in queued:
         await submit(connection, task_id, slide_id)
+    drawn = await add_slide(
+        connection, seeded, project_id, DRAWN_SLIDE, sample_facts(pool.next().stored)
+    )
+    await seed_drawn_review(connection, seeded, principal, results, project_id, drawn.id)
 
 
 async def seed_styles(
@@ -1090,6 +1097,7 @@ async def seed_example(
         )
         if agents:
             await seed_adjudication(connection, creator, agents[0])
+            await seed_adjudication(connection, creator, agents[0], DRAWN_TASK)
             await seat_on_cell_tour(connection, creator, workspace.gallery, agents[0])
         made = (
             None

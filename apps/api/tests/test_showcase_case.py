@@ -46,7 +46,7 @@ from parfocal_api.showcase_case import (
     UPLOADED_FILE,
     seed_http,
 )
-from parfocal_api.showcase_reviews import QUEUE_TASK
+from parfocal_api.showcase_reviews import DRAWN_TASK, QUEUE_TASK
 from parfocal_api.tables import (
     CaseReportState,
     ProjectRole,
@@ -366,3 +366,30 @@ async def test_an_agent_adjudicates_the_seeded_disagreement_queue(showcase: str)
             RESULTS,  # type: ignore[arg-type]
         )
         assert decided.decision == "agree"
+
+
+async def test_an_agent_adjudicates_a_seeded_review_of_drawn_outlines(showcase: str) -> None:
+    agent = await member(showcase, AGENT)
+    rows = await run_sql(
+        showcase,
+        f"SELECT t.id, p.name FROM review_tasks t JOIN projects p ON p.id = t.project_id "
+        f"WHERE t.tenant_id = '{agent.tenant_id}' AND t.name = '{DRAWN_TASK}'",
+    )
+    task_id = uuid.UUID(str(rows[0][0]))
+    pending = await run_sql(
+        showcase,
+        "SELECT count(*) FROM review_assignments "
+        f"WHERE task_id = '{task_id}' AND submitted_at IS NULL",
+    )
+    assert pending[0][0] == 0
+    async with rolled_back(showcase, agent) as connection:
+        queue = await queue_of(connection, task_id)
+        assert [(item.why, item.drawn) for item in queue] == [(Why.REVIEWERS_DIFFER, True)]
+        assert queue[0].adjudication is not None
+        assert queue[0].adjudication.adjudicator_user_id == agent.user_id
+        mine = await list_my_adjudications(agent, connection)
+        assert (task_id, DRAWN_TASK) in [(item.task_id, item.task_name) for item in mine]
+        shown = await get_my_adjudication(task_id, agent, connection, RESULTS)  # type: ignore[arg-type]
+        assert [(item.object, item.drawn, item.ai.score) for item in shown.objects] == [
+            (queue[0].object, True, None)
+        ]

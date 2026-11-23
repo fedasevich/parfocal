@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from starlette.requests import Request
 
 from parfocal_api.adjudications import AdjudicationDraft, ObjectRef, send_to_adjudicator
-from parfocal_api.annotations import Geometry
+from parfocal_api.annotations import AnnotationDraft, Geometry, add, drawable_slide
 from parfocal_api.decision_styles import DecisionSettings
 from parfocal_api.disagreements import queue_of
 from parfocal_api.principals import MemberPrincipal
@@ -20,14 +20,17 @@ from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_
 from parfocal_api.reviewed_layer import EditDraft, save_review_edit
 from parfocal_api.seed_request import seed_request
 from parfocal_api.tables import (
+    AnnotationKind,
     DecisionReason,
     DecisionStyle,
     DecisionValue,
+    DrawingTool,
     ResultObjectKind,
     TaskKind,
     TaskScope,
     TaskSplit,
     adjudications,
+    project_classes,
     result_objects,
     review_assignments,
     review_decisions,
@@ -38,6 +41,7 @@ from parfocal_common.disagreements import Why
 from parfocal_common.result_store import ResultStore
 
 QUEUE_TASK = "Disagreement queue example"
+DRAWN_TASK = "Drawn outline review example"
 OUTLINE_SHIFT = 0.6
 GEOMETRY = TypeAdapter[Geometry](Geometry)
 
@@ -232,14 +236,107 @@ async def agree_on_the_rest(
     )
 
 
+async def seed_drawn_review(
+    connection: AsyncConnection,
+    seeded: Seeded,
+    principal: MemberPrincipal,
+    results: ResultStore,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+) -> uuid.UUID:
+    class_id = await connection.scalar(
+        select(project_classes.c.id)
+        .where(project_classes.c.project_id == project_id)
+        .order_by(project_classes.c.key)
+        .limit(1)
+    )
+    slide = await drawable_slide(connection, principal, slide_id)
+    made = await add(
+        connection,
+        principal,
+        slide,
+        [
+            AnnotationDraft(
+                kind=AnnotationKind.REGION,
+                geometry=box(400, 400, 1400, 1200),
+                class_id=class_id,
+                tool=DrawingTool.HAND,
+            ),
+            AnnotationDraft(
+                kind=AnnotationKind.REGION,
+                geometry=box(1800, 600, 2600, 1500),
+                class_id=class_id,
+                tool=DrawingTool.SMART_SELECT,
+            ),
+        ],
+    )
+    task = await create_review_task(
+        project_id,
+        TaskDraft(
+            name=DRAWN_TASK,
+            slide_ids=[slide_id],
+            drawn_slide_ids=[slide_id],
+            reviewer_ids=[seeded.people["rhea"], seeded.people["remy"]],
+            split=TaskSplit.EVERYONE,
+            scope=Scope(kind=TaskScope.ALL_REGIONS),
+            blinded=False,
+            decision=DecisionSettings(style=DecisionStyle.AGREE),
+        ),
+        principal,
+        connection,
+        results,
+        NoRealtime(),
+        BackgroundTasks(),
+        seed_request(),
+    )
+    disputed, agreed = (ref.number for ref in made)
+    await decide(
+        connection,
+        seeded,
+        project_id,
+        task.id,
+        slide_id,
+        "rhea",
+        DecisionValue.AGREE,
+        number=disputed,
+    )
+    await decide(
+        connection,
+        seeded,
+        project_id,
+        task.id,
+        slide_id,
+        "remy",
+        DecisionValue.DISAGREE,
+        [DecisionReason.BOUNDARY_OFF],
+        number=disputed,
+    )
+    for key in ("rhea", "remy"):
+        await decide(
+            connection,
+            seeded,
+            project_id,
+            task.id,
+            slide_id,
+            key,
+            DecisionValue.AGREE,
+            number=agreed,
+        )
+    await submit(connection, task.id, slide_id)
+    return task.id
+
+
 async def seed_adjudication(
-    connection: AsyncConnection, creator: MemberPrincipal, adjudicator: uuid.UUID
+    connection: AsyncConnection,
+    creator: MemberPrincipal,
+    adjudicator: uuid.UUID,
+    name: str = QUEUE_TASK,
 ) -> None:
     task = (
         await connection.execute(
             select(review_tasks.c.id, review_tasks.c.project_id).where(
                 review_tasks.c.tenant_id == creator.tenant_id,
-                review_tasks.c.name == QUEUE_TASK,
+                review_tasks.c.name == name,
             )
         )
     ).one_or_none()
