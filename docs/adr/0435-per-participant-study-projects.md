@@ -1,4 +1,4 @@
-# 0434. Each study participant gets a project of their own, seeded fresh
+# 0435. Each study participant gets a project of their own, seeded fresh
 
 - Date: 2026-11-23
 - Status: Accepted
