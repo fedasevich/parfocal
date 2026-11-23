@@ -1,0 +1,77 @@
+[[chapter]]
+title = "Notifications and comments"
+group = "core"
+intro = "The bell counts unread notifications, such as a task sent to you, an object to adjudicate, a nudge or a mention. Each one opens exactly what it points at. Comments are threads pinned to an object ID, and anyone in the task can mention a colleague."
+
+[[chapter.step]]
+role = "adjudicator"
+title = "The bell and the notifications page"
+url = "/notifications"
+click = "Sign in as role-adjudicator@parfocal.eu. Press the bell in the top bar, then open the full list. Press Mark all read and Show older."
+expect = "A notice that an object was sent to you to decide. With nothing new the page says Nothing here yet."
+why = "People learn about new work without email."
+api = ["/api/me/notifications", "/api/me/notifications/counts"]
+
+[[chapter.step]]
+role = "adjudicator"
+title = "A notification opens its target"
+url = "/go/{notification:adjudicator}"
+click = "Click the notification."
+expect = "Opening the notification, then the adjudication page or task it points at."
+why = "One click from the notice to the work."
+api = ["/api/me/notifications/{notification:adjudicator}/target"]
+
+[[chapter.step]]
+role = "owner"
+title = "A notification whose target is gone"
+url = "/go/00000000-0000-0000-0000-000000000000"
+click = "Sign in as agent-walk@parfocal.eu and open the link."
+expect = "This notification cannot be opened. What it points at was deleted, or it is no longer open to you. A button leads to the notifications."
+why = "Old notices must fail politely."
+api = ["/api/me/notifications/00000000-0000-0000-0000-000000000000/target =404"]
+state = "error"
+
+[[chapter.step]]
+role = "owner"
+title = "A task's comment threads"
+url = "/tasks/{task:Every outcome review}/comments?slide={task_slide:Every outcome review|1}"
+click = "Open Comments of Every outcome review. Read the thread Is this the same tumour as the next region. Close the thread resolves it, and Your decision notes lists your own notes."
+expect = "The thread is pinned to its object, with an @mention of a colleague."
+why = "Questions about a single object stay with that object."
+api = ["/api/review-tasks/{task:Every outcome review}/slides/{task_slide:Every outcome review|1}/threads"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Start a thread and mention someone"
+url = "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review&tab=comments"
+click = "Sign in as role-reviewer-a@parfocal.eu. Press C, Comment on an ID, click an object, write a question and type @ to mention the researcher."
+expect = "The thread appears in Comments and the mentioned person gets a notification."
+why = "Reviewers ask the researcher instead of guessing."
+api = ["/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/threads/mentionable"]
+
+[[chapter.step]]
+role = "owner"
+title = "A case thread you can reply to"
+url = "/projects/{task_project:Showcase case review}/slides/{task_slide:Showcase case review|1}?tab=comments"
+click = "Open the case slide's Comments and reply to the thread."
+expect = "Your reply shows under the thread at once."
+why = "Clinical colleagues discuss a case slide in place."
+api = ["/api/projects/{task_project:Showcase case review}/slides/{task_slide:Showcase case review|1}/threads"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Nudge a reviewer"
+url = "/team"
+click = "On Team press Nudge next to a reviewer who is behind, or Nudge all behind."
+expect = "The reviewer gets a notification that says how far they are and when the task is due. With nobody behind: Nobody is behind right now."
+why = "A researcher keeps a study on time without writing emails."
+api = ["/api/me/team"]
+
+[[chapter.step]]
+role = "reviewer-b"
+title = "Choose what you are told about"
+url = "/settings/notifications"
+click = "Sign in as role-reviewer-b@parfocal.eu. Open the avatar menu, Settings, then Notifications. Switch a kind of notice off and on."
+expect = "Each kind of notice can be turned on or off for the app and for email."
+why = "People decide how much they are interrupted."
+api = ["/api/me/notification-preferences"]

@@ -1,0 +1,134 @@
+[[chapter]]
+title = "Drawing and annotate tasks"
+group = "viewer"
+intro = "In an annotate task, experts improve one shared drawing together instead of judging the AI one by one. They draw with the pen, the brush or Smart select, confirm or delete AI objects, and mark each slide checked. The researcher then signs each slide off."
+
+[[chapter.step]]
+role = "annotator"
+title = "Open the annotate task"
+url = "/tasks/{task:Role account annotation}/guided"
+click = "Sign in as role-annotator@parfocal.eu. Either press Continue on Home or open the link."
+expect = "The first slide of Role account annotation opens in Annotate mode. The mode switch is fixed to Annotate."
+why = "An expert should land straight on the drawing with nothing to set up."
+api = ["/api/review-tasks/{task:Role account annotation}", "/api/review-tasks/{task:Role account annotation}/states"]
+
+[[chapter.step]]
+role = "annotator"
+title = "The drawing tools"
+url = "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate"
+click = "Try the rail one tool at a time: Polygon P, Freehand Shift P, Rectangle R, Ellipse O, Brush B, Count marker M, Ruler L, Arrow Shift L and Text T. Press 1 to 9 to give a shape a class, Enter to edit its points and Backspace to delete it."
+expect = "Each shape appears on the shared layer with an ID such as T7 with a small plus, which says a person drew it."
+why = "Experts draw the training truth themselves when the AI is wrong or missing."
+api = ["/api/review-tasks/{task:Role account annotation}/slides/{task_slide:Role account annotation|1}/shared-layer"]
+
+[[chapter.step]]
+role = "annotator"
+title = "Smart select with Best"
+url = "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate"
+click = "Press S and click a cell. Switch the model to Best and click again."
+expect = "An outline appears per click. Best is slower and sharper. A cold GPU shows Waiting for a GPU first."
+why = "One click outlines make a training set affordable in expert time."
+api = ["/api/tenant/model-tiers"]
+gpu = true
+
+[[chapter.step]]
+role = "annotator"
+title = "Auto region"
+url = "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate"
+click = "Press U for Auto region and drag a box over a tumour area."
+expect = "The app proposes a region outline inside the box, which you keep or discard."
+why = "Large regions are tedious to trace by hand."
+api = ["/api/slides/{task_slide:Role account annotation|1}/ai-progress"]
+gpu = true
+
+[[chapter.step]]
+role = "annotator"
+title = "The guided check of AI objects"
+url = "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate"
+click = "Press Shift G for Guided check. Use Confirm D, Skip Shift E, Delete Shift X and Next class Shift Y, then Leave the guided check. Restore the AI original undoes your edit of an AI object."
+expect = "Each AI object gets a check state: unchecked, confirmed, edited or deleted. The counts update as you go."
+why = "Every AI object a person checked is marked as such in the training data."
+api = ["/api/review-tasks/{task:Role account annotation}/slides/{task_slide:Role account annotation|1}/shared-layer/ai"]
+
+[[chapter.step]]
+role = "annotator"
+title = "Groups and select all"
+url = "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate"
+click = "Select some shapes, press Cmd G to group them and Shift Cmd G to ungroup. Cmd A selects all. Rename a group in the side panel."
+expect = "Groups show in the panel with their count and can be renamed, filled or deleted."
+why = "Experts organise many shapes, such as all lymph node deposits, in one place."
+api = ["/api/review-tasks/{task:Role account annotation}/slides/{task_slide:Role account annotation|1}/shared-layer/groups"]
+
+[[chapter.step]]
+role = "annotator"
+title = "Mark the slide checked"
+url = "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate"
+click = "Press Mark slide checked in the panel. On an empty slide the same place offers nothing to mark."
+expect = "The slide shows as checked by you. The researcher sees it in the task's progress."
+why = "A slide can be signed off only when every expert has checked it."
+api = ["/api/review-tasks/{task:Role account annotation}/slides/{task_slide:Role account annotation|1}/check-status"]
+
+[[chapter.step]]
+role = "owner"
+title = "A worked and signed off annotate slide"
+url = "/projects/{task_project:Annotation example}/slides/{task_slide:Annotation example|1}?task={task:Annotation example}&mode=annotate"
+click = "Sign in as agent-walk@parfocal.eu. Open the link and look through the layer panel."
+expect = "Philips-3.tiff has shapes in classes and groups, AI cells confirmed, edited and deleted, a ruler and a note. Two experts checked it and it is signed off. The owner may still edit."
+why = "This is the finished state an annotate task works towards."
+api = ["/api/review-tasks/{task:Annotation example}/slides/{task_slide:Annotation example|1}/check-status", "/api/review-tasks/{task:Annotation example}/slides/{task_slide:Annotation example|1}/shared-layer"]
+
+[[chapter.step]]
+role = "owner"
+title = "Blind first, every AI object checked, nothing to mark"
+url = "/tasks/{task:Checked annotation example}/guided"
+click = "Open the task and move between its slides with the slide list."
+expect = "The task uses blind first and requires every AI object to be checked. One slide has no results and both experts marked it nothing to mark. Both slides are signed off."
+why = "These rules keep experts from copying each other and make sure nothing the AI made slips through unchecked."
+api = ["/api/review-tasks/{task:Checked annotation example}/states"]
+
+[[chapter.step]]
+role = "owner"
+title = "An empty slide to practise on"
+url = "/tasks/{task:Tumour outline practice}/guided"
+click = "Draw a tumour outline, confirm it and mark the slide checked."
+expect = "The slide starts empty and keeps what you draw. A reseed clears it."
+why = "A safe place to try every tool without touching the examples."
+api = ["/api/review-tasks/{task:Tumour outline practice}"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The older annotate address"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|Philips-3.tiff}/annotate"
+click = "Open the link."
+expect = "It moves on to the viewer in Annotate mode by itself."
+why = "Older links to the annotate view keep working."
+api = ["/api/slides/{slide:Scanner format comparison|Philips-3.tiff}/annotation-layers"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The older annotate task address"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|Philips-3.tiff}/annotate-task"
+click = "Open the link."
+expect = "It moves on to the viewer in Annotate mode by itself."
+why = "Older links to the annotate task view keep working."
+api = ["/api/slides/{slide:Scanner format comparison|Philips-3.tiff}/layer-groups"]
+
+[[chapter.step]]
+role = "viewer"
+title = "Someone not on the task cannot draw"
+url = "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate"
+click = "Sign in as role-viewer@parfocal.eu and open the link."
+expect = "The viewer says You are not assigned to this task, so you can look but not change anything, or You can look at this slide but not change it."
+why = "Only the experts of a task may change its shared drawing."
+api = ["/api/review-tasks/{task:Role account annotation}"]
+state = "refused"
+
+[[chapter.step]]
+role = "owner"
+title = "An annotate task has no disagreement queue"
+url = "/tasks/{task:Annotation example}/disagreements"
+click = "Open the link, then press Open the task."
+expect = "Annotate tasks have no disagreements."
+why = "Experts agree on one drawing, so there is nothing to compare."
+api = ["/api/review-tasks/{task:Annotation example}"]
+state = "refused"

@@ -1,0 +1,124 @@
+[[chapter]]
+title = "The viewer, its tabs and tools"
+group = "viewer"
+intro = "The viewer shows one whole slide like a map. Its top bar has Back, the slide name with the slide list, the mode switch Look, Review, Guided and Annotate, Export and Whole slide. The side panel has the tabs Objects, Display, Comments and Opinion, and I hides it. The left rail holds the tools. Press ? at any time for the shortcut sheet."
+
+[[chapter.step]]
+role = "researcher"
+title = "Open a slide on its own"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}"
+click = "Open the link. Drag to pan, scroll to zoom, press + and minus to zoom, 0 to fit, Z and hold to see the whole slide, and Alt with 1 to 6 for the objective."
+expect = "The slide opens in Look mode within a few seconds, tiles sharpen as you zoom and the camera stops at the slide edge."
+why = "Smooth viewing is the base of every other feature. Viv is the main renderer and must work perfectly."
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}", "/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/tile-access", "/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/neighbours"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The Objects tab"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}?tab=objects"
+click = "Open Objects in the side panel. Click a region such as T1 in the list, then press Shift F to zoom to it. Use G then a number, or the [ and ] keys, to jump between AI areas."
+expect = "The list shows the AI result sets of the slide and their objects with short IDs such as T2 and T2·C145. Clicking one centres it."
+why = "Short IDs let people talk about one object out loud and find it again."
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/result-sets"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The Display tab"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}?tab=display"
+click = "Open Display. Change outline or fill, line width, opacity, colour by class, ID labels and the confidence cut-off. Press A to hide overlays, F to toggle fill and Shift with 1 to 4 for presets."
+expect = "The overlay changes at once without reloading the slide."
+why = "Reviewers read cells better with their own display, and a task can lock some choices so everyone sees the same thing."
+api = ["/api/display-presets"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The Comments tab"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}?tab=comments"
+click = "Open Comments. Press C, Comment on an ID, and click an object to start a thread on it."
+expect = "Threads of this slide list with their object ID. A new thread pins to the object."
+why = "Discussion stays attached to the exact cell or region it is about."
+api = ["/api/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/threads"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Measure, whole slide and the minimap"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1.ndpi}"
+click = "Press L for Measure and drag across tissue. Press Whole slide in the top bar. Hold Space to pan while another tool is on."
+expect = "The ruler shows micrometres or millimetres from the slide's real pixel size. Whole slide fits the tissue."
+why = "Pathologists measure deposits and margins, and the number must be right for each scanner."
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1.ndpi}", "/api/slides/{slide:Scanner format comparison|CMU-1.ndpi}/thumbnail"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Compare slides"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1.tiff}?layout=compare"
+click = "Press Compare slides in the top bar, pick a second slide, and press Close compare when done. Q and E move to the previous and next slide."
+expect = "Two slides side by side that pan and zoom together."
+why = "Comparing levels or stains of one case is daily work for a pathologist."
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1.tiff}/neighbours"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Export the objects of a slide"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|Philips-3.tiff}"
+click = "Open Export in the top bar. Look at GeoJSON, FlatGeobuf, Parfocal JSON, Training dataset (QuPath GeoJSON zip), Patches with masks and Dataset page. Pick GeoJSON."
+expect = "A file downloads with every object of the slide."
+why = "Results leave the app in the formats QuPath and training code read."
+api = ["/api/slides/{slide:Scanner format comparison|Philips-3.tiff}/annotations"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Every format opens"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Saved-1_16 (MIRAX)}"
+click = "Open this MIRAX slide, then use the slide list in the top bar to open CMU-1-JP2K-33005-v2 (DICOM), Leica-1.scn, OS-1.bif, Argos-1.avs and synthetic-zlib.ome.tiff."
+expect = "Each one opens and its tiles look right, without a conversion step."
+why = "Labs use many scanners. Reading each format natively avoids slow conversions."
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1-Saved-1_16 (MIRAX)}/tile-access", "/api/slides/{slide:Scanner format comparison|CMU-1-JP2K-33005-v2 (DICOM)}/tile-access"]
+
+[[chapter.step]]
+role = "researcher"
+title = "A slide whose file is missing"
+url = "/projects/{project:Breast surgery sentinel nodes}/slides/{slide:Breast surgery sentinel nodes|Missing file.svs}"
+click = "Open the link."
+expect = "The viewer shows The slide file is not available instead of an empty canvas, with a way back."
+why = "A broken file must explain itself, so nobody thinks the tissue is blank."
+api = ["/api/slides/{slide:Breast surgery sentinel nodes|Missing file.svs}"]
+state = "error"
+
+[[chapter.step]]
+role = "researcher"
+title = "A second window for the minimap"
+url = "/popout?kind=minimap&project={project:Scanner format comparison}&slide={slide:Scanner format comparison|CMU-1.tiff}"
+click = "Open the slide in one tab first, then this link in a new window on a second screen."
+expect = "Opened alone it says Open this window from the viewer or Waiting for the main window. Next to an open viewer it says Following the main window and moves with it."
+why = "Pathologists with two screens keep the overview or the inspector on the second one."
+api = ["/api/me"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Smart select, the one-click outline"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}?mode=annotate"
+click = "Press S for Smart select and click once on a cell or a gland. Keep the outline, fix it or throw it away."
+expect = "An outline appears around what you clicked after a moment. The first call of the day can show Waiting for a GPU for a minute or two."
+why = "Drawing cells by hand is slow. One click outlines make annotation many times faster."
+api = ["/api/tenant/model-tiers"]
+gpu = true
+
+[[chapter.step]]
+role = "viewer"
+title = "A viewer can look but not change"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|Philips-3.tiff}?mode=annotate"
+click = "Sign in as role-viewer@parfocal.eu and open the link. Try to draw with P."
+expect = "The viewer says You can look at this slide but not change it. The drawing tools do nothing."
+why = "Read-only people must never change data by accident."
+api = ["/api/slides/{slide:Scanner format comparison|Philips-3.tiff}"]
+state = "refused"
+
+[[chapter.step]]
+role = "researcher"
+title = "The old live viewer address"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|test_065}/live"
+click = "Open the link."
+expect = "It moves on to the normal viewer of test_065 by itself."
+why = "Links shared before the viewers were merged keep working."
+api = ["/api/slides/{slide:Scanner format comparison|test_065}"]

@@ -1,0 +1,77 @@
+[[chapter]]
+title = "Creating review tasks"
+group = "core"
+intro = "A review task hands slides and an AI result to two or more reviewers, who each judge every object on their own. The wizard has six short steps: Kind, Slides, Reviewers, What to check, How it runs and Send. Walk through it with Next and stop before the last button, unless you want a throwaway task that the next reseed removes."
+
+[[chapter.step]]
+role = "researcher"
+title = "Kind, review or annotate"
+url = "/projects/{project:Sentinel node metastasis study}/tasks/new?step=kind"
+click = "From the project press New review task. Pick Review AI results and press Next."
+expect = "The wizard opens on Kind with the steps listed across the top."
+why = "Review and annotate tasks check work in different ways, so the choice comes first."
+api = ["/api/projects/{project:Sentinel node metastasis study}/review-tasks/defaults"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Slides and the AI result"
+url = "/projects/{project:Sentinel node metastasis study}/tasks/new?step=slides"
+click = "Pick a few slides and the AI result set to check on each."
+expect = "Each slide shows which result it has. A slide without results is marked."
+why = "Reviewers judge one named AI result, so the evaluation knows exactly what it measured."
+api = ["/api/projects/{project:Sentinel node metastasis study}/slides", "/api/projects/{project:Sentinel node metastasis study}/result-sets"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Reviewers"
+url = "/projects/{project:Sentinel node metastasis study}/tasks/new?step=reviewers"
+click = "Pick Reviewer A and Reviewer B. Everyone reviews all gives agreement numbers. Look at each person's workload and availability."
+expect = "The people of the workspace list with how busy they are."
+why = "Two independent reviewers are what makes a disagreement measurable."
+api = ["/api/tenant/availability"]
+
+[[chapter.step]]
+role = "researcher"
+title = "What to check"
+url = "/projects/{project:Sentinel node metastasis study}/tasks/new?step=check"
+click = "Pick the scope, such as all regions, random cells per slide, cells below a score or inside a drawn area. Then pick the decision style and read its Counts as line."
+expect = "The decision styles are Agree with the AI, Yes or no, a certainty scale from Certainly not to Certainly, and a blind class pick. On the 5 point scale, 4 and 5 count as agree."
+why = "The question decides what the evaluation can say about the AI."
+api = ["/api/projects/{project:Sentinel node metastasis study}/scope-options", "/api/study-templates"]
+
+[[chapter.step]]
+role = "researcher"
+title = "How it runs"
+url = "/projects/{project:Sentinel node metastasis study}/tasks/new?step=how"
+click = "Choose blind or not, guided review or the full viewer, a due date and reminders, and the display defaults reviewers start with."
+expect = "Blind is on by default, which hides each reviewer's answers from the other."
+why = "Blind review keeps reviewers from copying each other, and a due date drives the reminders."
+api = ["/api/display-presets"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Send, and what blocks it"
+url = "/projects/{project:Sentinel node metastasis study}/tasks/new?step=send"
+click = "Read the summary with a Change link back to each step. If something is missing, a box Before you can send lists it with a Go to link. Create and notify 2 reviewers would send it."
+expect = "Every choice is listed in one place. After sending: Back to the project and Track it in Team."
+why = "One last look before people are notified avoids tasks that have to be withdrawn."
+api = ["/api/projects/{project:Sentinel node metastasis study}/review-tasks/defaults"]
+state = "blocked until complete"
+
+[[chapter.step]]
+role = "researcher"
+title = "The annotate task wizard"
+url = "/projects/{project:Scanner format comparison}/tasks/new-annotate?step=kind&preset=hand"
+click = "Pick Annotate. The presets are Annotate by hand, Check a whole slide run, a sample, regions and mixed. Walk the steps Kind, Slides, Experts, What to check, How it runs and Send."
+expect = "The blockers are Name the task, Pick at least one slide and Pick at least one expert. Send to experts would create it, then Open the task."
+why = "Annotate tasks make training data from scratch or from the AI's shapes."
+api = ["/api/projects/{project:Scanner format comparison}/review-tasks/defaults", "/api/projects/{project:Scanner format comparison}/slides"]
+
+[[chapter.step]]
+role = "researcher"
+title = "What I handed out"
+url = "/my-work?tab=assigned"
+click = "Open My work, then Assigned by me. Use Nudge, Change due date, Add reviewer, Reassign slides and Preview on a task row."
+expect = "Every task the researcher sent, with how far each reviewer is. A researcher who sent nothing sees You have not handed out any review tasks yet."
+why = "The researcher follows their tasks without opening each one."
+api = ["/api/me/assigned-tasks"]

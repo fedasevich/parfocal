@@ -1,0 +1,104 @@
+[[chapter]]
+title = "Projects and upload"
+group = "core"
+intro = "A project holds slides, AI results, cases and tasks. Each workspace has three seeded projects: the study project Sentinel node metastasis study, the gallery project Scanner format comparison with one slide of every supported format, and the clinical project Breast surgery sentinel nodes with cases and reports."
+
+[[chapter.step]]
+role = "researcher"
+title = "Start a new project"
+url = "/projects/new"
+click = "The New project drawer opens over Home. Look at Name, Privacy, Class list and Analysis template. Press Cancel, or Create and upload if you want a throwaway project, which a reseed removes."
+expect = "The drawer shows every field. Create and upload makes the project and opens its upload page."
+why = "The privacy mode and class list are chosen here and decide what reviewers may see and which classes they can pick."
+api = ["/api/projects", "/api/taxonomy-templates"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The project page and its Slides tab"
+url = "/projects/{project:Sentinel node metastasis study}"
+click = "Look at the header buttons Upload, New case and New review task, and the More menu with Run a model, Automatic imports and Project settings. On the Slides tab, type in Filter by slide, file or case."
+expect = "Slides list with their state, such as Case ready, Case in-review, Case signed-off and Case ai-running, each with its results."
+why = "This is the researcher's home for one study, where every slide and its progress shows at a glance."
+api = ["/api/projects/{project:Sentinel node metastasis study}", "/api/projects/{project:Sentinel node metastasis study}/overview", "/api/projects/{project:Sentinel node metastasis study}/slides"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The Review tasks tab"
+url = "/projects/{project:Sentinel node metastasis study}?tab=tasks"
+click = "Open the Review tasks tab. Each row has the task code such as RT-10, its name, progress and buttons Disagreements and Evaluation."
+expect = "Every seeded task shows, from Every state review to Class decision queue example, with the annotate task Tumour annotation marked as annotate."
+why = "From here a researcher reaches the queue, the sign-off and the report of every task."
+api = ["/api/projects/{project:Sentinel node metastasis study}/review-tasks"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The Settings tab"
+url = "/projects/{project:Sentinel node metastasis study}?tab=settings"
+click = "Open Settings. Look at Invite people, the class list with Add a class, the opinion form with Edit the form, the members with Manage, and Delete project at the bottom. Do not delete."
+expect = "Everything is editable, because the researcher owns the project."
+why = "The class list, the opinion form and who is in the project are set here once and used by every task."
+api = ["/api/projects/{project:Sentinel node metastasis study}/classes", "/api/projects/{project:Sentinel node metastasis study}/opinion-form"]
+
+[[chapter.step]]
+role = "viewer"
+title = "A viewer cannot change the project settings"
+url = "/projects/{project:Sentinel node metastasis study}?tab=settings"
+click = "Sign in as role-viewer@parfocal.eu and open the link."
+expect = "The settings show read only with the line Only an owner of this project changes its settings."
+why = "A viewer such as a student or an auditor may look at everything and change nothing."
+api = ["/api/projects/{project:Sentinel node metastasis study}"]
+state = "refused"
+
+[[chapter.step]]
+role = "researcher"
+title = "Upload, the Files step"
+url = "/projects/{project:Scanner format comparison}/upload"
+click = "The page has three steps, Files, Check and Upload. Pick From this computer or From a link or storage, then Choose files or a folder. Open What files work? to see the folder shape Parfocal understands."
+expect = "With nothing picked the page says Add at least one slide to go on. Results go with a slide. Picked files show as one list grouped by case and slide."
+why = "Slides and AI results arrive together, and the app pairs each result with its slide before anything is uploaded."
+api = ["/api/projects/{project:Scanner format comparison}", "/api/projects/{project:Scanner format comparison}/source-files"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Upload, the Check and Upload steps"
+url = "/projects/{project:Scanner format comparison}/upload"
+click = "With a slide picked, press Next. Under Pair results by choose Folder, then name, then ID, and under Cases choose From folder names or Keep all loose. Each problem has its fix, such as Leave it out, and a slide already in the project offers Skip it or Keep both. Press Next to start, then Open now with what is ready or Run a model."
+expect = "One bar per file and one for everything. You can leave the page and the upload keeps going in the jobs tray."
+why = "Big slide files take minutes, so the upload must survive leaving the page and must show every problem before it starts."
+api = ["/api/result-formats/parfocal-json/template", "/api/result-formats/parfocal-json/schema"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The format gallery"
+url = "/projects/{project:Scanner format comparison}"
+click = "Look at the slide list."
+expect = "15 slides, one per format: Aperio SVS with JPEG and JPEG 2000, Hamamatsu NDPI, Leica SCN, Ventana BIF, Philips TIFF, Huron, Argos AVS, generic TIFF, MIRAX, DICOM, OME-TIFF, and the sample test_065."
+why = "Every format a scanner writes must open natively. This project is the proof."
+api = ["/api/projects/{project:Scanner format comparison}/slides"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Compare two slides from the list"
+url = "/projects/{project:Scanner format comparison}?tab=slides"
+click = "Tick two slides, such as CMU-1.tiff and CMU-1.ndpi, and press Compare. Edit slides lets you rename or move them."
+expect = "The viewer opens both side by side, and moving one moves the other."
+why = "A researcher checks the same tissue from two scanners in one view."
+api = ["/api/projects/{project:Scanner format comparison}/result-sets"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Make a new case"
+url = "/projects/{project:Breast surgery sentinel nodes}/cases/new"
+click = "The New case drawer opens over the clinical project. Look at Case ID, Patient and Specimen. Press Cancel, or Create case for a throwaway case."
+expect = "The drawer fits the window. Create case adds the case and offers to upload its slides."
+why = "In a clinical project, slides belong to a patient's case, which ends in a signed clinical report."
+api = ["/api/cases", "/api/projects/{project:Breast surgery sentinel nodes}"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Upload slides into a case"
+url = "/projects/{case_project:Showcase case}/cases/{case:Showcase case}/upload"
+click = "The case upload drawer has Upload slides, Drop slides here and Choose file. During an upload it shows Pause, Resume, Retry and Cancel."
+expect = "With no file picked it says No files yet. If the network drops it says Connection lost. Trying again, attempt 1 of 3."
+why = "Adding a late slide to an existing case must not need the whole upload page."
+api = ["/api/cases/{case:Showcase case}"]

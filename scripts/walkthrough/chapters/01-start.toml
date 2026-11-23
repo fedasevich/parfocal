@@ -1,0 +1,107 @@
+[[chapter]]
+title = "Sign in and home"
+group = "core"
+intro = "Everyone starts at the sign-in page and lands on Home. Home looks different for a researcher, who hands out work, and for a reviewer, who does it. This chapter also shows what a stranger sees and what happens with a broken link."
+
+[[chapter.step]]
+role = "signed-out"
+title = "The sign-in page"
+url = "/sign-in"
+click = "Look at the page. It has the email and password fields, Sign in, Sign in with a passkey, Sign in with your organisation, Email me a code, Forgot your password? and Create an account."
+expect = "The page loads with every sign-in option. Nothing else of the app is visible."
+why = "This is the only door into the app. Every other step starts behind it."
+api = ["/api/status", "/api/auth/password-sign-in"]
+
+[[chapter.step]]
+role = "signed-out"
+title = "A signed-out visitor is sent to sign in"
+url = "/my-work"
+click = "In the private window, open the link."
+expect = "You do not see My work. The app sends you to the sign-in page, and after you sign in it brings you back to My work."
+why = "Nothing in the app may show to someone who has not signed in, and a deep link must still work after signing in."
+api = ["/api/me =401", "/api/auth/session =401"]
+state = "signed out"
+
+[[chapter.step]]
+role = "signed-out"
+title = "Create an account"
+url = "/sign-up"
+click = "Look at the form with Create account. Do not send it, because it would make a real account. The second step asks for the emailed code with Confirm and set up, Resend the code and Change it."
+expect = "The form loads. A link Sign in leads back to the sign-in page."
+why = "A new pathologist or researcher can join without an invitation, and then sets up a workspace."
+api = ["/api/status"]
+
+[[chapter.step]]
+role = "signed-out"
+title = "An invitation link that does not work"
+url = "/invitations/not-a-real-invitation"
+click = "Open the link. It moves on to /invite by itself."
+expect = "The page says This invite link does not work. No account form shows."
+why = "Old or withdrawn invitations must fail clearly instead of half working."
+api = ["/api/invitations/not-a-real-invitation/preview =404"]
+state = "error"
+
+[[chapter.step]]
+role = "signed-out"
+title = "The invite landing"
+url = "/invite?token=not-a-real-invitation"
+click = "With a real invitation this page shows the workspace and the inviter, Accept and create my account, Join and open my first slide, Decline, I already have an account, sign in, and a box I agree to the terms and the data processing agreement. With this made-up token it shows the error."
+expect = "This invite link does not work."
+why = "This is how a reviewer joins a project they were invited to, and the terms must be agreed before the account exists."
+api = ["/api/invitations/not-a-real-invitation/preview =404"]
+state = "error"
+
+[[chapter.step]]
+role = "researcher"
+title = "Sign in as the researcher and land on Home"
+url = "/"
+click = "Sign in at /sign-in with role-researcher@parfocal.eu. In the top bar open the workspace switcher, Switch workspace, and pick ČVUT · Biomedical Engineering."
+expect = "Home shows the three projects with their slide counts, the week's numbers with open disagreements, a getting started checklist and buttons New project, New review task and Run a model."
+why = "Home is where a researcher sees what needs them today, such as open disagreements and slides without results."
+api = ["/api/me", "/api/me/home", "/api/me/checklist", "/api/projects"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The top bar and the sidebar"
+url = "/"
+click = "Look at the top bar: the Parfocal logo, Switch workspace, the search box, New project, Upload, the jobs button, the bell and your avatar. Then the sidebar: Home, My work, Search, the projects with their slide counts, Team. Press Hide the sidebar and Show the sidebar."
+expect = "Every item opens its page. Admin is missing, because the researcher has no admin rights."
+why = "These are the ways around the whole app. Knowing them makes every later step quicker."
+api = ["/api/me", "/api/me/notifications/counts", "/api/me/jobs"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Home for a reviewer"
+url = "/"
+click = "Sign out from the avatar menu and sign in as role-reviewer-a@parfocal.eu, or use a second private window. Look at Continue where you left off."
+expect = "Home leads with one big Continue where you left off button for Role account review, then the tasks due."
+why = "A reviewer should get from sign-in to the next object in one click."
+api = ["/api/me/home", "/api/me/review-tasks"]
+
+[[chapter.step]]
+role = "owner"
+title = "The first-run setup"
+url = "/setup"
+click = "Walk through the five steps You, Workspace, First project, Viewer and Done with Next and Back. Pick Researcher or Reviewer, a device such as Mouse or Trackpad and a theme Dark, Light or System. Use Skip this step instead of creating a workspace."
+expect = "Each step shows its choices. Nothing is created unless you press Create my first project or Create a new workspace."
+why = "A new user picks their role and input device once, and the viewer then fits how they work."
+api = ["/api/me", "/api/me/joinable-workspaces"]
+
+[[chapter.step]]
+role = "owner"
+title = "The old projects address goes home"
+url = "/projects"
+click = "Open the link."
+expect = "You land on Home, which lists the projects. There is no separate projects list page."
+why = "Old bookmarks still lead somewhere useful."
+api = ["/api/projects"]
+
+[[chapter.step]]
+role = "owner"
+title = "A page that does not exist"
+url = "/this-page-does-not-exist"
+click = "Open the link, then press Go home."
+expect = "Page not found. This page does not exist, or it was moved or deleted. Go home brings you back."
+why = "A mistyped or stale link must never show a blank screen."
+api = ["/api/me"]
+state = "not found"
