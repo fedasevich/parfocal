@@ -205,14 +205,24 @@ def analyse(
     round_number: int | None = None,
 ) -> Analysis:
     sessions, excluded = included(export, {code.upper() for code in exclude or set()}, round_number)
+    warnings: list[str] = []
+    app_source = "as recorded by the app (an automatic check or the participant pressing I'm done)"
     if scored:
+        keys = {(s.participant.upper(), a.task) for s in sessions for a in s.attempts}
+        matched = sum(key in scored for key in keys)
         sessions = scored_sessions(sessions, scored)
-        source = "moderator-scored against the success rules, from the scored CSV"
+        source = (
+            f"moderator-scored against the success rules for {matched} of {len(keys)} attempts, "
+            f"the rest {app_source}"
+        )
+        warnings += [
+            f"The scored CSV row {participant}, {task} matches no included attempt"
+            for participant, task in sorted(set(scored) - keys)
+        ]
     else:
-        source = "as recorded by the app (an automatic check or the participant pressing I'm done)"
+        source = app_source
     attempts = [a for session in sessions for a in session.attempts]
     order = task_order(export, attempts)
-    warnings: list[str] = []
     overall = Overall(
         participants=len({session.participant.upper() for session in sessions}),
         attempts=len(attempts),

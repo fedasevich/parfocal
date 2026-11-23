@@ -310,6 +310,7 @@ PER_TASK_HEADER = [
     "Round 5 median time (s)",
     "Round 5 SEQ mean",
     "Round 5 source",
+    "Comparability",
 ]
 
 
@@ -327,6 +328,7 @@ def per_task_table(analysis: Analysis) -> list[list[object]]:
                 "no round 5 data" if row is None else fixed(median(row.times)),
                 "no round 5 data" if row is None else fixed(mean(row.seqs)),
                 "" if row is None else ROUND5_SOURCE,
+                round4.COMPARABILITY[task.id],
             ]
         )
     for row in analysis.tasks:
@@ -340,6 +342,7 @@ def per_task_table(analysis: Analysis) -> list[list[object]]:
                     fixed(median(row.times)),
                     fixed(mean(row.seqs)),
                     ROUND5_SOURCE,
+                    "New task, nothing to compare",
                 ]
             )
     return rows

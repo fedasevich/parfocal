@@ -59,31 +59,31 @@ The participant presses "I agree and start" to give consent. The app makes the c
 
 Once per study day:
 
-1. Sign the study browser in to `app.parfocal.eu` as the shared study seat account (the lead's call under the moderated default, ADR 0435). Turn off ad blockers for the site, because they stop the recorder.
+1. Sign the study browser in to `app.parfocal.eu` as the shared study seat account (the lead's call under the moderated default, in ADR 0435 on per-participant study projects). Turn off ad blockers for the site, because they stop the recorder.
 2. Open `/study/console` in a second tab. Check that the current round holds the 11 tasks below.
 
 Before each participant:
 
-1. Open `/study`. If the thank-you screen of the last participant shows, press "Start the next participant". Read the new code on the consent screen, for example `P-7KQ2`.
+1. Open `/study` and keep this one tab for the whole session. The code lives in the tab's session storage (`participant-run.ts`), so a new tab makes a new code that no seeded project matches. If the thank-you screen of the last participant shows, press "Start the next participant". Read the new code on the consent screen, for example `P-7KQ2`.
 2. Seed that participant's fresh project, from the repository root with the Neon, Cloudflare and R2 settings in the environment (`NEON_API_KEY`, `NEON_PROJECT_ID`, `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`):
 
    ```
    uv run --package parfocal-deploy python -m parfocal_deploy.study seed P-7KQ2 --seat "$STUDY_SEAT_EMAIL"
    ```
 
-   It makes the project "Study P-7KQ2" in the workspace `cvut-study` with the review slides, the disagreement queue, the annotate slide and the 12-cell typing task, all in one fixed order (the EXP-016 log entry, ADR 0435). Locally it took 1.32 to 1.73 s ([results/2026-11-23-participant-seed-time.md](../results/2026-11-23-participant-seed-time.md)). The deployed time is TODO in that result.
-3. Reload `/study` so the page finds the project, and check that task 1 has a start link.
+   It makes the project "Study P-7KQ2" in the workspace `cvut-study` with the review slides, the disagreement queue, the annotate slide and the 12-cell typing task, all in one fixed order (the log entry of EXP-016 on fresh participant projects, and ADR 0435 on per-participant study projects). Locally it took 1.32 to 1.73 s ([results/2026-11-23-participant-seed-time.md](../results/2026-11-23-participant-seed-time.md)). The deployed time is TODO in that result.
+3. In the second tab, open Projects and check that the list shows "Study P-7KQ2". Then reload the `/study` tab, the same tab, so the page finds the project. Without the project the task card's "Start task" does nothing, because its start link cannot be filled.
 4. Fill the log header and hand the laptop over.
 
 After each participant:
 
 1. On `/study/console`, press "Download results". Rename the file `study-round-1.json` to `YYYY-MM-DD-P-XXXX.json` and keep it outside the repository. The console's round number is its own counter and starts at 1, so the file name says nothing about study round 5.
-2. Remove the project, because the shared seat sees every live study project (ADR 0435): `uv run --package parfocal-deploy python -m parfocal_deploy.study remove P-7KQ2`. It is a soft delete, so the rows stay until a full reset.
+2. Remove the project, because the shared seat sees every live study project (ADR 0435, per-participant study projects): `uv run --package parfocal-deploy python -m parfocal_deploy.study remove P-7KQ2`. It is a soft delete, so the rows stay until a full reset.
 3. Copy the replay times into the session log while the session is fresh.
 
 ## Tasks
 
-Round 5 has 11 tasks (`round5Tasks` in `apps/web/src/study/study-model.ts`). The backlog line for PILOT-012 says 13, but the code and the EXP-014 log entry both have 11, and this protocol follows the code. Nine keep a round 4 task id, two are new, and round 4's task 9, upload-problems, has no round 5 task.
+Round 5 has 11 tasks (`round5Tasks` in `apps/web/src/study/study-model.ts`). The backlog line for PILOT-012 (this protocol) says 13, but the code on main and the log entry of EXP-014 (the participant study page) both have 11, and this protocol follows the code. Nine keep a round 4 task id, two are new, and round 4's task 9, upload-problems, has no round 5 task.
 
 "Goal" is the text the participant reads in the task bar. "Against round 4" says whether that text is the same as round 4's goal in `poc/study/public/study.js`. "Ends by" says how the app closes the task: an automatic check of the page, or the participant pressing "I'm done". Round 4 checked every task automatically, so round 5's success for an "I'm done" task is what the participant claims until the moderator scores it ([Analysis](#analysis)).
 
@@ -111,7 +111,7 @@ Each task record in the export keeps round 4's field names (`TaskRecord` in `stu
 |---|---|---|
 | `success` | true when the automatic check passed or the participant pressed "I'm done", false after "I can't find it" | Round 4 had no give-up and ended every task by a check |
 | `durationMs` | From "Start task" to the end of the task | Same idea, after the same 5 s read delay |
-| `clicks` | Pointer presses in the application, not on the study's own bar | Same |
+| `clicks` | Every pointer press in the application, not on the study's own bar, drag starts included | Same rule: round 4 counted every `pointerdown` inside the app frame (`study.js`, line 216) |
 | `deadClicks` | A press on a control (link, button, field, tab and so on) after which nothing on the page changed within 800 ms (`deadClickWindowMs`) | Different. Round 4 counted a click on nothing clickable inside the app (`poc/study/README.md`). The comparison table marks it |
 | `blocked` | Times the task guard stopped the participant leaving the task's screen | Same idea, different screens |
 | `keys`, `wheels` | Key presses outside text fields, and wheel gestures at most one per 100 ms | Same names |
@@ -234,9 +234,11 @@ Before the first real participant, run the whole session once with someone who w
 - Seed a code, run all 11 tasks, the questions and the download, then remove the project.
 - Check every start link opens, every automatic check fires, the guard blocks only wrong turns, and the replay plays.
 - Fix the expected screen for each moderator-scored rule, chiefly which place is least sure in unsure-place and what a submitted review and a recorded queue decision look like.
+- Check that the case information of "Study review 1" names a doctor who sent the case in. The participant seed (`workers/ingest/src/parfocal_ingest/study_seed.py`) does not mention one, so if the screen has none, patient-details cannot succeed and must change before the first session.
 - Time the seed on the deployed app and record it in the seed time result.
 - Time the whole session. TODO: write the measured length here after the pilot.
-- Write down the pilot code. Its session is excluded from the analysis with `--exclude`, like any dry run. If the pilot changes a task, change it before the first real session, because the console freezes a round's tasks once a session exists.
+- Write down the pilot code. Its session is excluded from the analysis with `--exclude`, like any dry run.
+- The pilot session itself freezes the console round's tasks, because a round with a session cannot change. If the pilot changes a task, press the console's button for the next round, edit that round's task set there before any real session, also change `round5Tasks` in the code so the two agree, and analyse with `--round` set to the new round's number.
 
 ## If the round runs remote
 
@@ -245,7 +247,7 @@ If the owner answers "remote" in decisions.md:
 - Each participant needs their own sign-in account with a seat on their project, seeded with `--seat` set to that account, because a shared seat would let one participant see another's project.
 - The consent card "The moderator watches but does not help" must change, and there is no think-aloud to hear.
 - There is no timed log or `ASK` questions. Success for the seven "I'm done" tasks is scored from the replay instead.
-- The setup steps move before the link is sent, and the export is taken from the server results of EXP-015 instead of one browser's console.
+- The setup steps move before the link is sent, and the export is taken from the server results of EXP-015 (study sessions reach the server) instead of one browser's console.
 - Everything else stays: tasks, questionnaires, metrics and the analysis.
 
 ## Analysis
@@ -257,8 +259,8 @@ python3 scripts/study round5/*.json --exclude P-PILT --scored round5/scored.csv 
 ```
 
 - Input: the console's "Download results" JSON (the whole study state), a list of sessions, or a CSV with the same field names and one row per task attempt (`participant`, `session`, `round`, `id`, `idx`, `title`, `success`, `durationMs`, `clicks`, `deadClicks`, `blocked`, `keys`, `wheels`, `seq`, `like`, `dislike`, `recommend`, `reason`, and optionally `sus1` to `sus10`, `susScore` and `final.like` and so on). Several files merge by session id.
-- Excluded: sessions marked `dryRun`, `dry` or `pilot`, every code given with `--exclude`, and sessions with no task records.
-- `--scored` takes a CSV with `participant`, `task` and `success`, the moderator's scoring against the success rules above. Without it, the success column is what the app recorded, and every table says which source it used.
+- Excluded: sessions marked `dryRun`, `dry` or `pilot`, every code given with `--exclude`, and sessions with no task records. When two files hold the same session, the finished or fuller copy wins.
+- `--scored` takes a CSV with `participant`, `task` and `success`, the moderator's scoring against the success rules above. The tables say how many attempts it scored, and a row that matches no included attempt is listed as a warning. Without it, the success column is what the app recorded, and every table says which source it used.
 - `--round` keeps one console round only.
 - SUS is recomputed from the ten answers. A session with an unanswered item is shown but not scored. Numbers are rounded half up.
 
@@ -269,7 +271,7 @@ Outputs in the `--out` folder, each with its thesis place written in the folder'
 | `tasks.md`, `tasks.csv` | Per task: success, gave up, median and range of time for successful attempts, median and range of clicks, dead clicks, SEQ mean, median and range, SEQ 6 or 7, blocked |
 | `sus.md`, `sus.csv` | SUS per participant and the mean |
 | `comparison.md`, `comparison.csv` | Round 4 against round 5, each figure labelled with its source |
-| `per-task-comparison.md`, `.csv` | Round 4's median time and SEQ per task from the deck beside round 5's |
+| `per-task-comparison.md`, `.csv` | Round 4's median time and SEQ per task from the deck beside round 5's, with a comparability note per task: reworded goals, and round 5 times that include pressing "I'm done" |
 | `notes.md` | The per-task notes, give-up reasons and final answers, grouped by task and quoted |
 | `attempts.csv` | One row per included attempt, in the CSV input format |
 | `seq-per-task.svg` | SEQ per task, round 5's mean as a bar with round 4's figure as a mark |
@@ -304,4 +306,4 @@ Round 4 and round 1 numbers are quoted from the round 4 deck, "Viewer Usability 
 - TODO: the moderator cut-off for a task without progress.
 - TODO: how long recordings and exports are kept.
 - TODO: the deployed seed time and the session length, from the pilot.
-- TODO: whether EXP-015's server export marks dry runs. The script already honours `dryRun`, `dry` and `pilot`.
+- TODO: whether the server export of EXP-015 (study sessions reach the server) marks dry runs. The script already honours `dryRun`, `dry` and `pilot`.

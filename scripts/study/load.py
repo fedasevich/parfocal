@@ -213,6 +213,11 @@ def read_csv(path: Path) -> list[Session]:
     return list(sessions.values())
 
 
+def completeness(session: Session) -> tuple[bool, int, int]:
+    answered = sum(value is not None for value in session.sus or [])
+    return session.finished, len(session.attempts), answered
+
+
 def read_exports(paths: list[Path]) -> Export:
     merged: dict[str, Session] = {}
     order: list[tuple[str, str]] = []
@@ -225,7 +230,9 @@ def read_exports(paths: list[Path]) -> Export:
             skipped.extend(missing)
         order = order or found
         for session in sessions:
-            merged.setdefault(session.id, session)
+            known = merged.get(session.id)
+            if known is None or completeness(session) > completeness(known):
+                merged[session.id] = session
     return Export(sessions=list(merged.values()), task_order=order, without_tasks=skipped)
 
 

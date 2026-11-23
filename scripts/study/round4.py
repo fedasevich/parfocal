@@ -50,3 +50,19 @@ TASK_FIGURES = (
 )
 
 BY_ID = {task.id: task for task in TASK_FIGURES}
+
+ENDS_ON_DONE = "Round 5 ends when the participant presses I'm done, so its time includes that press"
+AUTOMATIC = "Both rounds end the task by an automatic check"
+
+COMPARABILITY = {
+    "open-case": f"Reworded goal. {AUTOMATIC}",
+    "patient-details": f"Same goal. {ENDS_ON_DONE}",
+    "unsure-place": f"Same goal. {ENDS_ON_DONE}",
+    "check-cells": f"Same goal. {ENDS_ON_DONE}",
+    "change-type": f"Reworded goal, round 4 preselected the cell. {AUTOMATIC}",
+    "whole-slide": f"Same goal. {ENDS_ON_DONE}. Round 4 also needed 1 s of peek",
+    "compare": f"Reworded goal. {AUTOMATIC}",
+    "add-scans": f"Same goal. {AUTOMATIC}",
+    "upload-problems": "No round 5 task",
+    "sign-out": f"Reworded goal, round 5 submits a slide review. {ENDS_ON_DONE}",
+}

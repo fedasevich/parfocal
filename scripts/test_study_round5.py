@@ -1,9 +1,10 @@
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
 
-from study import render, round4
+from study import charts, render, round4
 from study.analysis import analyse, fixed, sus_score
 from study.cli import PLACES, main
 from study.load import read_csv, read_exports, read_json
@@ -78,6 +79,27 @@ class TaskTableTest(unittest.TestCase):
         self.assertEqual(rows[0][3], "2 of 3")
         self.assertEqual(rows[2][3], "3 of 3")
         self.assertIn("moderator-scored", analysis.success_source)
+        self.assertIn("for 2 of 9 attempts", analysis.success_source)
+
+    def test_a_scored_row_with_no_attempt_is_reported(self):
+        analysis = fixture_analysis(scored={("P-ZZZZ", "open-case"): True})
+        self.assertIn("for 0 of 9 attempts", analysis.success_source)
+        self.assertEqual(
+            analysis.warnings, ["The scored CSV row P-ZZZZ, open-case matches no included attempt"]
+        )
+
+    def test_the_more_complete_copy_of_a_session_wins(self):
+        with tempfile.TemporaryDirectory() as folder:
+            early = Path(folder) / "early.json"
+            data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+            first = next(s for s in data["sessions"] if s["participant"] == "P-AAAA")
+            first["tasks"] = first["tasks"][:1]
+            first["final"] = None
+            early.write_text(json.dumps([first]), encoding="utf-8")
+            export = read_exports([early, FIXTURE])
+        session = next(s for s in export.sessions if s.participant == "P-AAAA")
+        self.assertEqual(len(session.attempts), 3)
+        self.assertTrue(session.finished)
 
 
 class SusTest(unittest.TestCase):
@@ -193,10 +215,18 @@ class CliTest(unittest.TestCase):
             names = {path.name for path in out.iterdir()}
             self.assertTrue(set(PLACES) <= names)
             self.assertIn("<svg", (out / "seq-per-task.svg").read_text(encoding="utf-8"))
-            self.assertIn("83.8", (out / "sus-by-round.svg").read_text(encoding="utf-8"))
+            sus_svg = (out / "sus-by-round.svg").read_text(encoding="utf-8")
+            self.assertIn("83.8", sus_svg)
+            self.assertEqual(sus_svg.count("<circle"), 7)
             for path in out.iterdir():
                 text = path.read_text(encoding="utf-8")
                 self.assertFalse(any(dash in text for dash in DASHES), path.name)
+
+    def test_tied_sus_scores_stay_visible(self):
+        analysis = fixture_analysis()
+        analysis.sus[1].score = 100.0
+        chart = charts.sus_chart(analysis)
+        self.assertEqual(len(set(re.findall(r'<circle cx="[^"]+" cy="[^"]+"', chart))), 7)
 
     def test_a_broken_export_fails_cleanly(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -116,9 +116,12 @@ def sus_chart(analysis: Analysis) -> str:
         y = top + index * row_height + 16
         body.append(label(left - 10, y + 4, f"{name} (n={len(scores)})", 12, "end"))
         body.append(label(left - 10, y + 18, source, 10, "end", MUTED))
+        seen: dict[float, int] = {}
         for score in scores:
+            tie = seen.get(score, 0)
+            seen[score] = tie + 1
             body.append(
-                f'<circle cx="{x_of(score):.1f}" cy="{y}" r="6" '
+                f'<circle cx="{x_of(score):.1f}" cy="{y + 10 * tie}" r="6" '
                 f'fill="{colour}" fill-opacity="0.75"/>'
             )
         average = mean(scores)
