@@ -2,6 +2,26 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.45.0 (2026-11-23)
+
+### Features
+
+- EXP-016: Seed a fresh study project per participant code on the EU seed function
+- EXP-016: Add a fixed-order cell review to each participant project
+
+### Docs
+
+- EXP-016: Move the participant seed to review
+
+### Tests
+
+- EXP-016: Require an outline disagreement and test the seed entry hand-off
+
+### Other
+
+- EXP-016: Renumber the study projects ADR to 0435
+- PILOT-011: Claim PILOT-011 for the parallel run
+
 ## v0.44.0 (2026-11-23)
 
 ### Features
