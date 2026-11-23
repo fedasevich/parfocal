@@ -2,6 +2,12 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.39.1 (2026-11-23)
+
+### Fixes
+
+- PROTO-164: Read the live viewer's display, coach and outline box as drawn on drawn tasks
+
 ## v0.39.0 (2026-11-23)
 
 ### Features
