@@ -13,6 +13,7 @@ import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { openTourMenu } from "../app-tour/tour-store.ts";
 import { now } from "../clock.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
 import { toPersonInfo } from "../screens/people.ts";
@@ -57,11 +58,12 @@ function useEntries(home: boolean) {
     },
     { icon: "comment", label: t`Send feedback`, action: "feedback" },
     { icon: "help", label: t`Help and what's new`, action: "help" },
+    { icon: "arrow", label: t`Tour of the app`, action: "tour" },
   ] satisfies {
     icon: IconName;
     label: string;
     href?: string;
-    action?: "feedback" | "help" | "lock";
+    action?: "feedback" | "help" | "lock" | "tour";
     keys?: string;
     disabledReason?: string;
   }[];
@@ -152,6 +154,7 @@ export function AccountMenu({
         ...(href ? { onSelect: () => void goTo(href) } : {}),
         ...(action === "feedback" ? { onSelect: openFeedback } : {}),
         ...(action === "help" ? { onSelect: openHelp } : {}),
+        ...(action === "tour" ? { onSelect: openTourMenu } : {}),
         ...(action === "lock" ? { onSelect: lockTheScreen } : {}),
       }))}
       extra={

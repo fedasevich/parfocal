@@ -26,6 +26,7 @@ import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
 import { useRememberReturnPage } from "../viewer/use-return-page.ts";
 
 const TourHost = lazy(() => import("../help/tour-host.tsx"));
+const AppTourHost = lazy(() => import("../app-tour/tour-host.tsx"));
 const PageTitle = lazy(() => import("../shell/page-title.ts"));
 const StudyGuardHost = lazy(() => import("../study/study-guard-host.tsx"));
 const ParticipantHost = lazy(() => import("../study/participant-host.tsx"));
@@ -91,6 +92,7 @@ function RootContent() {
       {signedIn ? (
         <Suspense fallback={null}>
           <TourHost />
+          <AppTourHost />
         </Suspense>
       ) : null}
     </KeyBindingsProvider>

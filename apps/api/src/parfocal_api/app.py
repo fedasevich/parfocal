@@ -133,6 +133,7 @@ from parfocal_api import (
     tenants,
     threads,
     tile_access,
+    tour_switch,
     track_record,
     training_exports,
     tumor_maps,
@@ -261,6 +262,7 @@ def create_app(
     app.include_router(project_uploads.router)
     app.include_router(sample_project.router)
     app.include_router(sign_out.router)
+    app.include_router(tour_switch.router)
     app.include_router(clinical_reports.router)
     app.include_router(clinical_reports.me_router)
     app.include_router(clinical_report_views.router)

@@ -73,6 +73,7 @@ export function usePaletteLabels(): Record<string, string> {
     home: t`Open Home`,
     notifications: t`Notifications`,
     feedback: t`Send feedback`,
+    "app-tour": t`Tour of the app`,
     "show-all-hints": t`Show all hints again`,
     "open-settings": t`Open Settings`,
   };

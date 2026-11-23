@@ -1,4 +1,9 @@
-import { defaultFakeView, type FakeView, scenario } from "@parfocal/api-client/fake";
+import {
+  defaultFakeView,
+  type FakeView,
+  scenario,
+  storedTourPersona,
+} from "@parfocal/api-client/fake";
 
 const isPersona = (value: unknown): value is keyof typeof scenario.people =>
   typeof value === "string" && Object.hasOwn(scenario.people, value);
@@ -6,6 +11,8 @@ const isPersona = (value: unknown): value is keyof typeof scenario.people =>
 export function fakeViewFor(pathname: string, search: Record<string, unknown>): FakeView {
   const persona = search["as"];
   if (isPersona(persona)) return { viewer: persona, firstWeek: false };
+  const toured = storedTourPersona();
+  if (toured !== null) return { viewer: toured, firstWeek: false };
   if (pathname === "/" && search["scene"] === "new") return { viewer: "LM", firstWeek: true };
   if (pathname === "/admin" || pathname === "/developer") return { viewer: "DH", firstWeek: false };
   if (pathname === "/sign-in" && search["scene"] === "noaccess") {

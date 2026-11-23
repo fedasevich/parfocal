@@ -26,6 +26,7 @@ from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
+from parfocal_api import tour_switch
 from parfocal_api.dataset_versions import dataset_version_key
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
@@ -140,6 +141,7 @@ OPEN_OPERATIONS = {
     "getSharedReport": "public",
     "getInvitePreview": "public",
     "callProjectWebhook": "webhook-signature",
+    "returnFromTourRole": "tour-origin",
     "getRemoteTile": "public",
     **dict.fromkeys(
         (
@@ -474,6 +476,7 @@ def link_site_serving() -> threading.Thread:
 
 
 INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile", "typeOutlines", "embedSlideView"})
+TOUR_OPERATIONS = frozenset({"switchToTourRole"})
 
 
 OUTLINE_TYPED: dict[str, object] = {
@@ -509,6 +512,20 @@ def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
     link_site_serving()
     trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
     monkeypatch.setattr(api.app, "settings", trusted)
+
+
+def allow_tour_switch(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
+    switch_on = api.app.settings.model_copy(update={"tour_role_switch": True})
+    monkeypatch.setattr(api.app, "settings", switch_on)
+
+    async def any_role_account(*_: object) -> tour_switch.Target:
+        return tour_switch.Target("seed:role-reviewer-a", "Reviewer A", "role-reviewer-a@x")
+
+    async def no_session(*_: object) -> None:
+        return None
+
+    monkeypatch.setattr(tour_switch, "role_account_in", any_role_account)
+    monkeypatch.setattr(tour_switch, "swap_session", no_session)
 
 
 def seeded(w: Workspace, name: str) -> uuid.UUID:
@@ -1627,6 +1644,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "changeMemberRole": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "reviewer"}
     ),
+    "switchToTourRole": lambda _: Call("POST", "/api/tour/role-switch", {"account": "reviewer-a"}),
     "setMemberAdminRights": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.deputy}/admin-rights", {"admin_rights": True}
     ),
@@ -3083,6 +3101,8 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
         trust_link_site(api, monkeypatch)
     if operation in INTERACTIVE_OPERATIONS:
         answer_view_maps(api, monkeypatch)
+    if operation in TOUR_OPERATIONS:
+        allow_tour_switch(api, monkeypatch)
     permission = guarded_operations()[operation]
     workspace = workspaces[seat]
     status = send(api, principal_for(workspace, seat), GUARDED_CALLS[operation](workspace))

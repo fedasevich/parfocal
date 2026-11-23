@@ -70,6 +70,7 @@ function DecisionButtons({
   return (
     <div
       data-slot="decision-buttons"
+      data-tour="decision-buttons"
       data-style={decisionStyle}
       data-size={size}
       role="group"

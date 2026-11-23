@@ -152,7 +152,7 @@ export function MyWorkScreen({
           })
         }
       >
-        <TabsList variant="page">
+        <TabsList variant="page" data-tour="my-work-tabs">
           <TabsTrigger value="review">{tabLabel(t`To review`, toReview)}</TabsTrigger>
           <TabsTrigger value="assigned">{tabLabel(t`Assigned by me`, assigned.length)}</TabsTrigger>
           <TabsTrigger value="all">{tabLabel(t`All slides`, slides.length)}</TabsTrigger>

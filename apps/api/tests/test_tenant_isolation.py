@@ -2728,6 +2728,31 @@ def test_another_workspace_cannot_answer_an_ask(api: ApiAs, seeded: tuple[Seeded
     assert str(a.ids["access_request"]) in [item["id"] for item in pending]
 
 
+def test_another_workspace_cannot_switch_to_a_role_account_of_this_one(
+    api: ApiAs, seeded: tuple[Seeded, Seeded], database: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    a, b = seeded
+    subject = f"seed:isolation-{uuid.uuid4().hex[:8]}"
+    query(
+        with_database(OWNER_URL, database),
+        "WITH person AS ("
+        "INSERT INTO users (subject, email, display_name, initials, avatar_colour) "
+        f"VALUES ('{subject}', 'role-annotator@parfocal.eu', 'Annotator', 'AN', 1) "
+        "RETURNING id) INSERT INTO memberships (tenant_id, user_id, role) "
+        f"SELECT '{a.tenant_id}', id, 'reviewer' FROM person",
+    )
+    switch_on = api.app.settings.model_copy(update={"tour_role_switch": True})
+    monkeypatch.setattr(api.app, "settings", switch_on)
+    attempt = api(b.member(admin_rights=True)).post(
+        "/api/tour/role-switch", json={"account": "annotator"}
+    )
+    assert (attempt.status_code, attempt.json()["code"]) == (404, "no-role-account")
+    own = api(a.member(admin_rights=True)).post(
+        "/api/tour/role-switch", json={"account": "annotator"}
+    )
+    assert (own.status_code, own.json()["code"]) == (409, "needs-browser-session")
+
+
 class CountingPools:
     def __init__(self) -> None:
         self.spawned = 0

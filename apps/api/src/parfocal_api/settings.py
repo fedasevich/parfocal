@@ -58,6 +58,7 @@ class ApiSettings(StorageSettings):
     ] = DEFAULT_PART_BYTES
     upload_part_url_seconds: Annotated[int, Field(ge=1, le=MAX_PRESIGN_SECONDS)] = 15 * 60
     upload_list_page_size: Annotated[int, Field(ge=1, le=LIST_PAGE_LIMIT)] = LIST_PAGE_LIMIT
+    tour_role_switch: bool = False
 
     @model_validator(mode="after")
     def services_over_tls(self) -> ApiSettings:

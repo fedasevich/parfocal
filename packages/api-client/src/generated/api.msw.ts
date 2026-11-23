@@ -254,6 +254,7 @@ import type {
   TierMapping,
   TileAccess,
   TimingEventsRecorded,
+  TourAccountShown,
   TrackRecord,
   TumorMapJob,
   UploadBatch,
@@ -1416,6 +1417,24 @@ export const getSetProjectMemberSignOutResponseMock = (
     faker.helpers.arrayElement(Object.values(SignOutWarning)),
     null,
   ]),
+  ...overrideResponse,
+});
+
+export const getSwitchToTourRoleResponseMock = (
+  overrideResponse: Partial<Extract<TourAccountShown, object>> = {},
+): TourAccountShown => ({
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  switched: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getReturnFromTourRoleResponseMock = (
+  overrideResponse: Partial<Extract<TourAccountShown, object>> = {},
+): TourAccountShown => ({
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  switched: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -21812,6 +21831,54 @@ export const getSetProjectMemberSignOutMockHandler = (
   );
 };
 
+export const getSwitchToTourRoleMockHandler = (
+  overrideResponse?:
+    | TourAccountShown
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<TourAccountShown> | TourAccountShown),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tour/role-switch",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSwitchToTourRoleResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getReturnFromTourRoleMockHandler = (
+  overrideResponse?:
+    | TourAccountShown
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<TourAccountShown> | TourAccountShown),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tour/role-switch",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReturnFromTourRoleResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateCaseReportMockHandler = (
   overrideResponse?:
     | CaseReport
@@ -31191,6 +31258,8 @@ export const getParfocalAPIMock = () => [
   getGetUploadBatchMockHandler(),
   getCreateSampleProjectMockHandler(),
   getSetProjectMemberSignOutMockHandler(),
+  getSwitchToTourRoleMockHandler(),
+  getReturnFromTourRoleMockHandler(),
   getCreateCaseReportMockHandler(),
   getGetCaseReportMockHandler(),
   getUpdateCaseReportMockHandler(),
