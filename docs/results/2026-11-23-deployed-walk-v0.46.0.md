@@ -87,6 +87,25 @@ No 409 and no console error. The page read "The objects of this slide are still 
 - PROTO-135. Pass for the warm-enough case. Best showed the wait and then a proposal, 65 s from click to proposal, of which the server answered at 26 s. A truly cold time was not measured.
 - PROTO-145. Fails on the start time, passes on the finish. The Run a model dialog on P03 picked "PathoSAM + HoVer-NeXt" for synthetic-zlib.ome.tiff and promised "About 2 min". The POST answered 201 at 22:09:37 UTC. `/api/me/jobs` then read queued, 0 units, until between 22:27:52 and 22:28:06, so about 18.5 minutes, then running 1 of 2 tiles at 22:28:22 and done 2 of 2 tiles at 22:28:35, unit tile and percent 100. So the run itself took about 30 s, and the tile count (2 of 2) is a plain one. While it was queued, Modal main showed parfocal-gpu-pool with 1 task. The GPU cost is not known yet (TODO). "A review lists only its own runs" was not walked. The new result set was not read, because the agent-walk session's active workspace had moved to cvut-imaging by then, likely from another agent on the same account, and switching back needs a write from the app.
 
+### The queued model run in detail
+
+The run 7e791c6e is the walk's run, started by agent-walk from the Run a model dialog. A script polled `/api/me/jobs` every 15 s. That API is all the walk watched, and the job tray and the progress window were not open while the run waited. From the POST at 22:09:37 to 22:27:52 every read said status queued, 0 units, units_total null, percent 0, minutes_left null and pause null. So the API carried no GPU wait or pause the screen could have shown. At 22:28:06 it read running with 0 units, at 22:28:22 running 1 of 2 tiles (50 percent), and at 22:28:35 done, 2 of 2 tiles, with finished_at 22:28:34.998. It waited about 18.5 minutes and ran for about 30 s. It never needed cancelling. After the run, the agent's Jobs button read "Jobs, 0 running" in cvut-imaging, the workspace the session had moved to, and its tray did not list the run.
+
+### Recheck on v0.47.0
+
+Rechecked on 2026-11-23 after deploy run 45277243787 finished with success and /api/status named release 4f3491e (v0.47.0), which carries SEC-053 (API answers are never cached) and SEC-052 (admin reads need admin rights).
+
+| Check | Expected | Got |
+|---|---|---|
+| Signed out, RT-11 objects.csv with a new query string | 401, no HIT | 401, CF-Cache-Status DYNAMIC, Cache-Control private, no-store |
+| role-researcher, the same URL | 200, private, no-store | 200 with 30 rows, DYNAMIC, private, no-store |
+| Signed out, the same URL right after the researcher | 401 | 401, DYNAMIC |
+| Signed out, the plain objects.csv URL that was a HIT before | 401 | 401, DYNAMIC, no Age |
+| role-researcher, /api/me | private, no-store | 200, private, no-store |
+| role-researcher, /api/tenant/overview, /storage, /webhooks, /security | 403 each | 403, 403, 403, 403 |
+
+The earlier cached entry no longer answers. RT-11 was not deleted, because the API has no route that deletes a review task.
+
 ## Interpretation
 
 PROTO-104 fixed the task-less path. Hits that carry a task, which the palette gives inside a task, still miss: a drawn shape in a drawn review does not move the camera, and a cell in an annotate task is centred without zooming or picking. PROTO-159, PROTO-166 and PROTO-157 meet the items that could be walked. PROTO-073's give-up path needs a cold pool to show. PROTO-145's run finishes but still waits far longer to start than the dialog says. EXP-014's tasks cannot run until a participant project can be seeded on the deployed app.
