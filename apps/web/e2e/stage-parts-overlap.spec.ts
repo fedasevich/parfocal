@@ -163,6 +163,13 @@ async function floatingParts(page: Page) {
   );
 }
 
+function minimapMoving(page: Page) {
+  return page.evaluate(() => {
+    const map = document.querySelector('[data-testid="stage-minimap"]');
+    return map?.getAnimations().some((moving) => moving.playState === "running") ?? false;
+  });
+}
+
 const homeMargin = 12;
 
 const cornerSlack = 8;
@@ -216,7 +223,7 @@ for (const viewport of [
       await expect
         .poll(async () => {
           const now = JSON.stringify(await floatingParts(page));
-          const still = now === before;
+          const still = now === before && !(await minimapMoving(page));
           before = now;
           return still;
         })
