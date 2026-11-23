@@ -7186,7 +7186,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 9, 10 and 11. The idle lock gives no warning before it locks and only blurs the page. Two calls the app expects to fail still go out. Opening a Preferences section or a draft report writes to the server.
   Done when a spec sees the warning before the lock and no slide or patient text in the locked page, and specs open Preferences and a draft report with no write and without the two calls.
   Depends on nothing. Size: S.
-- [ ] PROTO-157 · Round five small slips
+- [x] PROTO-157 · Round five small slips
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 7, 8 and 12 and the partly fixed recheck of round four issue 15. A case has no link on the project page, the slide counter restarts after a submit, and the remaining number and word slips.
   Done when unit tests or specs cover each item.
   Depends on nothing. Size: S.
