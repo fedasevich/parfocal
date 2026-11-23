@@ -42,6 +42,7 @@ import {
   landingPower,
   stageCalmView,
 } from "./calm-camera.ts";
+import { reviewObjectOf } from "./focus-object.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageAiReading } from "./stage-ai-reading.tsx";
@@ -322,7 +323,8 @@ export function StageReviewObjects({
   const order = objects.map((item) => item.object);
   const decided = new Set(session.decisions.keys());
   const allDecided = order.length > 0 && order.every((id) => decided.has(id));
-  const [chosen, setCurrent] = useState<string | null>(object ?? null);
+  const wanted = reviewObjectOf(object, objects);
+  const [chosen, setCurrent] = useState<string | null>(wanted ?? null);
   const [gridOpen, setGridOpen] = useState(cellsGrid);
   const [done, setDone] = useState(false);
   const [seenRequest, setSeenRequest] = useState(doneRequest);
@@ -357,14 +359,13 @@ export function StageReviewObjects({
   };
   const focusedObject = useRef<string | null>(null);
   useEffect(() => {
-    if (object === undefined || focusedObject.current === object) return;
-    if (!objects.some((item) => item.object === object)) return;
-    focusedObject.current = object;
+    if (wanted === undefined || focusedObject.current === wanted) return;
+    focusedObject.current = wanted;
     setDone(false);
-    setCurrent(object);
-    const area = outlineArea(objects.find((item) => item.object === object)?.outline);
+    setCurrent(wanted);
+    const area = outlineArea(objects.find((item) => item.object === wanted)?.outline);
     if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
-  }, [object, objects, engine]);
+  }, [wanted, objects, engine]);
   const stepGoal = useRef<CalmCamera | null>(null);
   const stepTo = (id: string) => {
     const cell = outlineCentre(objects.find((item) => item.object === id)?.outline);
