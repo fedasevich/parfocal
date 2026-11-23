@@ -2,6 +2,38 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.48.0 (2026-11-23)
+
+### Features
+
+- PILOT-013: Add the guided tour over the real app with a flagged role switch
+- EXP-015: Upload study sessions and traces with camera, and read results in the console
+
+### Fixes
+
+- EXP-017: Seed the study case with who requested it and a cell slide with tumour cells
+- EXP-017: Walk all 11 round 5 tasks on a fake participant project and script the deployed run
+- EXP-017: Put the requested_by migration after the study tables
+- PILOT-013: Type the tour origin and keep the fake switch safe outside a browser
+- PROTO-104: Land task search hits on the drawn object or cell, zoomed in and picked
+- PROTO-168: Say why a queued run waits for a GPU and wake a pool with nothing pending
+- PROTO-168: Wake a queued run's pool again at most once and count the GPU start in the headline
+
+### Docs
+
+- SEC-052: Tick the admin reads and the cache fix after the deploy
+- Record the deployed walk of v0.46.0
+- PROTO-167: Record the deployed walk and add its follow-ups
+- Add the v0.47.0 cache recheck and the queued run to the deployed walk
+- OPS-041: Record the worktree cleanup and add EXP-019
+- Number the ADRs from the merge
+- EXP-015: Record tonight's merges
+
+### Other
+
+- PROTO-168: Claim PROTO-104 and PROTO-168 for the parallel run
+- OPS-041: Prune merged agent worktrees after every lead push
+
 ## v0.47.0 (2026-11-23)
 
 ### Features
