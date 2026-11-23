@@ -8,6 +8,7 @@ export type ApiEnv = {
 
 export const PROXY_KEY_HEADER = "Modal-Key";
 export const PROXY_SECRET_HEADER = "Modal-Secret";
+export const API_CACHE_DEFAULT = "private, no-store";
 
 export type Send = (input: string, init: RequestInit) => Promise<Response>;
 
@@ -15,11 +16,18 @@ export function isApiPath(pathname: string): boolean {
   return pathname === "/api" || pathname.startsWith("/api/");
 }
 
-export function handleApi(
+export function withPrivateDefault(response: Response): Response {
+  if (response.headers.has("Cache-Control")) return response;
+  const marked = new Response(response.body, response);
+  marked.headers.set("Cache-Control", API_CACHE_DEFAULT);
+  return marked;
+}
+
+export async function handleApi(
   request: Request,
   env: ApiEnv,
   send: Send = (input, init) => fetch(input, init),
-): Promise<Response> | Response {
+): Promise<Response> {
   if (!env.API_ORIGIN) {
     return problem(503, "api-not-configured", "The API is not configured");
   }
@@ -39,6 +47,7 @@ export function handleApi(
     body: request.body,
     redirect: "manual",
     duplex: "half",
+    cache: "no-store",
   } as RequestInit;
-  return send(target.toString(), init);
+  return withPrivateDefault(await send(target.toString(), init));
 }
