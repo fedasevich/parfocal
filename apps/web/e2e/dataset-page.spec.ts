@@ -79,6 +79,28 @@ test("the dataset page filters its counts, freezes a version and gives it back b
   await expect(page.getByTestId("patch-export-job")).toContainText("The patches are ready");
 });
 
+test("the dataset page lists a patch export after a reload and downloads it", async ({ page }) => {
+  test.setTimeout(90_000);
+  await openTask(page);
+  await signOffTheSlide(page);
+  await page.getByTestId("export-menu").click();
+  await page.getByTestId("export-patches").click();
+  await page.getByRole("radio", { name: "Masks and COCO" }).click();
+  const cut = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Cut the patches" }).click();
+  await cut;
+  await expect(page.getByTestId("patch-export-job")).toContainText("The patches are ready");
+
+  await page.goto(`/tasks/${annotateTask}/dataset?as=DH`);
+  const list = page.getByTestId("dataset-patch-exports");
+  await expect(list).toContainText("Masks and COCO");
+  await expect(list).toContainText("Ready");
+  await expect(list).toContainText("started by Dana Hale");
+  const listed = page.waitForEvent("download");
+  await list.getByRole("button", { name: "Download" }).click();
+  expect((await listed).suggestedFilename()).toMatch(/patches\.zip$/);
+});
+
 test("the dataset page explains that nothing is signed off yet", async ({ page }) => {
   await page.goto(`/tasks/${annotateTask}/dataset?as=DH`);
   await expect(page.getByTestId("dataset-refusal")).toContainText(

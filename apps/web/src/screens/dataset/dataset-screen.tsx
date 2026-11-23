@@ -7,6 +7,8 @@ import {
   type FinalLayerStatus,
   getGetTaskDatasetQueryKey,
   getListDatasetVersionsQueryKey,
+  getListPatchExportsQueryKey,
+  type PatchExportEntry,
   type ProjectClass,
   useBuildFinalLayer,
   useFreezeDatasetVersion,
@@ -15,6 +17,7 @@ import {
   useGetReviewTaskStates,
   useGetTaskDataset,
   useListDatasetVersions,
+  useListPatchExports,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
@@ -23,7 +26,11 @@ import { Loader } from "@parfocal/ui/components/loader";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { lazy, type ReactNode, Suspense, useState } from "react";
-import { downloadDatasetVersion, refusalText } from "../../annotations/task-export.ts";
+import {
+  downloadDatasetVersion,
+  downloadPatchExportFile,
+  refusalText,
+} from "../../annotations/task-export.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { usePageTitleDetail } from "../../shell/page-title.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
@@ -349,6 +356,54 @@ function VersionRow({
   );
 }
 
+function PatchExportRow({
+  entry,
+  onDownload,
+}: {
+  entry: PatchExportEntry;
+  onDownload: () => void;
+}) {
+  const { t } = useLingui();
+  const names = {
+    cutting: t`Cutting`,
+    done: t`Ready`,
+    failed: t`Failed`,
+  };
+  const format = entry.format === "coco" ? t`Masks and COCO` : t`Class masks`;
+  const version =
+    entry.dataset_version === null ? t`the current data` : t`version ${entry.dataset_version}`;
+  const who = entry.started_by ?? t`a service`;
+  const started = whenText(entry.started_at);
+  return (
+    <li
+      className="grid gap-1 border-line border-t py-3 first:border-t-0"
+      data-testid={`patch-export-${entry.job_id}`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-semibold text-fg">{format}</span>
+        <span className="flex items-center gap-2 text-body-sm text-fg-dim">
+          <span data-testid={`patch-export-${entry.job_id}-state`}>{names[entry.state]}</span>
+          {entry.state === "done" ? (
+            <Button
+              variant="ghost"
+              data-testid={`patch-export-${entry.job_id}-download`}
+              onClick={onDownload}
+            >
+              <Trans>Download</Trans>
+            </Button>
+          ) : null}
+        </span>
+      </div>
+      <p className="m-0 text-caption text-fg-dim">
+        {entry.finished_at === null
+          ? t`Of ${version}, started by ${who} on ${started}`
+          : t`Of ${version}, started by ${who} on ${started}, finished on ${whenText(entry.finished_at)}`}
+        {entry.bytes === null ? "" : `, ${sizeText(entry.bytes)}`}
+      </p>
+    </li>
+  );
+}
+
 export function DatasetScreen({ taskId }: { taskId: string }) {
   const { t } = useLingui();
   const renderLink = useRouterLink();
@@ -380,6 +435,7 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
     }).data,
   );
   const versions = okData(useListDatasetVersions(taskId).data) ?? [];
+  const patchExports = okData(useListPatchExports(taskId).data) ?? [];
   const freeze = useFreezeDatasetVersion();
   const rebuild = useBuildFinalLayer();
   const review = task?.kind === "review";
@@ -419,6 +475,16 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
   const download = async (number: number) => {
     const result = await downloadDatasetVersion(taskId, number);
     toast.show(result.state === "saved" ? t`Saved ${result.name}` : refusalText(result.code));
+  };
+
+  const downloadPatches = async (jobId: string) => {
+    const result = await downloadPatchExportFile(taskId, jobId);
+    toast.show(result.state === "saved" ? t`Saved ${result.name}` : refusalText(result.code));
+  };
+
+  const closePatches = () => {
+    setPatchesOf(null);
+    void queryClient.invalidateQueries({ queryKey: getListPatchExportsQueryKey(taskId) });
   };
 
   const refusedCode = baseQuery.isError ? problemCode(baseQuery.error) : null;
@@ -533,16 +599,29 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
                 </ul>
               )}
             </Section>
+            <Section title={<Trans>Patch exports</Trans>}>
+              {patchExports.length === 0 ? (
+                <p className="m-0 text-body-sm text-fg-dim" data-testid="dataset-no-patch-exports">
+                  <Trans>No patches are cut yet.</Trans>
+                </p>
+              ) : (
+                <ul className="m-0 list-none p-0" data-testid="dataset-patch-exports">
+                  {patchExports.map((entry) => (
+                    <PatchExportRow
+                      key={entry.job_id}
+                      entry={entry}
+                      onDownload={() => void downloadPatches(entry.job_id)}
+                    />
+                  ))}
+                </ul>
+              )}
+            </Section>
           </div>
         </div>
       )}
       {patchesOf === null ? null : (
         <Suspense fallback={null}>
-          <PatchExportDialog
-            taskId={taskId}
-            datasetVersion={patchesOf}
-            onClose={() => setPatchesOf(null)}
-          />
+          <PatchExportDialog taskId={taskId} datasetVersion={patchesOf} onClose={closePatches} />
         </Suspense>
       )}
       {toast.node}

@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Mapping
+from datetime import datetime
 from enum import StrEnum
 from typing import Any, Literal
 
@@ -9,13 +10,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.annotate_sign_off import user_of
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.dataset_versions import version_row
 from parfocal_api.final_layers import current_layers
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.review_tasks import code_of, readable_task
-from parfocal_api.tables import TaskKind
+from parfocal_api.tables import TaskKind, users
 from parfocal_api.training_exports import (
     DatasetHiddenError,
     NothingSignedOffError,
@@ -129,10 +131,77 @@ async def start_patch_export(
             "level": body.level,
             "tile_size": body.tile_size,
             "format": body.format,
+            "started_by": None if (starter := user_of(principal)) is None else str(starter),
             **frozen,
         },
     )
     return PatchExportStarted(job_id=job_id)
+
+
+class PatchExportEntry(BaseModel):
+    job_id: uuid.UUID
+    started_by: str | None
+    dataset_version: int | None
+    format: Literal["masks", "coco"]
+    state: PatchExportState
+    bytes: int | None
+    started_at: datetime
+    finished_at: datetime | None
+
+
+async def starter_names(connection: AsyncConnection, rows: list[Any]) -> dict[str, str]:
+    ids = {row.input.get("started_by") for row in rows} - {None}
+    if not ids:
+        return {}
+    found = await connection.execute(
+        select(users.c.id, users.c.display_name).where(users.c.id.in_([uuid.UUID(i) for i in ids]))
+    )
+    return {str(row.id): row.display_name for row in found}
+
+
+@router.get(
+    "",
+    operation_id="listPatchExports",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def list_patch_exports(
+    task_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    store: Store,
+) -> list[PatchExportEntry]:
+    task, whole = await readable_task(connection, principal, task_id)
+    if not whole:
+        raise DatasetHiddenError
+    rows = (
+        await connection.execute(
+            select(jobs.c.id, jobs.c.status, jobs.c.input, jobs.c.created_at, jobs.c.finished_at)
+            .where(jobs.c.kind == PATCH_KIND, jobs.c.input["task_id"].astext == str(task_id))
+            .order_by(jobs.c.created_at.desc(), jobs.c.id)
+        )
+    ).all()
+    names = await starter_names(connection, list(rows))
+    entries: list[PatchExportEntry] = []
+    for row in rows:
+        state = state_of(str(row.status))
+        size = (
+            await store.head_object(patch_export_key(task.tenant_id, row.id))
+            if state is PatchExportState.DONE
+            else None
+        )
+        entries.append(
+            PatchExportEntry(
+                job_id=row.id,
+                started_by=names.get(str(row.input.get("started_by"))),
+                dataset_version=row.input.get("dataset_version"),
+                format=row.input.get("format", "masks"),
+                state=state,
+                bytes=size,
+                started_at=row.created_at,
+                finished_at=row.finished_at,
+            )
+        )
+    return entries
 
 
 async def job_status(connection: AsyncConnection, task_id: uuid.UUID, job_id: uuid.UUID) -> str:

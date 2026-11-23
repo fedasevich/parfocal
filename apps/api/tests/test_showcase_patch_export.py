@@ -13,7 +13,7 @@ from fixture_support import cache_dir, fixture_path
 from test_showcase import OPENABLE, RESULTS, EmptyStore
 from test_showcase_outcomes import as_owner
 
-from parfocal_api.patch_exports import download_patch_export
+from parfocal_api.patch_exports import download_patch_export, list_patch_exports
 from parfocal_api.showcase import seed
 from parfocal_api.showcase_outcomes import OUTCOME_TASK
 from parfocal_common.ingest import fixture_original_key
@@ -91,3 +91,25 @@ async def test_the_seeded_coco_export_downloads_a_zip_with_annotations(
         assert manifest["dataset_version"] == 1
         assert len(coco["annotations"]) >= 1
         assert {image["file_name"] for image in coco["images"]} <= names
+
+
+async def test_the_seeded_export_is_listed_for_a_colleague(
+    exported: tuple[str, list[int], ServedStore],
+) -> None:
+    url, _, store = exported
+    async for task_id, principal, connection in as_owner(url, OUTCOME_TASK):
+        entries = await list_patch_exports(
+            task_id,
+            principal,
+            connection,
+            store,  # type: ignore[arg-type]
+        )
+        assert len(entries) == 1
+        entry = entries[0]
+        assert entry.state.value == "done"
+        assert entry.format == "coco"
+        assert entry.dataset_version == 1
+        assert entry.started_by
+        assert entry.bytes is not None
+        assert entry.bytes > 0
+        assert entry.finished_at is not None

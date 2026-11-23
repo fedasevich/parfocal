@@ -5774,6 +5774,33 @@ export interface PasswordSignInAvailability {
   available: boolean;
 }
 
+export type PatchExportEntryFormat =
+  (typeof PatchExportEntryFormat)[keyof typeof PatchExportEntryFormat];
+
+export const PatchExportEntryFormat = {
+  masks: "masks",
+  coco: "coco",
+} as const;
+
+export type PatchExportState = (typeof PatchExportState)[keyof typeof PatchExportState];
+
+export const PatchExportState = {
+  cutting: "cutting",
+  done: "done",
+  failed: "failed",
+} as const;
+
+export interface PatchExportEntry {
+  job_id: string;
+  started_by: string | null;
+  dataset_version: number | null;
+  format: PatchExportEntryFormat;
+  state: PatchExportState;
+  bytes: number | null;
+  started_at: string;
+  finished_at: string | null;
+}
+
 export type PatchExportRequestFormat =
   (typeof PatchExportRequestFormat)[keyof typeof PatchExportRequestFormat];
 
@@ -5800,14 +5827,6 @@ export interface PatchExportRequest {
 export interface PatchExportStarted {
   job_id: string;
 }
-
-export type PatchExportState = (typeof PatchExportState)[keyof typeof PatchExportState];
-
-export const PatchExportState = {
-  cutting: "cutting",
-  done: "done",
-  failed: "failed",
-} as const;
 
 export interface PatchExportStatus {
   job_id: string;
@@ -71050,6 +71069,195 @@ export const useStartPatchExport = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getStartPatchExportMutationOptions(options), queryClient);
 };
+
+export type listPatchExportsResponse200 = {
+  data: PatchExportEntry[];
+  status: 200;
+};
+
+export type listPatchExportsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listPatchExportsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listPatchExportsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listPatchExportsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listPatchExportsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listPatchExportsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listPatchExportsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listPatchExportsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listPatchExportsResponseSuccess = listPatchExportsResponse200 & {
+  headers: Headers;
+};
+export type listPatchExportsResponseError = (
+  | listPatchExportsResponse400
+  | listPatchExportsResponse401
+  | listPatchExportsResponse403
+  | listPatchExportsResponse404
+  | listPatchExportsResponse409
+  | listPatchExportsResponse422
+  | listPatchExportsResponse429
+  | listPatchExportsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listPatchExportsResponse =
+  | listPatchExportsResponseSuccess
+  | listPatchExportsResponseError;
+
+export const getListPatchExportsUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/patch-exports`;
+};
+
+/**
+ * @summary List Patch Exports
+ */
+export const listPatchExports = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listPatchExportsResponse> => {
+  return apiFetch<listPatchExportsResponse>(getListPatchExportsUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPatchExportsQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/patch-exports`] as const;
+};
+
+export const getListPatchExportsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPatchExports>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPatchExports>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPatchExportsQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPatchExports>>> = ({ signal }) =>
+    listPatchExports(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listPatchExports>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListPatchExportsQueryResult = NonNullable<Awaited<ReturnType<typeof listPatchExports>>>;
+export type ListPatchExportsQueryError = Problem;
+
+export function useListPatchExports<
+  TData = Awaited<ReturnType<typeof listPatchExports>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPatchExports>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPatchExports>>,
+          TError,
+          Awaited<ReturnType<typeof listPatchExports>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPatchExports<
+  TData = Awaited<ReturnType<typeof listPatchExports>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPatchExports>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPatchExports>>,
+          TError,
+          Awaited<ReturnType<typeof listPatchExports>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPatchExports<
+  TData = Awaited<ReturnType<typeof listPatchExports>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPatchExports>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Patch Exports
+ */
+
+export function useListPatchExports<
+  TData = Awaited<ReturnType<typeof listPatchExports>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPatchExports>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPatchExportsQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getPatchExportStatusResponse200 = {
   data: PatchExportStatus;

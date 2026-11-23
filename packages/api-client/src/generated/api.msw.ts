@@ -140,6 +140,7 @@ import type {
   PasskeyCreation,
   PasskeyRequest,
   PasswordSignInAvailability,
+  PatchExportEntry,
   PatchExportStarted,
   PatchExportStatus,
   PatientData,
@@ -14941,6 +14942,24 @@ export const getStartPatchExportResponseMock = (
   overrideResponse: Partial<Extract<PatchExportStarted, object>> = {},
 ): PatchExportStarted => ({ job_id: faker.string.uuid(), ...overrideResponse });
 
+export const getListPatchExportsResponseMock = (): PatchExportEntry[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    job_id: faker.string.uuid(),
+    started_by: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    dataset_version: faker.helpers.arrayElement([faker.number.int(), null]),
+    format: faker.helpers.arrayElement(["masks", "coco"] as const),
+    state: faker.helpers.arrayElement(Object.values(PatchExportState)),
+    bytes: faker.helpers.arrayElement([faker.number.int(), null]),
+    started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    finished_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+  }));
+
 export const getGetPatchExportStatusResponseMock = (
   overrideResponse: Partial<Extract<PatchExportStatus, object>> = {},
 ): PatchExportStatus => ({
@@ -28623,6 +28642,30 @@ export const getStartPatchExportMockHandler = (
   );
 };
 
+export const getListPatchExportsMockHandler = (
+  overrideResponse?:
+    | PatchExportEntry[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PatchExportEntry[]> | PatchExportEntry[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/patch-exports",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListPatchExportsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetPatchExportStatusMockHandler = (
   overrideResponse?:
     | PatchExportStatus
@@ -31442,6 +31485,7 @@ export const getParfocalAPIMock = () => [
   getSetTaskReportLayoutMockHandler(),
   getExportTrainingDatasetMockHandler(),
   getStartPatchExportMockHandler(),
+  getListPatchExportsMockHandler(),
   getGetPatchExportStatusMockHandler(),
   getDownloadPatchExportMockHandler(),
   getGetTaskDatasetMockHandler(),
