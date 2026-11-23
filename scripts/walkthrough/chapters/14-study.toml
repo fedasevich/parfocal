@@ -17,7 +17,7 @@ role = "owner"
 title = "Edit the tasks and start the next round"
 url = "/study/console"
 click = "Change the task list in the editor and save it, then press Start next round. A round that already has sessions keeps its tasks frozen."
-expect = "The new round uses the saved tasks. Round 5 starts with eleven tasks that mirror round 4's, plus one queue task and one annotate task."
+expect = "The new round uses the saved tasks. Round 5 has eleven tasks: nine that match round 4's goals, one in the disagreement queue and one in an annotate task."
 why = "Rounds only compare when their tasks stay the same, and each new round tests the app after the last round's fixes."
 api = ["/api/me/home"]
 
@@ -34,7 +34,7 @@ api = ["/api/me/home"]
 role = "owner"
 title = "A task card and the pinned goal"
 url = "/study"
-click = "Read the task card, Task 1 of 13, and its goal. Start task unlocks after five seconds of reading. Work in the real app. The goal stays at the bottom of the screen while you work."
+click = "Read the task card, Task 1 of 11, and its goal. Start task unlocks after five seconds of reading. Work in the real app. The goal stays at the bottom of the screen while you work."
 expect = "The app opens at the task's start page inside the participant's own project. The task ends by itself when the goal is reached, or with I'm done."
 why = "The same start and the same goal for everyone make the times and clicks comparable."
 api = ["/api/projects"]
