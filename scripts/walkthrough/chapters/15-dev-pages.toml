@@ -1,0 +1,94 @@
+[[chapter]]
+title = "Pages only a development build shows"
+group = "setup"
+intro = "These pages exist for designers and developers. The deployed app hides them unless public dev tools are switched on, so on app.parfocal.eu each of them should say Page not found. If one of them opens instead, dev tools are on."
+
+[[chapter.step]]
+role = "owner"
+title = "The error page gallery"
+url = "/issue-pages/not-found"
+click = "Open the link. In a dev build the kinds are not-found, server-error, expired, no-access and styles."
+expect = "Page not found on the deployed app. In a dev build, the shared error page of that kind."
+why = "Every error page of the app can be checked in one place during design."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "Every error state by screen"
+url = "/issue-states"
+click = "Open the link."
+expect = "Page not found on the deployed app. In a dev build, a list of every error state by screen."
+why = "Designers check that every screen handles its failures."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "The flow map"
+url = "/flow-map"
+click = "Open the link. In a dev build it shows one lane per person, with Walkthrough and Prototype index."
+expect = "Page not found on the deployed app."
+why = "The map is the index of the core flow for the design work."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "The guided walkthrough"
+url = "/flow-map/walkthrough"
+click = "Open the link. In a dev build: Walkthrough, nine chapters, and Play all, from upload to the signed report."
+expect = "Page not found on the deployed app."
+why = "The mock walkthrough tells the story this page checks for real."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "One walkthrough chapter"
+url = "/flow-map/walkthrough/1"
+click = "Open the link. In a dev build it plays chapter 1, Upload, with Back to the map."
+expect = "Page not found on the deployed app."
+why = "Each chapter can be shown on its own in a meeting."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "The prototype index"
+url = "/prototype"
+click = "Open the link."
+expect = "Page not found on the deployed app. In a dev build, links to every mock scene."
+why = "Designers jump to any mock state."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "The hotkeys spike"
+url = "/spikes/hotkeys"
+click = "Open the link."
+expect = "Page not found on the deployed app."
+why = "A test bench for keyboard handling."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "The input traces spike"
+url = "/spikes/input-traces"
+click = "Open the link."
+expect = "Page not found on the deployed app."
+why = "A test bench that records pointer input for camera tests."
+api = ["/api/me"]
+state = "dev build only"
+
+[[chapter.step]]
+role = "owner"
+title = "The worklist spike"
+url = "/spikes/worklist?rows=5000&mode=virtual"
+click = "Open the link."
+expect = "Page not found on the deployed app. In a dev build, a list of 5000 rows that scrolls smoothly."
+why = "A test bench for long lists."
+api = ["/api/me"]
+state = "dev build only"

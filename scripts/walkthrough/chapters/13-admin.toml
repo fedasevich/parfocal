@@ -1,0 +1,213 @@
+[[chapter]]
+title = "Team, settings and admin"
+group = "setup"
+intro = "Team shows who reviews what. Settings are personal and open as an overlay from the avatar menu or Cmd comma. Admin is the workspace's control room and only opens for a researcher with admin rights, which here is only agent-walk. The developer drawer is for researchers."
+
+[[chapter.step]]
+role = "researcher"
+title = "Team, open tasks"
+url = "/team"
+click = "Open Team in the sidebar. Filter by project, reviewer or task. Reassign slides from a reviewer who is away."
+expect = "Every open task with each reviewer's progress and who is behind."
+why = "The researcher spots a stuck study before its due date."
+api = ["/api/me/team", "/api/tenant/availability"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Team, done"
+url = "/team?tab=done"
+click = "Open the Done tab."
+expect = "Signed off tasks, or No signed-off task matches these filters."
+why = "A record of finished work per person."
+api = ["/api/me/team"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Settings open on Display"
+url = "/settings"
+click = "Open the avatar menu and Settings, or press Cmd comma. Type in the filter at the top to find a setting."
+expect = "It opens on Display. The sections are Display, Review, Layout, AI and confidence, Navigation and devices, Shortcuts, Notifications, Privacy and session and Account."
+why = "Each person tunes the viewer to their eyes and hands."
+api = ["/api/me/setting-layers"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Review and Layout settings"
+url = "/settings/review"
+click = "Look at Review, then Layout at /settings/layout. Change how the next object is chosen and where the panel sits."
+expect = "Each change applies at once and shows where a task locks it."
+why = "Reviewers work faster with the order and layout they like, within what the task allows."
+api = ["/api/me/setting-layers"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "AI and confidence"
+url = "/settings/ai"
+click = "Change how confidence shows, as a number or a bar."
+expect = "The viewer follows the setting."
+why = "Some reviewers want to see the AI's certainty, some want to avoid its pull."
+api = ["/api/me/setting-layers"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Navigation, devices and shortcuts"
+url = "/settings/navigation"
+click = "Pick a device such as Mouse, Trackpad, Gamepad, Tablet and pen or Keyboard. Then open Shortcuts at /settings/shortcuts and change one key. A key already in use shows a conflict."
+expect = "The viewer's controls follow the device, and the shortcut sheet shows your keys."
+why = "Pathologists come from QuPath or other viewers and keep their habits."
+api = ["/api/me/setting-layers"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Privacy, session and account"
+url = "/settings/privacy"
+click = "Look at Privacy and session, with Sign out on other devices and Add a passkey. Then Account at /settings/account, and Show all hints again."
+expect = "Your sessions and passkeys list, each with Remove."
+why = "People control where they are signed in and how."
+api = ["/api/auth/sessions", "/api/auth/passkeys"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "An unknown settings section"
+url = "/settings/no-such-section"
+click = "Open the link."
+expect = "Page not found."
+why = "A wrong link fails clearly."
+api = ["/api/me"]
+state = "not found"
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "The avatar menu"
+url = "/"
+click = "Open the avatar menu. Try Keyboard shortcuts, Profile and signature, Send feedback, Help and what's new, Lock the screen and Log out."
+expect = "Lock the screen hides the app until you sign in again. Send feedback opens a short form."
+why = "A pathologist leaving the desk locks the screen in one click."
+api = ["/api/me"]
+
+[[chapter.step]]
+role = "owner"
+title = "Admin overview"
+url = "/admin"
+click = "Sign in as agent-walk@parfocal.eu and open Admin in the sidebar. The side nav has Back to Parfocal, Overview, People and roles, Projects, AI models, Report templates, Storage and sources, API and webhooks, Audit log, Security and Workspace settings."
+expect = "The overview shows members, projects, storage and AI use of the workspace."
+why = "One place to run the workspace."
+api = ["/api/tenant/overview"]
+
+[[chapter.step]]
+role = "owner"
+title = "People and roles"
+url = "/admin?section=people"
+click = "Look at the members and their roles. Invite opens the invite window. Do not change the role accounts."
+expect = "Every member with role and project roles, and pending access requests."
+why = "Admins decide who may see and change what."
+api = ["/api/tenant/members"]
+
+[[chapter.step]]
+role = "owner"
+title = "Projects in admin"
+url = "/admin?section=projects"
+click = "Look at the list, including deleted projects that can be restored."
+expect = "Every project with its owner and size."
+why = "Admins clean up and restore projects."
+api = ["/api/projects", "/api/projects/deleted"]
+
+[[chapter.step]]
+role = "owner"
+title = "AI models and their use"
+url = "/admin?section=models"
+click = "Look at the models, which ones are hidden, the model tiers and the AI use with GPU seconds."
+expect = "Each model with its version and the GPU seconds the workspace used."
+why = "GPU time costs money, so admins see and limit it."
+api = ["/api/tenant/models", "/api/tenant/ai-usage"]
+
+[[chapter.step]]
+role = "owner"
+title = "Report templates"
+url = "/admin?section=templates"
+click = "Open a study template and its preview."
+expect = "The templates with their versions and a preview of the report they make."
+why = "The template decides how every evaluation report is laid out."
+api = ["/api/study-templates"]
+
+[[chapter.step]]
+role = "owner"
+title = "Storage and sources"
+url = "/admin?section=storage"
+click = "Look at storage use and the import sources."
+expect = "Bytes used per project and the connected storage."
+why = "Slides are big. Admins watch the bill."
+api = ["/api/tenant/storage", "/api/tenant/import-sources"]
+
+[[chapter.step]]
+role = "owner"
+title = "API and webhooks"
+url = "/admin?section=api"
+click = "Look at the webhooks and the API settings."
+expect = "The webhook list, empty or with targets."
+why = "A lab's own systems hear about finished tasks."
+api = ["/api/tenant/webhooks"]
+
+[[chapter.step]]
+role = "owner"
+title = "Audit log"
+url = "/admin?section=audit"
+click = "Filter the log by person or action and export it."
+expect = "Every sign-in, sign off and change with who and when."
+why = "Every action on medical data must be traceable."
+api = ["/api/tenant/audit-events"]
+
+[[chapter.step]]
+role = "owner"
+title = "Security and workspace settings"
+url = "/admin?section=security"
+click = "Look at Security, then Workspace settings at /admin?section=settings."
+expect = "The session policy, sign-in rules, retention and who may join."
+why = "Each workspace sets its own security rules."
+api = ["/api/tenant/security", "/api/tenant/retention"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Admin refused without admin rights"
+url = "/admin"
+click = "Sign in as role-researcher@parfocal.eu and open the link."
+expect = "You do not have admin rights in this workspace."
+why = "A researcher runs studies, not the workspace, and the API refuses every admin read."
+api = [
+  "/api/tenant/audit-events =403",
+  "/api/tenant/overview =403",
+  "/api/tenant/storage =403",
+  "/api/tenant/webhooks =403",
+  "/api/tenant/security =403",
+  "/api/tenant/retention =403",
+]
+state = "refused"
+
+[[chapter.step]]
+role = "reviewer-b"
+title = "Admin refused for a reviewer"
+url = "/admin"
+click = "Sign in as role-reviewer-b@parfocal.eu and open the link."
+expect = "The admin page is for people with admin rights."
+why = "Reviewers never reach workspace settings."
+api = ["/api/tenant/overview =403"]
+state = "refused"
+
+[[chapter.step]]
+role = "researcher"
+title = "The developer drawer"
+url = "/developer"
+click = "Open the sections Renderer, Tiles and source, Annotations, Heatmap, Models, Typing and confidence, Whole-slide job, Benchmark, HUD and URL and debug handle."
+expect = "Each section shows its switches and numbers."
+why = "Researchers tune and measure the viewer and models for the thesis."
+api = ["/api/me", "/api/projects"]
+
+[[chapter.step]]
+role = "viewer"
+title = "The developer drawer is refused"
+url = "/developer"
+click = "Sign in as role-viewer@parfocal.eu and open the link."
+expect = "Developer mode is not available. The developer drawer is for researchers. Reviewers and doctors review slides without it. Go home."
+why = "Clinical users never see debug switches."
+api = ["/api/me"]
+state = "refused"

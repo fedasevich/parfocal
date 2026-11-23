@@ -1,0 +1,61 @@
+[[chapter]]
+title = "Jobs and model runs"
+group = "core"
+intro = "Uploads, model runs and patch exports run as jobs. The jobs button in the top bar shows how many run, and each job has a progress window you can close while it keeps going. Model runs use a GPU in the EU on demand. They cost money and the first one after a quiet spell waits for a cold start, which the app shows as Waiting for a GPU."
+
+[[chapter.step]]
+role = "researcher"
+title = "The jobs tray"
+url = "/"
+click = "Press the jobs button in the top bar, which reads the number of jobs running."
+expect = "Running and recent jobs with their progress, each opening its own window."
+why = "Long work never blocks the page you are on."
+api = ["/api/me/jobs"]
+
+[[chapter.step]]
+role = "owner"
+title = "One job's progress window"
+url = "/projects/{job_project}/jobs/{job}"
+click = "Sign in as agent-walk@parfocal.eu and open the link to the seeded upload job. The buttons are Close, it keeps going, Open the slide and Open the project. A running model run adds Cancel the run, Resume now and Move it to another GPU."
+expect = "The upload of Philips-4.tiff shows as done at 100 percent."
+why = "Anyone can see what a job did and jump to its result."
+api = ["/api/me/jobs", "/api/projects/{job_project}/jobs/{job}"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Run a model, pick"
+url = "/projects/{project:Scanner format comparison}/run-model"
+click = "From the project's More menu press Run a model. Pick a Model, add slides under Slides with Add slides by name or case, and read the time estimate. Connect your own model leads to the lab model setup."
+expect = "With no slide picked it says No slides picked yet. With slides the button reads Run on 2 slides."
+why = "A researcher fills in slides that came without results."
+api = ["/api/projects/{project:Scanner format comparison}/model-runs/defaults", "/api/projects/{project:Scanner format comparison}/models"]
+gpu = true
+
+[[chapter.step]]
+role = "researcher"
+title = "Run a model, start"
+url = "/projects/{project:Scanner format comparison}/run-model"
+click = "Press Run on 1 slide with one small slide such as CMU-1-Small-Region.svs. Then watch the progress window and close it."
+expect = "The job starts, shows Waiting for a GPU if the pool is cold, then counts tiles and ends with a new result set on the slide."
+why = "This is the real AI inference the whole review is about. It costs GPU seconds."
+api = ["/api/projects/{project:Scanner format comparison}/model-runs"]
+gpu = true
+
+[[chapter.step]]
+role = "researcher"
+title = "Find nuclei on part of a slide"
+url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}?mode=annotate"
+click = "Press Shift A for AI tools and pick Find nuclei on the area in view."
+expect = "The panel shows the run's progress and the new cells appear on the slide."
+why = "An expert gets AI cells on just the part they are working on."
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/ai-progress"]
+gpu = true
+
+[[chapter.step]]
+role = "researcher"
+title = "Task timing"
+url = "/kpi"
+click = "Open the link."
+expect = "Task timing figures, or No timing recorded yet. Figures appear as people who allow analytics finish tasks."
+why = "The thesis measures how long review takes. This page shows those numbers."
+api = ["/api/tenant/task-timing", "/api/tenant/ai-corrections"]

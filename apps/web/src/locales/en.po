@@ -3018,6 +3018,10 @@ msgstr "A review task made from this template starts with these. The researcher 
 msgid "a reviewer"
 msgstr "a reviewer"
 
+#: src/app-tour/tour-steps.ts
+msgid "A reviewer finds all their work in My work. To review lists the tasks, Assigned by me what they handed out and All slides every slide they can see."
+msgstr "A reviewer finds all their work in My work. To review lists the tasks, Assigned by me what they handed out and All slides every slide they can see."
+
 #: src/screens/disagreements/send-modal.tsx
 msgid "A reviewer of {taskCode}"
 msgstr "A reviewer of {taskCode}"
@@ -3026,6 +3030,10 @@ msgstr "A reviewer of {taskCode}"
 #: src/shell/palette-labels.tsx
 msgid "A reviewer submits a slide of my task"
 msgstr "A reviewer submits a slide of my task"
+
+#: src/app-tour/tour-host.tsx
+msgid "A ring shows each control on the real app. Press it or Next to go on."
+msgstr "A ring shows each control on the real app. Press it or Next to go on."
 
 #: src/screens/jobs/run-model-window.tsx
 msgid "A run always uses the latest version, and the result set records which one."
@@ -3500,6 +3508,10 @@ msgstr "Adjudication · {0}"
 msgid "Adjudications"
 msgstr "Adjudications"
 
+#: src/app-tour/tour-host.tsx
+msgid "adjudicator"
+msgstr "adjudicator"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Adjustments"
 msgstr "Adjustments"
@@ -3783,6 +3795,10 @@ msgstr "All results for \"{trimmed}\""
 msgid "All slides"
 msgstr "All slides"
 
+#: src/app-tour/tour-steps.ts
+msgid "All slides finds any slide again, with its state, not only the next one. That ends this chapter."
+msgstr "All slides finds any slide again, with its state, not only the next one. That ends this chapter."
+
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "All slides kept loose"
@@ -3907,6 +3923,10 @@ msgstr "Annotate"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Annotate by hand"
 msgstr "Annotate by hand"
+
+#: src/app-tour/tour-host.tsx
+msgid "annotate expert"
+msgstr "annotate expert"
 
 #: src/viewer/annotate-task-panel.tsx
 msgid "Annotate task"
@@ -4131,6 +4151,10 @@ msgstr "As"
 msgid "As {0}"
 msgstr "As {0}"
 
+#: src/app-tour/tour-host.tsx
+msgid "as the {role}"
+msgstr "as the {role}"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Ask"
 msgstr "Ask"
@@ -4292,6 +4316,7 @@ msgstr "B · {0}"
 
 #: ../../packages/ui/src/components/auth.tsx
 #: ../../packages/ui/src/components/icon.tsx
+#: src/app-tour/tour-host.tsx
 #: src/help/tour-host.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -5204,6 +5229,7 @@ msgstr "Channels"
 msgid "Chapter"
 msgstr "Chapter"
 
+#: src/app-tour/tour-host.tsx
 #: src/routes/flow-map.walkthrough.index.tsx
 msgid "Chapters"
 msgstr "Chapters"
@@ -6773,6 +6799,7 @@ msgstr "Does not line up"
 
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/team.tsx
+#: src/app-tour/tour-host.tsx
 #: src/feedback/feedback-dialog.tsx
 #: src/help/tour-host.tsx
 #: src/screens/admin/api-section.tsx
@@ -7033,6 +7060,10 @@ msgstr "Drop more slides, results or folders here"
 msgid "Drop slides here"
 msgstr "Drop slides here"
 
+#: src/app-tour/tour-steps.ts
+msgid "Drop slides, AI results or a whole folder here, or press Choose files. The app pairs each result with its slide before anything is uploaded."
+msgstr "Drop slides, AI results or a whole folder here, or press Choose files. The app pairs each result with its slide before anything is uploaded."
+
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Drop slides, results or a whole folder"
@@ -7145,6 +7176,10 @@ msgstr "Each switch is written to the audit log."
 #: src/screens/project/settings-tab.tsx
 msgid "each task can change them"
 msgstr "each task can change them"
+
+#: src/app-tour/tour-steps.ts
+msgid "Each task shows its progress. Press the task to see where you are in it."
+msgstr "Each task shows its progress. Press the task to see where you are in it."
 
 #: src/help/tool-hints-section.tsx
 msgid "Each tool shows its hint once. Show one again to see it on the slide."
@@ -7483,6 +7518,10 @@ msgstr "Every object is decided, left open or with the adjudicator"
 #: src/screens/admin/connect-model.tsx
 msgid "Every object needs a class and a polygon in level 0 pixels. A score is optional."
 msgstr "Every object needs a class and a polygon in level 0 pixels. A score is optional."
+
+#: src/app-tour/tour-steps.ts
+msgid "Every project has its own Upload button. This is the format gallery, one slide of every supported format."
+msgstr "Every project has its own Upload button. This is the format gallery, one slide of every supported format."
 
 #: src/screens/admin/admin-shell.tsx
 msgid "Every project in the workspace, its privacy and the space it uses"
@@ -8331,6 +8370,10 @@ msgstr "Give the model a name and a version."
 msgid "Go home"
 msgstr "Go home"
 
+#: src/app-tour/tour-host.tsx
+msgid "Go on as myself"
+msgstr "Go on as myself"
+
 #: ../../packages/ui/src/components/command-palette.tsx
 #: ../../packages/ui/src/components/team.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -8493,6 +8536,10 @@ msgstr "Guided check"
 #: src/shell/page-title-names.ts
 msgid "Guided review"
 msgstr "Guided review"
+
+#: src/app-tour/tour-steps.ts
+msgid "Guided review shows one object at a time. Agree, Disagree or Not sure saves at once and moves to the next object. The keys are K, X and U."
+msgstr "Guided review shows one object at a time. Agree, Disagree or Not sure saves at once and moves to the next object. The keys are K, X and U."
 
 #: src/help/tour-host.tsx
 msgid "Guided tour"
@@ -11008,6 +11055,7 @@ msgid "New workspace"
 msgstr "New workspace"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/app-tour/tour-host.tsx
 #: src/help/tour-host.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/clinical-report/report-screen.tsx
@@ -13383,6 +13431,14 @@ msgstr "Plain"
 msgid "Play"
 msgstr "Play"
 
+#: src/app-tour/tour-host.tsx
+msgid "Play {title}"
+msgstr "Play {title}"
+
+#: src/app-tour/tour-host.tsx
+msgid "Play all"
+msgstr "Play all"
+
 #: src/flow-map/walk-bar.tsx
 msgid "Play all, from upload to the signed report"
 msgstr "Play all, from upload to the signed report"
@@ -14230,6 +14286,10 @@ msgstr "Research output"
 msgid "Research projects never show it."
 msgstr "Research projects never show it."
 
+#: src/app-tour/tour-host.tsx
+msgid "researcher"
+msgstr "researcher"
+
 #: ../../packages/ui/src/components/comment-thread.tsx
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/screens/admin/people.tsx
@@ -14526,6 +14586,10 @@ msgstr "Review"
 msgid "Review AI results"
 msgstr "Review AI results"
 
+#: src/app-tour/tour-steps.ts
+msgid "Review as reviewer A"
+msgstr "Review as reviewer A"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Review CSV"
 msgstr "Review CSV"
@@ -14597,6 +14661,14 @@ msgstr "Reviewer"
 #: src/screens/disagreements/adjudicator-view.tsx
 msgid "Reviewer {0}"
 msgstr "Reviewer {0}"
+
+#: src/app-tour/tour-host.tsx
+msgid "reviewer A"
+msgstr "reviewer A"
+
+#: src/app-tour/tour-host.tsx
+msgid "reviewer B"
+msgstr "reviewer B"
 
 #. placeholder {0}: added.join(", ")
 #: src/screens/viewer/layer-views.tsx
@@ -16278,6 +16350,10 @@ msgstr "Skin"
 msgid "Skip"
 msgstr "Skip"
 
+#: src/app-tour/tour-host.tsx
+msgid "Skip chapter"
+msgstr "Skip chapter"
+
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
 #: src/viewer/stage-guided-card.tsx
@@ -16762,6 +16838,10 @@ msgstr "Start here"
 msgid "Start in guided review"
 msgstr "Start in guided review"
 
+#: src/app-tour/tour-steps.ts
+msgid "Start in guided review opens the first object that needs you. Press it."
+msgstr "Start in guided review opens the first object that needs you. Press it."
+
 #: src/study/study-screen.tsx
 msgid "Start next round"
 msgstr "Start next round"
@@ -16826,6 +16906,10 @@ msgstr "Start with a project"
 msgid "Start with area {0}"
 msgstr "Start with area {0}"
 
+#: src/app-tour/tour-steps.ts
+msgid "Start with Upload. The same button sits in the top bar on every page. Press it."
+msgstr "Start with Upload. The same button sits in the top bar on every page. Press it."
+
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/send-step.tsx
 #: src/screens/new-task/steps.tsx
@@ -16870,6 +16954,12 @@ msgstr "Stays open until you pick. Your review can be changed until sign-off."
 #: src/screens/settings/settings-screen.tsx
 msgid "Stays put"
 msgstr "Stays put"
+
+#. placeholder {0}: step.number
+#. placeholder {1}: tourSteps.length
+#: src/app-tour/tour-host.tsx
+msgid "Step {0} of {1}"
+msgstr "Step {0} of {1}"
 
 #. placeholder {0}: index + 1
 #: src/help/tour-host.tsx
@@ -16923,6 +17013,10 @@ msgstr "Still reading this slide, {0} regions so far"
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid "Still reading, {0} so far"
 msgstr "Still reading, {0} so far"
+
+#: src/app-tour/tour-host.tsx
+msgid "Stop"
+msgstr "Stop"
 
 #: src/results/painted-map-layer.tsx
 msgid "Stop painting"
@@ -17115,6 +17209,14 @@ msgstr "Sweeping 180 steps"
 msgid "Swipe line between the two sets"
 msgstr "Swipe line between the two sets"
 
+#: src/app-tour/tour-steps.ts
+msgid "Switch from Guided to Review to scan the whole slide. Both ways save to the same review."
+msgstr "Switch from Guided to Review to scan the whole slide. Both ways save to the same review."
+
+#: src/app-tour/tour-host.tsx
+msgid "Switch to the {who}"
+msgstr "Switch to the {who}"
+
 #. placeholder {0}: report.template.latest_version
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "Switch to v{0}"
@@ -17123,6 +17225,11 @@ msgstr "Switch to v{0}"
 #: ../../packages/ui/src/components/workspace-switcher.tsx
 msgid "Switch workspace"
 msgstr "Switch workspace"
+
+#. placeholder {0}: step.role
+#: src/app-tour/tour-host.tsx
+msgid "Switching account is off on this server. Sign in as role-{0}@parfocal.eu in another window, or go on as yourself."
+msgstr "Switching account is off on this server. Sign in as role-{0}@parfocal.eu in another window, or go on as yourself."
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Synthetic"
@@ -17427,6 +17534,10 @@ msgstr "The {left} slides not started"
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "The {total} sampled cells sit close together here. Click to zoom to them"
 msgstr "The {total} sampled cells sit close together here. Click to zoom to them"
+
+#: src/app-tour/tour-host.tsx
+msgid "the account that started the tour"
+msgstr "the account that started the tour"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "the AI cells inside the areas you draw"
@@ -17804,6 +17915,10 @@ msgstr "The next object comes by itself. The dots take you back to any of them."
 msgid "The next open object comes by itself. Previous and Next take you back to any of them."
 msgstr "The next open object comes by itself. Previous and Next take you back to any of them."
 
+#: src/app-tour/tour-host.tsx
+msgid "The next step is done as the {who}."
+msgstr "The next step is done as the {who}."
+
 #: src/routes/prototype.tsx
 msgid "The nine chapters from upload to the co-signed clinical report"
 msgstr "The nine chapters from upload to the co-signed clinical report"
@@ -18108,6 +18223,10 @@ msgstr "The screen recorder did not load. An ad blocker may be blocking it. Sess
 #: src/feedback/feedback-dialog.tsx
 msgid "The screenshot that will be sent, with slides and patient details blurred"
 msgstr "The screenshot that will be sent, with slides and patient details blurred"
+
+#: src/app-tour/tour-host.tsx
+msgid "The seeded data for this step is missing, so the tour stays on this page."
+msgstr "The seeded data for this step is missing, so the tour stays on this page."
 
 #: src/viewer/start-run-panel.tsx
 msgid "The selected shapes"
@@ -18466,6 +18585,10 @@ msgstr "This case has no report yet"
 #: ../../packages/ui/src/components/settings-dialog.tsx
 msgid "This computer"
 msgstr "This computer"
+
+#: src/app-tour/tour-host.tsx
+msgid "This control is not on the page now, so the tour cannot point at it. Press Next."
+msgstr "This control is not on the page now, so the tour cannot point at it. Press Next."
 
 #: src/screens/upload/live-wizard.tsx
 msgid "This file has nothing in it"
@@ -18945,6 +19068,12 @@ msgstr "Top right"
 msgid "Touch ID, or your computer's PIN, unlocks the passkey saved on this computer."
 msgstr "Touch ID, or your computer's PIN, unlocks the passkey saved on this computer."
 
+#: src/app-tour/tour-host.tsx
+#: src/shell/account-menu.tsx
+#: src/shell/palette-labels.tsx
+msgid "Tour of the app"
+msgstr "Tour of the app"
+
 #: src/help/tour-host.tsx
 msgid "Tour offer"
 msgstr "Tour offer"
@@ -19369,6 +19498,14 @@ msgstr "Upload {0}, 1 left out"
 msgid "Upload a file"
 msgstr "Upload a file"
 
+#: src/app-tour/tour-steps.ts
+msgid "Upload and import"
+msgstr "Upload and import"
+
+#: src/app-tour/tour-steps.ts
+msgid "Upload is a page with three steps, Files, Check and Upload. Files come from this computer or from a link or storage."
+msgstr "Upload is a page with three steps, Files, Check and Upload. Files come from this computer or from a link or storage."
+
 #. placeholder {0}: entry.name
 #: src/screens/upload/case-upload-drawer.tsx
 msgid "Upload of {0}"
@@ -19634,6 +19771,10 @@ msgstr "View centre"
 msgid "View only"
 msgstr "View only"
 
+#: src/app-tour/tour-host.tsx
+msgid "viewer"
+msgstr "viewer"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Viewer"
 msgstr "Viewer"
@@ -19897,6 +20038,10 @@ msgstr "What experts check"
 msgid "What files work?"
 msgstr "What files work?"
 
+#: src/app-tour/tour-steps.ts
+msgid "What files work? shows the folder shape Parfocal understands and every scanner format it opens."
+msgstr "What files work? shows the folder shape Parfocal understands and every scanner format it opens."
+
 #: src/screens/upload/files-step.tsx
 msgid "What folder shape works"
 msgstr "What folder shape works"
@@ -20042,6 +20187,10 @@ msgstr "When a screen locks, how long a sign-in lasts and how long emergency acc
 #: src/screens/onboarding/setup-screen.tsx
 msgid "When setup ends, New project opens with the name, the privacy mode and the class list to fill in."
 msgstr "When setup ends, New project opens with the name, the privacy mode and the class list to fill in."
+
+#: src/app-tour/tour-steps.ts
+msgid "When the slides are in, New review task hands them to reviewers. The next chapter is the reviewer's side."
+msgstr "When the slides are in, New review task hands them to reviewers. The next chapter is the reviewer's side."
 
 #: src/screens/settings/settings-screen.tsx
 msgid "When useful"
@@ -20357,6 +20506,12 @@ msgstr "You already have a preset called {0}."
 #: src/screens/review/slide-submitted.tsx
 msgid "You and {other} agree on {0} of {1} objects. You can look at the differences later, or go on."
 msgstr "You and {other} agree on {0} of {1} objects. You can look at the differences later, or go on."
+
+#. placeholder {0}: me.display_name
+#. placeholder {1}: roleLabel(state.acting)
+#: src/app-tour/tour-host.tsx
+msgid "You are {0}, {1}"
+msgstr "You are {0}, {1}"
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "You are here"

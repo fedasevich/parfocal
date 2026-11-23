@@ -122,6 +122,7 @@ function TaskRow({ selected, colour, title, sub, progress, tags, action, onSelec
         type="button"
         aria-pressed={selected}
         data-list-row=""
+        data-tour="my-work-task"
         data-vt-source=""
         onClick={onSelect}
         className="col-span-3 grid cursor-pointer grid-cols-subgrid items-center gap-3.5 border-0 bg-transparent p-0 text-left font-[inherit] text-[inherit]"

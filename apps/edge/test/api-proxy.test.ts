@@ -77,3 +77,27 @@ test("without a proxy token no client copy of one reaches the API", async () => 
   assert.equal(headers.get("Modal-Key"), null);
   assert.equal(headers.get("Modal-Secret"), null);
 });
+
+test("the Worker never lets Cloudflare cache an API answer", async () => {
+  const { send, sent } = recorder(
+    new Response("id,class\nT1,tumour", { headers: { "Content-Type": "text/csv" } }),
+  );
+  const request = new Request(
+    "https://app.parfocal.test/api/review-tasks/t1/evaluation/exports/objects.csv",
+  );
+  const response = await handleApi(request, { API_ORIGIN }, send);
+  assert.equal(sent[0]?.init.cache, "no-store");
+  assert.equal(response.headers.get("Cache-Control"), "private, no-store");
+  assert.equal(await response.text(), "id,class\nT1,tumour");
+});
+
+test("an API answer that sets its own caching keeps it", async () => {
+  const reply = new Response("tile", { headers: { "Cache-Control": "private, max-age=3600" } });
+  const { send } = recorder(reply);
+  const response = await handleApi(
+    new Request("https://app.parfocal.test/api/x"),
+    { API_ORIGIN },
+    send,
+  );
+  assert.equal(response.headers.get("Cache-Control"), "private, max-age=3600");
+});

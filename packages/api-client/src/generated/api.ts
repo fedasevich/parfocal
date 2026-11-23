@@ -8404,6 +8404,27 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
+export interface TourAccountShown {
+  name: string;
+  email: string;
+  switched: boolean;
+}
+
+export type TourSwitchAccount = (typeof TourSwitchAccount)[keyof typeof TourSwitchAccount];
+
+export const TourSwitchAccount = {
+  researcher: "researcher",
+  "reviewer-a": "reviewer-a",
+  "reviewer-b": "reviewer-b",
+  adjudicator: "adjudicator",
+  viewer: "viewer",
+  annotator: "annotator",
+} as const;
+
+export interface TourSwitch {
+  account: TourSwitchAccount;
+}
+
 export type Withheld = (typeof Withheld)[keyof typeof Withheld];
 
 export const Withheld = {
@@ -16884,6 +16905,307 @@ export const useSetProjectMemberSignOut = <TError = Problem, TContext = unknown>
   TContext
 > => {
   return useMutation(getSetProjectMemberSignOutMutationOptions(options), queryClient);
+};
+
+export type switchToTourRoleResponse200 = {
+  data: TourAccountShown;
+  status: 200;
+};
+
+export type switchToTourRoleResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type switchToTourRoleResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type switchToTourRoleResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type switchToTourRoleResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type switchToTourRoleResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type switchToTourRoleResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type switchToTourRoleResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type switchToTourRoleResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type switchToTourRoleResponseSuccess = switchToTourRoleResponse200 & {
+  headers: Headers;
+};
+export type switchToTourRoleResponseError = (
+  | switchToTourRoleResponse400
+  | switchToTourRoleResponse401
+  | switchToTourRoleResponse403
+  | switchToTourRoleResponse404
+  | switchToTourRoleResponse409
+  | switchToTourRoleResponse422
+  | switchToTourRoleResponse429
+  | switchToTourRoleResponse500
+) & {
+  headers: Headers;
+};
+
+export type switchToTourRoleResponse =
+  | switchToTourRoleResponseSuccess
+  | switchToTourRoleResponseError;
+
+export const getSwitchToTourRoleUrl = () => {
+  return `/api/tour/role-switch`;
+};
+
+/**
+ * @summary Switch To Tour Role
+ */
+export const switchToTourRole = async (
+  tourSwitch: TourSwitch,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<switchToTourRoleResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<switchToTourRoleResponse>(getSwitchToTourRoleUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(tourSwitch),
+  });
+};
+
+export const getSwitchToTourRoleMutationKey = () => ["switchToTourRole"] as const;
+
+export const getSwitchToTourRoleMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof switchToTourRole>>,
+    TError,
+    SwitchToTourRoleMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof switchToTourRole>>,
+  TError,
+  SwitchToTourRoleMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSwitchToTourRoleMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof switchToTourRole>>,
+    SwitchToTourRoleMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return switchToTourRole(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SwitchToTourRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof switchToTourRole>>
+>;
+export type SwitchToTourRoleMutationBody = TourSwitch;
+export type SwitchToTourRoleMutationError = Problem;
+export type SwitchToTourRoleMutationVariables = { data: TourSwitch };
+
+/**
+ * @summary Switch To Tour Role
+ */
+export const useSwitchToTourRole = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof switchToTourRole>>,
+      TError,
+      SwitchToTourRoleMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof switchToTourRole>>,
+  TError,
+  SwitchToTourRoleMutationVariables,
+  TContext
+> => {
+  return useMutation(getSwitchToTourRoleMutationOptions(options), queryClient);
+};
+
+export type returnFromTourRoleResponse200 = {
+  data: TourAccountShown;
+  status: 200;
+};
+
+export type returnFromTourRoleResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type returnFromTourRoleResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type returnFromTourRoleResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type returnFromTourRoleResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type returnFromTourRoleResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type returnFromTourRoleResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type returnFromTourRoleResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type returnFromTourRoleResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type returnFromTourRoleResponseSuccess = returnFromTourRoleResponse200 & {
+  headers: Headers;
+};
+export type returnFromTourRoleResponseError = (
+  | returnFromTourRoleResponse400
+  | returnFromTourRoleResponse401
+  | returnFromTourRoleResponse403
+  | returnFromTourRoleResponse404
+  | returnFromTourRoleResponse409
+  | returnFromTourRoleResponse422
+  | returnFromTourRoleResponse429
+  | returnFromTourRoleResponse500
+) & {
+  headers: Headers;
+};
+
+export type returnFromTourRoleResponse =
+  | returnFromTourRoleResponseSuccess
+  | returnFromTourRoleResponseError;
+
+export const getReturnFromTourRoleUrl = () => {
+  return `/api/tour/role-switch`;
+};
+
+/**
+ * @summary Return From Tour Role
+ */
+export const returnFromTourRole = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<returnFromTourRoleResponse> => {
+  return apiFetch<returnFromTourRoleResponse>(getReturnFromTourRoleUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getReturnFromTourRoleMutationKey = () => ["returnFromTourRole"] as const;
+
+export const getReturnFromTourRoleMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof returnFromTourRole>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof returnFromTourRole>>, TError, void, TContext> => {
+  const mutationKey = getReturnFromTourRoleMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof returnFromTourRole>>, void> = () => {
+    return returnFromTourRole(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReturnFromTourRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof returnFromTourRole>>
+>;
+
+export type ReturnFromTourRoleMutationError = Problem;
+
+/**
+ * @summary Return From Tour Role
+ */
+export const useReturnFromTourRole = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof returnFromTourRole>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof returnFromTourRole>>, TError, void, TContext> => {
+  return useMutation(getReturnFromTourRoleMutationOptions(options), queryClient);
 };
 
 export type createCaseReportResponse201 = {

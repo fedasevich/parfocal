@@ -85,6 +85,7 @@ API_TOKEN_PREFIX = "pf_"
 SECOND_FACTOR_SETUP_PATH = "/ui/console/users/me"
 SIGNATURE_WINDOW = timedelta(minutes=5)
 CLOCK_SKEW = timedelta(seconds=30)
+TOUR_ORIGIN = "tour_origin"
 
 
 class LoginFailedError(ProblemError):
@@ -190,7 +191,7 @@ def sealed_tokens(
     tokens: TokenSet, claims: dict[str, Any], earlier: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     before = earlier or {}
-    return {
+    sealed = {
         "id_token": tokens.id_token,
         "refresh_token": tokens.refresh_token,
         "name": claims.get("name"),
@@ -198,6 +199,13 @@ def sealed_tokens(
         "amr": factors_of(claims) or factors_of(before),
         "auth_time": auth_time_of(claims) if earlier is None else auth_time_of(before),
     }
+    if TOUR_ORIGIN in before:
+        sealed |= {
+            "name": before.get("name"),
+            "email": before.get("email"),
+            TOUR_ORIGIN: before[TOUR_ORIGIN],
+        }
+    return sealed
 
 
 async def load_session(

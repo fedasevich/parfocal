@@ -1,0 +1,132 @@
+[[chapter]]
+title = "Reviewing, as each reviewer"
+group = "core"
+intro = "Each reviewer judges every object of their slides alone. Guided review shows one object at a time, and the full viewer in Review mode saves to the same review. A decision counts as agree, not sure or disagree. A reviewer can also fix an object by redrawing, retyping or adding what the AI missed. Role account review has two reviewers, A and B, on two slides of the format gallery."
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "My work, To review"
+url = "/my-work"
+click = "Sign in as role-reviewer-a@parfocal.eu. Open My work. The tabs are To review, Assigned by me and All slides. Press Start in guided review on Role account review."
+expect = "Role account review shows with 0 of 2 slides and a Start in guided review button."
+why = "A reviewer finds all their work in one list."
+api = ["/api/me/review-tasks", "/api/me/slides"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Guided review opens the first object"
+url = "/tasks/{task:Role account review}/guided"
+click = "Open the link, or press Start in guided review."
+expect = "The first slide opens in Guided mode with one object centred and outlined and its decision buttons in the panel."
+why = "One object at a time is the fastest way to judge hundreds of objects without missing one."
+api = ["/api/review-tasks/{task:Role account review}", "/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/layer"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Agree, disagree, not sure"
+url = "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=guided"
+click = "Press Agree or K on the first object. On the next press Disagree or X, then pick What is wrong and Quick reasons, optional. Press Not sure or U on a third. J is Skip for now, Shift J is Previous, Shift K is Agree with the rest and Shift N is Add a note."
+expect = "Each press saves at once and moves to the next object. The dots show which objects are decided."
+why = "These answers are the data the evaluation is built from."
+api = ["/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/objects", "/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/decisions"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Fix an object"
+url = "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=guided"
+click = "On the object card press Change the type and pick another class. On another press Redraw the outline or Edit shape. Press Add something the AI missed and draw it."
+expect = "The fix shows on the slide and is kept in a history that is never erased. The AI's own object stays untouched."
+why = "A reviewer's fix becomes the outline or class in the training data when the queue agrees."
+api = ["/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/decision-notes"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "The full viewer saves to the same review"
+url = "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review"
+click = "Switch the mode from Guided to Review. Click any object on the slide and decide it in the panel. P is Annotate this slide and Shift A opens AI tools."
+expect = "The decisions made in guided review show here too, and new ones show there."
+why = "Some reviewers prefer to scan the whole slide. Both ways must give one review."
+api = ["/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/skips"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "The opinion form"
+url = "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review&tab=opinion"
+click = "Open the Opinion tab and answer the questions."
+expect = "The slide's questions show, or No opinion asked if the task has none. Required questions block the submit until answered."
+why = "Some answers are about the whole slide, such as how acceptable the AI result is."
+api = ["/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/opinion"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Submit the slide"
+url = "/tasks/{task:Role account review}/submitted?slide={task_slide:Role account review|1}"
+click = "When every object is decided, press Submit the slide or Enter. The submitted page counts down."
+expect = "Slide 1 submitted. Opens by itself in a few seconds, with Open slide 2 and Back to My work. The review can still change until the researcher signs off."
+why = "Submitting tells the researcher this reviewer is done with the slide."
+api = ["/api/review-tasks/{task:Role account review}/states"]
+
+[[chapter.step]]
+role = "reviewer-b"
+title = "Reviewer B works alone"
+url = "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=guided"
+click = "Sign in as role-reviewer-b@parfocal.eu in a second private window and review the same slide."
+expect = "Reviewer B sees none of Reviewer A's answers, only the AI's objects."
+why = "Blind review is what makes the agreement between reviewers mean something."
+api = ["/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/decisions"]
+
+[[chapter.step]]
+role = "reviewer-b"
+title = "All slides"
+url = "/my-work?tab=all"
+click = "Open My work, All slides. Filter by project and status, then Clear filters."
+expect = "Every slide the reviewer can see, with its state. A filter with no match says No slide matches these filters."
+why = "A reviewer can find any slide again, not only the next one."
+api = ["/api/me/slides"]
+
+[[chapter.step]]
+role = "owner"
+title = "Cells judged on the slide"
+url = "/tasks/{task:Cell typing tour}/cells"
+click = "Sign in as agent-walk@parfocal.eu. Open the link. Move between the twelve random cells with the small cells panel and decide each."
+expect = "The viewer opens in cells mode with the current cell centred and outlined."
+why = "Random cells give an unbiased estimate of how well the AI types cells."
+api = ["/api/review-tasks/{task:Cell typing tour}", "/api/review-tasks/{task:Cell typing tour}/states"]
+
+[[chapter.step]]
+role = "owner"
+title = "Four ways to ask"
+url = "/projects/{task_project:Certainty decisions review}/slides/{task_slide:Certainty decisions review|1}?task={task:Certainty decisions review}"
+click = "Open each of Agree decisions review, Certainty decisions review, Yes-no decisions review and Blind decisions review from the project's Review tasks tab, and look at the buttons."
+expect = "Agree K, Disagree X and Not sure U. Certainly not to Certainly on 1 to 5. Yes Y, No N and Not sure U. Blind shows class names on 1 to 4 without the AI's guess."
+why = "The style is chosen per task, and each one is turned into agree, not sure or disagree by its Counts as line."
+api = ["/api/review-tasks/{task:Agree decisions review}", "/api/review-tasks/{task:Certainty decisions review}", "/api/review-tasks/{task:Yes-no decisions review}", "/api/review-tasks/{task:Blind decisions review}"]
+
+[[chapter.step]]
+role = "viewer"
+title = "Someone not on the task can only look"
+url = "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review"
+click = "Sign in as role-viewer@parfocal.eu and open the link."
+expect = "You are not assigned to this task, so you can look but not change anything. No decision buttons work."
+why = "Only the assigned reviewers may add answers."
+api = ["/api/review-tasks/{task:Role account review}"]
+state = "refused"
+
+[[chapter.step]]
+role = "owner"
+title = "A signed off task is locked"
+url = "/projects/{task_project:Signed-off review}/slides/{task_slide:Signed-off review|1}?task={task:Signed-off review}&mode=review"
+click = "Open the link and try to change a decision."
+expect = "The task is signed off. An owner can reopen it."
+why = "After sign-off the answers are final and the report stays true."
+api = ["/api/review-tasks/{task:Signed-off review}/states"]
+state = "refused"
+
+[[chapter.step]]
+role = "owner"
+title = "The task address alone"
+url = "/tasks/{task:Showcase case review}"
+click = "Open the link."
+expect = "It moves on to guided review of your next open slide by itself."
+why = "Links to a task always lead to the work that is left."
+api = ["/api/review-tasks/{task:Showcase case review}"]

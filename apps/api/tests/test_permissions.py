@@ -26,6 +26,7 @@ from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
+from parfocal_api import tour_switch
 from parfocal_api.dataset_versions import dataset_version_key
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
@@ -141,6 +142,7 @@ OPEN_OPERATIONS = {
     "getSharedReport": "public",
     "getInvitePreview": "public",
     "callProjectWebhook": "webhook-signature",
+    "returnFromTourRole": "tour-origin",
     "getRemoteTile": "public",
     **dict.fromkeys(
         (
@@ -477,6 +479,7 @@ def link_site_serving() -> threading.Thread:
 
 
 INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile", "typeOutlines", "embedSlideView"})
+TOUR_OPERATIONS = frozenset({"switchToTourRole"})
 
 
 OUTLINE_TYPED: dict[str, object] = {
@@ -512,6 +515,21 @@ def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
     link_site_serving()
     trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
     monkeypatch.setattr(api.app, "settings", trusted)
+
+
+def allow_tour_switch(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
+    switch_on = api.app.settings.model_copy(update={"tour_role_switch": True})
+    monkeypatch.setattr(api.app, "settings", switch_on)
+
+    async def any_role_account(*_: object) -> tour_switch.Target:
+        return tour_switch.Target("seed:role-reviewer-a", "Reviewer A", "role-reviewer-a@x")
+
+    async def no_session(*_: object, **__: object) -> None:
+        return None
+
+    monkeypatch.setattr(tour_switch, "role_account_in", any_role_account)
+    monkeypatch.setattr(tour_switch, "swap_session", no_session)
+    monkeypatch.setattr(tour_switch, "record", no_session)
 
 
 def seeded(w: Workspace, name: str) -> uuid.UUID:
@@ -1635,6 +1653,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "changeMemberRole": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.colleague}/role", {"role": "reviewer"}
     ),
+    "switchToTourRole": lambda _: Call("POST", "/api/tour/role-switch", {"account": "reviewer-a"}),
     "setMemberAdminRights": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.deputy}/admin-rights", {"admin_rights": True}
     ),
@@ -1790,6 +1809,41 @@ WRITES = {
 
 def writes() -> set[str]:
     return {name for name, operation in operations().items() if operation.get("x-permission-write")}
+
+
+ADMIN_READS = {
+    "getAdminOverview",
+    "getStorageUsage",
+    "getSecuritySettings",
+    "listWebhooks",
+    "listAiModels",
+    "getLabModelConnection",
+    "getLabModel",
+    "getProjectWebhook",
+    "listEventTargets",
+    "listEventDeliveries",
+    "getRetentionPolicy",
+    "listLegalHolds",
+    "getAiUsage",
+    "getJoinSettings",
+    "listServiceAccounts",
+    "getSecurityContact",
+}
+
+VIEW_ONLY_READS = {"listImportSources", "getAiCorrections", "getTaskTiming"}
+
+
+def admin_reads() -> set[str]:
+    return {name for name, operation in operations().items() if operation.get("x-permission-admin")}
+
+
+def test_admin_rights_gate_every_admin_read() -> None:
+    assert admin_reads() == ADMIN_READS
+    assert not ADMIN_READS & WRITES
+    setup = {Permission.WORKSPACE_SETTINGS.value, Permission.INTEGRATIONS.value}
+    guarded = guarded_operations()
+    setup_reads = {name for name, permission in guarded.items() if permission in setup} - WRITES
+    assert setup_reads == ADMIN_READS | VIEW_ONLY_READS
 
 
 def test_the_matrix_covers_every_permission_for_every_role() -> None:
@@ -3110,6 +3164,8 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
         trust_link_site(api, monkeypatch)
     if operation in INTERACTIVE_OPERATIONS:
         answer_view_maps(api, monkeypatch)
+    if operation in TOUR_OPERATIONS:
+        allow_tour_switch(api, monkeypatch)
     permission = guarded_operations()[operation]
     workspace = workspaces[seat]
     status = send(api, principal_for(workspace, seat), GUARDED_CALLS[operation](workspace))
@@ -3117,7 +3173,7 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
     if (
         (grant is Grant.ASSIGNED and operation in NEEDS_A_TASK)
         or grant is Grant.NONE
-        or (operation in WRITES and grant is Grant.VIEW_ONLY)
+        or (operation in WRITES | ADMIN_READS and grant is Grant.VIEW_ONLY)
     ):
         assert status == 403
     else:

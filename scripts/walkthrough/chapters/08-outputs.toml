@@ -1,0 +1,134 @@
+[[chapter]]
+title = "Sign off, evaluation, dataset and exports"
+group = "research"
+intro = "Sign off makes a review task final. It needs every slide submitted, every queue row decided or left open on purpose, and a sign-in from the last five minutes. At sign off the app builds the final layer, the clean checked answer per slide, and the evaluation report. The Dataset page turns the final layer into training files and frozen versions."
+
+[[chapter.step]]
+role = "researcher"
+title = "What blocks a sign off"
+url = "/tasks/{task:Disagreement queue example}/sign-off"
+click = "Open the link. Each blocker has a link, such as See them in the disagreements or Back to disagreements."
+expect = "Before you can sign, with the open queue rows and anyone with slides left, such as Rhea has 1 slide left."
+why = "A task cannot be signed while answers are missing, so the report is never built on half the data."
+api = ["/api/review-tasks/{task:Disagreement queue example}/sign-off-summary"]
+state = "blocked"
+
+[[chapter.step]]
+role = "owner"
+title = "A signed task"
+url = "/tasks/{task:Every outcome review}/sign-off"
+click = "Sign in as agent-walk@parfocal.eu and open the link. Press Download 3 files."
+expect = "Evaluation v1 is signed. The counts, the signature with its checksum, the change after sign off and the three files: report PDF, decisions CSV and evaluation JSON."
+why = "The signature and checksum prove the files were not changed after signing."
+api = ["/api/review-tasks/{task:Every outcome review}/sign-off-summary", "/api/review-tasks/{task:Every outcome review}/evaluation"]
+
+[[chapter.step]]
+role = "owner"
+title = "Sign a task yourself"
+url = "/tasks/{task:Disagreement queue example}/sign-off"
+click = "First decide every open row of Disagreement queue example in its queue. Then press Sign off Disagreement queue example and Sign v1. If your sign-in is older than five minutes, enter your password again."
+expect = "Ready to sign, then Evaluation v1 is signed. Reviewers are told. Open the evaluation report and Start v2 appear."
+why = "A fresh sign-in means nobody can sign at a laptop left open."
+api = ["/api/review-tasks/{task:Disagreement queue example}/states"]
+
+[[chapter.step]]
+role = "owner"
+title = "The evaluation report"
+url = "/tasks/{task:Every outcome review}/evaluation"
+click = "Open Evaluation from the task row. Press Preview the PDF, then Download or Download CSV only. Arrange blocks and format changes the layout."
+expect = "The report pages show agreement with the AI per class, errors by reason and every object by ID, laid out by the study template."
+why = "This is what goes into a paper or to a supervisor."
+api = ["/api/review-tasks/{task:Every outcome review}/evaluation-report", "/api/review-tasks/{task:Every outcome review}/report-layout"]
+
+[[chapter.step]]
+role = "owner"
+title = "Changes after sign off"
+url = "/tasks/{task:Every outcome review}/evaluation"
+click = "Scroll to the change table, or Switch to another version."
+expect = "One change after sign off, with the reason A pathologist meeting found tumour on the deeper level. The signed checksum still belongs to the version as signed."
+why = "The owner can still correct data after signing, and every change leaves a trace."
+api = ["/api/review-tasks/{task:Every outcome review}/evaluation-changes"]
+
+[[chapter.step]]
+role = "owner"
+title = "Share the report by link"
+url = "/tasks/{task:Every outcome review}/evaluation"
+click = "Press Compare and share, then Make a link, Copy, and later Revoke."
+expect = "A read-only link that anyone can open without an account until you revoke it."
+why = "Co-authors read the report without joining the workspace."
+api = ["/api/review-tasks/{task:Every outcome review}/evaluation/links"]
+
+[[chapter.step]]
+role = "signed-out"
+title = "A shared link that does not work"
+url = "/shared-reports/not-a-real-link"
+click = "Open the link in a private window."
+expect = "This link does not lead to a report. A revoked link says This link was revoked or has expired."
+why = "A stranger with a dead link learns nothing about the study."
+api = ["/api/shared-reports/not-a-real-link =404"]
+state = "error"
+
+[[chapter.step]]
+role = "owner"
+title = "The final layer"
+url = "/tasks/{task:Every outcome review}/dataset"
+click = "Open the Dataset page. Filter By origin and By class. Tick Include AI objects nobody checked to see the difference. Build the final layer again rebuilds it after a change."
+expect = "Counts per slide of ai-confirmed, ai-edited, rejected and human objects, and the one left open on purpose."
+why = "Only what a person checked goes into training data, and what was left out is counted."
+api = ["/api/review-tasks/{task:Every outcome review}/dataset"]
+
+[[chapter.step]]
+role = "owner"
+title = "Frozen dataset versions"
+url = "/tasks/{task:Every outcome review}/dataset"
+click = "Under versions, press Download on version 1, First frozen training set. Freeze a version would make version 2."
+expect = "A zip with one QuPath GeoJSON per slide and a manifest with a SHA-256 per file."
+why = "A frozen version never changes, so an experiment can be repeated months later."
+api = ["/api/review-tasks/{task:Every outcome review}/dataset-versions"]
+
+[[chapter.step]]
+role = "owner"
+title = "Patches with masks and COCO"
+url = "/tasks/{task:Every outcome review}/dataset"
+click = "Under Patch exports, download the COCO export of version 1. Cut patches would start a new export as a job."
+expect = "A zip of tiles, masks and a COCO file. A new export runs as a job and sends a notice when done."
+why = "Pixel models train on patches and masks, many tools read COCO."
+api = ["/api/review-tasks/{task:Every outcome review}/patch-exports"]
+
+[[chapter.step]]
+role = "owner"
+title = "The training dataset of a signed task"
+url = "/tasks/{task:Signed-off review}/dataset"
+click = "Open the link and press Download."
+expect = "A zip of the signed slides."
+why = "Every signed review task can feed training directly."
+api = ["/api/review-tasks/{task:Signed-off review}/training-dataset"]
+
+[[chapter.step]]
+role = "researcher"
+title = "No dataset before sign off"
+url = "/tasks/{task:Role account review}/dataset"
+click = "Open the link."
+expect = "Sign off the review task first. Its final layer is built from the signed off decisions."
+why = "Training on unfinished answers would put unchecked data into a model."
+api = ["/api/review-tasks/{task:Role account review}"]
+state = "refused"
+
+[[chapter.step]]
+role = "owner"
+title = "An annotate task's dataset"
+url = "/tasks/{task:Annotation example}/dataset"
+click = "Open the link and download."
+expect = "The signed off annotate slide with its drawn and checked objects. Arrows, text notes and rulers are only counted, never exported."
+why = "Annotate tasks feed the same training files as review tasks."
+api = ["/api/review-tasks/{task:Annotation example}/dataset"]
+
+[[chapter.step]]
+role = "owner"
+title = "An annotate task has no evaluation"
+url = "/tasks/{task:Annotation example}/evaluation"
+click = "Open the link."
+expect = "Annotate tasks have no evaluation, with a way back to the task."
+why = "There is no AI answer being measured in an annotate task."
+api = ["/api/review-tasks/{task:Annotation example}"]
+state = "refused"

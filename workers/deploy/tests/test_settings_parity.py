@@ -1,8 +1,14 @@
 import re
 from pathlib import Path
 
+import pytest
+
 from parfocal_api.settings import ApiSettings
-from parfocal_deploy.bootstrap import config_values, generated_keys
+from parfocal_deploy.bootstrap import (
+    TourSwitchOutsideDevelopmentError,
+    config_values,
+    generated_keys,
+)
 from parfocal_deploy.environments import environment
 from parfocal_deploy.tools import REPOSITORY
 
@@ -55,3 +61,16 @@ def test_the_stack_env_carries_every_required_setting() -> None:
 
 def test_the_production_secrets_carry_every_required_setting() -> None:
     assert required_settings() - production_secret_keys() == set()
+
+
+def test_the_tour_switch_is_off_unless_asked_for() -> None:
+    assert "TOUR_ROLE_SWITCH" not in config_values(environment("production"), OUTPUTS, LOCAL)
+    assert ApiSettings.model_fields["tour_role_switch"].default is False
+
+
+def test_the_tour_switch_turns_on_only_for_a_development_deployment() -> None:
+    asked = LOCAL | {"TOUR_ROLE_SWITCH": "on"}
+    configured = config_values(environment("production"), OUTPUTS, asked)
+    assert configured["TOUR_ROLE_SWITCH"] == "true"
+    with pytest.raises(TourSwitchOutsideDevelopmentError):
+        config_values(environment("staging"), OUTPUTS, asked)

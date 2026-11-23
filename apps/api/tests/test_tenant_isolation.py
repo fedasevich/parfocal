@@ -2008,7 +2008,9 @@ GET_ROUTES = {
     "listAuditSigningKeys": Route(
         Exposure.TENANT, lambda _: "/api/tenant/audit-events/signing-keys", admin_rights=True
     ),
-    "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
+    "listServiceAccounts": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/service-accounts", admin_rights=True
+    ),
     "listInvitations": Route(
         Exposure.TENANT, lambda _: "/api/tenant/invitations", admin_rights=True
     ),
@@ -2370,14 +2372,17 @@ GET_ROUTES = {
     "listModelVisibility": Route(Exposure.TENANT, lambda _: "/api/tenant/hidden-models"),
     "listImportSources": Route(Exposure.TENANT, lambda _: "/api/tenant/import-sources"),
     "getProjectWebhook": Route(
-        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/webhook"
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/webhook", admin_rights=True
     ),
     "listEventTargets": Route(
-        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/event-targets"
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/event-targets",
+        admin_rights=True,
     ),
     "listEventDeliveries": Route(
         Exposure.TENANT,
         lambda a: f"/api/projects/{a.ids['project']}/event-targets/{a.ids['event_target']}/events",
+        admin_rights=True,
     ),
     "getLabModel": Route(
         Exposure.TENANT,
@@ -2767,6 +2772,31 @@ def test_another_workspace_cannot_answer_an_ask(api: ApiAs, seeded: tuple[Seeded
         assert attempt.status_code == 404, attempt.text
     pending = api(a.member(admin_rights=True)).get("/api/tenant/access-requests").json()
     assert str(a.ids["access_request"]) in [item["id"] for item in pending]
+
+
+def test_another_workspace_cannot_switch_to_a_role_account_of_this_one(
+    api: ApiAs, seeded: tuple[Seeded, Seeded], database: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    a, b = seeded
+    subject = f"seed:isolation-{uuid.uuid4().hex[:8]}"
+    query(
+        with_database(OWNER_URL, database),
+        "WITH person AS ("
+        "INSERT INTO users (subject, email, display_name, initials, avatar_colour) "
+        f"VALUES ('{subject}', 'role-annotator@parfocal.eu', 'Annotator', 'AN', 1) "
+        "RETURNING id) INSERT INTO memberships (tenant_id, user_id, role) "
+        f"SELECT '{a.tenant_id}', id, 'reviewer' FROM person",
+    )
+    switch_on = api.app.settings.model_copy(update={"tour_role_switch": True})
+    monkeypatch.setattr(api.app, "settings", switch_on)
+    attempt = api(b.member(admin_rights=True)).post(
+        "/api/tour/role-switch", json={"account": "annotator"}
+    )
+    assert (attempt.status_code, attempt.json()["code"]) == (404, "no-role-account")
+    own = api(a.member(admin_rights=True)).post(
+        "/api/tour/role-switch", json={"account": "annotator"}
+    )
+    assert (own.status_code, own.json()["code"]) == (409, "needs-browser-session")
 
 
 class CountingPools:

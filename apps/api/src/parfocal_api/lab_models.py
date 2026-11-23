@@ -679,7 +679,7 @@ async def connect_lab_model(
 @router.get(
     "/{model_id}",
     operation_id="getLabModel",
-    **require(Permission.INTEGRATIONS),
+    **require(Permission.INTEGRATIONS, admin=True),
 )
 async def get_lab_model(model_id: ModelId, connection: TenantConnection) -> LabModel:
     return await lab_model_of(connection, await model_row(connection, model_id))

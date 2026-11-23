@@ -249,19 +249,21 @@ def may_ask_for_emergency_access(principal: object) -> bool:
 
 
 def require(
-    permission: Permission, *, write: bool = False, emergency: bool = False
+    permission: Permission, *, write: bool = False, emergency: bool = False, admin: bool = False
 ) -> dict[str, Any]:
     async def check(principal: CurrentPrincipal) -> Grant:
         grant = grant_of(principal, permission)
         if grant is Grant.NONE and emergency and may_ask_for_emergency_access(principal):
             return grant
-        if grant is Grant.NONE or (write and grant is Grant.VIEW_ONLY):
+        if grant is Grant.NONE or ((write or admin) and grant is Grant.VIEW_ONLY):
             raise ForbiddenError
         return grant
 
     extra: dict[str, Any] = {"x-permission": permission.value}
     if write:
         extra["x-permission-write"] = True
+    if admin:
+        extra["x-permission-admin"] = True
     if emergency:
         extra["x-permission-emergency"] = True
     return {"dependencies": [Depends(check)], "openapi_extra": extra}

@@ -1,4 +1,5 @@
 import type { IconName } from "@parfocal/ui/components/icon";
+import { openTourMenu } from "../app-tour/tour-store.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
 import { developerNav } from "../screens/developer/developer-data.ts";
 import { keyAction } from "../screens/settings/keymap.ts";
@@ -187,6 +188,14 @@ function actionEntries(ctx: PaletteContext): PaletteEntry[] {
       label: "Notifications",
       keywords: ["bell", "inbox", "mentions"],
       run: ctx.openNotifications,
+    },
+    {
+      id: "app-tour",
+      group: "Actions",
+      icon: "arrow",
+      label: "Tour of the app",
+      keywords: ["guided tour", "walkthrough", "play all", "demo", "role"],
+      run: openTourMenu,
     },
     {
       id: "feedback",

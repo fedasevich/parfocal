@@ -1,0 +1,105 @@
+[[chapter]]
+title = "The disagreement queue and adjudication"
+group = "core"
+intro = "When every reviewer has submitted, the app compares their answers. An object goes to the queue when reviewers differ, when both say the AI is wrong, when someone asked for a second look, or when their redrawn outlines overlap less than the task's threshold of 60 percent. The researcher decides it, leaves it open on purpose, asks both to look again, or sends it to an adjudicator, who sees the reviewers only as Reviewer A and Reviewer B."
+
+[[chapter.step]]
+role = "researcher"
+title = "Open the queue"
+url = "/tasks/{task:Disagreement queue example}/disagreements"
+click = "Sign in as role-researcher@parfocal.eu. From the study project's Review tasks tab press Disagreements on Disagreement queue example, or open the link."
+expect = "Disagreements in Disagreement queue example. Each row shows the AI and both reviewers side by side, the reason it is here, and the buttons."
+why = "This is where the final answer of every contested object is made."
+api = ["/api/review-tasks/{task:Disagreement queue example}/disagreement-queue", "/api/review-tasks/{task:Disagreement queue example}/sign-off-summary"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Decide a row"
+url = "/tasks/{task:Disagreement queue example}/disagreements"
+click = "On an open row press Decide with the task's own buttons, or Keep as a class, or Keep with the reviewer's type, or Redraw it myself."
+expect = "The row moves to decided and the count of open rows drops."
+why = "Agree keeps the object, disagree leaves it out, and a chosen class or outline is what goes into the training data."
+api = ["/api/review-tasks/{task:Disagreement queue example}/disagreements", "/api/projects/{task_project:Disagreement queue example}/classes"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Leave a row open, or ask to look again"
+url = "/tasks/{task:Disagreement queue example}/disagreements"
+click = "On another row press Leave open and write why. On a third press Ask both to look again."
+expect = "A left open row is counted and named in the report. A look again row goes back to both reviewers with your note, and their old answers stay in the history."
+why = "Some objects cannot be decided from this slide, and the report must say so honestly."
+api = ["/api/review-tasks/{task:Disagreement queue example}"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Send to an adjudicator"
+url = "/tasks/{task:Disagreement queue example}/disagreements"
+click = "Tick a row and press Send to an adjudicator. Pick a person who was not a reviewer and send."
+expect = "The row shows as with the adjudicator. Send to someone else changes the person."
+why = "A neutral referee settles what the researcher should not decide alone."
+api = ["/api/review-tasks/{task:Disagreement queue example}/disagreements/adjudicators", "/api/review-tasks/{task:Disagreement queue example}/disagreements/adjudications"]
+
+[[chapter.step]]
+role = "owner"
+title = "A finished queue with every outcome"
+url = "/tasks/{task:Every outcome review}/disagreements"
+click = "Sign in as agent-walk@parfocal.eu and open the link. Read the reasons and answers of each row."
+expect = "Every reason shows: reviewers differ, both against the AI, second look and outlines differ. The answers are agree, disagree, keep the reviewer's type, use Rhea's outline, an adjudicator's answer, a look again and one left open on purpose."
+why = "This is the reference of what every queue answer does."
+api = ["/api/review-tasks/{task:Every outcome review}/disagreement-queue"]
+
+[[chapter.step]]
+role = "owner"
+title = "Disagree and choose a class"
+url = "/tasks/{task:Class decision queue example}/disagreements"
+click = "Open the link and find the row decided by naming a class."
+expect = "The object stays in the data with the class the researcher chose."
+why = "An AI object with the wrong class is still useful once its class is fixed."
+api = ["/api/review-tasks/{task:Class decision queue example}/disagreement-queue"]
+
+[[chapter.step]]
+role = "owner"
+title = "Drawn objects in the queue"
+url = "/tasks/{task:Drawn outline review example}/disagreements"
+click = "Open the link. One object was drawn by hand and one with Smart select."
+expect = "Drawn objects carry IDs with a small plus, such as T7 plus, and read as drawn, not as AI."
+why = "A review task can check a colleague's drawing, not only the AI."
+api = ["/api/review-tasks/{task:Drawn outline review example}/disagreement-queue"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The queue before everyone submitted"
+url = "/tasks/{task:Role account review}/disagreements"
+click = "Open the link while Reviewer A or B still has slides left."
+expect = "Nothing to decide yet. The queue opens when every reviewer has submitted, with Nudge for the reviewer who is behind."
+why = "Comparing half finished reviews would be unfair to the slower reviewer."
+api = ["/api/review-tasks/{task:Role account review}/disagreement-queue"]
+state = "empty"
+
+[[chapter.step]]
+role = "adjudicator"
+title = "The adjudicator's My work"
+url = "/my-work"
+click = "Sign in as role-adjudicator@parfocal.eu. Open My work."
+expect = "One object sent to you, with Start deciding."
+why = "The adjudicator only sees what was sent to them."
+api = ["/api/adjudications"]
+
+[[chapter.step]]
+role = "adjudicator"
+title = "Decide as the adjudicator"
+url = "/tasks/{adj_task:adjudicator}/adjudicate"
+click = "Press Start deciding, or open the link. Read the card that says who asked you to decide. Decide the object with the task's buttons. Previous, Next and Skip for now move between objects, and Open in Review shows the full viewer."
+expect = "The reviewers show as Reviewer A and Reviewer B, never by name. Your answer goes back to the researcher's queue."
+why = "An anonymous referee judges the work, not the person."
+api = ["/api/review-tasks/{adj_task:adjudicator}/adjudication", "/api/review-tasks/{adj_task:adjudicator}"]
+
+[[chapter.step]]
+role = "reviewer-a"
+title = "Nothing to adjudicate"
+url = "/tasks/{task:Disagreement queue example}/adjudicate"
+click = "Sign in as role-reviewer-a@parfocal.eu and open the link."
+expect = "Nothing is queued for you on this task. Back to My work."
+why = "Only the person a row was sent to can decide it."
+api = ["/api/review-tasks/{task:Disagreement queue example}/adjudication =404"]
+state = "empty"

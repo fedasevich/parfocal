@@ -5567,6 +5567,234 @@
         "x-permission-write": true
       }
     },
+    "/api/tour/role-switch": {
+      "post": {
+        "tags": [
+          "tour"
+        ],
+        "summary": "Switch To Tour Role",
+        "operationId": "switchToTourRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TourSwitch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TourAccountShown"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "manage-people",
+        "x-permission-write": true
+      },
+      "delete": {
+        "tags": [
+          "tour"
+        ],
+        "summary": "Return From Tour Role",
+        "operationId": "returnFromTourRole",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TourAccountShown"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{project_id}/cases/{case_id}/clinical-report": {
       "post": {
         "tags": [
@@ -9454,7 +9682,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -9683,7 +9912,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/overview": {
@@ -9793,7 +10023,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/storage": {
@@ -9903,7 +10134,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/security": {
@@ -10013,7 +10245,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/webhooks": {
@@ -10127,7 +10360,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/invitations/{token}/preview": {
@@ -13021,7 +13255,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/models/{model_id}/test": {
@@ -22673,7 +22908,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/projects/{project_id}/webhook/secret": {
@@ -23504,7 +23740,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -23893,7 +24130,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/projects/{project_id}/event-targets/{target_id}/events/{event_id}/replay": {
@@ -33314,7 +33552,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "put": {
         "tags": [
@@ -33547,7 +33786,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -47667,7 +47907,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       }
     },
     "/api/review-tasks/{task_id}/evaluation-versions": {
@@ -54624,7 +54865,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "put": {
         "tags": [
@@ -56658,7 +56900,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -58471,7 +58714,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "put": {
         "tags": [
@@ -90631,6 +90875,50 @@
         },
         "type": "object",
         "title": "TokenRequest"
+      },
+      "TourAccountShown": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "switched": {
+            "type": "boolean",
+            "title": "Switched"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "switched"
+        ],
+        "title": "TourAccountShown"
+      },
+      "TourSwitch": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "enum": [
+              "researcher",
+              "reviewer-a",
+              "reviewer-b",
+              "adjudicator",
+              "viewer",
+              "annotator"
+            ],
+            "title": "Account"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account"
+        ],
+        "title": "TourSwitch"
       },
       "TrackRecord": {
         "properties": {

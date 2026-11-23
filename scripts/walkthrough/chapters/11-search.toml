@@ -1,0 +1,60 @@
+[[chapter]]
+title = "Search"
+group = "core"
+intro = "Search finds projects, cases, slides, object IDs such as T2·C145, people and actions. It works from the top bar, from Cmd K anywhere, and as its own page with scope chips."
+
+[[chapter.step]]
+role = "researcher"
+title = "Search from the top bar"
+url = "/"
+click = "Click the search box Search projects, slides, IDs like T2·C145, or press Cmd K, and type CMU."
+expect = "The command palette lists matching slides with their project. Enter opens the first."
+why = "With hundreds of slides, typing a name is faster than browsing."
+api = ["/api/search?q=CMU"]
+
+[[chapter.step]]
+role = "researcher"
+title = "The search page and its scopes"
+url = "/search?q=CMU"
+click = "Press the scope chips All, Projects, Cases, Slides, Object IDs, People and Actions."
+expect = "The results narrow to each kind. Every hit opens its page."
+why = "The same word can mean a slide, a case or a person."
+api = ["/api/search?q=CMU", "/api/projects"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Search for an object ID"
+url = "/search?q=T2"
+click = "Open the link and pick a hit."
+expect = "The slide opens with that object centred."
+why = "A colleague can say T2 on Case queue 1 and anyone finds it."
+api = ["/api/search?q=T2"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Too short to search"
+url = "/search?q=C"
+click = "Open the link."
+expect = "Type at least two letters to search."
+why = "One letter would match everything."
+api = ["/api/projects"]
+state = "empty"
+
+[[chapter.step]]
+role = "researcher"
+title = "Nothing matches"
+url = "/search?q=zzqqxx"
+click = "Open the link."
+expect = "Nothing matches zzqqxx."
+why = "An empty result says so in words."
+api = ["/api/search?q=zzqqxx"]
+state = "empty"
+
+[[chapter.step]]
+role = "viewer"
+title = "Search as a viewer"
+url = "/search?q=Case"
+click = "Sign in as role-viewer@parfocal.eu and search for Case."
+expect = "Only what the viewer may see appears."
+why = "Search must never leak a project someone is not in."
+api = ["/api/search?q=Case"]

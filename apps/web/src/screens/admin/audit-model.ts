@@ -52,6 +52,8 @@ const auditLabels: Record<string, string> = {
   "user.signed-in": "Signed in",
   "user.signed-out": "Signed out",
   "user.sso-linked": "Linked their organisation sign-in",
+  "user.tour-role-switched": "Switched to a role account for the tour",
+  "user.tour-role-returned": "Returned from a role account to their own",
   "user.sessions-ended": "Ended their sessions",
   "user.profile-changed": "Changed their profile",
   "member.added": "Added a member",

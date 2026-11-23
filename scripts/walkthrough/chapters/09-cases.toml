@@ -1,0 +1,96 @@
+[[chapter]]
+title = "Cases and clinical reports"
+group = "core"
+intro = "Only a clinical project has cases. A case holds one patient's slides and ends in a clinical report written in steps: findings, staging, report text and sign. A member with the right to sign out signs it. Anyone else sends it for co-sign. The seed has three cases in Breast surgery sentinel nodes: Showcase case, Showcase draft report and Showcase co-sign."
+
+[[chapter.step]]
+role = "owner"
+title = "The clinical project and its cases"
+url = "/projects/{project:Breast surgery sentinel nodes}?tab=slides"
+click = "Sign in as agent-walk@parfocal.eu. Open the clinical project. Slides are grouped by case, and a case row has Open report."
+expect = "The three cases and the loose slide Missing file.svs."
+why = "Clinical work is organised by patient, not by slide."
+api = ["/api/cases", "/api/projects/{project:Breast surgery sentinel nodes}/slides"]
+
+[[chapter.step]]
+role = "owner"
+title = "Review a case in the viewer"
+url = "/tasks/{task:Showcase case review}/guided"
+click = "Open the link. The top bar has Open report next to Submit. Cmd Enter signs out the case."
+expect = "The case slides open in the same viewer, and the report is one click away."
+why = "The pathologist moves from the slide to the report without losing their place."
+api = ["/api/review-tasks/{task:Showcase case review}", "/api/review-tasks/{task:Showcase case review}/states"]
+
+[[chapter.step]]
+role = "owner"
+title = "A case address opens its report"
+url = "/projects/{case_project:Showcase case}/cases/{case:Showcase case}"
+click = "Open the link."
+expect = "It moves on to the report of Showcase case by itself."
+why = "The report is what a case is for."
+api = ["/api/cases/{case:Showcase case}", "/api/projects/{case_project:Showcase case}/cases/{case:Showcase case}/clinical-report"]
+
+[[chapter.step]]
+role = "owner"
+title = "Findings"
+url = "/projects/{case_project:Showcase draft report}/cases/{case:Showcase draft report}/report?step=findings"
+click = "Open the draft report. If it has none yet, press Start the report. Read the findings, which come from the decisions on the slides, and press Next."
+expect = "The findings list with the objects they come from."
+why = "The report text starts from what was seen on the slide, not from a blank page."
+api = ["/api/projects/{case_project:Showcase draft report}/cases/{case:Showcase draft report}/clinical-report"]
+
+[[chapter.step]]
+role = "owner"
+title = "Staging with several deposits"
+url = "/projects/{case_project:Showcase draft report}/cases/{case:Showcase draft report}/report?step=staging"
+click = "Look at the deposit rows. Add one measured by hand. Pick the category and extranodal extension. Press Next."
+expect = "The largest deposit sets the suggested category, which stays a suggestion until you pick it. The suggested pN follows."
+why = "Staging decides treatment, so the app suggests and the doctor decides."
+api = ["/api/cases/{case:Showcase draft report}"]
+
+[[chapter.step]]
+role = "owner"
+title = "The report text"
+url = "/projects/{case_project:Showcase draft report}/cases/{case:Showcase draft report}/report?step=text"
+click = "Edit the text. Use the chips that insert measurements from the slide. Press Next."
+expect = "The text is filled in from the findings and staging."
+why = "Pre-filled text saves time and keeps numbers right."
+api = ["/api/projects/{case_project:Showcase draft report}/cases/{case:Showcase draft report}/clinical-report"]
+
+[[chapter.step]]
+role = "owner"
+title = "Sign out, or send for co-sign"
+url = "/projects/{case_project:Showcase draft report}/cases/{case:Showcase draft report}/report?step=sign"
+click = "With the right to sign out, the step offers Sign out and Send for co-sign instead. Without it, Send for co-sign, and after sending Withdraw the request."
+expect = "Signed out: the case is signed out and goes to the clinician, with Download PDF and Amend. Sent: Sent to a name, waiting."
+why = "Only a doctor with the right may release a report. Others must pass it to one."
+api = ["/api/me"]
+
+[[chapter.step]]
+role = "owner"
+title = "Co-sign a colleague's report"
+url = "/projects/{case_project:Showcase co-sign}/cases/{case:Showcase co-sign}/co-sign"
+click = "Open My work, or the link. Compare the sender's values with yours and the AI's. Press Co-sign and sign out, or Return with a note."
+expect = "Changed rows highlight. After signing: Co-signed and signed out. The report names you both."
+why = "A trainee's report is checked and signed by a senior, and both names stay on it."
+api = ["/api/me/cosign-requests", "/api/projects/{case_project:Showcase co-sign}/cases/{case:Showcase co-sign}/clinical-report"]
+
+[[chapter.step]]
+role = "researcher"
+title = "Only the asked person can co-sign"
+url = "/projects/{case_project:Showcase co-sign}/cases/{case:Showcase co-sign}/co-sign"
+click = "Sign in as role-researcher@parfocal.eu and open the link."
+expect = "Only the named person can co-sign this report. Nothing can be signed here."
+why = "A co-sign request belongs to one person."
+api = ["/api/cases/{case:Showcase co-sign}"]
+state = "refused"
+
+[[chapter.step]]
+role = "owner"
+title = "A case without a co-sign request"
+url = "/projects/{case_project:Showcase case}/cases/{case:Showcase case}/co-sign"
+click = "Open the link."
+expect = "Nobody has sent this report for co-sign yet."
+why = "The co-sign page explains itself instead of showing an empty form."
+api = ["/api/cases/{case:Showcase case}"]
+state = "empty"
