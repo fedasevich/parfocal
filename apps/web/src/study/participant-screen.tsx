@@ -32,15 +32,18 @@ import {
   taskNoteKeys,
 } from "./study-model.ts";
 import { updateStudy } from "./study-storage.ts";
+import { useUploadState } from "./study-upload.ts";
 import { useStudy } from "./use-study.ts";
 
 const stamp = () => Date.now();
 
 function Page({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+  const upload = useUploadState();
   return (
     <main
       className="grid min-h-dvh place-items-center bg-surf-app p-6 text-fg"
       data-testid="study-participant"
+      data-upload={upload}
     >
       <section
         className={`grid w-full gap-5 rounded-[14px] border border-line bg-surf-panel p-8 shadow-pop ${wide ? "max-w-3xl" : "max-w-xl"}`}

@@ -110,6 +110,7 @@ import {
 } from "../session/signature-sign-in.ts";
 import { GuidedCheck } from "./guided-check.tsx";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
+import { guidedZoomLimit, outlineArea, reviewMinSide } from "./stage-geometry.ts";
 import { useFinishSlot } from "./stage-notices.tsx";
 import { brushDocument } from "./stage-shape-edit.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -620,19 +621,9 @@ export function AnnotateTaskPanel({
     focused.current = focusObject;
     setSelection([focusObject]);
     showPanel.current?.();
-    const bounds = stage.getBoundingClientRect();
-    const camera = engine.getCamera();
-    const corner = screenToSlide(camera, bounds, bounds.left, bounds.top);
-    const far = screenToSlide(camera, bounds, bounds.right, bounds.bottom);
-    const width = far.x - corner.x;
-    const height = far.y - corner.y;
-    void engine.flyToArea({
-      x: cell.centre.x - width / 2,
-      y: cell.centre.y - height / 2,
-      width,
-      height,
-    });
-  }, [focusObject, cells, engine, stage]);
+    const area = outlineArea([...cell.bounds], reviewMinSide);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
+  }, [focusObject, cells, engine]);
 
   const replay = useCallback(
     (

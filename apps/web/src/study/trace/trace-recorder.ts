@@ -1,5 +1,5 @@
-import type { Frame, TraceEvent } from "./trace-model.ts";
-import { loggedKey } from "./trace-model.ts";
+import type { CameraSample, Frame, TraceEvent } from "./trace-model.ts";
+import { loggedKey, sameCamera } from "./trace-model.ts";
 import type { Batcher } from "./trace-store.ts";
 
 export type FrameTools = {
@@ -52,6 +52,7 @@ export function createRecorder(options: {
   batcher: Batcher;
   now: () => number;
   frames: () => FrameTools | undefined;
+  cameras?: () => CameraSample[];
 }): Recorder {
   const { batcher, now } = options;
   let target: Window | null = null;
@@ -64,6 +65,7 @@ export function createRecorder(options: {
   let frameCount = 0;
   let observer: MutationObserver | undefined;
   let settleTimer: number | undefined;
+  const lastCameras = new Map<string, CameraSample>();
 
   const emit = (event: TraceEvent) => batcher.push(event);
 
@@ -149,8 +151,17 @@ export function createRecorder(options: {
     settleTimer = window.setTimeout(takeFrame, settleMs);
   };
 
+  const sampleCameras = () => {
+    for (const camera of options.cameras?.() ?? []) {
+      if (sameCamera(lastCameras.get(camera.slide), camera)) continue;
+      lastCameras.set(camera.slide, camera);
+      emit({ t: now(), k: "camera", ...camera });
+    }
+  };
+
   const poll = () => {
     if (!readableWindow(target)) return;
+    sampleCameras();
     if (target.document !== current) {
       onNewDocument(target);
       return;

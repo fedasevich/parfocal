@@ -231,10 +231,14 @@ import type {
   SourceListing,
   SourceWatch,
   StorageUsage,
+  StudyDryRun,
+  StudySessions,
   StudyTemplate,
   StudyTemplateReviewDefaults,
   StudyTemplateSummary,
   StudyTemplateVersion,
+  StudyTrace,
+  StudyUploadSaved,
   Target,
   TaskAdjudication,
   TaskDisplay,
@@ -18539,6 +18543,51 @@ export const getRestoreStudyTemplateResponseMock = (
   ...overrideResponse,
 });
 
+export const getSaveStudySessionResponseMock = (
+  overrideResponse: Partial<Extract<StudyUploadSaved, object>> = {},
+): StudyUploadSaved => ({
+  session_key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getSaveStudyTracePartResponseMock = (
+  overrideResponse: Partial<Extract<StudyUploadSaved, object>> = {},
+): StudyUploadSaved => ({
+  session_key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getListStudySessionsResponseMock = (
+  overrideResponse: Partial<Extract<StudySessions, object>> = {},
+): StudySessions => ({
+  sessions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      session_key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      participant: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      round: faker.number.int(),
+      dry_run: faker.datatype.boolean(),
+      answers: {},
+      trace_parts: faker.number.int(),
+      updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getGetStudyTraceResponseMock = (
+  overrideResponse: Partial<Extract<StudyTrace, object>> = {},
+): StudyTrace => ({
+  parts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    seq: faker.number.int(),
+    events_gz: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  ...overrideResponse,
+});
+
+export const getMarkStudyDryRunResponseMock = (
+  overrideResponse: Partial<Extract<StudyDryRun, object>> = {},
+): StudyDryRun => ({ dry_run: faker.datatype.boolean(), ...overrideResponse });
+
 export const getListTemplateOffersResponseHeadlineNumbersMock = (
   overrideResponse: Partial<HeadlineNumbers> = {},
 ): HeadlineNumbers => ({
@@ -29522,6 +29571,122 @@ export const getRestoreStudyTemplateMockHandler = (
   );
 };
 
+export const getSaveStudySessionMockHandler = (
+  overrideResponse?:
+    | StudyUploadSaved
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<StudyUploadSaved> | StudyUploadSaved),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/me/study-sessions/:sessionKey",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSaveStudySessionResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSaveStudyTracePartMockHandler = (
+  overrideResponse?:
+    | StudyUploadSaved
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<StudyUploadSaved> | StudyUploadSaved),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/me/study-sessions/:sessionKey/trace/:seq",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSaveStudyTracePartResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListStudySessionsMockHandler = (
+  overrideResponse?:
+    | StudySessions
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<StudySessions> | StudySessions),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/study-sessions",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListStudySessionsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetStudyTraceMockHandler = (
+  overrideResponse?:
+    | StudyTrace
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<StudyTrace> | StudyTrace),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/study-sessions/:sessionKey/trace",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetStudyTraceResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getMarkStudyDryRunMockHandler = (
+  overrideResponse?:
+    | StudyDryRun
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<StudyDryRun> | StudyDryRun),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/study-sessions/:sessionKey/dry-run",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMarkStudyDryRunResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTemplateOffersMockHandler = (
   overrideResponse?:
     | TemplateOffer[]
@@ -31712,6 +31877,11 @@ export const getParfocalAPIMock = () => [
   getGetStudyTemplateVersionMockHandler(),
   getRetireStudyTemplateMockHandler(),
   getRestoreStudyTemplateMockHandler(),
+  getSaveStudySessionMockHandler(),
+  getSaveStudyTracePartMockHandler(),
+  getListStudySessionsMockHandler(),
+  getGetStudyTraceMockHandler(),
+  getMarkStudyDryRunMockHandler(),
   getListTemplateOffersMockHandler(),
   getOfferStudyTemplateMockHandler(),
   getAcceptTemplateOfferMockHandler(),

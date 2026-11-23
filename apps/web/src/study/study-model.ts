@@ -42,6 +42,7 @@ export const studyTaskSchema = z.object({
   slide: z.string().min(1).optional(),
   startPath: z.string().startsWith("/").optional(),
   targetSeconds: z.number().int().positive().optional(),
+  firstClick: z.string().min(1).optional(),
   check: taskCheckSchema.optional(),
   guard: taskGuardSchema.optional(),
 });
@@ -89,6 +90,9 @@ export type TaskRecord = {
   notes: TaskNotes;
   reason: string | null;
   endedAt: number;
+  timeToFirstActionMs?: number | null | undefined;
+  firstClickCorrect?: boolean | null | undefined;
+  pathStraightness?: number | null | undefined;
 };
 
 export const finalTextKeys = ["like", "dislike", "missing", "recommend"] as const;
@@ -249,6 +253,7 @@ export const round5Tasks: StudyTask[] = [
     title: "Open the slide to review",
     instruction: "Find the slide that is waiting for your review in this project and open it.",
     startPath: "/projects/{studyProject}?tab=slides",
+    firstClick: '[data-testid="slide-row"]',
     check: { path: "/slides/{reviewSlide}(\\?|$)" },
   },
   {
@@ -704,6 +709,9 @@ const taskRecordSchema = z.object({
   notes: notesSchema.default({}),
   reason: z.string().nullable(),
   endedAt: z.number(),
+  timeToFirstActionMs: z.number().nullable().optional(),
+  firstClickCorrect: z.boolean().nullable().optional(),
+  pathStraightness: z.number().nullable().optional(),
 });
 
 const finalSchema = z.object({
@@ -726,29 +734,29 @@ const finalSchema = z.object({
   finishedAt: z.number().nullable(),
 });
 
-const stateSchema = z.object({
-  rounds: z.array(z.object({ number: z.number().int().positive(), tasks: taskSetSchema })).min(1),
-  sessions: z.array(
+export const sessionSchema = z.object({
+  id: z.string(),
+  round: z.number().int().positive(),
+  participant: z.string(),
+  startedAt: z.number(),
+  consentAt: z.number().optional(),
+  tasks: z.array(taskRecordSchema).optional(),
+  final: finalSchema.optional(),
+  blocks: z.array(z.object({ taskId: z.string(), at: z.number(), to: z.string() })).default([]),
+  results: z.array(
     z.object({
-      id: z.string(),
-      round: z.number().int().positive(),
-      participant: z.string(),
+      taskId: z.string(),
       startedAt: z.number(),
-      consentAt: z.number().optional(),
-      tasks: z.array(taskRecordSchema).optional(),
-      final: finalSchema.optional(),
-      blocks: z.array(z.object({ taskId: z.string(), at: z.number(), to: z.string() })).default([]),
-      results: z.array(
-        z.object({
-          taskId: z.string(),
-          startedAt: z.number(),
-          endedAt: z.number(),
-          outcome: z.enum(["done", "gave-up", "skipped"]),
-          auto: z.boolean().optional(),
-        }),
-      ),
+      endedAt: z.number(),
+      outcome: z.enum(["done", "gave-up", "skipped"]),
+      auto: z.boolean().optional(),
     }),
   ),
+});
+
+const stateSchema = z.object({
+  rounds: z.array(z.object({ number: z.number().int().positive(), tasks: taskSetSchema })).min(1),
+  sessions: z.array(sessionSchema),
 });
 
 export function parseState(raw: string | null): StudyState {

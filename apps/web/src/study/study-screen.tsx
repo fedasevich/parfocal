@@ -20,7 +20,9 @@ import {
   startSession,
   summariseRound,
 } from "./study-model.ts";
+import { StudyResultsPanel } from "./study-results-panel.tsx";
 import { clearBlockLog, readBlockLog, readStudy, writeGuard, writeStudy } from "./study-storage.ts";
+import { startStudyUpload, useUploadState } from "./study-upload.ts";
 import { taskWindowName } from "./study-window.ts";
 import { ReplayPanel } from "./trace/replay-panel.tsx";
 import { mergeBatches, type TraceEvent } from "./trace/trace-model.ts";
@@ -78,6 +80,9 @@ export function StudyScreen() {
   const sink = useRef(indexedDbSink());
   const [recorderState, setRecorderState] = useState<"loading" | "ready" | "blocked">("loading");
   const [replay, setReplay] = useState<{ sessionId: string; events: TraceEvent[] } | null>(null);
+  const upload = useUploadState();
+
+  useEffect(() => startStudyUpload(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -236,7 +241,11 @@ export function StudyScreen() {
   const summary = summariseRound(state, round.number);
 
   return (
-    <main className="mx-auto grid max-w-5xl gap-6 p-8" data-testid="study-screen">
+    <main
+      className="mx-auto grid max-w-5xl gap-6 p-8"
+      data-testid="study-screen"
+      data-upload={upload}
+    >
       <header className="grid gap-1">
         <h1 className="font-semibold text-page-title text-fg">
           <Trans>Study mode</Trans>
@@ -465,6 +474,8 @@ export function StudyScreen() {
           <Trans>Download results</Trans>
         </button>
       </section>
+
+      <StudyResultsPanel titles={titles} />
 
       <section className="grid gap-2" aria-label={t`Task set`}>
         <h2 className="font-semibold text-fg">

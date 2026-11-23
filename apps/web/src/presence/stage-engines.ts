@@ -26,3 +26,5 @@ const subscribe = (listener: () => void) => {
 export function useStageEngine(slideId: string): ViewerEngine | null {
   return useSyncExternalStore(subscribe, () => engines.get(slideId) ?? null);
 }
+
+export const stageEngines = (): [string, ViewerEngine][] => [...engines];

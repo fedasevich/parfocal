@@ -1434,6 +1434,12 @@ msgstr ""
 msgid "{0} saved to Downloads"
 msgstr ""
 
+#. placeholder {0}: included.length
+#. placeholder {1}: sessions.length - included.length
+#: src/study/study-results-panel.tsx
+msgid "{0} sessions counted, {1} dry runs left out"
+msgstr ""
+
 #. placeholder {0}: model.name
 #: src/screens/admin/sections.tsx
 msgid "{0} shows in every model list again."
@@ -6418,6 +6424,10 @@ msgstr ""
 msgid "De-identified, so labels and patient names are removed on upload"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Dead clicks"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Dead zone"
@@ -6747,6 +6757,10 @@ msgstr ""
 msgid "Discard your changes?"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Disliked"
+msgstr ""
+
 #: ../../packages/ui/src/components/error-toast.tsx
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Dismiss"
@@ -7052,6 +7066,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/drop-overlay.tsx
 msgid "Drop to upload into {projectCode}"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Dry run"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
@@ -7621,6 +7639,10 @@ msgstr ""
 msgid "Expected back at {until}."
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Expected but missing"
+msgstr ""
+
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "expert"
 msgstr ""
@@ -7688,6 +7710,14 @@ msgstr ""
 #. placeholder {0}: choice.label
 #: src/screens/review/slide-export-items.ts
 msgid "Export {0}"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Export CSV"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Export JSON"
 msgstr ""
 
 #: src/screens/admin/audit.tsx
@@ -7842,6 +7872,10 @@ msgstr ""
 msgid "Final layer build {0} is ready"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Final open answers"
+msgstr ""
+
 #: src/screens/disagreements/outline-settle.tsx
 msgid "Final outline"
 msgstr ""
@@ -7912,6 +7946,10 @@ msgstr ""
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Finishing a slide"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "First click correct"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -9817,6 +9855,10 @@ msgstr ""
 msgid "Like the light dial on a microscope. Changes the slide only, never the interface or the monitor's calibration. Remembered on this computer. <0/> <1/> <2/>"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Liked"
+msgstr ""
+
 #. placeholder {0}: line.line
 #: src/screens/upload/check-step.tsx
 msgid "line {0}"
@@ -10343,6 +10385,27 @@ msgstr ""
 msgid "May not be a nucleus. Disagree (X)"
 msgstr ""
 
+#. placeholder {0}: decimal(sus.mean)
+#: src/study/study-results-panel.tsx
+msgid "Mean {0}"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Mean clicks"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Mean SEQ"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Mean SEQ of 7"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Mean SUS"
+msgstr ""
+
 #. placeholder {0}: fixed(evaluation.mean_kappa)
 #. placeholder {1}: fixed(evaluation.fleiss_kappa)
 #. placeholder {2}: fixed(evaluation.cell_agreement_between_reviewers.value)
@@ -10353,6 +10416,7 @@ msgstr ""
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/kpi/kpi-screen.tsx
 #: src/shell/palette-labels.tsx
+#: src/study/study-results-panel.tsx
 msgid "Measure"
 msgstr ""
 
@@ -10415,8 +10479,16 @@ msgstr ""
 msgid "Median seconds"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Median time"
+msgstr ""
+
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Median time per area visit"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Median time to first action"
 msgstr ""
 
 #: src/screens/project/settings-zones.tsx
@@ -11711,6 +11783,10 @@ msgstr ""
 msgid "Note, optional"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Notes by task"
+msgstr ""
+
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "nothing"
 msgstr ""
@@ -12954,6 +13030,10 @@ msgstr ""
 msgid "Parfocal's models are always here. Connect your lab's own models next to them"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Participant"
+msgstr ""
+
 #: src/study/study-screen.tsx
 msgid "Participant code"
 msgstr ""
@@ -13000,6 +13080,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Path or URL"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Path straightness"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -13135,8 +13219,16 @@ msgstr ""
 msgid "Per class"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Per participant"
+msgstr ""
+
 #: src/screens/admin/template-editor.tsx
 msgid "Per slide"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Per task"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -13871,6 +13963,7 @@ msgid "Recent activity"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
+#: src/study/study-results-panel.tsx
 msgid "Recommended"
 msgstr ""
 
@@ -14088,6 +14181,7 @@ msgstr ""
 msgid "Replace"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
 #: src/study/study-screen.tsx
 msgid "Replay"
 msgstr ""
@@ -14782,6 +14876,13 @@ msgstr ""
 msgid "Rotate {name} pane right"
 msgstr ""
 
+#. placeholder {0}: entry.round
+#. placeholder {1}: entry.session?.tasks?.length ?? 0
+#. placeholder {2}: entry.traceParts
+#: src/study/study-results-panel.tsx
+msgid "Round {0}, {1} tasks, {2} trace parts"
+msgstr ""
+
 #. placeholder {0}: round.number
 #: src/study/study-screen.tsx
 msgid "Round {0}. Its screens and tasks are frozen so sessions compare."
@@ -14790,6 +14891,19 @@ msgstr ""
 #. placeholder {0}: round.number
 #: src/study/study-screen.tsx
 msgid "Round {0}. No session has run yet, so the tasks can change."
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Round 4 against this round"
+msgstr ""
+
+#. placeholder {0}: four.roundOneSus
+#: src/study/study-results-panel.tsx
+msgid "Round 4 figures are the ones its deck reported, quoted as they are. Round 1 reported a mean SUS of {0}. This round counts every session that is not a dry run."
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Round 4, reported"
 msgstr ""
 
 #: src/screens/upload/check-step.tsx
@@ -16308,6 +16422,14 @@ msgstr ""
 msgid "Slide {0} of {1}, case {2}"
 msgstr ""
 
+#. placeholder {0}: camera.slide
+#. placeholder {1}: camera.x
+#. placeholder {2}: camera.y
+#. placeholder {3}: camera.zoom
+#: src/study/trace/replay-panel.tsx
+msgid "Slide {0}, centre {1}, {2}, zoom {3}"
+msgstr ""
+
 #. placeholder {0}: list.total
 #: src/viewer/live-progress.tsx
 msgid "Slide {position} of {0}"
@@ -17023,6 +17145,10 @@ msgstr ""
 msgid "Subtitle"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Success"
+msgstr ""
+
 #: src/screens/clinical-report/steps.tsx
 msgid "suggested"
 msgstr ""
@@ -17059,6 +17185,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "SURGICAL PATHOLOGY REPORT"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "SUS"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "SUS per participant"
 msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
@@ -17173,6 +17307,7 @@ msgstr ""
 #: src/screens/my-work/to-review-tab.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
+#: src/study/study-results-panel.tsx
 #: src/study/study-screen.tsx
 msgid "Task"
 msgstr ""
@@ -17237,6 +17372,18 @@ msgstr ""
 #: src/screens/admin/templates.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Tasks"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Tasks completed"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Tasks rated 6 or 7"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Tasks rated below 4"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -18536,6 +18683,10 @@ msgstr ""
 msgid "this result set"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "This round"
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "This sets your home page and which walkthrough you see first."
 msgstr ""
@@ -18784,6 +18935,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Time left"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Time to first action"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -19403,6 +19558,14 @@ msgstr ""
 msgid "Uploaded"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Uploaded results"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "uploaded sessions"
+msgstr ""
+
 #: src/shell/shell-jobs.tsx
 msgid "Uploading"
 msgstr ""
@@ -19621,6 +19784,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Viewer"
+msgstr ""
+
+#: src/study/trace/replay-panel.tsx
+msgid "Viewer camera on the slide"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { areaFocusOf, cellNumberOf } from "../src/viewer/focus-object.ts";
+import { areaFocusOf, cellNumberOf, reviewObjectOf } from "../src/viewer/focus-object.ts";
 
 test("a cell is read in display and ASCII form", () => {
   assert.equal(cellNumberOf("C145"), 145);
@@ -26,4 +26,26 @@ test("an area is centred on its box in either ID form", () => {
 
 test("an object the slide does not have finds nothing", () => {
   assert.equal(areaFocusOf("T9", []), null);
+});
+
+const reviewObjects = [
+  { object: "T1", drawn: true },
+  { object: "T2", drawn: false },
+  { object: "C5" },
+];
+
+test("a review object is found by its own ID", () => {
+  assert.equal(reviewObjectOf("T2", reviewObjects), "T2");
+  assert.equal(reviewObjectOf("c5", reviewObjects), "C5");
+});
+
+test("a drawn ID with a plus finds the drawn review object", () => {
+  assert.equal(reviewObjectOf("T1+", reviewObjects), "T1");
+  assert.equal(reviewObjectOf("T1⁺", reviewObjects), "T1");
+});
+
+test("a plus ID never finds an AI review object", () => {
+  assert.equal(reviewObjectOf("T2+", reviewObjects), undefined);
+  assert.equal(reviewObjectOf("T9", reviewObjects), undefined);
+  assert.equal(reviewObjectOf(undefined, reviewObjects), undefined);
 });
