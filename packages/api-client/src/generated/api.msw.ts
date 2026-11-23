@@ -322,6 +322,7 @@ import {
   JobControl,
   JobPauseReason,
   JobStatus,
+  JobUnit,
   JoinPolicy,
   LabModelRunners,
   LabModelSignIn,
@@ -990,6 +991,7 @@ export const getGetProjectOverviewResponseMock = (
   result_sets: faker.number.int({ min: 0 }),
   objects: faker.number.int({ min: 0 }),
   reviewed_percent: faker.number.float({ min: 0, max: 100, fractionDigits: 2 }),
+  reviewed_slides: faker.number.int({ min: 0 }),
   needs_review: faker.number.int({ min: 0 }),
   no_results: faker.number.int({ min: 0 }),
   case_groups: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -9477,6 +9479,8 @@ export const getListReviewObjectsResponseMock = (
       null,
     ]),
   })),
+  order: faker.helpers.arrayElement(["ready", "preparing"] as const),
+  ready_in_seconds: faker.helpers.arrayElement([faker.number.int(), null]),
   ...overrideResponse,
 });
 
@@ -10581,6 +10585,7 @@ export const getListMyJobsResponseMock = (): MyJob[] =>
     minutes_left: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
     units_done: faker.number.int({ min: 0 }),
     units_total: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+    unit: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(JobUnit)), null]),
     started_by_user_id: faker.string.uuid(),
     slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
       () => ({

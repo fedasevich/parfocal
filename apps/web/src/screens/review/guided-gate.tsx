@@ -30,6 +30,7 @@ export function GuidedGate({
         onRetry={session.retryOrder}
         projectId={session.task?.project_id}
         madeAt={session.task?.created_at}
+        readyInSeconds={session.readyInSeconds}
       />
     );
   if (!session.ready || (hidesAi && firstRead.isPending)) {

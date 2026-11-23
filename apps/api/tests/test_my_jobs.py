@@ -89,6 +89,65 @@ def test_my_jobs_lists_the_uploads_and_runs_i_started_newest_first(
     assert my_jobs(api, s, "second") == []
 
 
+def steps(database: str, s: Study, job_id: uuid.UUID, counts: list[tuple[str, int, int]]) -> None:
+    for ordinal, (name, total, done) in enumerate(counts):
+        owner(
+            database,
+            "INSERT INTO job_steps (tenant_id, job_id, ordinal, name, units_total) "
+            f"VALUES ('{s.tenant_id}', '{job_id}', {ordinal}, '{name}', {total}) RETURNING job_id",
+        )
+        for unit in range(done):
+            owner(
+                database,
+                "INSERT INTO job_units (tenant_id, job_id, ordinal, unit, worker) "
+                f"VALUES ('{s.tenant_id}', '{job_id}', {ordinal}, {unit}, 'w') RETURNING job_id",
+            )
+
+
+def test_a_whole_slide_run_counts_its_tiles_and_names_them(api: ApiAs, database: str) -> None:
+    s = study(database)
+    ran = run(database, s, "owner", s.slides[0], "1 minute")
+    owner(database, f"UPDATE jobs SET status = 'running' WHERE id = '{ran}'")
+    steps(
+        database,
+        s,
+        ran,
+        [("tiles-read", 1, 1), ("tissue-found", 1, 1), ("model-running", 11, 4)],
+    )
+    [found] = my_jobs(api, s, "owner")
+    assert (found["units_done"], found["units_total"], found["unit"]) == (4, 11, "tile")
+    assert found["percent"] == 36
+
+
+def import_job(database: str, s: Study, result_set: uuid.UUID | None) -> uuid.UUID:
+    job_id = job(database, s, "result-import", "running", "1 minute")
+    linked = "NULL" if result_set is None else f"'{result_set}'"
+    owner(
+        database,
+        "INSERT INTO uploads (id, tenant_id, project_id, kind, slide_id, result_set_id, file_name, "
+        "size_bytes, object_key, storage_upload_id, part_bytes, part_count, created_by_user_id, "
+        "job_id, status, closed_at) VALUES (gen_random_uuid(), "
+        f"'{s.tenant_id}', '{s.project}', 'result', '{s.slides[0]}', {linked}, 'cells.geojson', 1, "
+        f"'k-{uuid.uuid4().hex}', 'u', 5242880, 1, '{s.user('owner')}', '{job_id}', 'completed', "
+        "now()) RETURNING id",
+    )
+    return job_id
+
+
+def test_an_import_reads_done_once_its_result_set_is_ready(api: ApiAs, database: str) -> None:
+    s = study(database)
+    working = import_job(database, s, None)
+    ready = import_job(database, s, s.sets[s.slides[0]])
+    found = {entry["id"]: entry for entry in my_jobs(api, s, "owner")}
+    assert (found[str(working)]["status"], found[str(working)]["finished_at"]) == (
+        "running",
+        None,
+    )
+    assert (found[str(ready)]["status"], found[str(ready)]["percent"]) == ("done", 100)
+    assert found[str(ready)]["finished_at"] is not None
+    assert {entry["unit"] for entry in found.values()} == {None}
+
+
 def test_my_jobs_leaves_out_runs_on_slides_i_may_not_read(api: ApiAs, database: str) -> None:
     s = study(database)
     run(database, s, "first", s.slides[0], "1 minute")

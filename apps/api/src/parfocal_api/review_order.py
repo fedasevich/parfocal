@@ -1,3 +1,4 @@
+import math
 import uuid
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
@@ -74,6 +75,9 @@ ORDER_STEP = "order"
 ORDER_LEASE_SECONDS = 120.0
 WAITING = frozenset({JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.PAUSED, JobStatus.CANCELLING})
 CANCELLABLE = frozenset({JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.PAUSED})
+TYPICAL_ORDER_SECONDS = 30.0
+MIN_ESTIMATE_SECONDS = 5
+RECENT_ORDERS = 20
 
 
 class OrderedObject(BaseModel):
@@ -527,21 +531,55 @@ async def store_order(
     return None
 
 
-async def order_state(connection: AsyncConnection, task_id: uuid.UUID) -> None:
+def seconds_since(column: ColumnElement[Any]) -> ColumnElement[float]:
+    return func.extract("epoch", func.now() - column).cast(Float)
+
+
+async def typical_order_seconds(connection: AsyncConnection) -> float:
+    recent = (
+        select((func.extract("epoch", jobs.c.finished_at - jobs.c.created_at)).label("took"))
+        .where(
+            jobs.c.kind == ORDER_KIND,
+            jobs.c.status == JobStatus.DONE,
+            jobs.c.finished_at.is_not(None),
+        )
+        .order_by(jobs.c.finished_at.desc())
+        .limit(RECENT_ORDERS)
+        .subquery()
+    )
+    typical = await connection.scalar(
+        select(func.percentile_cont(0.5).within_group(recent.c.took).cast(Float))
+    )
+    return TYPICAL_ORDER_SECONDS if typical is None else float(typical)
+
+
+def remaining_seconds(typical: float, waited: float) -> int:
+    return max(MIN_ESTIMATE_SECONDS, math.ceil(typical - waited))
+
+
+async def order_wait(connection: AsyncConnection, task_id: uuid.UUID) -> int | None:
     latest = (
         await connection.execute(
-            select(jobs.c.status, jobs.c.error_code)
+            select(
+                jobs.c.status, jobs.c.error_code, seconds_since(jobs.c.created_at).label("waited")
+            )
             .where(order_jobs(task_id))
             .order_by(jobs.c.created_at.desc())
             .limit(1)
         )
     ).one_or_none()
     if latest is None:
-        return
+        return None
     if latest.status in WAITING:
-        raise ReviewOrderNotReadyError
+        return remaining_seconds(await typical_order_seconds(connection), latest.waited or 0.0)
     if latest.status == JobStatus.FAILED:
         raise FAILURES.get(latest.error_code or "", ReviewOrderFailedError)
+    return None
+
+
+async def order_state(connection: AsyncConnection, task_id: uuid.UUID) -> None:
+    if await order_wait(connection, task_id) is not None:
+        raise ReviewOrderNotReadyError
 
 
 async def stored_seeds(

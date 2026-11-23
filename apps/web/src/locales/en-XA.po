@@ -1869,11 +1869,6 @@ msgstr ""
 msgid "{0}% on tissue"
 msgstr ""
 
-#. placeholder {0}: overview.reviewed_percent
-#: src/screens/project/project-page.tsx
-msgid "{0}% reviewed"
-msgstr ""
-
 #. placeholder {0}: magnification.toFixed(1)
 #. placeholder {1}: Math.round(viewport[0])
 #. placeholder {2}: Math.round(viewport[1])
@@ -9102,6 +9097,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/connect-model.tsx
 msgid "It sends"
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} minutes."
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} seconds."
 msgstr ""
 
 #. placeholder {0}: joinSteps(open)

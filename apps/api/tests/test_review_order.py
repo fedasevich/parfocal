@@ -12,7 +12,12 @@ from workspace_support import join_project, make_project, make_workspace, owner
 
 from parfocal_api.cell_crop_jobs import CROP_PLAN
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.review_order import ORDER_PLAN
+from parfocal_api.review_order import (
+    MIN_ESTIMATE_SECONDS,
+    ORDER_PLAN,
+    TYPICAL_ORDER_SECONDS,
+    remaining_seconds,
+)
 from parfocal_api.review_order_job import REVIEW_ORDER
 from parfocal_api.tables import Role
 from parfocal_common.cell_chunks import encode
@@ -415,6 +420,33 @@ def test_a_cell_scope_order_is_not_ready_until_its_job_runs(api: ApiAs, database
     assert sorted(order[4:]) == ["T4", "T6"]
     assert shared(api, o, task, slide=1) == []
     assert [status for _, status, _ in order_jobs_of(database, task)] == ["done"]
+
+
+def objects_of(api: ApiAs, o: Ordered, task: uuid.UUID, slide: int = 0) -> Any:
+    return api(o.people["first"]).get(f"/api/review-tasks/{task}/slides/{o.slides[slide]}/objects")
+
+
+def test_a_preparing_order_answers_a_waiting_state_instead_of_a_conflict(
+    api: ApiAs, database: str
+) -> None:
+    o = ordered(database, api)
+    task = made(api, o, {"kind": "inside-rois"})
+    waiting = objects_of(api, o, task)
+    assert waiting.status_code == 200, waiting.text
+    body = waiting.json()
+    assert (body["order"], body["objects"]) == ("preparing", [])
+    assert MIN_ESTIMATE_SECONDS <= body["ready_in_seconds"] <= TYPICAL_ORDER_SECONDS
+    run_orders(database, o.tenant)
+    ready = objects_of(api, o, task)
+    assert ready.status_code == 200, ready.text
+    assert (ready.json()["order"], ready.json()["ready_in_seconds"]) == ("ready", None)
+    assert [item["object"] for item in ready.json()["objects"]][:4] == ["C1", "C2", "T3", "T5"]
+
+
+def test_the_wait_estimate_counts_down_from_the_typical_order_time() -> None:
+    assert remaining_seconds(30.0, 0.0) == 30
+    assert remaining_seconds(30.0, 12.4) == 18
+    assert remaining_seconds(30.0, 90.0) == MIN_ESTIMATE_SECONDS
 
 
 async def crashing_crop(_run: StepRun) -> None:

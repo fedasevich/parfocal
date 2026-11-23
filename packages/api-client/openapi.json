@@ -70562,6 +70562,13 @@
         ],
         "title": "JobStep"
       },
+      "JobUnit": {
+        "type": "string",
+        "enum": [
+          "tile"
+        ],
+        "title": "JobUnit"
+      },
       "JoinPolicy": {
         "type": "string",
         "enum": [
@@ -73633,6 +73640,16 @@
             ],
             "title": "Units Total"
           },
+          "unit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "started_by_user_id": {
             "type": "string",
             "format": "uuid",
@@ -73686,6 +73703,7 @@
           "minutes_left",
           "units_done",
           "units_total",
+          "unit",
           "started_by_user_id",
           "slides",
           "pause",
@@ -77546,6 +77564,11 @@
             "minimum": 0.0,
             "title": "Reviewed Percent"
           },
+          "reviewed_slides": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Reviewed Slides"
+          },
           "needs_review": {
             "type": "integer",
             "minimum": 0.0,
@@ -77604,6 +77627,7 @@
           "result_sets",
           "objects",
           "reviewed_percent",
+          "reviewed_slides",
           "needs_review",
           "no_results",
           "case_groups",
@@ -81099,6 +81123,26 @@
             },
             "type": "array",
             "title": "Added"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "preparing"
+            ],
+            "title": "Order",
+            "default": "ready"
+          },
+          "ready_in_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ready In Seconds"
           }
         },
         "type": "object",

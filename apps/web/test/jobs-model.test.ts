@@ -44,6 +44,7 @@ const job = (patch: Partial<MyJob>): MyJob => ({
   minutes_left: 34,
   units_done: 0,
   units_total: 2,
+  unit: "tile",
   started_by_user_id: "dh",
   slides: [],
   pause: null,

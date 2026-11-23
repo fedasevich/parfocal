@@ -1871,11 +1871,6 @@ msgstr "{0}) · task {1}"
 msgid "{0}% on tissue"
 msgstr "{0}% on tissue"
 
-#. placeholder {0}: overview.reviewed_percent
-#: src/screens/project/project-page.tsx
-msgid "{0}% reviewed"
-msgstr "{0}% reviewed"
-
 #. placeholder {0}: magnification.toFixed(1)
 #. placeholder {1}: Math.round(viewport[0])
 #. placeholder {2}: Math.round(viewport[1])
@@ -9108,6 +9103,14 @@ msgstr "It sat in results/ and a PNG has no slide ID inside. Pick its slide and 
 #: ../../packages/ui/src/components/connect-model.tsx
 msgid "It sends"
 msgstr "It sends"
+
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} minutes."
+msgstr "It should be ready in about {count} minutes."
+
+#: src/screens/review/review-order-state.tsx
+msgid "It should be ready in about {count} seconds."
+msgstr "It should be ready in about {count} seconds."
 
 #. placeholder {0}: joinSteps(open)
 #: ../../packages/ui/src/components/analysis-cards.tsx

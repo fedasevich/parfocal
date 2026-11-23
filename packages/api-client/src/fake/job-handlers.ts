@@ -53,6 +53,7 @@ export const toMyJob = (job: JobRow): MyJob => {
     minutes_left: job.minutesLeft,
     units_done: job.unitsDone,
     units_total: job.unitsTotal,
+    unit: job.kind === "model-run" ? "tile" : null,
     started_by_user_id: people[job.by].id,
     slides: job.slides,
     pause: job.pause,
