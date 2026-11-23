@@ -172,8 +172,15 @@ title = "Admin refused without admin rights"
 url = "/admin"
 click = "Sign in as role-researcher@parfocal.eu and open the link."
 expect = "You do not have admin rights in this workspace."
-why = "A researcher runs studies, not the workspace."
-api = ["/api/tenant/audit-events =403"]
+why = "A researcher runs studies, not the workspace, and the API refuses every admin read."
+api = [
+  "/api/tenant/audit-events =403",
+  "/api/tenant/overview =403",
+  "/api/tenant/storage =403",
+  "/api/tenant/webhooks =403",
+  "/api/tenant/security =403",
+  "/api/tenant/retention =403",
+]
 state = "refused"
 
 [[chapter.step]]
