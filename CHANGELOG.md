@@ -2,6 +2,25 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.43.1 (2026-11-23)
+
+### Fixes
+
+- PROTO-157: Name devices in words, one version in the Display tab, Cells pill pressed
+- PROTO-104: A search hit without a task now centres the camera and picks the object
+
+### Docs
+
+- PILOT-010: Split the owner's study and walkthrough request into tasks
+- PROTO-165: Tick the patch export list after the deployed download
+- PROTO-157: Tick the round five slips
+- PROTO-104: Move the search hit fix to review
+
+### Other
+
+- TEST-059: Claim TEST-059 EXP-014 EXP-016 for the parallel run
+- PROTO-159: Claim PROTO-159 for the parallel run
+
 ## v0.43.0 (2026-11-23)
 
 ### Features
