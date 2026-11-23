@@ -89,6 +89,7 @@ def test_project_slides_show_ready_sets_and_only_assigned_slides_to_a_reviewer(
             "stain": "H&E",
             "case": None,
             "result_set_ids": [str(r.result_set)],
+            "drawn_count": 0,
             "width": mine.json()[0]["width"],
             "height": mine.json()[0]["height"],
         }
