@@ -521,11 +521,12 @@ def allow_tour_switch(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
     async def any_role_account(*_: object) -> tour_switch.Target:
         return tour_switch.Target("seed:role-reviewer-a", "Reviewer A", "role-reviewer-a@x")
 
-    async def no_session(*_: object) -> None:
+    async def no_session(*_: object, **__: object) -> None:
         return None
 
     monkeypatch.setattr(tour_switch, "role_account_in", any_role_account)
     monkeypatch.setattr(tour_switch, "swap_session", no_session)
+    monkeypatch.setattr(tour_switch, "record", no_session)
 
 
 def seeded(w: Workspace, name: str) -> uuid.UUID:

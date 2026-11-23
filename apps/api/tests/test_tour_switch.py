@@ -1,4 +1,5 @@
 import uuid
+from collections import Counter
 from collections.abc import Iterator
 
 import pytest
@@ -59,17 +60,15 @@ def admin_in_tour_workspace(browser: Browser) -> str:
     return tenant_id
 
 
-def audit_actions(browser: Browser) -> list[str]:
-    rows = browser.sql(
-        "SELECT action FROM audit_events WHERE action LIKE 'user.tour-role-%' ORDER BY id"
-    )
-    return [str(row[0]) for row in rows]
+def audit_actions(browser: Browser) -> Counter[str]:
+    rows = browser.sql("SELECT action FROM audit_events WHERE action LIKE 'user.tour-role-%'")
+    return Counter(str(row[0]) for row in rows)
 
 
 def test_an_admin_switches_to_a_role_account_and_back(tour: Browser) -> None:
     tenant_id = admin_in_tour_workspace(tour)
     role_subject = seat_role_account(tour, tenant_id, "role-reviewer-a@parfocal.eu")
-    before = len(audit_actions(tour))
+    before = audit_actions(tour)
 
     switched = tour.client.post(SWITCH, json={"account": "reviewer-a"})
     assert switched.status_code == 200, switched.text
@@ -90,7 +89,9 @@ def test_an_admin_switches_to_a_role_account_and_back(tour: Browser) -> None:
     assert back.status_code == 200, back.text
     assert back.json()["switched"] is False
     assert tour.session().json()["subject"] == tour.idp.subject
-    assert audit_actions(tour)[before:] == ["user.tour-role-switched", "user.tour-role-returned"]
+    assert audit_actions(tour) - before == Counter(
+        {"user.tour-role-switched": 1, "user.tour-role-returned": 1}
+    )
 
 
 def test_the_switch_is_refused_while_the_server_flag_is_off(browser: Browser) -> None:

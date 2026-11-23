@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.audit import Actor, ActorKind, AuditAction, AuditTarget, record
+from parfocal_api.audit import Actor, AuditAction, AuditTarget, record
 from parfocal_api.auth import (
     AUTH_SCOPE,
     SESSION_COOKIE,
@@ -21,7 +21,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.settings import ApiSettings
-from parfocal_api.tables import memberships, sessions, users
+from parfocal_api.tables import ActorKind, memberships, sessions, users
 from parfocal_common.db import scoped_transaction
 
 TourAccount = Literal[
@@ -74,6 +74,28 @@ class Target:
     subject: str
     name: str
     email: str
+
+
+@dataclass(frozen=True)
+class Origin:
+    subject: str
+    name: str | None
+    email: str | None
+
+
+def text_or_none(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def origin_of(tokens: dict[str, Any]) -> Origin | None:
+    held: object = tokens.get(TOUR_ORIGIN)
+    if not isinstance(held, dict):
+        return None
+    fields = cast("dict[str, object]", held)
+    subject = text_or_none(fields.get("subject"))
+    if subject is None:
+        return None
+    return Origin(subject, text_or_none(fields.get("name")), text_or_none(fields.get("email")))
 
 
 router = APIRouter(prefix="/api/tour", tags=["tour"])
@@ -174,33 +196,25 @@ async def return_from_tour_role(
         if loaded is None or loaded["row"].subject != principal.subject:
             raise NoTourOriginError
         tokens: dict[str, Any] = loaded["tokens"]
-        origin = tokens.get(TOUR_ORIGIN)
-        if not isinstance(origin, dict) or not isinstance(origin.get("subject"), str):
+        origin = origin_of(tokens)
+        if origin is None:
             raise NoTourOriginError
-        known = await connection.scalar(
-            select(users.c.id).where(users.c.subject == origin["subject"])
-        )
+        known = await connection.scalar(select(users.c.id).where(users.c.subject == origin.subject))
         if known is None:
             raise NoTourOriginError
         restored = {key: value for key, value in tokens.items() if key != TOUR_ORIGIN}
-        restored |= {"name": origin.get("name"), "email": origin.get("email")}
+        restored |= {"name": origin.name, "email": origin.email}
         await connection.execute(
             update(sessions)
             .where(sessions.c.id_hash == digest(session_id))
-            .values(subject=origin["subject"], tokens=state.cipher.seal(restored))
+            .values(subject=origin.subject, tokens=state.cipher.seal(restored))
         )
     await record(
         tenant,
-        Actor(ActorKind.MEMBER, origin["subject"]),
+        Actor(ActorKind.MEMBER, origin.subject),
         AuditAction.TOUR_ROLE_RETURNED,
         AuditTarget.PERSON,
         person=principal.subject,
         tenant_id=principal.tenant_id,
     )
-    name = origin.get("name")
-    email = origin.get("email")
-    return TourAccountShown(
-        name=name if isinstance(name, str) else "",
-        email=email if isinstance(email, str) else "",
-        switched=False,
-    )
+    return TourAccountShown(name=origin.name or "", email=origin.email or "", switched=False)

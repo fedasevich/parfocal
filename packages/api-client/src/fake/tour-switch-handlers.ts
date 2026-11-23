@@ -17,6 +17,7 @@ const isPersona = (value: string | null): value is PersonKey =>
   value !== null && Object.hasOwn(people, value);
 
 export function storedTourPersona(): PersonKey | null {
+  if (typeof window === "undefined") return null;
   const stored = window.sessionStorage.getItem(storageKey);
   return isPersona(stored) ? stored : null;
 }
