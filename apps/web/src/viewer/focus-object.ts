@@ -13,6 +13,21 @@ export function cellNumberOf(object: string | undefined): number | null {
   return found?.[1] === undefined ? null : Number(found[1]);
 }
 
+export function reviewObjectOf(
+  object: string | undefined,
+  objects: readonly { readonly object: string; readonly drawn?: boolean | undefined }[],
+): string | undefined {
+  if (object === undefined) return undefined;
+  const wanted = asciiObjectId(object).toUpperCase();
+  const exact = objects.find((item) => asciiObjectId(item.object).toUpperCase() === wanted);
+  if (exact !== undefined) return exact.object;
+  if (!wanted.endsWith("+")) return undefined;
+  const plain = wanted.slice(0, -1);
+  return objects.find(
+    (item) => item.drawn === true && asciiObjectId(item.object).toUpperCase() === plain,
+  )?.object;
+}
+
 export type ObjectFocus = {
   readonly area: StageArea;
   readonly shape: ShapeId | null;
