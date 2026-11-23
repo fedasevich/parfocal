@@ -554,7 +554,7 @@ const canonicalObject = (token: string): string =>
   token.toUpperCase().replace(/^(T\d+)[.-]/, "$1·");
 
 const knownObjects: Record<number, readonly string[]> = {
-  1: ["T1", "T2", "T3", "T4", "T5", "C145", "C1394", "T1·C145", "T2·C145", "T2·C1394", "R1"],
+  1: ["T1", "T2", "T3", "T4", "T5", "C145", "C1394", "T1·C145", "T2·C145", "T2·C1394", "R1", "T1+"],
 };
 
 const exactObjectHits = (query: string, slideId: string | null): SearchHit[] => {
@@ -568,7 +568,8 @@ const exactObjectHits = (query: string, slideId: string | null): SearchHit[] => 
   const slideWords = words.slice(0, -1).map(fold);
   return Object.entries(knownObjects).flatMap(([index, objects]) => {
     const slide = slideByIndex(Number(index));
-    if (!objects.includes(object) || (slideId !== null && slide.id !== slideId)) return [];
+    const elsewhere = slideId !== null && slide.id !== slideId && slideWords.length === 0;
+    if (!objects.includes(object) || elsewhere) return [];
     const where = fold([slide.project, slide.caseLabel, slide.label].filter(Boolean).join(" "));
     if (!slideWords.every((word) => where.includes(word))) return [];
     return [

@@ -106,6 +106,7 @@ import { threadAnchorPoint } from "./thread-target.ts";
 import { firstGrant, type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
+import { useObjectFocus } from "./use-object-focus.ts";
 import { usePanelKey, usePanHide } from "./use-pan-hide.ts";
 import { useSelectionClass } from "./use-selection-class.ts";
 import { useStageDevices } from "./use-stage-devices.ts";
@@ -180,6 +181,7 @@ export function SlideStage({
   projectId,
   taskId,
   areas = [],
+  focusObject,
   viewed,
   systematicScan = false,
   outlines = false,
@@ -211,6 +213,7 @@ export function SlideStage({
   onOpenSlide?: (slideId: string) => void;
   onStorage?: (note: SlideStorageNote) => void;
   areas?: readonly SlideAreaEntry[];
+  focusObject?: string | undefined;
   viewed?: ViewedLink;
   systematicScan?: boolean;
   outlines?: boolean;
@@ -224,6 +227,7 @@ export function SlideStage({
       projectId={projectId}
       taskId={taskId}
       areas={areas}
+      focusObject={focusObject}
       viewed={viewed}
       systematicScan={systematicScan}
       outlines={outlines}
@@ -253,6 +257,7 @@ function OpenedSlide({
   projectId,
   taskId,
   areas,
+  focusObject,
   viewed,
   systematicScan,
   outlines,
@@ -285,6 +290,7 @@ function OpenedSlide({
   onOpenSlide: ((slideId: string) => void) | undefined;
   onStorage: ((note: SlideStorageNote) => void) | undefined;
   areas: readonly SlideAreaEntry[];
+  focusObject: string | undefined;
   viewed: ViewedLink | undefined;
   systematicScan: boolean;
   outlines: boolean;
@@ -405,6 +411,7 @@ function OpenedSlide({
       ),
     [annotations.shapes, selectedIds],
   );
+  const pickRequest = useObjectFocus(focusObject, session?.engine ?? null, saved, areas, setTool);
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
@@ -887,6 +894,7 @@ function OpenedSlide({
                         {...(readOnly ? {} : { onCommit: saved.commit })}
                         onEditText={(id) => (readOnly ? undefined : textControl.current?.edit(id))}
                         onSelectionChange={setSelectedIds}
+                        pickRequest={pickRequest}
                         onMarquee={onAiMarquee}
                         pinRegistry={pinRegistry}
                         emptyDrag={setup.dragBehaviour}

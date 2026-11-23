@@ -37,6 +37,7 @@ type SelectLayerProps = {
   onCommit?: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
   onEditText?: (id: ShapeId) => void;
   onSelectionChange?: (ids: readonly ShapeId[]) => void;
+  pickRequest?: readonly ShapeId[] | null;
   onMarquee?: (area: Extent, additive: boolean) => void;
   pinRegistry?: PinRegistry;
   emptyDrag?: EmptyDrag;
@@ -158,6 +159,7 @@ export function SelectLayer({
   onCommit,
   onEditText,
   onSelectionChange,
+  pickRequest = null,
   onMarquee,
   pinRegistry,
   emptyDrag,
@@ -182,6 +184,10 @@ export function SelectLayer({
   useEffect(() => {
     onSelectionChange?.(state.ids);
   }, [state.ids, onSelectionChange]);
+
+  useEffect(() => {
+    if (active && pickRequest !== null) tool.select(pickRequest);
+  }, [active, pickRequest, tool]);
 
   useEffect(() => {
     tool.prune(doc);
