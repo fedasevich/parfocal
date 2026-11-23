@@ -2,6 +2,23 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.41.0 (2026-11-23)
+
+### Features
+
+- OPS-039: Seed production from a Modal function in the EU beside the database
+
+### Performance
+
+- TEST-057: Print seed phase times and trace the slow reseed to the runner region
+
+### Docs
+
+- TEST-057: Log the v0.40.1 reseed time
+- OPS-039: Add the task to run the reseed in Modal's EU region
+- TEST-057: Tick the seed of every review outcome
+- TEST-057: Release the board claim
+
 ## v0.40.1 (2026-11-23)
 
 ### Performance
