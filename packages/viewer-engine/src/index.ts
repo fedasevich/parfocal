@@ -258,6 +258,7 @@ export type {
   EngineEvents,
   EngineSlide,
   EngineStatus,
+  FlyToAreaLimit,
   FrameScheduler,
   OverlayLayer,
   OverlayRegistration,

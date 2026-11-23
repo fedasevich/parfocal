@@ -14,6 +14,7 @@ import {
   type ViewEmbeddingPost,
   type ViewSam,
   viewEncoder,
+  viewGiveUpMs,
   viewOf,
   withSeenLevels,
   withViewEmbeddings,
@@ -130,6 +131,10 @@ describe("live ViT-L view embeddings", () => {
         signal.addEventListener("abort", () => reject(new GpuCallCancelledError())),
       );
     assert.equal(await answer(hanging, 10), "gave-up");
+  });
+
+  it("gives Best a bounded wait of no more than two minutes", () => {
+    assert.ok(viewGiveUpMs > 0 && viewGiveUpMs <= 120_000);
   });
 
   it("stops every open call when Smart select closes", async () => {

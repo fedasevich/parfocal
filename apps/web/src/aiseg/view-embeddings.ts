@@ -18,7 +18,7 @@ export const viewEncoder = "pathosam-vit-l-histopathology-fp32";
 export const minViewSide = 16;
 export const maxViewSide = 4096;
 export const viewShowWaitAfterMs = 8000;
-export const viewGiveUpMs = 180_000;
+export const viewGiveUpMs = 90_000;
 
 export type BestFallback = "unsendable" | "refused" | "offline" | "gave-up" | "cancelled";
 
