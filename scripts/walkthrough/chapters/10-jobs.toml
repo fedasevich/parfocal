@@ -19,7 +19,7 @@ url = "/projects/{job_project}/jobs/{job}"
 click = "Sign in as agent-walk@parfocal.eu and open the link to the seeded upload job. The buttons are Close, it keeps going, Open the slide and Open the project. A running model run adds Cancel the run, Resume now and Move it to another GPU."
 expect = "The upload of Philips-4.tiff shows as done at 100 percent."
 why = "Anyone can see what a job did and jump to its result."
-api = ["/api/me/jobs", "/api/projects/{job_project}/model-runs"]
+api = ["/api/me/jobs", "/api/projects/{job_project}/jobs/{job}"]
 
 [[chapter.step]]
 role = "researcher"

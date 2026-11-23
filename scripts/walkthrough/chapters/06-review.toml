@@ -16,7 +16,7 @@ api = ["/api/me/review-tasks", "/api/me/slides"]
 role = "reviewer-a"
 title = "Guided review opens the first object"
 url = "/tasks/{task:Role account review}/guided"
-click = "Open the link, or press Start in guided review. Read the Got it, start card the first time."
+click = "Open the link, or press Start in guided review."
 expect = "The first slide opens in Guided mode with one object centred and outlined and its decision buttons in the panel."
 why = "One object at a time is the fastest way to judge hundreds of objects without missing one."
 api = ["/api/review-tasks/{task:Role account review}", "/api/review-tasks/{task:Role account review}/slides/{task_slide:Role account review|1}/layer"]
@@ -62,7 +62,7 @@ role = "reviewer-a"
 title = "Submit the slide"
 url = "/tasks/{task:Role account review}/submitted?slide={task_slide:Role account review|1}"
 click = "When every object is decided, press Submit the slide or Enter. The submitted page counts down."
-expect = "Slide 1 submitted. Opens by itself in a few seconds, with Open slide 2 and Back to My work. Until the researcher signs off, Reopen my review stays possible."
+expect = "Slide 1 submitted. Opens by itself in a few seconds, with Open slide 2 and Back to My work. The review can still change until the researcher signs off."
 why = "Submitting tells the researcher this reviewer is done with the slide."
 api = ["/api/review-tasks/{task:Role account review}/states"]
 

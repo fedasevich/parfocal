@@ -1,7 +1,7 @@
 {
   "origin": "https://app.parfocal.eu",
   "workspace": "cvut-biomedical",
-  "checked_at": "2026-11-23 21:23 UTC",
+  "checked_at": "2026-11-23 21:28 UTC",
   "release": "3b46404",
   "sign_in_problems": [],
   "chapters": [
@@ -242,7 +242,7 @@
           "role_name": "Reviewer A",
           "account": "role-reviewer-a@parfocal.eu",
           "title": "Home for a reviewer",
-          "click": "Sign out from the avatar menu and sign in as role-reviewer-a@parfocal.eu, or use a second private window. Look at Continue where you left off.",
+          "click": "Press Log out in the avatar menu and sign in as role-reviewer-a@parfocal.eu, or use a second private window. Look at Continue where you left off.",
           "expect": "Home leads with one big Continue where you left off button for Role account review, then the tasks due.",
           "why": "A reviewer should get from sign-in to the next object in one click.",
           "gpu": false,
@@ -1759,7 +1759,7 @@
           "role_name": "Reviewer A",
           "account": "role-reviewer-a@parfocal.eu",
           "title": "Guided review opens the first object",
-          "click": "Open the link, or press Start in guided review. Read the Got it, start card the first time.",
+          "click": "Open the link, or press Start in guided review.",
           "expect": "The first slide opens in Guided mode with one object centred and outlined and its decision buttons in the panel.",
           "why": "One object at a time is the fastest way to judge hundreds of objects without missing one.",
           "gpu": false,
@@ -1905,7 +1905,7 @@
           "account": "role-reviewer-a@parfocal.eu",
           "title": "Submit the slide",
           "click": "When every object is decided, press Submit the slide or Enter. The submitted page counts down.",
-          "expect": "Slide 1 submitted. Opens by itself in a few seconds, with Open slide 2 and Back to My work. Until the researcher signs off, Reopen my review stays possible.",
+          "expect": "Slide 1 submitted. Opens by itself in a few seconds, with Open slide 2 and Back to My work. The review can still change until the researcher signs off.",
           "why": "Submitting tells the researcher this reviewer is done with the slide.",
           "gpu": false,
           "state": "",
@@ -3218,7 +3218,7 @@
               "got": 200
             },
             {
-              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/model-runs",
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/jobs/da8d6d02-a4fd-40f4-9980-8b3a87da5d1a",
               "expected": 200,
               "got": 200
             }
@@ -3989,7 +3989,7 @@
           "role_name": "Reviewer A",
           "account": "role-reviewer-a@parfocal.eu",
           "title": "The avatar menu",
-          "click": "Open the avatar menu. Try Keyboard shortcuts, Profile and signature, Send feedback, Help and what's new and Lock the screen.",
+          "click": "Open the avatar menu. Try Keyboard shortcuts, Profile and signature, Send feedback, Help and what's new, Lock the screen and Log out.",
           "expect": "Lock the screen hides the app until you sign in again. Send feedback opens a short form.",
           "why": "A pathologist leaving the desk locks the screen in one click.",
           "gpu": false,
@@ -4285,8 +4285,8 @@
           "gpu": false,
           "state": "refused",
           "link": "/admin",
-          "status": "broken",
-          "reason": "/api/tenant/overview answered 200, not 403",
+          "status": "working",
+          "reason": "",
           "calls": [
             {
               "path": "/admin",
@@ -4294,9 +4294,9 @@
               "got": 200
             },
             {
-              "path": "/api/tenant/overview",
+              "path": "/api/tenant/audit-events",
               "expected": 403,
-              "got": 200
+              "got": 403
             }
           ]
         },

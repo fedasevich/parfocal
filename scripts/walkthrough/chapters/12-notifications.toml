@@ -34,11 +34,11 @@ state = "error"
 [[chapter.step]]
 role = "owner"
 title = "A task's comment threads"
-url = "/tasks/{task:Every outcome review}/comments?slide={task_slide:Every outcome review|1}"
+url = "/tasks/{task:Every outcome review}/comments?slide={slide:Sentinel node metastasis study|Case outcomes 1}"
 click = "Open Comments of Every outcome review. Read the thread Is this the same tumour as the next region. Close the thread resolves it, and Your decision notes lists your own notes."
 expect = "The thread is pinned to its object, with an @mention of a colleague."
 why = "Questions about a single object stay with that object."
-api = ["/api/review-tasks/{task:Every outcome review}/slides/{task_slide:Every outcome review|1}/threads"]
+api = ["/api/review-tasks/{task:Every outcome review}/slides/{slide:Sentinel node metastasis study|Case outcomes 1}/threads"]
 
 [[chapter.step]]
 role = "reviewer-a"

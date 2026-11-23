@@ -80,7 +80,7 @@ state = "not found"
 role = "reviewer-a"
 title = "The avatar menu"
 url = "/"
-click = "Open the avatar menu. Try Keyboard shortcuts, Profile and signature, Send feedback, Help and what's new and Lock the screen."
+click = "Open the avatar menu. Try Keyboard shortcuts, Profile and signature, Send feedback, Help and what's new, Lock the screen and Log out."
 expect = "Lock the screen hides the app until you sign in again. Send feedback opens a short form."
 why = "A pathologist leaving the desk locks the screen in one click."
 api = ["/api/me"]
@@ -173,7 +173,7 @@ url = "/admin"
 click = "Sign in as role-researcher@parfocal.eu and open the link."
 expect = "You do not have admin rights in this workspace."
 why = "A researcher runs studies, not the workspace."
-api = ["/api/tenant/overview =403"]
+api = ["/api/tenant/audit-events =403"]
 state = "refused"
 
 [[chapter.step]]

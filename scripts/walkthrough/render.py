@@ -34,11 +34,11 @@ def e(text: object) -> str:
 
 def how_to_sign_in(role: str, origin: str) -> str:
     if role == "signed-out":
-        return "Open a private window, or sign out from the avatar menu, and stay signed out."
+        return "Open a private window, or press Log out in the avatar menu, and stay signed out."
     secret = SIGN_IN.get(role, "the password in ~/.config/parfocal/role-accounts.env")
     return (
         f"Sign in at {origin}/sign-in as <code>{e(ACCOUNTS[role])}</code> with {e(secret)}. "
-        "If another account is signed in, sign out from the avatar menu first, or keep one "
+        "If another account is signed in, press Log out in the avatar menu first, or keep one "
         "browser profile or private window per account."
     )
 
@@ -111,7 +111,8 @@ def accounts_zone(origin: str) -> str:
         "<code>~/.config/parfocal/role-accounts.env</code>. The owner and admin account "
         "<code>agent-walk</code> keeps its password in "
         "<code>~/.config/parfocal/agent-account.env</code>. You can also use your own owner "
-        "account for its steps. After signing in, pick the workspace "
+        "account for its steps, except the co-sign request and the object to "
+        "adjudicate, which wait for agent-walk. After signing in, pick the workspace "
         "<b>ČVUT · Biomedical Engineering</b> in the workspace switcher, because every link "
         "below points into it.</p>"
         f"<table><tr><th>Role</th><th>Account</th><th>What it has</th></tr>{rows}</table>"
