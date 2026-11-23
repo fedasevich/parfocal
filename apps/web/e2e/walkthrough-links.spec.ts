@@ -82,7 +82,7 @@ test("the browser tab names the page and the slide", async ({ page }) => {
 });
 
 test("task timing and the study page sit inside the app menu", async ({ page }) => {
-  for (const path of ["/kpi", "/study"]) {
+  for (const path of ["/kpi", "/study/console"]) {
     await page.goto(path);
     await expect(page.getByRole("navigation").first()).toBeVisible();
   }

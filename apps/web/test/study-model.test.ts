@@ -3,15 +3,16 @@ import { test } from "node:test";
 import {
   checkMet,
   currentRound,
-  defaultTasks,
   editTasks,
   initialState,
   isFrozen,
   nextTask,
   type PageProbe,
   parseState,
+  pilotTasks,
   recordResult,
   resolveStartPath,
+  round5Tasks,
   type StudyContext,
   type StudyTask,
   startNextRound,
@@ -23,8 +24,9 @@ import {
 const oneTask = JSON.stringify([{ id: "a", title: "A", instruction: "Do A" }]);
 
 test("the default round has ten tasks", () => {
-  assert.equal(defaultTasks.length, 10);
-  assert.equal(currentRound(initialState()).tasks.length, 10);
+  assert.equal(pilotTasks.length, 10);
+  assert.equal(round5Tasks.length, 11);
+  assert.equal(currentRound(initialState()).tasks.length, 11);
 });
 
 test("an empty round can be edited from JSON", () => {
@@ -51,11 +53,16 @@ test("a round with a session is frozen until the next round starts", () => {
   assert.equal(isFrozen(next, 2), false);
   const edited = editTasks(next, 2, oneTask);
   assert.ok(edited.ok);
-  assert.equal(edited.state.rounds[0]?.tasks.length, 10);
+  assert.equal(edited.state.rounds[0]?.tasks.length, 11);
 });
 
 test("results advance the session and the summary reports medians", () => {
-  let state = startSession(initialState(), "P1", "s1", 0);
+  let state = startSession(
+    { rounds: [{ number: 1, tasks: pilotTasks }], sessions: [] },
+    "P1",
+    "s1",
+    0,
+  );
   state = startSession(state, "P2", "s2", 0);
   state = recordResult(state, "s1", {
     taskId: "t1",
@@ -104,12 +111,12 @@ const page = (url: string, counts: Record<string, number> = {}, text = ""): Page
 });
 
 test("every default task opens a start screen and slide tasks open the CAMELYON16 slide", () => {
-  for (const task of defaultTasks) {
+  for (const task of pilotTasks) {
     const path = resolveStartPath(task, context);
     assert.ok(path !== undefined && !path.includes("{"), task.id);
     if (task.slide !== undefined) assert.equal(task.slide, studySlide);
   }
-  const live = defaultTasks.find((task) => task.id === "t2");
+  const live = pilotTasks.find((task) => task.id === "t2");
   assert.ok(live);
   assert.equal(resolveStartPath(live, context), "/projects/p-7/slides/s-44?task=rt-14&as=DH");
 });

@@ -22,12 +22,39 @@ export function readStudy(storage = browserStorage()): StudyState {
   }
 }
 
+const studyListeners = new Set<() => void>();
+
+export function subscribeStudy(listener: () => void): () => void {
+  studyListeners.add(listener);
+  return () => {
+    studyListeners.delete(listener);
+  };
+}
+
+export function readStudyRaw(storage = browserStorage()): string | null {
+  try {
+    return storage?.getItem(studyKey) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function writeStudy(state: StudyState, storage = browserStorage()): void {
   try {
     storage?.setItem(studyKey, JSON.stringify(state));
   } catch {
     storage?.removeItem(studyKey);
   }
+  for (const listener of studyListeners) listener();
+}
+
+export function updateStudy(
+  change: (state: StudyState) => StudyState,
+  storage = browserStorage(),
+): StudyState {
+  const next = change(readStudy(storage));
+  writeStudy(next, storage);
+  return next;
 }
 
 const guardSchema = z.object({

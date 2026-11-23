@@ -23,7 +23,6 @@ import { Route as SearchRouteImport } from "./routes/search.tsx";
 import { Route as SetupRouteImport } from "./routes/setup.tsx";
 import { Route as SignInRouteImport } from "./routes/sign-in.tsx";
 import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
-import { Route as StudyRouteImport } from "./routes/study.tsx";
 import { Route as TeamRouteImport } from "./routes/team.tsx";
 import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
 import { Route as GoNotificationIdRouteImport } from "./routes/go.$notificationId.tsx";
@@ -37,6 +36,8 @@ import { Route as SharedReportsTokenRouteImport } from "./routes/shared-reports.
 import { Route as SpikesHotkeysRouteImport } from "./routes/spikes.hotkeys.tsx";
 import { Route as SpikesInputTracesRouteImport } from "./routes/spikes.input-traces.tsx";
 import { Route as SpikesWorklistRouteImport } from "./routes/spikes.worklist.tsx";
+import { Route as StudyIndexRouteImport } from "./routes/study.index.tsx";
+import { Route as StudyConsoleRouteImport } from "./routes/study.console.tsx";
 import { Route as FlowMapWalkthroughIndexRouteImport } from "./routes/flow-map.walkthrough.index.tsx";
 import { Route as FlowMapWalkthroughChapterRouteImport } from "./routes/flow-map.walkthrough.$chapter.tsx";
 import { Route as ProjectsProjectIdIndexRouteImport } from "./routes/projects.$projectId.index.tsx";
@@ -135,11 +136,6 @@ const SignUpRoute = SignUpRouteImport.update({
   path: "/sign-up",
   getParentRoute: () => rootRouteImport,
 } as any);
-const StudyRoute = StudyRouteImport.update({
-  id: "/study",
-  path: "/study",
-  getParentRoute: () => rootRouteImport,
-} as any);
 const TeamRoute = TeamRouteImport.update({
   id: "/team",
   path: "/team",
@@ -203,6 +199,16 @@ const SpikesInputTracesRoute = SpikesInputTracesRouteImport.update({
 const SpikesWorklistRoute = SpikesWorklistRouteImport.update({
   id: "/spikes/worklist",
   path: "/spikes/worklist",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const StudyIndexRoute = StudyIndexRouteImport.update({
+  id: "/study/",
+  path: "/study/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const StudyConsoleRoute = StudyConsoleRouteImport.update({
+  id: "/study/console",
+  path: "/study/console",
   getParentRoute: () => rootRouteImport,
 } as any);
 const FlowMapWalkthroughIndexRoute = FlowMapWalkthroughIndexRouteImport.update({
@@ -371,7 +377,6 @@ export interface FileRoutesByFullPath {
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
-  "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
   "/go/$notificationId": typeof GoNotificationIdRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
@@ -382,9 +387,11 @@ export interface FileRoutesByFullPath {
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
+  "/study/console": typeof StudyConsoleRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/projects/": typeof ProjectsIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
+  "/study/": typeof StudyIndexRoute;
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
   "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
   "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
@@ -428,7 +435,6 @@ export interface FileRoutesByTo {
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
-  "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
   "/go/$notificationId": typeof GoNotificationIdRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
@@ -439,9 +445,11 @@ export interface FileRoutesByTo {
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
+  "/study/console": typeof StudyConsoleRoute;
   "/flow-map": typeof FlowMapIndexRoute;
   "/projects": typeof ProjectsIndexRoute;
   "/settings": typeof SettingsIndexRoute;
+  "/study": typeof StudyIndexRoute;
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
   "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
   "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
@@ -486,7 +494,6 @@ export interface FileRoutesById {
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
-  "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
   "/go/$notificationId": typeof GoNotificationIdRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
@@ -497,9 +504,11 @@ export interface FileRoutesById {
   "/spikes/hotkeys": typeof SpikesHotkeysRoute;
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
+  "/study/console": typeof StudyConsoleRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/projects/": typeof ProjectsIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
+  "/study/": typeof StudyIndexRoute;
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
   "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
   "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
@@ -545,7 +554,6 @@ export interface FileRouteTypes {
     | "/setup"
     | "/sign-in"
     | "/sign-up"
-    | "/study"
     | "/team"
     | "/go/$notificationId"
     | "/invitations/$token"
@@ -556,9 +564,11 @@ export interface FileRouteTypes {
     | "/spikes/hotkeys"
     | "/spikes/input-traces"
     | "/spikes/worklist"
+    | "/study/console"
     | "/flow-map/"
     | "/projects/"
     | "/settings/"
+    | "/study/"
     | "/flow-map/walkthrough/$chapter"
     | "/projects/$projectId/run-model"
     | "/projects/$projectId/upload"
@@ -602,7 +612,6 @@ export interface FileRouteTypes {
     | "/setup"
     | "/sign-in"
     | "/sign-up"
-    | "/study"
     | "/team"
     | "/go/$notificationId"
     | "/invitations/$token"
@@ -613,9 +622,11 @@ export interface FileRouteTypes {
     | "/spikes/hotkeys"
     | "/spikes/input-traces"
     | "/spikes/worklist"
+    | "/study/console"
     | "/flow-map"
     | "/projects"
     | "/settings"
+    | "/study"
     | "/flow-map/walkthrough/$chapter"
     | "/projects/$projectId/run-model"
     | "/projects/$projectId/upload"
@@ -659,7 +670,6 @@ export interface FileRouteTypes {
     | "/setup"
     | "/sign-in"
     | "/sign-up"
-    | "/study"
     | "/team"
     | "/go/$notificationId"
     | "/invitations/$token"
@@ -670,9 +680,11 @@ export interface FileRouteTypes {
     | "/spikes/hotkeys"
     | "/spikes/input-traces"
     | "/spikes/worklist"
+    | "/study/console"
     | "/flow-map/"
     | "/projects/"
     | "/settings/"
+    | "/study/"
     | "/flow-map/walkthrough/$chapter"
     | "/projects/$projectId/run-model"
     | "/projects/$projectId/upload"
@@ -717,7 +729,6 @@ export interface RootRouteChildren {
   SetupRoute: typeof SetupRoute;
   SignInRoute: typeof SignInRoute;
   SignUpRoute: typeof SignUpRoute;
-  StudyRoute: typeof StudyRoute;
   TeamRoute: typeof TeamRoute;
   GoNotificationIdRoute: typeof GoNotificationIdRoute;
   InvitationsTokenRoute: typeof InvitationsTokenRoute;
@@ -728,9 +739,11 @@ export interface RootRouteChildren {
   SpikesHotkeysRoute: typeof SpikesHotkeysRoute;
   SpikesInputTracesRoute: typeof SpikesInputTracesRoute;
   SpikesWorklistRoute: typeof SpikesWorklistRoute;
+  StudyConsoleRoute: typeof StudyConsoleRoute;
   FlowMapIndexRoute: typeof FlowMapIndexRoute;
   ProjectsIndexRoute: typeof ProjectsIndexRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
+  StudyIndexRoute: typeof StudyIndexRoute;
   FlowMapWalkthroughChapterRoute: typeof FlowMapWalkthroughChapterRoute;
   ProjectsProjectIdRunModelRoute: typeof ProjectsProjectIdRunModelRoute;
   ProjectsProjectIdUploadRoute: typeof ProjectsProjectIdUploadRoute;
@@ -860,13 +873,6 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof SignUpRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    "/study": {
-      id: "/study";
-      path: "/study";
-      fullPath: "/study";
-      preLoaderRoute: typeof StudyRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
     "/team": {
       id: "/team";
       path: "/team";
@@ -956,6 +962,20 @@ declare module "@tanstack/react-router" {
       path: "/spikes/worklist";
       fullPath: "/spikes/worklist";
       preLoaderRoute: typeof SpikesWorklistRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/study/": {
+      id: "/study/";
+      path: "/study";
+      fullPath: "/study/";
+      preLoaderRoute: typeof StudyIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/study/console": {
+      id: "/study/console";
+      path: "/study/console";
+      fullPath: "/study/console";
+      preLoaderRoute: typeof StudyConsoleRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/flow-map/walkthrough/": {
@@ -1165,7 +1185,6 @@ const rootRouteChildren: RootRouteChildren = {
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
-  StudyRoute: StudyRoute,
   TeamRoute: TeamRoute,
   GoNotificationIdRoute: GoNotificationIdRoute,
   InvitationsTokenRoute: InvitationsTokenRoute,
@@ -1176,9 +1195,11 @@ const rootRouteChildren: RootRouteChildren = {
   SpikesHotkeysRoute: SpikesHotkeysRoute,
   SpikesInputTracesRoute: SpikesInputTracesRoute,
   SpikesWorklistRoute: SpikesWorklistRoute,
+  StudyConsoleRoute: StudyConsoleRoute,
   FlowMapIndexRoute: FlowMapIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  StudyIndexRoute: StudyIndexRoute,
   FlowMapWalkthroughChapterRoute: FlowMapWalkthroughChapterRoute,
   ProjectsProjectIdRunModelRoute: ProjectsProjectIdRunModelRoute,
   ProjectsProjectIdUploadRoute: ProjectsProjectIdUploadRoute,

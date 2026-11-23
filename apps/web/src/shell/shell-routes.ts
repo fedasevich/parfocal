@@ -20,7 +20,7 @@ export const shellRouteIds: ReadonlySet<string> = new Set([
   "/tasks/$taskId/sign-off",
   "/tasks/$taskId/evaluation",
   "/kpi",
-  "/study",
+  "/study/console",
   "/go/$notificationId",
 ]);
 
