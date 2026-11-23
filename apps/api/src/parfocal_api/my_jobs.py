@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime
+from collections.abc import Sequence
+from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import DateTime, case, func, literal, null, select, union_all
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -15,10 +16,11 @@ from parfocal_api.notifications import member_of
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ProblemError
 from parfocal_api.projects import code_of as project_code
+from parfocal_api.run_waits import PoolWatch, RunWait, pool_watch_of, run_waits
 from parfocal_api.tables import project_members, projects, result_sets, slides, uploads
 from parfocal_common.jobs import JobStatus, job_steps, job_units, jobs
 from parfocal_common.model_runs import KIND as MODEL_RUN
-from parfocal_common.model_runs import MODEL_STAGE, model_runs
+from parfocal_common.model_runs import MODEL_STAGE, NUCLEI_DETECTORS, model_runs
 from parfocal_common.result_imports import UploadKind
 
 RECENT = 20
@@ -76,6 +78,7 @@ class MyJob(BaseModel):
     started_by_user_id: uuid.UUID
     slides: list[JobSlide]
     pause: JobPause | None
+    wait: RunWait | None
     created_at: datetime
     finished_at: datetime | None
 
@@ -188,8 +191,32 @@ async def readable(connection: AsyncConnection, principal: MemberPrincipal, row:
     return True
 
 
+async def queued_on_the_pool(
+    connection: AsyncConnection, rows: Sequence[Any]
+) -> list[tuple[uuid.UUID, datetime]]:
+    candidates = [
+        row.id for row in rows if row.kind == MyJobKind.MODEL_RUN and row.status == JobStatus.QUEUED
+    ]
+    if not candidates:
+        return []
+    found = await connection.execute(
+        select(jobs.c.id, jobs.c.created_at)
+        .join(model_runs, model_runs.c.job_id == jobs.c.id)
+        .where(
+            jobs.c.id.in_(candidates),
+            jobs.c.status == JobStatus.QUEUED,
+            model_runs.c.detector.in_(NUCLEI_DETECTORS),
+        )
+    )
+    return [(row.id, row.created_at) for row in found]
+
+
 @router.get("/jobs", operation_id="listMyJobs")
-async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection) -> list[MyJob]:
+async def list_my_jobs(
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    watch: Annotated[PoolWatch | None, Depends(pool_watch_of)],
+) -> list[MyJob]:
     person = member_of(principal)
     started = started_by(person.user_id)
     done, total = units_of()
@@ -227,6 +254,7 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
             .limit(RECENT)
         )
     ).all()
+    waits = await run_waits(watch, await queued_on_the_pool(connection, rows), datetime.now(UTC))
     found: list[MyJob] = []
     for row in rows:
         if not await readable(connection, person, row):
@@ -259,6 +287,7 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
                 started_by_user_id=person.user_id,
                 slides=shown,
                 pause=pause_of(row, status),
+                wait=waits.get(row.id) if status is JobStatus.QUEUED else None,
                 created_at=row.created_at,
                 finished_at=finished_at,
             )

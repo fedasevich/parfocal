@@ -5,7 +5,7 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Protocol, cast
+from typing import Any, Protocol, cast, runtime_checkable
 
 GPU_POOL_APP = "parfocal-gpu-pool"
 EMBEDDER_FUNCTION = "embedder"
@@ -28,6 +28,17 @@ class Pools(Protocol):
     def spawn(self, function_name: str, call: dict[str, object]) -> None: ...
 
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]: ...
+
+
+@dataclass(frozen=True)
+class PoolLoad:
+    backlog: int
+    runners: int
+
+
+@runtime_checkable
+class PoolLoads(Protocol):
+    def load(self, function_name: str) -> PoolLoad: ...
 
 
 class PendingPools(Protocol):
@@ -138,6 +149,10 @@ class ModalPools:
 
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
         return self.function(function_name).remote(call)
+
+    def load(self, function_name: str) -> PoolLoad:
+        stats = self.function(function_name).get_current_stats()
+        return PoolLoad(backlog=int(stats.backlog), runners=int(stats.num_total_runners))
 
     def submit(self, function_name: str, call: dict[str, object]) -> str:
         return str(self.function(function_name).spawn(call).object_id)

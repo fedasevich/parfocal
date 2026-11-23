@@ -73688,6 +73688,16 @@
               }
             ]
           },
+          "wait": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunWait"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -73723,6 +73733,7 @@
           "started_by_user_id",
           "slides",
           "pause",
+          "wait",
           "created_at",
           "finished_at"
         ],
@@ -77508,6 +77519,10 @@
             "type": "integer",
             "title": "Queue Minutes"
           },
+          "start_minutes": {
+            "type": "integer",
+            "title": "Start Minutes"
+          },
           "latency_ms": {
             "anyOf": [
               {
@@ -77538,6 +77553,7 @@
           "server",
           "runs_ahead",
           "queue_minutes",
+          "start_minutes",
           "latency_ms"
         ],
         "title": "ProjectModel"
@@ -82551,6 +82567,33 @@
           "finished_at"
         ],
         "title": "RunStage"
+      },
+      "RunWait": {
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/RunWaitReason"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "since"
+        ],
+        "title": "RunWait"
+      },
+      "RunWaitReason": {
+        "type": "string",
+        "enum": [
+          "waiting-for-gpu",
+          "gpu-busy",
+          "woken-again"
+        ],
+        "title": "RunWaitReason"
       },
       "RunningStep": {
         "properties": {

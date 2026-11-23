@@ -256,7 +256,7 @@ async def test_the_agent_reads_the_signed_case_report(showcase: str) -> None:
 async def test_the_agent_finds_a_finished_upload_job_with_its_slide(showcase: str) -> None:
     agent = await member(showcase, AGENT)
     async with as_member(showcase, agent) as connection:
-        jobs = await list_my_jobs(agent, connection)
+        jobs = await list_my_jobs(agent, connection, None)
     assert [(job.kind, job.status, job.percent) for job in jobs] == [
         (MyJobKind.UPLOAD, JobStatus.DONE, 100)
     ] * len(WORKSPACES)

@@ -5278,6 +5278,19 @@ export const MyJobKind = {
   import: "import",
 } as const;
 
+export type RunWaitReason = (typeof RunWaitReason)[keyof typeof RunWaitReason];
+
+export const RunWaitReason = {
+  "waiting-for-gpu": "waiting-for-gpu",
+  "gpu-busy": "gpu-busy",
+  "woken-again": "woken-again",
+} as const;
+
+export interface RunWait {
+  reason: RunWaitReason;
+  since: string;
+}
+
 export interface MyJob {
   id: string;
   kind: MyJobKind;
@@ -5299,6 +5312,7 @@ export interface MyJob {
   started_by_user_id: string;
   slides: JobSlide[];
   pause: JobPause | null;
+  wait: RunWait | null;
   created_at: string;
   finished_at: string | null;
 }
@@ -6200,6 +6214,7 @@ export interface ProjectModel {
   server: string;
   runs_ahead: number;
   queue_minutes: number;
+  start_minutes: number;
   latency_ms: number | null;
   serving?: Serving;
 }
