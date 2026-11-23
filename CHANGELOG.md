@@ -2,6 +2,27 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.46.0 (2026-11-23)
+
+### Features
+
+- EXP-014: Run the study for the participant in one tab with round 4 and nur questions
+- EXP-014: List the study run key in the storage policy and rebaseline the code budget
+- EXP-014: Merge main and start round 5 tasks from the EXP-016 participant project
+
+### Fixes
+
+- PROTO-166: Answer a preparing review order with a waiting state and make job counts true
+
+### Docs
+
+- PROTO-166: Move the preparing state to review
+- TEST-059: Tick the role accounts and move the study page to review
+
+### Tests
+
+- PROTO-165: Cover the patch export list in the tenant isolation suite
+
 ## v0.45.0 (2026-11-23)
 
 ### Features
