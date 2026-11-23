@@ -19,7 +19,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { AccountMenu } from "./account-menu.tsx";
 import { Bell } from "./bell.tsx";
 import { ConnectionBanner } from "./connection-banner.tsx";
-import { destinations } from "./destinations.ts";
+import { destinations, uploadProjectId } from "./destinations.ts";
 import { JobsTrayProvider } from "./jobs-tray.tsx";
 import { MaintenanceBanner } from "./maintenance-banner.tsx";
 import { useOverlay } from "./overlays.ts";
@@ -72,6 +72,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
   const goTo = useGoTo();
   const renderLink = useRouterLink();
   const active = useActiveItem();
+  const openProjectId = useParams({ strict: false }).projectId;
   const folded = useMatches({
     select: (matches) => matches.some((match) => foldedShellRouteIds.has(match.routeId)),
   });
@@ -148,7 +149,9 @@ export function GlobalShell({ children }: { children: ReactNode }) {
               }
               onSearch={() => void overlay.set("palette")}
               onNewProject={() => void goTo(destinations.newProject())}
-              onUpload={() => void goTo(destinations.upload(firstProject))}
+              onUpload={() =>
+                void goTo(destinations.upload(uploadProjectId(openProjectId, firstProject)))
+              }
               bellSlot={<Bell />}
               accountSlot={<AccountMenu me={me} person={person} />}
             />

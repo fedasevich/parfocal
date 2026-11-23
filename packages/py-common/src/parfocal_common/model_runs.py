@@ -220,13 +220,15 @@ RUN_NOTICE = text(
       CASE WHEN j.status = 'done' THEN jsonb_build_object(
         'status', 'done',
         'title', 'Model run finished',
-        'detail', r.detector || ' ' || r.detector_version || ' finished on its slide.',
+        'detail', (CASE r.detector WHEN 'pathosam-hovernext' THEN 'PathoSAM + HoVer-NeXt'
+          ELSE r.detector END) || ' ' || r.detector_version || ' finished on its slide.',
         'action', 'Open the run'
       ) ELSE jsonb_build_object(
         'status', 'failed',
         'reason', coalesce(j.error_code, 'unknown'),
         'title', 'Model run failed',
-        'detail', r.detector || ' ' || r.detector_version || ' stopped with the code '
+        'detail', (CASE r.detector WHEN 'pathosam-hovernext' THEN 'PathoSAM + HoVer-NeXt'
+          ELSE r.detector END) || ' ' || r.detector_version || ' stopped with the code '
           || coalesce(j.error_code, 'unknown') || '.',
         'action', 'See why'
       ) END,

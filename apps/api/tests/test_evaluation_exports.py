@@ -6,11 +6,13 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+from chunk_support import CellRow, chunk_bytes, put_chunk
 from db_support import ApiAs
 from pypdf import PdfReader
 from test_evaluation_api import scenario
 from test_locales import REPORT
 from test_reviewed_layer import Review
+from workspace_support import owner
 
 from parfocal_api.evaluation_exports import (
     CHECKSUM_HEADER,
@@ -20,7 +22,9 @@ from parfocal_api.evaluation_exports import (
     pdf_of,
 )
 from parfocal_api.report_template import render_report
+from parfocal_common.chunk_store import chunk_key
 from parfocal_common.report_blocks import HeadlineNumbers, TextBlock
+from parfocal_common.result_imports import result_set_prefix
 
 KINDS = (
     "report.pdf",
@@ -180,3 +184,26 @@ def test_reviewers_cannot_export_the_evaluation(api: ApiAs, database: str) -> No
     assert (hidden.status_code, hidden.json()["code"]) == (403, "evaluation-hidden")
     unknown = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/evaluation/exports/x.txt")
     assert unknown.status_code == 422
+
+
+@pytest.mark.db
+def test_the_decisions_csv_names_the_class_of_chunked_cells(api: ApiAs, database: str) -> None:
+    r = scenario(api, database)
+    tenant = r.people["owner"].tenant_id
+    owner(
+        database,
+        "DO $$ BEGIN PERFORM set_config('session_replication_role', 'replica', true); "
+        "INSERT INTO result_set_classes (tenant_id, project_id, result_set_id, position, "
+        f"source_name) VALUES ('{tenant}', '{r.project}', '{r.result_set}', 0, 'Stroma cell'); "
+        "END $$",
+    )
+    cells: list[CellRow] = [(number, 0, 100, number * 100.0, 100.0) for number in range(1, 6)]
+    key = chunk_key(result_set_prefix(tenant, r.slide, r.result_set), 0)
+    put_chunk(key, chunk_bytes(cells, None))
+    _, rows = rows_of(exported(api, r, "decisions.csv").text)
+    classes = {row["object_id"].rsplit("/", 1)[1]: row["class"] for row in rows}
+    assert classes["C1"] == "Stroma cell"
+    assert classes["C2"] == "Stroma cell"
+    assert classes["T1"] == "unclassified"
+    _, objects = rows_of(exported(api, r, "objects.csv").text)
+    assert {row["class"] for row in objects if row["kind"] == "cell"} == {"Stroma cell"}

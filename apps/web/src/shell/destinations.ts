@@ -62,3 +62,7 @@ export const destinations = {
   admin: () => "/admin",
   developer: (section?: string) => `/developer${query({ section })}`,
 };
+
+export function uploadProjectId(current: string | undefined, first: string): string {
+  return current ?? first;
+}
