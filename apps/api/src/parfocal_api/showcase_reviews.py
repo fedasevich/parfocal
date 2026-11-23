@@ -290,38 +290,30 @@ async def seed_drawn_review(
         seed_request(),
     )
     disputed, agreed = (ref.number for ref in made)
-    await decide(
-        connection,
-        seeded,
-        project_id,
-        task.id,
-        slide_id,
-        "rhea",
-        DecisionValue.AGREE,
-        number=disputed,
+    await connection.execute(
+        insert(review_decisions),
+        [
+            {
+                "tenant_id": seeded.tenant_id,
+                "project_id": project_id,
+                "task_id": task.id,
+                "slide_id": slide_id,
+                "user_id": seeded.people[key],
+                "kind": "region",
+                "number": number,
+                "value": value,
+                "style": DecisionStyle.AGREE,
+                "answer": value,
+                "reasons": [reason.value for reason in reasons],
+            }
+            for key, number, value, reasons in (
+                ("rhea", disputed, DecisionValue.AGREE, []),
+                ("remy", disputed, DecisionValue.DISAGREE, [DecisionReason.BOUNDARY_OFF]),
+                ("rhea", agreed, DecisionValue.AGREE, []),
+                ("remy", agreed, DecisionValue.AGREE, []),
+            )
+        ],
     )
-    await decide(
-        connection,
-        seeded,
-        project_id,
-        task.id,
-        slide_id,
-        "remy",
-        DecisionValue.DISAGREE,
-        [DecisionReason.BOUNDARY_OFF],
-        number=disputed,
-    )
-    for key in ("rhea", "remy"):
-        await decide(
-            connection,
-            seeded,
-            project_id,
-            task.id,
-            slide_id,
-            key,
-            DecisionValue.AGREE,
-            number=agreed,
-        )
     await submit(connection, task.id, slide_id)
     return task.id
 

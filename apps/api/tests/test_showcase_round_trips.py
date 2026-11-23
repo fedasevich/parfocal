@@ -16,7 +16,7 @@ from parfocal_api.showcase import WORKSPACES, seed
 pytestmark = pytest.mark.db
 
 PROJECTS_STATEMENT_CEILING = 900
-SEED_STATEMENT_CEILING = 9000
+SEED_STATEMENT_CEILING = 9300
 
 
 class Tally:

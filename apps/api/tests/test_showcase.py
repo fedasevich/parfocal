@@ -273,7 +273,10 @@ async def test_every_state_and_kind_has_a_seeded_row(seeded: str) -> None:
     assert await values(seeded, "SELECT DISTINCT status FROM jobs") == set(JobStatus)
     assert await values(seeded, "SELECT DISTINCT kind FROM review_tasks") >= {"review", "annotate"}
     suffixes = {
-        Path(name).suffix for name in await values(seeded, "SELECT source_file FROM result_sets")
+        Path(name).suffix
+        for name in await values(
+            seeded, "SELECT source_file FROM result_sets WHERE source <> 'drawn'"
+        )
     }
     assert {SUFFIX_FORMATS[suffix] for suffix in suffixes} == set(ResultFormat)
     assert {Path(name).suffix for name in RESULT_FILES} == set(SUFFIX_FORMATS)
@@ -897,7 +900,7 @@ async def test_every_seeded_ai_result_comes_from_a_model_run(seeded: str) -> Non
     made = await run_sql(
         seeded,
         "SELECT model_version, cell_count, region_count, status FROM result_sets "
-        "WHERE status <> 'failed'",
+        "WHERE status <> 'failed' AND source <> 'drawn'",
     )
     assert made
     assert {str(row[0]) for row in made} == {REGIONS_MODEL, CELLS_MODEL}
@@ -905,6 +908,10 @@ async def test_every_seeded_ai_result_comes_from_a_model_run(seeded: str) -> Non
     assert all(
         int(str(row[2])) > 0 for row in made if row[0] == REGIONS_MODEL and row[3] == "ready"
     )
-    shapes = await run_sql(seeded, "SELECT ST_AsText(geometry) FROM result_objects")
+    shapes = await run_sql(
+        seeded,
+        "SELECT ST_AsText(o.geometry) FROM result_objects o "
+        "JOIN result_sets s ON s.id = o.result_set_id WHERE s.source <> 'drawn'",
+    )
     assert shapes
     assert {points_of(str(row[0])) for row in shapes} <= rings
