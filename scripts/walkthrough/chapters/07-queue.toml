@@ -101,5 +101,5 @@ url = "/tasks/{task:Disagreement queue example}/adjudicate"
 click = "Sign in as role-reviewer-a@parfocal.eu and open the link."
 expect = "Nothing is queued for you on this task. Back to My work."
 why = "Only the person a row was sent to can decide it."
-api = ["/api/review-tasks/{task:Disagreement queue example}/adjudication"]
+api = ["/api/review-tasks/{task:Disagreement queue example}/adjudication =404"]
 state = "empty"

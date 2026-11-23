@@ -1,16 +1,9 @@
 {
   "origin": "https://app.parfocal.eu",
   "workspace": "cvut-biomedical",
-  "checked_at": "2026-11-23 21:16 UTC",
+  "checked_at": "2026-11-23 21:23 UTC",
   "release": "3b46404",
-  "sign_in_problems": [
-    "researcher could not sign in: the account belongs to no workspace, not only to seeded workspaces",
-    "reviewer-a could not sign in: the account belongs to no workspace, not only to seeded workspaces",
-    "reviewer-b could not sign in: the account belongs to no workspace, not only to seeded workspaces",
-    "adjudicator could not sign in: the account belongs to no workspace, not only to seeded workspaces",
-    "viewer could not sign in: the account belongs to no workspace, not only to seeded workspaces",
-    "annotator could not sign in: the account belongs to no workspace, not only to seeded workspaces"
-  ],
+  "sign_in_problems": [],
   "chapters": [
     {
       "number": 1,
@@ -31,9 +24,25 @@
           "gpu": false,
           "state": "",
           "link": "/sign-in",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/sign-in",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/status",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/auth/password-sign-in",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "1.2",
@@ -47,9 +56,25 @@
           "gpu": false,
           "state": "signed out",
           "link": "/my-work",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/my-work",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 401,
+              "got": 401
+            },
+            {
+              "path": "/api/auth/session",
+              "expected": 401,
+              "got": 401
+            }
+          ]
         },
         {
           "number": "1.3",
@@ -63,9 +88,20 @@
           "gpu": false,
           "state": "",
           "link": "/sign-up",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/sign-up",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/status",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "1.4",
@@ -79,9 +115,20 @@
           "gpu": false,
           "state": "error",
           "link": "/invitations/not-a-real-invitation",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/invitations/not-a-real-invitation",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/invitations/not-a-real-invitation/preview",
+              "expected": 404,
+              "got": 404
+            }
+          ]
         },
         {
           "number": "1.5",
@@ -95,9 +142,20 @@
           "gpu": false,
           "state": "error",
           "link": "/invite?token=not-a-real-invitation",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/invite?token=not-a-real-invitation",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/invitations/not-a-real-invitation/preview",
+              "expected": 404,
+              "got": 404
+            }
+          ]
         },
         {
           "number": "1.6",
@@ -111,9 +169,35 @@
           "gpu": false,
           "state": "",
           "link": "/",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/home",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/checklist",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "1.7",
@@ -127,9 +211,30 @@
           "gpu": false,
           "state": "",
           "link": "/",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/notifications/counts",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/jobs",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "1.8",
@@ -143,9 +248,25 @@
           "gpu": false,
           "state": "",
           "link": "/",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/home",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/review-tasks",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "1.9",
@@ -159,9 +280,25 @@
           "gpu": false,
           "state": "",
           "link": "/setup",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/setup",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/joinable-workspaces",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "1.10",
@@ -175,9 +312,20 @@
           "gpu": false,
           "state": "",
           "link": "/projects",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "1.11",
@@ -191,9 +339,20 @@
           "gpu": false,
           "state": "not found",
           "link": "/this-page-does-not-exist",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/this-page-does-not-exist",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -216,9 +375,25 @@
           "gpu": false,
           "state": "",
           "link": "/projects/new",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/new",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/taxonomy-templates",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.2",
@@ -231,10 +406,31 @@
           "why": "This is the researcher's home for one study, where every slide and its progress shows at a glance.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/overview",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.3",
@@ -247,10 +443,21 @@
           "why": "From here a researcher reaches the queue, the sign-off and the report of every task.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e?tab=tasks",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819?tab=tasks",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819?tab=tasks",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/review-tasks",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.4",
@@ -263,10 +470,26 @@
           "why": "The class list, the opinion form and who is in the project are set here once and used by every task.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e?tab=settings",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819?tab=settings",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819?tab=settings",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/classes",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/opinion-form",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.5",
@@ -279,10 +502,21 @@
           "why": "A viewer such as a student or an auditor may look at everything and change nothing.",
           "gpu": false,
           "state": "refused",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e?tab=settings",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819?tab=settings",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819?tab=settings",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.6",
@@ -295,10 +529,26 @@
           "why": "Slides and AI results arrive together, and the app pairs each result with its slide before anything is uploaded.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/upload",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/upload",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/upload",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/import-sources",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.7",
@@ -311,10 +561,26 @@
           "why": "Big slide files take minutes, so the upload must survive leaving the page and must show every problem before it starts.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/upload",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/upload",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/upload",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/result-formats/parfocal-json/template",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/result-formats/parfocal-json/schema",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.8",
@@ -327,10 +593,21 @@
           "why": "Every format a scanner writes must open natively. This project is the proof.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.9",
@@ -343,10 +620,21 @@
           "why": "A researcher checks the same tissue from two scanners in one view.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f?tab=slides",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1?tab=slides",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1?tab=slides",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/result-sets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.10",
@@ -359,10 +647,26 @@
           "why": "In a clinical project, slides belong to a patient's case, which ends in a signed clinical report.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/new",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/new",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/new",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/cases",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "2.11",
@@ -375,10 +679,21 @@
           "why": "Adding a late slide to an existing case must not need the whole upload page.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/a4c8a8d4-3a7e-43d5-9caf-72926ff19d9d/upload",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b/upload",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b/upload",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -400,10 +715,31 @@
           "why": "Smooth viewing is the base of every other feature. Viv is the main renderer and must work perfectly.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/46fabdf8-8530-47fb-be8b-0b788d82993e",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/d49e8d5c-950f-4698-9e31-833d2550c91f/result-sets",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/d49e8d5c-950f-4698-9e31-833d2550c91f/tile-access",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/d49e8d5c-950f-4698-9e31-833d2550c91f/neighbours?from=all-slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.2",
@@ -416,10 +752,21 @@
           "why": "Short IDs let people talk about one object out loud and find it again.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/46fabdf8-8530-47fb-be8b-0b788d82993e?tab=objects",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?tab=objects",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?tab=objects",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/d49e8d5c-950f-4698-9e31-833d2550c91f/result-sets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.3",
@@ -432,10 +779,21 @@
           "why": "Reviewers read cells better with their own display, and a task can lock some choices so everyone sees the same thing.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/46fabdf8-8530-47fb-be8b-0b788d82993e?tab=display",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?tab=display",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?tab=display",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/display-presets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.4",
@@ -448,10 +806,21 @@
           "why": "Discussion stays attached to the exact cell or region it is about.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/46fabdf8-8530-47fb-be8b-0b788d82993e?tab=comments",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?tab=comments",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?tab=comments",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f/threads",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.5",
@@ -464,10 +833,26 @@
           "why": "Pathologists measure deposits and margins, and the number must be right for each scanner.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/9e209299-2eeb-4e1d-8581-991d0073601d",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d02926c5-4fa6-4592-a247-a70df5488f5b",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d02926c5-4fa6-4592-a247-a70df5488f5b",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/d02926c5-4fa6-4592-a247-a70df5488f5b/result-sets",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/d02926c5-4fa6-4592-a247-a70df5488f5b/thumbnail",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.6",
@@ -480,10 +865,21 @@
           "why": "Comparing levels or stains of one case is daily work for a pathologist.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/3275df4c-cffe-413f-80f8-8e2c83e19ea3?layout=compare",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/7e152dea-f189-4995-b787-51d3467bace6?layout=compare",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/7e152dea-f189-4995-b787-51d3467bace6?layout=compare",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/7e152dea-f189-4995-b787-51d3467bace6/neighbours?from=all-slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.7",
@@ -496,10 +892,21 @@
           "why": "Results leave the app in the formats QuPath and training code read.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/bed8ed15-6169-43d4-8f32-7569ef4317b0",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/163205e5-9947-412f-9657-f9f950d8718a/annotations",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.8",
@@ -512,10 +919,26 @@
           "why": "Labs use many scanners. Reading each format natively avoids slow conversions.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/906301b3-a821-4827-85fe-657c0cd5addb",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/7c0318b6-ba25-42f7-a927-7fd62fe66beb",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/7c0318b6-ba25-42f7-a927-7fd62fe66beb",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/7c0318b6-ba25-42f7-a927-7fd62fe66beb/tile-access",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/a64ad460-fec8-4da5-b97d-605c352467dd/tile-access",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.9",
@@ -528,10 +951,21 @@
           "why": "A broken file must explain itself, so nobody thinks the tissue is blank.",
           "gpu": false,
           "state": "error",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/slides/754098f7-f7a4-414f-8966-fad61d4a4136",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/slides/3e8ba6ca-0507-4302-930d-1b5d821ac2c8",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/slides/3e8ba6ca-0507-4302-930d-1b5d821ac2c8",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/3e8ba6ca-0507-4302-930d-1b5d821ac2c8/result-sets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.10",
@@ -544,10 +978,21 @@
           "why": "Pathologists with two screens keep the overview or the inspector on the second one.",
           "gpu": false,
           "state": "",
-          "link": "/popout?kind=minimap&project=d464f23b-a304-40da-b010-e0e595c7197f&slide=3275df4c-cffe-413f-80f8-8e2c83e19ea3",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/popout?kind=minimap&project=f39b1964-399f-449c-911a-bce89b0ce5e1&slide=7e152dea-f189-4995-b787-51d3467bace6",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/popout?kind=minimap&project=f39b1964-399f-449c-911a-bce89b0ce5e1&slide=7e152dea-f189-4995-b787-51d3467bace6",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.11",
@@ -560,10 +1005,21 @@
           "why": "Drawing cells by hand is slow. One click outlines make annotation many times faster.",
           "gpu": true,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/46fabdf8-8530-47fb-be8b-0b788d82993e?mode=annotate",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/model-tiers",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.12",
@@ -576,10 +1032,21 @@
           "why": "Read-only people must never change data by accident.",
           "gpu": false,
           "state": "refused",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/bed8ed15-6169-43d4-8f32-7569ef4317b0?mode=annotate",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a?mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a?mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/163205e5-9947-412f-9657-f9f950d8718a/result-sets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "3.13",
@@ -592,10 +1059,21 @@
           "why": "Links shared before the viewers were merged keep working.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/f781218e-5917-4156-970a-39d18ecf78e0/live",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/live",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/live",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/result-sets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -617,10 +1095,26 @@
           "why": "An expert should land straight on the drawing with nothing to set up.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/{task:Role account annotation}/guided",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc/guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc/guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc/states",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.2",
@@ -633,10 +1127,21 @@
           "why": "Experts draw the training truth themselves when the AI is wrong or missing.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/shared-layer",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.3",
@@ -649,10 +1154,21 @@
           "why": "One click outlines make a training set affordable in expert time.",
           "gpu": true,
           "state": "",
-          "link": "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/model-tiers",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.4",
@@ -665,10 +1181,21 @@
           "why": "Large regions are tedious to trace by hand.",
           "gpu": true,
           "state": "",
-          "link": "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/ai-progress",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.5",
@@ -681,10 +1208,21 @@
           "why": "Every AI object a person checked is marked as such in the training data.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/shared-layer/ai",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.6",
@@ -697,10 +1235,21 @@
           "why": "Experts organise many shapes, such as all lymph node deposits, in one place.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/shared-layer/groups",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.7",
@@ -713,10 +1262,21 @@
           "why": "A slide can be signed off only when every expert has checked it.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/check-status",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.8",
@@ -729,10 +1289,26 @@
           "why": "This is the finished state an annotate task works towards.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/bed8ed15-6169-43d4-8f32-7569ef4317b0?task=8266ac1a-d115-4af4-96b0-4b206bae5575&mode=annotate",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a?task=a69a618f-4c16-4b91-a754-bb5baaecf86e&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a?task=a69a618f-4c16-4b91-a754-bb5baaecf86e&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/slides/163205e5-9947-412f-9657-f9f950d8718a/check-status",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/slides/163205e5-9947-412f-9657-f9f950d8718a/shared-layer",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.9",
@@ -745,10 +1321,21 @@
           "why": "These rules keep experts from copying each other and make sure nothing the AI made slips through unchecked.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/4dfd237f-8337-46bd-884c-1a958e2e7e17/guided",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/7ac9419b-722a-41cc-814c-69b801394ea0/guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/7ac9419b-722a-41cc-814c-69b801394ea0/guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/7ac9419b-722a-41cc-814c-69b801394ea0/states",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.10",
@@ -761,10 +1348,21 @@
           "why": "A safe place to try every tool without touching the examples.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/4d2ba676-4899-460b-be3c-a8190d989679/guided",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/9146188c-643f-44a0-8e21-6b1eeae93a56/guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/9146188c-643f-44a0-8e21-6b1eeae93a56/guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/9146188c-643f-44a0-8e21-6b1eeae93a56",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.11",
@@ -777,10 +1375,21 @@
           "why": "Older links to the annotate view keep working.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/bed8ed15-6169-43d4-8f32-7569ef4317b0/annotate",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a/annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a/annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/163205e5-9947-412f-9657-f9f950d8718a/annotation-layers",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.12",
@@ -793,10 +1402,21 @@
           "why": "Older links to the annotate task view keep working.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/bed8ed15-6169-43d4-8f32-7569ef4317b0/annotate-task",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a/annotate-task",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/163205e5-9947-412f-9657-f9f950d8718a/annotate-task",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/163205e5-9947-412f-9657-f9f950d8718a/layer-groups",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.13",
@@ -809,10 +1429,21 @@
           "why": "Only the experts of a task may change its shared drawing.",
           "gpu": false,
           "state": "refused",
-          "link": "/projects/{task_project:Role account annotation}/slides/{task_slide:Role account annotation|1}?task={task:Role account annotation}&mode=annotate",
-          "status": "not checked",
-          "reason": "no task named Role account annotation",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc&mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/afeadb13-aa9a-40b5-a29a-4bf7e8cf4dbc",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "4.14",
@@ -825,10 +1456,21 @@
           "why": "Experts agree on one drawing, so there is nothing to compare.",
           "gpu": false,
           "state": "refused",
-          "link": "/tasks/8266ac1a-d115-4af4-96b0-4b206bae5575/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -850,10 +1492,21 @@
           "why": "Review and annotate tasks check work in different ways, so the choice comes first.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/tasks/new?step=kind",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=kind",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=kind",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/review-tasks/defaults",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "5.2",
@@ -866,10 +1519,26 @@
           "why": "Reviewers judge one named AI result, so the evaluation knows exactly what it measured.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/tasks/new?step=slides",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=slides",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=slides",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/slides",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/result-sets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "5.3",
@@ -882,10 +1551,21 @@
           "why": "Two independent reviewers are what makes a disagreement measurable.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/tasks/new?step=reviewers",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=reviewers",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=reviewers",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/availability",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "5.4",
@@ -898,10 +1578,26 @@
           "why": "The question decides what the evaluation can say about the AI.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/tasks/new?step=check",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=check",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=check",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/scope-options",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/study-templates",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "5.5",
@@ -914,10 +1610,21 @@
           "why": "Blind review keeps reviewers from copying each other, and a due date drives the reminders.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/tasks/new?step=how",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=how",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=how",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/display-presets",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "5.6",
@@ -930,10 +1637,21 @@
           "why": "One last look before people are notified avoids tasks that have to be withdrawn.",
           "gpu": false,
           "state": "blocked until complete",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/tasks/new?step=send",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=send",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/tasks/new?step=send",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/review-tasks/defaults",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "5.7",
@@ -946,10 +1664,26 @@
           "why": "Annotate tasks make training data from scratch or from the AI's shapes.",
           "gpu": false,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/tasks/new-annotate?step=kind&preset=hand",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/tasks/new-annotate?step=kind&preset=hand",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/tasks/new-annotate?step=kind&preset=hand",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/review-tasks/defaults",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "5.8",
@@ -963,9 +1697,20 @@
           "gpu": false,
           "state": "",
           "link": "/my-work?tab=assigned",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/my-work?tab=assigned",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/assigned-tasks",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -988,9 +1733,25 @@
           "gpu": false,
           "state": "",
           "link": "/my-work",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/my-work",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/review-tasks",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.2",
@@ -1003,10 +1764,26 @@
           "why": "One object at a time is the fastest way to judge hundreds of objects without missing one.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/{task:Role account review}/guided",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/layer",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.3",
@@ -1019,10 +1796,26 @@
           "why": "These answers are the data the evaluation is built from.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=guided",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/objects",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/decisions",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.4",
@@ -1035,10 +1828,21 @@
           "why": "A reviewer's fix becomes the outline or class in the training data when the queue agrees.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=guided",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/decision-notes",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.5",
@@ -1051,10 +1855,21 @@
           "why": "Some reviewers prefer to scan the whole slide. Both ways must give one review.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/skips",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.6",
@@ -1067,10 +1882,21 @@
           "why": "Some answers are about the whole slide, such as how acceptable the AI result is.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review&tab=opinion",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review&tab=opinion",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review&tab=opinion",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/opinion",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.7",
@@ -1083,10 +1909,21 @@
           "why": "Submitting tells the researcher this reviewer is done with the slide.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/{task:Role account review}/submitted?slide={task_slide:Role account review|1}",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/submitted?slide=6b402d4e-71f3-47a6-97fd-59655f2f14a9",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/submitted?slide=6b402d4e-71f3-47a6-97fd-59655f2f14a9",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/states",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.8",
@@ -1099,10 +1936,21 @@
           "why": "Blind review is what makes the agreement between reviewers mean something.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=guided",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/decisions",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.9",
@@ -1116,9 +1964,20 @@
           "gpu": false,
           "state": "",
           "link": "/my-work?tab=all",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/my-work?tab=all",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.10",
@@ -1131,10 +1990,26 @@
           "why": "Random cells give an unbiased estimate of how well the AI types cells.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/04e0077c-f52f-4d1b-b8b6-0f8961a74c9a/cells",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/f64213c5-8793-45bd-92a0-5f7d1ee2af54/cells",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/f64213c5-8793-45bd-92a0-5f7d1ee2af54/cells",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/f64213c5-8793-45bd-92a0-5f7d1ee2af54",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/f64213c5-8793-45bd-92a0-5f7d1ee2af54/states",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.11",
@@ -1147,10 +2022,36 @@
           "why": "The style is chosen per task, and each one is turned into agree, not sure or disagree by its Counts as line.",
           "gpu": false,
           "state": "",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/slides/ee405dea-ed3c-4534-a881-489af0dad56c?task=46e06a3e-ef6e-40ee-8190-fb1dc7c8c9a4",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/slides/c45904e3-b988-4cdc-87c8-d1adb33950bf?task=1abac39b-5273-4099-8582-71a8d55e56a8",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/slides/c45904e3-b988-4cdc-87c8-d1adb33950bf?task=1abac39b-5273-4099-8582-71a8d55e56a8",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6c304d87-0ea7-42ec-bf46-0e687ce9b83a",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/1abac39b-5273-4099-8582-71a8d55e56a8",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/f4edeb52-a5d9-4d19-95f9-6b9124551176",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/7351fca2-a7ab-4e9f-afbe-43a73ba6d6dc",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.12",
@@ -1163,10 +2064,21 @@
           "why": "Only the assigned reviewers may add answers.",
           "gpu": false,
           "state": "refused",
-          "link": "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.13",
@@ -1179,10 +2091,21 @@
           "why": "After sign-off the answers are final and the report stays true.",
           "gpu": false,
           "state": "refused",
-          "link": "/projects/b668eb15-0fa8-48b2-8f03-2440bf337b1e/slides/aa475412-034c-4b49-a03c-08b12094499f?task=afe0b3de-6e25-41dd-a6f4-3fcfe7574874&mode=review",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/slides/9bbe1ec0-6018-4c9e-b39b-3841d1d39c44?task=79bb4ce2-f3d9-4fc1-84c0-44f0fbf37d48&mode=review",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/b8bfa31b-a86c-40e5-9371-95229414e819/slides/9bbe1ec0-6018-4c9e-b39b-3841d1d39c44?task=79bb4ce2-f3d9-4fc1-84c0-44f0fbf37d48&mode=review",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/79bb4ce2-f3d9-4fc1-84c0-44f0fbf37d48/states",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "6.14",
@@ -1195,10 +2118,21 @@
           "why": "Links to a task always lead to the work that is left.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/cd00a910-be14-485c-8779-6737ed342f6e",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/fd6c2288-97f2-44a3-927a-5fbf9fc21495",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/fd6c2288-97f2-44a3-927a-5fbf9fc21495",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/fd6c2288-97f2-44a3-927a-5fbf9fc21495",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -1220,10 +2154,26 @@
           "why": "This is where the final answer of every contested object is made.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bd54a58c-e025-46f1-9cb9-f8bb7375bf0b/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreement-queue",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/sign-off-summary",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.2",
@@ -1236,10 +2186,26 @@
           "why": "Agree keeps the object, disagree leaves it out, and a chosen class or outline is what goes into the training data.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bd54a58c-e025-46f1-9cb9-f8bb7375bf0b/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/b8bfa31b-a86c-40e5-9371-95229414e819/classes",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.3",
@@ -1252,10 +2218,21 @@
           "why": "Some objects cannot be decided from this slide, and the report must say so honestly.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bd54a58c-e025-46f1-9cb9-f8bb7375bf0b/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.4",
@@ -1268,10 +2245,26 @@
           "why": "A neutral referee settles what the researcher should not decide alone.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bd54a58c-e025-46f1-9cb9-f8bb7375bf0b/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements/adjudicators",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/disagreements/adjudications",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.5",
@@ -1284,10 +2277,21 @@
           "why": "This is the reference of what every queue answer does.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/disagreement-queue",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.6",
@@ -1300,10 +2304,21 @@
           "why": "An AI object with the wrong class is still useful once its class is fixed.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/54d8df54-a933-4cda-8928-87f14943b1e3/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/c4015260-1c06-4faf-a7c4-f834bd01f0ae/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/c4015260-1c06-4faf-a7c4-f834bd01f0ae/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/c4015260-1c06-4faf-a7c4-f834bd01f0ae/disagreement-queue",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.7",
@@ -1316,10 +2331,21 @@
           "why": "A review task can check a colleague's drawing, not only the AI.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/75fc102c-d461-4dd2-a632-70ac01261c2c/disagreements",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/b3096151-1f32-48e4-b4d6-115a72e5de11/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/b3096151-1f32-48e4-b4d6-115a72e5de11/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/b3096151-1f32-48e4-b4d6-115a72e5de11/disagreement-queue",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.8",
@@ -1332,10 +2358,21 @@
           "why": "Comparing half finished reviews would be unfair to the slower reviewer.",
           "gpu": false,
           "state": "empty",
-          "link": "/tasks/{task:Role account review}/disagreements",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/disagreements",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/disagreements",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/disagreement-queue",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.9",
@@ -1349,9 +2386,20 @@
           "gpu": false,
           "state": "",
           "link": "/my-work",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/my-work",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/adjudications",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.10",
@@ -1364,10 +2412,26 @@
           "why": "An anonymous referee judges the work, not the person.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/{adj_task:adjudicator}/adjudicate",
-          "status": "not checked",
-          "reason": "no adj_task named adj_task:adjudicator",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/adjudicate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/adjudicate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/adjudication",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "7.11",
@@ -1380,10 +2444,21 @@
           "why": "Only the person a row was sent to can decide it.",
           "gpu": false,
           "state": "empty",
-          "link": "/tasks/bd54a58c-e025-46f1-9cb9-f8bb7375bf0b/adjudicate",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/adjudicate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/adjudicate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/adjudication",
+              "expected": 404,
+              "got": 404
+            }
+          ]
         }
       ]
     },
@@ -1405,10 +2480,21 @@
           "why": "A task cannot be signed while answers are missing, so the report is never built on half the data.",
           "gpu": false,
           "state": "blocked",
-          "link": "/tasks/bd54a58c-e025-46f1-9cb9-f8bb7375bf0b/sign-off",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/sign-off",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/sign-off",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/sign-off-summary",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.2",
@@ -1421,10 +2507,26 @@
           "why": "The signature and checksum prove the files were not changed after signing.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/sign-off",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/sign-off",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/sign-off",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/sign-off-summary",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.3",
@@ -1437,10 +2539,21 @@
           "why": "A fresh sign-in means nobody can sign at a laptop left open.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bd54a58c-e025-46f1-9cb9-f8bb7375bf0b/sign-off",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/sign-off",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/sign-off",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/6799f36f-b690-41fe-acaa-e5e434226cb1/states",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.4",
@@ -1453,10 +2566,26 @@
           "why": "This is what goes into a paper or to a supervisor.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/evaluation",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation-report",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/report-layout",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.5",
@@ -1469,10 +2598,21 @@
           "why": "The owner can still correct data after signing, and every change leaves a trace.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/evaluation",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation-changes",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.6",
@@ -1485,10 +2625,21 @@
           "why": "Co-authors read the report without joining the workspace.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/evaluation",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/evaluation/links",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.7",
@@ -1502,9 +2653,20 @@
           "gpu": false,
           "state": "error",
           "link": "/shared-reports/not-a-real-link",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/shared-reports/not-a-real-link",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/shared-reports/not-a-real-link",
+              "expected": 404,
+              "got": 404
+            }
+          ]
         },
         {
           "number": "8.8",
@@ -1517,10 +2679,21 @@
           "why": "Only what a person checked goes into training data, and what was left out is counted.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/dataset",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.9",
@@ -1533,10 +2706,21 @@
           "why": "A frozen version never changes, so an experiment can be repeated months later.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/dataset",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset-versions",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.10",
@@ -1549,10 +2733,21 @@
           "why": "Pixel models train on patches and masks, many tools read COCO.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/dataset",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/dataset",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/patch-exports",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.11",
@@ -1565,10 +2760,21 @@
           "why": "Every signed review task can feed training directly.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/afe0b3de-6e25-41dd-a6f4-3fcfe7574874/dataset",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/79bb4ce2-f3d9-4fc1-84c0-44f0fbf37d48/dataset",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/79bb4ce2-f3d9-4fc1-84c0-44f0fbf37d48/dataset",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/79bb4ce2-f3d9-4fc1-84c0-44f0fbf37d48/training-dataset",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.12",
@@ -1581,10 +2787,21 @@
           "why": "Training on unfinished answers would put unchecked data into a model.",
           "gpu": false,
           "state": "refused",
-          "link": "/tasks/{task:Role account review}/dataset",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/dataset",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/dataset",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.13",
@@ -1597,10 +2814,21 @@
           "why": "Annotate tasks feed the same training files as review tasks.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/8266ac1a-d115-4af4-96b0-4b206bae5575/dataset",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/dataset",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/dataset",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/dataset",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "8.14",
@@ -1613,10 +2841,21 @@
           "why": "There is no AI answer being measured in an annotate task.",
           "gpu": false,
           "state": "refused",
-          "link": "/tasks/8266ac1a-d115-4af4-96b0-4b206bae5575/evaluation",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/evaluation",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e/evaluation",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/a69a618f-4c16-4b91-a754-bb5baaecf86e",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -1638,10 +2877,26 @@
           "why": "Clinical work is organised by patient, not by slide.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276?tab=slides",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849?tab=slides",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849?tab=slides",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/cases",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.2",
@@ -1654,10 +2909,26 @@
           "why": "The pathologist moves from the slide to the report without losing their place.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/cd00a910-be14-485c-8779-6737ed342f6e/guided",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/fd6c2288-97f2-44a3-927a-5fbf9fc21495/guided",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/fd6c2288-97f2-44a3-927a-5fbf9fc21495/guided",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/fd6c2288-97f2-44a3-927a-5fbf9fc21495",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/fd6c2288-97f2-44a3-927a-5fbf9fc21495/states",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.3",
@@ -1670,10 +2941,26 @@
           "why": "The report is what a case is for.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/a4c8a8d4-3a7e-43d5-9caf-72926ff19d9d",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b/clinical-report",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.4",
@@ -1686,10 +2973,21 @@
           "why": "The report text starts from what was seen on the slide, not from a blank page.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/996e3c3f-0d97-475f-af00-329b05afc6ef/report?step=findings",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=findings",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=findings",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/clinical-report",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.5",
@@ -1702,10 +3000,21 @@
           "why": "Staging decides treatment, so the app suggests and the doctor decides.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/996e3c3f-0d97-475f-af00-329b05afc6ef/report?step=staging",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=staging",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=staging",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.6",
@@ -1718,10 +3027,21 @@
           "why": "Pre-filled text saves time and keeps numbers right.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/996e3c3f-0d97-475f-af00-329b05afc6ef/report?step=text",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=text",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=text",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/clinical-report",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.7",
@@ -1734,10 +3054,21 @@
           "why": "Only a doctor with the right may release a report. Others must pass it to one.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/996e3c3f-0d97-475f-af00-329b05afc6ef/report?step=sign",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=sign",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/cfc010b2-542b-4105-9c1f-c6819cc8e810/report?step=sign",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.8",
@@ -1750,10 +3081,26 @@
           "why": "A trainee's report is checked and signed by a senior, and both names stay on it.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/27c33a19-86c4-450d-82b9-2853d5977451/co-sign",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/97ce4631-4645-416a-88d4-855fc2dc0f5e/co-sign",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/97ce4631-4645-416a-88d4-855fc2dc0f5e/co-sign",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/cosign-requests",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/97ce4631-4645-416a-88d4-855fc2dc0f5e/clinical-report",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.9",
@@ -1766,10 +3113,21 @@
           "why": "A co-sign request belongs to one person.",
           "gpu": false,
           "state": "refused",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/27c33a19-86c4-450d-82b9-2853d5977451/co-sign",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/97ce4631-4645-416a-88d4-855fc2dc0f5e/co-sign",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/97ce4631-4645-416a-88d4-855fc2dc0f5e/co-sign",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/cases/97ce4631-4645-416a-88d4-855fc2dc0f5e",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "9.10",
@@ -1782,10 +3140,21 @@
           "why": "The co-sign page explains itself instead of showing an empty form.",
           "gpu": false,
           "state": "empty",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/cases/a4c8a8d4-3a7e-43d5-9caf-72926ff19d9d/co-sign",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b/co-sign",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b/co-sign",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/cases/eecae8e6-547e-45d8-8897-a3ddcbe78c5b",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -1808,9 +3177,20 @@
           "gpu": false,
           "state": "",
           "link": "/",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/jobs",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "10.2",
@@ -1823,10 +3203,26 @@
           "why": "Anyone can see what a job did and jump to its result.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/jobs/33f28a05-7595-4b98-ba57-dbd6068a8840",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/jobs/da8d6d02-a4fd-40f4-9980-8b3a87da5d1a",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/jobs/da8d6d02-a4fd-40f4-9980-8b3a87da5d1a",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/jobs",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/model-runs",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "10.3",
@@ -1839,10 +3235,26 @@
           "why": "A researcher fills in slides that came without results.",
           "gpu": true,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/run-model",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/run-model",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/run-model",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/model-runs/defaults",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/models",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "10.4",
@@ -1855,10 +3267,21 @@
           "why": "This is the real AI inference the whole review is about. It costs GPU seconds.",
           "gpu": true,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/run-model",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/run-model",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/run-model",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/model-runs",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "10.5",
@@ -1871,10 +3294,21 @@
           "why": "An expert gets AI cells on just the part they are working on.",
           "gpu": true,
           "state": "",
-          "link": "/projects/d464f23b-a304-40da-b010-e0e595c7197f/slides/46fabdf8-8530-47fb-be8b-0b788d82993e?mode=annotate",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?mode=annotate",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/d49e8d5c-950f-4698-9e31-833d2550c91f?mode=annotate",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/slides/d49e8d5c-950f-4698-9e31-833d2550c91f/ai-progress",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "10.6",
@@ -1888,9 +3322,25 @@
           "gpu": false,
           "state": "",
           "link": "/kpi",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/kpi",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/task-timing",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/ai-corrections",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -1913,9 +3363,20 @@
           "gpu": false,
           "state": "",
           "link": "/",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/search?q=CMU",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "11.2",
@@ -1929,9 +3390,25 @@
           "gpu": false,
           "state": "",
           "link": "/search?q=CMU",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/search?q=CMU",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/search?q=CMU",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "11.3",
@@ -1945,9 +3422,20 @@
           "gpu": false,
           "state": "",
           "link": "/search?q=T2",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/search?q=T2",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/search?q=T2",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "11.4",
@@ -1961,9 +3449,20 @@
           "gpu": false,
           "state": "empty",
           "link": "/search?q=C",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/search?q=C",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "11.5",
@@ -1977,9 +3476,20 @@
           "gpu": false,
           "state": "empty",
           "link": "/search?q=zzqqxx",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/search?q=zzqqxx",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/search?q=zzqqxx",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "11.6",
@@ -1993,9 +3503,20 @@
           "gpu": false,
           "state": "",
           "link": "/search?q=Case",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/search?q=Case",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/search?q=Case",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -2018,9 +3539,25 @@
           "gpu": false,
           "state": "",
           "link": "/notifications",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/notifications",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/notifications",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/notifications/counts",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "12.2",
@@ -2033,10 +3570,21 @@
           "why": "One click from the notice to the work.",
           "gpu": false,
           "state": "",
-          "link": "/go/{notification:adjudicator}",
-          "status": "not checked",
-          "reason": "no notification named notification:adjudicator",
-          "calls": []
+          "link": "/go/8b1bfc2d-d050-4356-8b45-94674659ac03",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/go/8b1bfc2d-d050-4356-8b45-94674659ac03",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/notifications/8b1bfc2d-d050-4356-8b45-94674659ac03/target",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "12.3",
@@ -2050,9 +3598,20 @@
           "gpu": false,
           "state": "error",
           "link": "/go/00000000-0000-0000-0000-000000000000",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/go/00000000-0000-0000-0000-000000000000",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/notifications/00000000-0000-0000-0000-000000000000/target",
+              "expected": 404,
+              "got": 404
+            }
+          ]
         },
         {
           "number": "12.4",
@@ -2065,10 +3624,21 @@
           "why": "Questions about a single object stay with that object.",
           "gpu": false,
           "state": "",
-          "link": "/tasks/bbd0d963-b853-4f36-9e40-5b1948857828/comments?slide=e1199189-5abf-4721-943c-bb457b4778fe",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/comments?slide=ad8e3c02-c17a-4b37-a905-788b1dc4244f",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/comments?slide=ad8e3c02-c17a-4b37-a905-788b1dc4244f",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/4ad3710a-5391-4971-8f57-7a1ef13c21e7/slides/ad8e3c02-c17a-4b37-a905-788b1dc4244f/threads",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "12.5",
@@ -2081,10 +3651,21 @@
           "why": "Reviewers ask the researcher instead of guessing.",
           "gpu": false,
           "state": "",
-          "link": "/projects/{task_project:Role account review}/slides/{task_slide:Role account review|1}?task={task:Role account review}&mode=review&tab=comments",
-          "status": "not checked",
-          "reason": "no task named Role account review",
-          "calls": []
+          "link": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review&tab=comments",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/f39b1964-399f-449c-911a-bce89b0ce5e1/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9?task=96083eb8-bae8-4fd7-9bf7-e2d35723e649&mode=review&tab=comments",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/review-tasks/96083eb8-bae8-4fd7-9bf7-e2d35723e649/slides/6b402d4e-71f3-47a6-97fd-59655f2f14a9/threads/mentionable",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "12.6",
@@ -2097,10 +3678,21 @@
           "why": "Clinical colleagues discuss a case slide in place.",
           "gpu": false,
           "state": "",
-          "link": "/projects/fffda8d1-4e65-4416-8712-6af83a2b0276/slides/61f1682a-0524-4530-b771-817e81da63f2?tab=comments",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "link": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/slides/151d74ac-85b0-46cd-b293-14adf057d17b?tab=comments",
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/projects/cb94a527-9208-4f53-a762-4a18a993d849/slides/151d74ac-85b0-46cd-b293-14adf057d17b?tab=comments",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/cb94a527-9208-4f53-a762-4a18a993d849/slides/151d74ac-85b0-46cd-b293-14adf057d17b/threads",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "12.7",
@@ -2114,9 +3706,20 @@
           "gpu": false,
           "state": "",
           "link": "/team",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/team",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/team",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "12.8",
@@ -2130,9 +3733,20 @@
           "gpu": false,
           "state": "",
           "link": "/settings/notifications",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/settings/notifications",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/notification-preferences",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -2155,9 +3769,25 @@
           "gpu": false,
           "state": "",
           "link": "/team",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/team",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/team",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/availability",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.2",
@@ -2171,9 +3801,20 @@
           "gpu": false,
           "state": "",
           "link": "/team?tab=done",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/team?tab=done",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/team",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.3",
@@ -2187,9 +3828,20 @@
           "gpu": false,
           "state": "",
           "link": "/settings",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/settings",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/setting-layers",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.4",
@@ -2203,9 +3855,20 @@
           "gpu": false,
           "state": "",
           "link": "/settings/review",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/settings/review",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/setting-layers",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.5",
@@ -2219,9 +3882,20 @@
           "gpu": false,
           "state": "",
           "link": "/settings/ai",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/settings/ai",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/setting-layers",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.6",
@@ -2235,9 +3909,20 @@
           "gpu": false,
           "state": "",
           "link": "/settings/navigation",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/settings/navigation",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/setting-layers",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.7",
@@ -2251,9 +3936,25 @@
           "gpu": false,
           "state": "",
           "link": "/settings/privacy",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/settings/privacy",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/auth/sessions",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/auth/passkeys",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.8",
@@ -2267,9 +3968,20 @@
           "gpu": false,
           "state": "not found",
           "link": "/settings/no-such-section",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/settings/no-such-section",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.9",
@@ -2283,9 +3995,20 @@
           "gpu": false,
           "state": "",
           "link": "/",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.10",
@@ -2299,9 +4022,20 @@
           "gpu": false,
           "state": "",
           "link": "/admin",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/overview",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.11",
@@ -2315,9 +4049,20 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=people",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=people",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/members",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.12",
@@ -2331,9 +4076,25 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=projects",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=projects",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects/deleted",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.13",
@@ -2347,9 +4108,25 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=models",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=models",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/models",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/ai-usage",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.14",
@@ -2363,9 +4140,20 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=templates",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=templates",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/study-templates",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.15",
@@ -2379,9 +4167,25 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=storage",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=storage",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/storage",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/import-sources",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.16",
@@ -2395,9 +4199,20 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=api",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=api",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/webhooks",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.17",
@@ -2411,9 +4226,20 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=audit",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=audit",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/audit-events",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.18",
@@ -2427,9 +4253,25 @@
           "gpu": false,
           "state": "",
           "link": "/admin?section=security",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin?section=security",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/security",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/retention",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.19",
@@ -2443,9 +4285,20 @@
           "gpu": false,
           "state": "refused",
           "link": "/admin",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "broken",
+          "reason": "/api/tenant/overview answered 200, not 403",
+          "calls": [
+            {
+              "path": "/admin",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/overview",
+              "expected": 403,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.20",
@@ -2459,9 +4312,20 @@
           "gpu": false,
           "state": "refused",
           "link": "/admin",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/admin",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/tenant/overview",
+              "expected": 403,
+              "got": 403
+            }
+          ]
         },
         {
           "number": "13.21",
@@ -2475,9 +4339,25 @@
           "gpu": false,
           "state": "",
           "link": "/developer",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/developer",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/projects",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "13.22",
@@ -2491,9 +4371,20 @@
           "gpu": false,
           "state": "refused",
           "link": "/developer",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/developer",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -2516,9 +4407,20 @@
           "gpu": false,
           "state": "",
           "link": "/study",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/study",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/home",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "14.2",
@@ -2532,9 +4434,20 @@
           "gpu": false,
           "state": "",
           "link": "/study",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/study",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "14.3",
@@ -2548,9 +4461,20 @@
           "gpu": false,
           "state": "",
           "link": "/study",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/study",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/home",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "14.4",
@@ -2564,9 +4488,20 @@
           "gpu": false,
           "state": "",
           "link": "/study",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/study",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/home",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "14.5",
@@ -2580,9 +4515,20 @@
           "gpu": false,
           "state": "",
           "link": "/study",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/study",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me/slides",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     },
@@ -2605,9 +4551,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/issue-pages/not-found",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/issue-pages/not-found",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.2",
@@ -2621,9 +4578,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/issue-states",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/issue-states",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.3",
@@ -2637,9 +4605,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/flow-map",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/flow-map",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.4",
@@ -2653,9 +4632,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/flow-map/walkthrough",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/flow-map/walkthrough",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.5",
@@ -2669,9 +4659,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/flow-map/walkthrough/1",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/flow-map/walkthrough/1",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.6",
@@ -2685,9 +4686,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/prototype",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/prototype",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.7",
@@ -2701,9 +4713,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/spikes/hotkeys",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/spikes/hotkeys",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.8",
@@ -2717,9 +4740,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/spikes/input-traces",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/spikes/input-traces",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         },
         {
           "number": "15.9",
@@ -2733,9 +4767,20 @@
           "gpu": false,
           "state": "dev build only",
           "link": "/spikes/worklist?rows=5000&mode=virtual",
-          "status": "not checked",
-          "reason": "the run did not check",
-          "calls": []
+          "status": "working",
+          "reason": "",
+          "calls": [
+            {
+              "path": "/spikes/worklist?rows=5000&mode=virtual",
+              "expected": 200,
+              "got": 200
+            },
+            {
+              "path": "/api/me",
+              "expected": 200,
+              "got": 200
+            }
+          ]
         }
       ]
     }

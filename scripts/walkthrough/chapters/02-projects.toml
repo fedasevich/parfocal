@@ -56,7 +56,7 @@ url = "/projects/{project:Scanner format comparison}/upload"
 click = "The page has three steps, Files, Check and Upload. Pick From this computer or From a link or storage, then Choose files or a folder. Open What files work? to see the folder shape Parfocal understands."
 expect = "With nothing picked the page says Add at least one slide to go on. Results go with a slide. Picked files show as one list grouped by case and slide."
 why = "Slides and AI results arrive together, and the app pairs each result with its slide before anything is uploaded."
-api = ["/api/projects/{project:Scanner format comparison}", "/api/projects/{project:Scanner format comparison}/source-files"]
+api = ["/api/projects/{project:Scanner format comparison}", "/api/tenant/import-sources"]
 
 [[chapter.step]]
 role = "researcher"

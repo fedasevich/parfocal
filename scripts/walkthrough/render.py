@@ -185,7 +185,8 @@ def step_card(item: dict[str, Any], origin: str) -> str:
         f"<dl><dt>Where to click</dt><dd>{e(item['click'])}</dd>"
         f"<dt>What should happen</dt><dd>{e(item['expect'])}</dd>"
         f"<dt>Why it matters</dt><dd>{e(item['why'])}</dd></dl>"
-        f'<a class="go" href="{e(link)}" target="_blank" rel="noopener">Open {e(item["link"])}</a>'
+        f'<a class="go" href="{e(link)}" target="_blank" rel="noopener" '
+        f'title="{e(link)}">Open in the app</a>'
         f'<label class="tick"><input type="checkbox"> I tried this</label>'
         f"{reason}{details if calls else ''}</div></article>"
     )
@@ -238,7 +239,11 @@ def render(document: dict[str, Any]) -> str:
         f"{e(origin)}, in the order a user meets it, with the account to sign in as, where to "
         "click, what should happen and why it matters. The links point at the seeded examples "
         "of the last run of the walkthrough script, so they change after every reseed. Tick a "
-        "step when you have tried it. The ticks stay in this browser.</p>"
+        "step when you have tried it. The ticks stay in this browser. Working means the script "
+        "signed in as the step's account and the page and the API reads behind it answered as "
+        "expected. The script never clicks, never starts a GPU run and changes nothing but the "
+        "active workspace of its own sign-ins, so what "
+        "happens after a click is yours to check.</p>"
         f'<div class="meta">{meta}</div></header>'
         f"{chapter_bar(chapters)}<main>{problem_zone}{broken_zone(chapters)}"
         f"{accounts_zone(origin)}{lanes_zone(chapters)}"

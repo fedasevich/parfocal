@@ -10,7 +10,7 @@ url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner forma
 click = "Open the link. Drag to pan, scroll to zoom, press + and minus to zoom, 0 to fit, Z and hold to see the whole slide, and Alt with 1 to 6 for the objective."
 expect = "The slide opens in Look mode within a few seconds, tiles sharpen as you zoom and the camera stops at the slide edge."
 why = "Smooth viewing is the base of every other feature. Viv is the main renderer and must work perfectly."
-api = ["/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}", "/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/tile-access", "/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/neighbours"]
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/result-sets", "/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/tile-access", "/api/slides/{slide:Scanner format comparison|CMU-1-Small-Region.svs}/neighbours?from=all-slides"]
 
 [[chapter.step]]
 role = "researcher"
@@ -46,7 +46,7 @@ url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner forma
 click = "Press L for Measure and drag across tissue. Press Whole slide in the top bar. Hold Space to pan while another tool is on."
 expect = "The ruler shows micrometres or millimetres from the slide's real pixel size. Whole slide fits the tissue."
 why = "Pathologists measure deposits and margins, and the number must be right for each scanner."
-api = ["/api/slides/{slide:Scanner format comparison|CMU-1.ndpi}", "/api/slides/{slide:Scanner format comparison|CMU-1.ndpi}/thumbnail"]
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1.ndpi}/result-sets", "/api/slides/{slide:Scanner format comparison|CMU-1.ndpi}/thumbnail"]
 
 [[chapter.step]]
 role = "researcher"
@@ -55,7 +55,7 @@ url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner forma
 click = "Press Compare slides in the top bar, pick a second slide, and press Close compare when done. Q and E move to the previous and next slide."
 expect = "Two slides side by side that pan and zoom together."
 why = "Comparing levels or stains of one case is daily work for a pathologist."
-api = ["/api/slides/{slide:Scanner format comparison|CMU-1.tiff}/neighbours"]
+api = ["/api/slides/{slide:Scanner format comparison|CMU-1.tiff}/neighbours?from=all-slides"]
 
 [[chapter.step]]
 role = "researcher"
@@ -82,7 +82,7 @@ url = "/projects/{project:Breast surgery sentinel nodes}/slides/{slide:Breast su
 click = "Open the link."
 expect = "The viewer shows The slide file is not available instead of an empty canvas, with a way back."
 why = "A broken file must explain itself, so nobody thinks the tissue is blank."
-api = ["/api/slides/{slide:Breast surgery sentinel nodes|Missing file.svs}"]
+api = ["/api/slides/{slide:Breast surgery sentinel nodes|Missing file.svs}/result-sets"]
 state = "error"
 
 [[chapter.step]]
@@ -111,7 +111,7 @@ url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner forma
 click = "Sign in as role-viewer@parfocal.eu and open the link. Try to draw with P."
 expect = "The viewer says You can look at this slide but not change it. The drawing tools do nothing."
 why = "Read-only people must never change data by accident."
-api = ["/api/slides/{slide:Scanner format comparison|Philips-3.tiff}"]
+api = ["/api/slides/{slide:Scanner format comparison|Philips-3.tiff}/result-sets"]
 state = "refused"
 
 [[chapter.step]]
@@ -121,4 +121,4 @@ url = "/projects/{project:Scanner format comparison}/slides/{slide:Scanner forma
 click = "Open the link."
 expect = "It moves on to the normal viewer of test_065 by itself."
 why = "Links shared before the viewers were merged keep working."
-api = ["/api/slides/{slide:Scanner format comparison|test_065}"]
+api = ["/api/slides/{slide:Scanner format comparison|test_065}/result-sets"]
