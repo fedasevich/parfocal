@@ -5100,6 +5100,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the owner's list of changes is written in this task's log, each change is built with a spec or moved to its own task, and the owner has gone over the study again on the deployed app.
   Depends on EXP-010. Size: M.
 
+- [ ] PILOT-012 · The round 5 study protocol and thesis tables against round 4
+  On 2026-11-23 the owner asked for the study to be organised so it matches the earlier rounds and can all go into the thesis. Write `docs/project/study-round-5.md`, the protocol: the research questions, the participants (3 to 8 non-specialists, moderated by default), the consent and the anonymous codes, the setup per participant (a fresh project from EXP-016), the 13 round 5 tasks, each mapped to its round 4 task or marked new with its success rule, the metrics with round 4's names, the questionnaires word for word, the moderator script and the timed log, as in nur's `docs/testing/sessions/_template.md`, and the pilot run. Keep an analysis script in the repo that reads the console's JSON or CSV export and writes the thesis tables and figures as files: per-task success, time, clicks, dead clicks and SEQ, SUS per participant and mean, notes grouped by task, and a table of round 4's reported figures beside round 5's, using only the numbers quoted in the round 4 deck. Describe results descriptively for a small sample, with no significance tests. Note where each output goes in the thesis: section 3.3, chapter 4 as the usability test of the application, and the appendix of usability test materials and results.
+  Done when the protocol is written, the script turns a sample export into the tables and figures with a unit test on a fixed fixture, and the protocol names every place a number comes from.
+  Depends on EXP-014. Size: M.
 ---
 
 ## 40 PROJ · Projects, privacy modes, class taxonomy and templates
