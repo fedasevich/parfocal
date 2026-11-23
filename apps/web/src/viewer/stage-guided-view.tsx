@@ -4,7 +4,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { formatMagnification } from "@parfocal/ui/lib/magnification-bar";
 import { useCallback, useState, useSyncExternalStore } from "react";
 import type { ViewerModule } from "./magnification-control.tsx";
-import type { StageArea } from "./stage-geometry.ts";
+import { guidedZoomLimit, type StageArea } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 import { WholeSlideButton } from "./whole-slide-button.tsx";
 
@@ -54,7 +54,7 @@ export function StageGuidedView({
   const [whole, setWhole] = useState(false);
   const centre = () => {
     setWhole(false);
-    if (area !== null) void engine.flyToArea(area);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   };
   const toggleWhole = () => {
     if (whole) {

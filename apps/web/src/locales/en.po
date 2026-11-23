@@ -1316,7 +1316,7 @@ msgid "{0} or less"
 msgstr "{0} or less"
 
 #. placeholder {0}: others.length === 2 ? "Two" : others.length
-#. placeholder {1}: andJoin( others.map((session) => withArticle(session.user_agent ?? "unknown device")), )
+#. placeholder {1}: andJoin( others.map((session) => withArticle(deviceName(session.user_agent))), )
 #: src/screens/settings/settings-screen.tsx
 msgid "{0} other devices are signed in: {1}."
 msgstr "{0} other devices are signed in: {1}."
@@ -11013,8 +11013,8 @@ msgid "No final layer is built yet."
 msgstr "No final layer is built yet."
 
 #: src/annotations/smart-layer.tsx
-msgid "No GPU answered Best in 3 minutes, Good outlined this view. Click again to ask Best again"
-msgstr "No GPU answered Best in 3 minutes, Good outlined this view. Click again to ask Best again"
+msgid "No GPU answered Best in 90 seconds, Good outlined this view. Click again to ask Best again"
+msgstr "No GPU answered Best in 90 seconds, Good outlined this view. Click again to ask Best again"
 
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "no key"

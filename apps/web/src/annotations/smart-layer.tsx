@@ -437,7 +437,7 @@ export function SmartLayer({
     unsendable: t`Best cannot outline this view, Good outlined it`,
     refused: t`The server refused Best here, Good outlined this view`,
     offline: t`Best's GPU is not answering, Good outlined this view. Click again to ask Best again`,
-    "gave-up": t`No GPU answered Best in 3 minutes, Good outlined this view. Click again to ask Best again`,
+    "gave-up": t`No GPU answered Best in 90 seconds, Good outlined this view. Click again to ask Best again`,
     cancelled: t`You stopped waiting for Best, Good outlined this view. Click again to ask Best again`,
   };
 

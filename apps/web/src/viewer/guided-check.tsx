@@ -18,6 +18,7 @@ import {
 import { useBindings } from "../keys/personal-keys.ts";
 import type { Fired } from "../keys/registry.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
+import { guidedZoomLimit } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 type GuidedCheckProps = {
@@ -63,7 +64,7 @@ export function GuidedCheck({
     if (object === undefined || flownTo.current === object.object) return;
     flownTo.current = object.object;
     const area = areaAround(object.geometry);
-    if (area !== null) void engine.flyToArea(area);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   }, [object, engine]);
 
   const latest = useRef({ queue, state, locked, onDelete, onReclass });

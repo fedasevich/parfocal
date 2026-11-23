@@ -51,6 +51,7 @@ import { StageCoachAnswerTip, StageCoachOnSlide, StageCoachStepTip } from "./sta
 import { StageFocusCard } from "./stage-focus.tsx";
 import {
   cellsInTissueOrder,
+  guidedZoomLimit,
   nextOpenObject,
   outlineArea,
   outlineCentre,
@@ -346,7 +347,7 @@ export function StageReviewObjects({
         rulers.find((item) => item.label === id)?.points,
       reviewMinSide,
     );
-    if (area !== null) void engine.flyToArea(area);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   };
   const pick = (id: string | null) => {
     if (id === null) return;
@@ -362,7 +363,7 @@ export function StageReviewObjects({
     setDone(false);
     setCurrent(object);
     const area = outlineArea(objects.find((item) => item.object === object)?.outline);
-    if (area !== null) void engine.flyToArea(area);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   }, [object, objects, engine]);
   const stepGoal = useRef<CalmCamera | null>(null);
   const stepTo = (id: string) => {
@@ -423,7 +424,7 @@ export function StageReviewObjects({
       objects.find((item) => item.object === current)?.outline,
       reviewMinSide,
     );
-    if (area !== null) void engine.flyToArea(area);
+    if (area !== null) void engine.flyToArea(area, guidedZoomLimit);
   }, [ready, objects, engine, current, opensOnOpinion]);
   useEffect(() => {
     if (ready) reported.current?.(current);
