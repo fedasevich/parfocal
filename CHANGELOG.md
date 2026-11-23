@@ -2,6 +2,22 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.44.0 (2026-11-23)
+
+### Features
+
+- TEST-059: Seed role test accounts on open work and sign them in with --role
+- TEST-059: Type the Zitadel answers in the role account script
+
+### Fixes
+
+- PROTO-073: Stop guided steps at the scan power and end the Best wait in 90 seconds
+
+### Docs
+
+- TEST-059: Add ADR 0434 and move the role accounts to review
+- PROTO-073: Move the guided and Best bounds to review
+
 ## v0.43.2 (2026-11-23)
 
 ### Fixes

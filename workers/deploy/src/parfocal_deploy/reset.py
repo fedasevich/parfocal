@@ -201,6 +201,7 @@ def reset(
                 "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
                 "SEED_VIEWER_EMAILS": local.get("SEED_VIEWER_EMAILS", ""),
                 "SEED_AGENT_EMAILS": local.get("SEED_AGENT_EMAILS", ""),
+                "SEED_ROLE_EMAILS": local.get("SEED_ROLE_EMAILS", ""),
                 **{name: local[name] for name in SEED_PASSED if name in local},
             },
         )

@@ -37,7 +37,6 @@ from parfocal_api.showcase import (
     DEMO_TASKS,
     FIXTURES_MANIFEST,
     FORMAT_GALLERY,
-    GALLERY_TOUR,
     HALF_DONE,
     RESULT_FILES,
     SUBMITTED,
@@ -56,6 +55,7 @@ from parfocal_api.showcase_results import (
     model_cells,
     model_regions,
 )
+from parfocal_api.showcase_roles import GALLERY_TOUR
 from parfocal_api.slide_result_stats import get_slide_result_stats
 from parfocal_api.slide_threads import list_slide_threads, list_thread_comments
 from parfocal_api.slide_viewer import (

@@ -16,6 +16,10 @@ ENVIRONMENTS = REPOSITORY / "infra/app-environments.json"
 CONFIG_FOLDER = Path.home() / ".config/parfocal"
 CREDENTIALS = CONFIG_FOLDER / "agent-account.env"
 STORAGE_STATE = CONFIG_FOLDER / "agent-session.json"
+ROLE_CREDENTIALS = CONFIG_FOLDER / "role-accounts.env"
+ROLES = ("researcher", "reviewer-a", "reviewer-b", "adjudicator", "viewer", "annotator")
+EMAIL_KEY = "PARFOCAL_AGENT_EMAIL"
+PASSWORD_KEY = "PARFOCAL_AGENT_PASSWORD"
 SESSION_COOKIE = "__Host-parfocal_session"
 DEVELOPMENT = "development"
 LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
@@ -92,17 +96,30 @@ def private_file(path: Path) -> None:
         raise RefusedError(f"{path} must be readable by you only, run chmod 600 on it")
 
 
-def account_of(path: Path) -> Account:
+def role_keys(role: str) -> tuple[str, str]:
+    if role not in ROLES:
+        raise RefusedError(f"{role} is not a seeded role, pick one of {', '.join(ROLES)}")
+    stem = f"PARFOCAL_ROLE_{role.upper().replace('-', '_')}"
+    return f"{stem}_EMAIL", f"{stem}_PASSWORD"
+
+
+def role_session(role: str) -> Path:
+    role_keys(role)
+    return CONFIG_FOLDER / f"role-{role}-session.json"
+
+
+def account_of(path: Path, role: str | None = None) -> Account:
     private_file(path)
     values: dict[str, str] = {}
     for line in path.read_text().splitlines():
         key, separator, value = line.strip().partition("=")
         if separator and not key.startswith("#"):
             values[key.strip()] = value.strip()
-    email = values.get("PARFOCAL_AGENT_EMAIL", "").lower()
-    password = values.get("PARFOCAL_AGENT_PASSWORD", "")
+    email_key, password_key = (EMAIL_KEY, PASSWORD_KEY) if role is None else role_keys(role)
+    email = values.get(email_key, "").lower()
+    password = values.get(password_key, "")
     if not email or not password:
-        raise RefusedError(f"{path} needs PARFOCAL_AGENT_EMAIL and PARFOCAL_AGENT_PASSWORD")
+        raise RefusedError(f"{path} needs {email_key} and {password_key}")
     return Account(email, password)
 
 
@@ -175,11 +192,17 @@ def write_private(path: Path, content: str) -> None:
     path.write_text(content)
 
 
-def mint(url: str, credentials: Path, out: Path, environments_path: Path = ENVIRONMENTS) -> str:
+def mint(
+    url: str,
+    credentials: Path,
+    out: Path,
+    environments_path: Path = ENVIRONMENTS,
+    role: str | None = None,
+) -> str:
     environments = json.loads(environments_path.read_text())
     origin = development_origin(url, environments)
     outside_repository(out)
-    account = account_of(credentials)
+    account = account_of(credentials, role)
     seeded_account(account, environments)
     reply = send(
         f"{origin}/api/auth/sign-in",
@@ -201,12 +224,16 @@ def main(argv: list[str] | None = None) -> int:
         "a Playwright storage state, without a browser and without printing the password",
     )
     parser.add_argument("--url", default="https://app.parfocal.eu")
-    parser.add_argument("--credentials", type=Path, default=CREDENTIALS)
-    parser.add_argument("--out", type=Path, default=STORAGE_STATE)
+    parser.add_argument("--role", help=f"sign in as a role account, one of {', '.join(ROLES)}")
+    parser.add_argument("--credentials", type=Path)
+    parser.add_argument("--out", type=Path)
     parser.add_argument("--environments", type=Path, default=ENVIRONMENTS)
     args = parser.parse_args(argv)
     try:
-        print(mint(args.url, args.credentials, args.out, args.environments))
+        role = args.role
+        credentials = args.credentials or (CREDENTIALS if role is None else ROLE_CREDENTIALS)
+        out = args.out or (STORAGE_STATE if role is None else role_session(role))
+        print(mint(args.url, credentials, out, args.environments, role))
     except RefusedError as error:
         print(f"agent_session refused: {error}", file=sys.stderr)
         return 2

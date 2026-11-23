@@ -31,6 +31,8 @@ export function viewportRect(
 
 export const reviewMinSide = 768;
 
+export const guidedZoomLimit = { fallbackMagnification: 40 } as const;
+
 export function outlineArea(
   outline: readonly number[] | null | undefined,
   minSide = 0,

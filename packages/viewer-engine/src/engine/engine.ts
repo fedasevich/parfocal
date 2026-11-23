@@ -15,6 +15,7 @@ import {
 } from "../camera/camera.ts";
 import { createCameraController, type FlightEnd, type ScreenOffset } from "../camera/controller.ts";
 import { zoomForMagnification } from "../camera/magnification.ts";
+import { scanObjective } from "../camera/units.ts";
 import {
   clampSlideBrightness,
   defaultSlideBrightness,
@@ -36,6 +37,7 @@ import type {
   EngineEvents,
   EngineSlide,
   EngineStatus,
+  FlyToAreaLimit,
   OverlayLayer,
   OverlayRegistration,
   RendererFactory,
@@ -257,13 +259,25 @@ export function createViewerEngine<Slide extends EngineSlide>(
     };
   };
 
-  const flyToArea = (area: SlideArea) => {
+  const scanCappedBounds = (limit: FlyToAreaLimit | undefined): CameraBounds => {
+    const bounds = currentBounds();
+    const micronsPerPixel = slide?.micronsPerPixel ?? null;
+    if (limit === undefined || micronsPerPixel === null || !(micronsPerPixel > 0)) return bounds;
+    const power = scanObjective(micronsPerPixel) ?? limit.fallbackMagnification;
+    if (!(power > 0)) return bounds;
+    return {
+      ...bounds,
+      maxZoom: Math.min(bounds.maxZoom, zoomForMagnification(micronsPerPixel, power)),
+    };
+  };
+
+  const flyToArea = (area: SlideArea, limit?: FlyToAreaLimit) => {
     assertAlive();
     fitPending = false;
     const viewport = mounted ? measure(mounted.container) : null;
     const target =
       viewport && viewport.width > 0 && viewport.height > 0
-        ? areaCamera(area, viewport, currentBounds())
+        ? areaCamera(area, viewport, scanCappedBounds(limit))
         : { x: area.x + area.width / 2, y: area.y + area.height / 2, zoom: camera.zoom };
     return controller.flyTo(target);
   };

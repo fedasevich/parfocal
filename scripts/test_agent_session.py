@@ -12,10 +12,13 @@ from typing import ClassVar
 from agent_session import (
     ENVIRONMENTS,
     REPOSITORY,
+    ROLES,
     SESSION_COOKIE,
+    STORAGE_STATE,
     RefusedError,
     main,
     mint,
+    role_session,
 )
 from guard_destructive import refuse_command
 
@@ -227,6 +230,44 @@ class AgentSessionTest(unittest.TestCase):
         assert code == 2
         assert "401 Wrong email or password" in err.getvalue()
         assert WRONG not in err.getvalue() + printed_out.getvalue()
+
+    def test_role_picks_that_role_account_from_the_role_file(self) -> None:
+        tmp_path = self.tmp_path
+        path = tmp_path / "role-accounts.env"
+        path.write_text(
+            f"PARFOCAL_ROLE_VIEWER_EMAIL=someone@example.test\nPARFOCAL_ROLE_VIEWER_PASSWORD={WRONG}\n"
+            f"PARFOCAL_ROLE_REVIEWER_A_EMAIL={EMAIL}\nPARFOCAL_ROLE_REVIEWER_A_PASSWORD={PHRASE}\n"
+        )
+        path.chmod(0o600)
+        out = tmp_path / "reviewer-a.json"
+        printed = io.StringIO()
+        with contextlib.redirect_stdout(printed):
+            code = main(
+                [
+                    *("--url", self.app, "--role", "reviewer-a", "--credentials", str(path)),
+                    *("--out", str(out), "--environments", str(environments(tmp_path))),
+                ]
+            )
+        assert code == 0
+        assert f"signed in as {EMAIL}" in printed.getvalue()
+        assert PHRASE not in printed.getvalue()
+        assert out.stat().st_mode & 0o777 == 0o600
+        with self.assertRaisesRegex(RefusedError, "PARFOCAL_ROLE_ANNOTATOR_EMAIL"):
+            mint(self.app, path, tmp_path / "o.json", environments(tmp_path), "annotator")
+        with self.assertRaisesRegex(RefusedError, "not a seeded role"):
+            mint(self.app, path, tmp_path / "o.json", environments(tmp_path), "pathologist")
+
+    def test_each_role_gets_its_own_session_file_next_to_the_agent_one(self) -> None:
+        sessions = {role_session(role) for role in ROLES}
+        assert len(sessions) == len(ROLES)
+        assert all(path.parent == STORAGE_STATE.parent for path in sessions)
+        assert STORAGE_STATE not in sessions
+        assert role_session("reviewer-b").name == "role-reviewer-b-session.json"
+
+    def test_the_committed_environments_list_every_role_account(self) -> None:
+        declared = json.loads(ENVIRONMENTS.read_text())
+        roles = {email for email in declared["test_accounts"] if email.startswith("role-")}
+        assert len(roles) == len(ROLES)
 
     def test_the_committed_environments_declare_the_deployed_app_development(self) -> None:
         declared = json.loads(ENVIRONMENTS.read_text())

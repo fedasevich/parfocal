@@ -33,6 +33,7 @@ jobs:
       SEED_OWNER_EMAIL: ${{ secrets.SEED_OWNER_EMAIL }}
       SEED_VIEWER_EMAILS: ${{ vars.SEED_VIEWER_EMAILS }}
       SEED_AGENT_EMAILS: ${{ vars.SEED_AGENT_EMAILS }}
+      SEED_ROLE_EMAILS: ${{ vars.SEED_ROLE_EMAILS }}
       PUBLIC_ORIGIN: https://app.parfocal.eu
       RESET_CONFIRM: ${{ inputs.confirm }}
     steps:

@@ -19,6 +19,7 @@ from parfocal_api.dataset_versions import frozen_parts
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.showcase import DEPLOYED_ENVS, seed, viewer_emails_of
 from parfocal_api.showcase_outcomes import OUTCOME_TASK
+from parfocal_api.showcase_roles import role_emails_of
 from parfocal_api.showcase_timing import took
 from parfocal_api.tables import review_tasks, slides
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
@@ -176,6 +177,7 @@ async def main() -> None:
             os.environ.get("SEED_OWNER_EMAIL") or None,
             viewer_emails=viewer_emails_of(os.environ.get("SEED_VIEWER_EMAILS", "")),
             agent_emails=viewer_emails_of(os.environ.get("SEED_AGENT_EMAILS", "")),
+            role_emails=role_emails_of(os.environ.get("SEED_ROLE_EMAILS", "")),
             require_fixture_folders=settings.app_env in DEPLOYED_ENVS,
         )
         await cut_seeded_exports(
