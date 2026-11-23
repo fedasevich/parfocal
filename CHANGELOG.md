@@ -2,6 +2,19 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.39.0 (2026-11-23)
+
+### Features
+
+- PROTO-164: Word any opinion form and the guided card as drawn on a drawn task
+- PROTO-164: Seed a drawn outline review with an adjudication for the agent
+- PROTO-164: Read drawn tasks as drawn in first reads, display, refusals and methods
+
+### Docs
+
+- PROTO-163: Tick the drawn wording after the deployed walk
+- PROTO-164: Add the drawn wording everywhere task
+
 ## v0.38.1 (2026-11-22)
 
 ### Fixes
