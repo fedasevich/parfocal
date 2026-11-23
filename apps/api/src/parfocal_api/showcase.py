@@ -14,6 +14,7 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api import showcase_outcomes as outcomes
+from parfocal_api import showcase_roles as role_seeds
 from parfocal_api.audit import actor_of, pseudonym_of
 from parfocal_api.auth import SEEDED_SUBJECT_PREFIX
 from parfocal_api.class_templates import TaxonomyTemplate
@@ -222,14 +223,13 @@ VIEWER_SAMPLE_RANGES = {
     "identifying": [[309569679, 309569800]],
     "barcode": [[309578626, 309578638]],
 }
-GALLERY_TOUR = "Format gallery tour"
 CELL_TOUR = "Cell typing tour"
 HALF_DONE = "Half done review"
 SUBMITTED = "Submitted review"
 ANNOTATE_DEMO = "Tumour outline practice"
 QUEUE_SLIDES = ("Case queue 1", "Case queue 2")
 DRAWN_SLIDE = "Case drawn outlines"
-DEMO_TASKS = (GALLERY_TOUR, CELL_TOUR, HALF_DONE, SUBMITTED, ANNOTATE_DEMO)
+DEMO_TASKS = (role_seeds.GALLERY_TOUR, CELL_TOUR, HALF_DONE, SUBMITTED, ANNOTATE_DEMO)
 CELLS_CHECKED = 12
 OWNER_SUBJECT = f"{PLACEHOLDER_PREFIX}owner"
 ALREADY_STORED = 412
@@ -757,7 +757,7 @@ async def seed_gallery_tour(
         return
     toured = await connection.scalar(
         select(review_tasks.c.id).where(
-            review_tasks.c.project_id == project_id, review_tasks.c.name == GALLERY_TOUR
+            review_tasks.c.project_id == project_id, review_tasks.c.name == role_seeds.GALLERY_TOUR
         )
     )
     if toured is not None:
@@ -803,7 +803,7 @@ async def seed_gallery_tour(
         principal,
         results,
         project_id,
-        GALLERY_TOUR,
+        role_seeds.GALLERY_TOUR,
         regions_of,
         owner,
         DecisionStyle.AGREE,
@@ -948,6 +948,7 @@ async def seed(
     *,
     viewer_emails: Sequence[str] = (),
     agent_emails: Sequence[str] = (),
+    role_emails: Sequence[role_seeds.RoleEmail] = (),
     require_fixture_folders: bool = False,
 ) -> list[uuid.UUID]:
     if require_fixture_folders and (missing := await unpublished_gallery(store)):
@@ -995,6 +996,7 @@ async def seed(
         with Timed("seats"):
             await seat_accounts(engine, tenant_ids, viewer_emails, SEEDED_VIEWER)
             await seat_accounts(engine, tenant_ids, agent_emails, SEEDED_AGENT)
+            await role_seeds.seat_roles(engine, tenant_ids, role_emails)
             if owners:
                 await pseudonymise_example_actors(engine, owners.values(), agent_emails)
             case_facts = {
@@ -1005,7 +1007,9 @@ async def seed(
                 if slide.file in CASE_FILES
             }
         links = await side_by_side(
-            seed_example(engine, tenant_id, owner, results, workspace, agent_emails, case_facts)
+            seed_example(
+                engine, tenant_id, owner, results, workspace, agent_emails, case_facts, role_emails
+            )
             for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True)
             if (owner := owners.get(tenant_id)) is not None
         )
@@ -1132,10 +1136,12 @@ async def seed_example(
     workspace: Workspace,
     agent_emails: Sequence[str],
     case_facts: Mapping[str, Mapping[str, Any]] | None,
+    role_emails: Sequence[role_seeds.RoleEmail] = (),
 ) -> str | None:
     seeded = Seeded(tenant_id, await people_of(engine, tenant_id), owner_id)
     assert seeded.owner is not None
     seats = await agent_principals(engine, seeded.tenant_id, agent_emails)
+    seats_by_role = await role_seeds.role_ids(engine, seeded.tenant_id, role_emails)
     agents = [seat.user_id for seat in seats]
     creator = principal_of(seeded, "ada", Role.RESEARCHER, True)
     owner = MemberPrincipal(OWNER_SUBJECT, seeded.tenant_id, seeded.owner, Role.RESEARCHER, True)
@@ -1155,6 +1161,10 @@ async def seed_example(
                 await seed_adjudication(connection, creator, agents[0])
                 await seed_adjudication(connection, creator, agents[0], DRAWN_TASK)
                 await seat_on_cell_tour(connection, creator, workspace.gallery, agents[0])
+        with Timed(f"{workspace.slug} role accounts"):
+            await role_seeds.seed_role_work(
+                connection, creator, results, workspace.gallery, seats_by_role
+            )
         with Timed(f"{workspace.slug} clinical case"):
             made = (
                 None

@@ -13,6 +13,15 @@
       "record": "infra/local"
     }
   },
-  "test_accounts": ["agent-walk@parfocal.eu", "smoke-walk@parfocal.eu"],
+  "test_accounts": [
+    "agent-walk@parfocal.eu",
+    "smoke-walk@parfocal.eu",
+    "role-researcher@parfocal.eu",
+    "role-reviewer-a@parfocal.eu",
+    "role-reviewer-b@parfocal.eu",
+    "role-adjudicator@parfocal.eu",
+    "role-viewer@parfocal.eu",
+    "role-annotator@parfocal.eu"
+  ],
   "seeded_workspaces": ["cvut-biomedical", "cvut-imaging", "cvut-ml"]
 }
