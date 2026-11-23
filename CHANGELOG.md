@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.40.1 (2026-11-23)
+
+### Performance
+
+- TEST-057: Create acting seed pseudonyms up front so workspaces seed side by side
+
+### Docs
+
+- TEST-057: Log the v0.40.0 reseed and its seed time
+
 ## v0.40.0 (2026-11-23)
 
 ### Features
