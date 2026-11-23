@@ -10,6 +10,7 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 import jwt
 from agent_session import (
@@ -130,13 +131,13 @@ def find_user(call: Call, email: str) -> dict[str, object] | None:
             ]
         },
     )
-    listed = found.get("result") or []
-    return dict(listed[0]) if isinstance(listed, list) and listed else None
+    listed = cast("list[dict[str, object]]", found.get("result") or [])
+    return dict(listed[0]) if listed else None
 
 
 def organisation_of(user: dict[str, object]) -> str:
-    details = user.get("details")
-    owner = details.get("resourceOwner") if isinstance(details, dict) else None
+    details = cast("dict[str, object]", user.get("details") or {})
+    owner = details.get("resourceOwner")
     if not owner:
         raise RefusedError("the model account has no organisation in Zitadel's answer")
     return str(owner)
