@@ -199,6 +199,55 @@ test("the display tab of a drawn review orders by drawing, not by the AI", async
   await expect(panel.getByText(/AI order/)).toHaveCount(0);
 });
 
+const p07 = "00000000-0000-4000-8003-000000000007";
+const liveSlide = `/projects/${p07}/slides/${a1}?task=00000000-0000-4000-8007-000000000014`;
+
+async function liveReady(page: Page, url: string) {
+  await page.goto(url);
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
+}
+
+test("the live viewer's Display tab reads as drawn from the task's drawn flag", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await liveReady(page, `${liveSlide}&source=drawn`);
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
+  const panel = page.getByTestId("stage-display");
+  await expect(panel.getByText("What the layers show")).toBeVisible();
+  await expect(panel.getByText("What the AI shows")).toHaveCount(0);
+  await expect(panel).not.toContainText("AI order");
+});
+
+test("the live viewer names who drew the outlines and shows no scores", async ({ page }) => {
+  test.setTimeout(90_000);
+  await liveReady(page, `${liveSlide}&source=drawn`);
+  const objects = page.getByTestId("stage-review-objects");
+  await expect(objects.getByText("Drawn outlines")).toBeVisible();
+  await expect(objects.getByText(/(by hand|with Smart select)/).first()).toBeVisible();
+  await expect(objects.getByText("Result set", { exact: true })).toHaveCount(0);
+  await expect(objects.getByText("0.00")).toHaveCount(0);
+});
+
+test("the live guided coach says a person drew the outline", async ({ page }) => {
+  test.setTimeout(90_000);
+  await liveReady(page, `${liveSlide}&mode=guided&source=drawn`);
+  await expect(page.getByTestId("stage-coach")).toContainText(
+    "A person drew this. It is outlined in white.",
+  );
+  await expect(page.getByText("The AI found this.")).toHaveCount(0);
+});
+
+test("the live viewer of an AI review still reads as AI", async ({ page }) => {
+  test.setTimeout(90_000);
+  await liveReady(page, liveSlide);
+  const objects = page.getByTestId("stage-review-objects");
+  await expect(objects.getByText("AI says")).toBeVisible();
+  await expect(objects.getByText("Result set", { exact: true })).toBeVisible();
+});
+
 test("the guided card of a drawn outline names it as drawn", async ({ page }) => {
   await page.goto(`${rt14}/guided?slide=${a1}&scene=region&source=drawn`);
   await expect(

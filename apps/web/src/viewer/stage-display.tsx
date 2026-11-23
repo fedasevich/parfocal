@@ -48,7 +48,8 @@ function TaskDisplay({
   onSlot: SlotPlacer;
 }) {
   const myDisplay = useMyDisplay(taskId);
-  const taskCode = okData(useGetReviewTask(taskId).data)?.code ?? "";
+  const task = okData(useGetReviewTask(taskId).data);
+  const taskCode = task?.code ?? "";
   const display = useMemo(
     () => (myDisplay ? taskDisplayView(myDisplay, taskCode) : undefined),
     [myDisplay, taskCode],
@@ -64,6 +65,7 @@ function TaskDisplay({
         preset={choice.preset}
         extraLocks={[]}
         viewer
+        drawn={task?.drawn ?? false}
         changed={choice.changed}
         saveBlocked={choice.save.reason}
         onSave={choice.saveChanges}

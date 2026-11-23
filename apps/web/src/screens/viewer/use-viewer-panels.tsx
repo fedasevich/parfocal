@@ -270,7 +270,7 @@ export function useViewerPanels(
         ) : (
           <ModelWarningsBlock warnings={modelWarnings} />
         )}
-        <AiSays setName={setName} objects={objects} />
+        <AiSays setName={setName} objects={objects} drawnTask={session.task?.drawn} />
         <TrackRecordBlock
           enabled={personalSettings?.inspector_track_record ?? true}
           lines={trackRecordLines(trackRecord, typer?.name ?? "")}

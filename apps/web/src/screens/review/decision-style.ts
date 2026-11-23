@@ -67,6 +67,24 @@ const toolWords: Record<NonNullable<ReviewObject["tool"]>, string> = {
   "smart-select": "with Smart select",
 };
 
+export function drawnByText(
+  objects: readonly Pick<ReviewObject, "drawn" | "drawn_by_user_id" | "tool">[],
+  nameOf: (userId: string) => string | undefined,
+): string {
+  const lines = new Set(
+    objects
+      .filter((item) => item.drawn)
+      .map((item) => {
+        const who = (item.drawn_by_user_id && nameOf(item.drawn_by_user_id)) || "A person";
+        return item.tool ? `${who} ${toolWords[item.tool]}` : who;
+      }),
+  );
+  return [...lines].join(", ") || "A person";
+}
+
+export const scoreShown = (item: Pick<ReviewObject, "drawn">, showScore: boolean) =>
+  showScore && !item.drawn;
+
 export const shownCode = (object: Pick<ReviewObject, "object" | "drawn">) =>
   object.drawn ? `${object.object}⁺` : object.object;
 

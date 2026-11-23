@@ -174,7 +174,7 @@ export const toReviewObjects = (taskId: string, slideId: string, drawn = false):
     kind: item.kind,
     number: index + 1,
     class_name: item.className,
-    score: item.score,
+    score: drawn && item.kind === "region" ? 0 : item.score,
     size_mm: item.sizeMm,
     other_class: item.otherClass,
     detector_score: item.detectorScore,

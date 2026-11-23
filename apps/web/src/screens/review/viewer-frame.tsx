@@ -16,7 +16,8 @@ import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts";
 import { useToolsLayout } from "../../shell/tools-layout.ts";
-import { type Count, countWord } from "./decision-style.ts";
+import { usePeople } from "../people.ts";
+import { type Count, countWord, drawnByText, scoreShown } from "./decision-style.ts";
 import { InspectorDock } from "./inspector-dock.tsx";
 import { useInspectorLayout } from "./inspector-layout.ts";
 import { sampledCellsOf } from "./object-counts.ts";
@@ -313,22 +314,37 @@ export function ObjectsSummary({
   );
 }
 
-export function AiSays({ setName, objects }: { setName: string; objects: ReviewObject[] }) {
+export function AiSays({
+  setName,
+  objects,
+  drawnTask = false,
+}: {
+  setName: string;
+  objects: ReviewObject[];
+  drawnTask?: boolean | undefined;
+}) {
   const { t } = useLingui();
   const units = useLengthUnits();
+  const person = usePeople();
   const regions = objects.filter((item) => item.kind === "region");
   const range = regionRange(
     regions.map((item) => item.size_mm),
     units,
   );
   const cells = sampledCellsOf(objects);
-  const drawn = objects.some((item) => item.drawn);
+  const drawn = drawnTask || objects.some((item) => item.drawn);
   return (
     <Zone title={drawn ? t`Drawn outlines` : t`AI says`}>
       <FactList
         tight
         rows={[
-          { icon: "layers", label: "Result set", value: setName },
+          drawn
+            ? {
+                icon: "pen",
+                label: "Drawn by",
+                value: drawnByText(objects, (userId) => person(userId)?.name),
+              }
+            : { icon: "layers", label: "Result set", value: setName },
           {
             icon: "flag",
             label: "Tumor regions",
@@ -487,7 +503,7 @@ export function ObjectList({
                   </small>
                 </span>
                 <span className="font-mono text-fg-dim">
-                  {showScore ? item.score.toFixed(2) : ""}
+                  {scoreShown(item, showScore) ? item.score.toFixed(2) : ""}
                 </span>
                 <span className="font-mono text-fg-dim">
                   {item.size_mm == null ? "" : formatMillimetres(item.size_mm)}

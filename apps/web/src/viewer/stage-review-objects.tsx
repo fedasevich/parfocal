@@ -774,7 +774,9 @@ export function StageReviewObjects({
           onWholeSlide={guided ? null : wholeSlide}
         />
       ) : null}
-      {coachOn && focus === null ? <StageCoachOnSlide object={current ?? ""} /> : null}
+      {coachOn && focus === null ? (
+        <StageCoachOnSlide object={current ?? ""} drawn={session.task?.drawn ?? false} />
+      ) : null}
       {focus === null || currentItem === undefined || typedCell !== null ? null : (
         <StageFocusCard
           session={session}

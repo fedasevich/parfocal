@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-23
 
+- PROTO-164 Fixed three slips from the deployed walk on RT-10. The live viewer's Display tab (viewer/stage-display.tsx) never passed the drawn flag, so it now reads the task detail's drawn. The live and guided coach tips use the task's drawn flag, not a loaded object. The Drawn outlines box names the drawer and tool in place of the hidden snapshot's result set, and drawn rows show no score. The fake now sends drawn objects with score 0 as the API does. New live viewer specs and unit tests use the API's object shape, and the Display spec was checked to fail without the fix.
 - PROTO-164 Finished the drawn wording sweep. ReviewTaskDetail gains a drawn flag. The first-read panel and notice, the AI says title, the display tab (Drawing order, What the layers show), the methods line and task settings style name read as drawn. Drawn tasks get drawn titles for the first-read refusals in blinding, first_reads and review_states. Emails, audit names and CSV headers were inspected and need nothing, since they are neutral or only about model runs. Left alone: AiHiddenError (slide level, no task), ObjectEditHistory (rendered nowhere), Smart select AI tools, cell-only text, run progress and annotate-task text. Seeded Drawn outline review example in the de-identified study project with rhea and remy disagreeing on one outline and the agent as adjudicator. The guided-review failed-submit test flaked once under load and passed alone.
 
 ## 2026-11-22

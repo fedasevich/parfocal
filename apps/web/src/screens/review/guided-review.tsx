@@ -1033,7 +1033,7 @@ function GuidedBody({
                 {coachOn ? (
                   <>
                     <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
-                      {current?.drawn ? (
+                      {session.task?.drawn || current?.drawn ? (
                         <Trans>A person drew this. It is outlined in white.</Trans>
                       ) : (
                         <Trans>The AI found this. It is outlined in white.</Trans>

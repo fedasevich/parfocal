@@ -2934,6 +2934,7 @@ msgid "A person drew {code} as tumor."
 msgstr "A person drew {code} as tumor."
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "A person drew this. It is outlined in white."
 msgstr "A person drew this. It is outlined in white."
 

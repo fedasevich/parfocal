@@ -2,11 +2,15 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { CoachTip } from "../screens/review/guided-parts.tsx";
 
-export function StageCoachOnSlide({ object }: { object: string }) {
+export function StageCoachOnSlide({ object, drawn }: { object: string; drawn: boolean }) {
   return (
     <div data-testid="stage-coach" className="pointer-events-none absolute inset-0 z-5">
       <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
-        <Trans>The AI found this. It is outlined in white.</Trans>
+        {drawn ? (
+          <Trans>A person drew this. It is outlined in white.</Trans>
+        ) : (
+          <Trans>The AI found this. It is outlined in white.</Trans>
+        )}
       </CoachTip>
       <CoachTip n={2} className="absolute bottom-20 left-4 w-85">
         <Trans>

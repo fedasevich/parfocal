@@ -136,7 +136,7 @@ export function StageObjectsPanel({
         counts={counts}
         added={session.added.map((item) => item.object)}
       />
-      <AiSays setName={setName} objects={objects} />
+      <AiSays setName={setName} objects={objects} drawnTask={session.task?.drawn} />
       <ObjectList
         objects={objects}
         counts={counts}
