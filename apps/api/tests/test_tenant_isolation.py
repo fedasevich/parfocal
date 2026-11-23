@@ -1971,7 +1971,9 @@ GET_ROUTES = {
     "listAuditSigningKeys": Route(
         Exposure.TENANT, lambda _: "/api/tenant/audit-events/signing-keys", admin_rights=True
     ),
-    "listServiceAccounts": Route(Exposure.TENANT, lambda _: "/api/tenant/service-accounts"),
+    "listServiceAccounts": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/service-accounts", admin_rights=True
+    ),
     "listInvitations": Route(
         Exposure.TENANT, lambda _: "/api/tenant/invitations", admin_rights=True
     ),
@@ -2329,14 +2331,17 @@ GET_ROUTES = {
     "listModelVisibility": Route(Exposure.TENANT, lambda _: "/api/tenant/hidden-models"),
     "listImportSources": Route(Exposure.TENANT, lambda _: "/api/tenant/import-sources"),
     "getProjectWebhook": Route(
-        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/webhook"
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/webhook", admin_rights=True
     ),
     "listEventTargets": Route(
-        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/event-targets"
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/event-targets",
+        admin_rights=True,
     ),
     "listEventDeliveries": Route(
         Exposure.TENANT,
         lambda a: f"/api/projects/{a.ids['project']}/event-targets/{a.ids['event_target']}/events",
+        admin_rights=True,
     ),
     "getLabModel": Route(
         Exposure.TENANT,

@@ -190,8 +190,9 @@ def test_the_gpu_seconds_land_on_the_person_who_asked(api: ApiAs, database: str,
 
 
 def test_a_best_embedding_is_an_ai_usage_row_with_its_gpu_seconds(
-    api: ApiAs, database: str, lab: Lab
+    api: ApiAs, database: str
 ) -> None:
+    lab = sized(database, make_lab(api, database, admins=("owner",)))
     api.app.state.warm_gate = WarmGate(FakeEncoder(seconds=0.75))
     try:
         assert ask(api, lab, who="reader").status_code == 200

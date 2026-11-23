@@ -603,7 +603,7 @@ JOIN_SETTINGS_COLUMNS = (
 @tenant_router.get(
     "/join-settings",
     operation_id="getJoinSettings",
-    **require(Permission.WORKSPACE_SETTINGS),
+    **require(Permission.WORKSPACE_SETTINGS, admin=True),
 )
 async def get_join_settings(connection: TenantConnection) -> JoinSettings:
     row = (

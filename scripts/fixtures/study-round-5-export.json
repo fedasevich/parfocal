@@ -1,0 +1,391 @@
+{
+  "rounds": [
+    {
+      "number": 1,
+      "tasks": [
+        {
+          "id": "open-case",
+          "title": "Open the slide to review",
+          "instruction": "Open the slide to review"
+        },
+        {
+          "id": "check-cells",
+          "title": "Answer four unsure cells",
+          "instruction": "Answer four unsure cells"
+        },
+        {
+          "id": "queue-decision",
+          "title": "Settle a disagreement",
+          "instruction": "Settle a disagreement"
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "id": "s-old0",
+      "round": 1,
+      "participant": "P-OLD0",
+      "startedAt": 1,
+      "results": [],
+      "blocks": []
+    },
+    {
+      "id": "s-p-aaaa",
+      "round": 1,
+      "participant": "P-AAAA",
+      "startedAt": 1790000000000,
+      "consentAt": 1790000000000,
+      "results": [
+        {
+          "taskId": "open-case",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000006000,
+          "outcome": "done"
+        },
+        {
+          "taskId": "check-cells",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000030000,
+          "outcome": "done"
+        },
+        {
+          "taskId": "queue-decision",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000020000,
+          "outcome": "done"
+        }
+      ],
+      "blocks": [],
+      "tasks": [
+        {
+          "id": "open-case",
+          "idx": 0,
+          "title": "Open the slide to review",
+          "goal": "Open the slide to review",
+          "success": true,
+          "durationMs": 6000,
+          "clicks": 2,
+          "deadClicks": 0,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 7,
+          "notes": {
+            "like": "Quick to find"
+          },
+          "reason": null,
+          "endedAt": 1000
+        },
+        {
+          "id": "check-cells",
+          "idx": 1,
+          "title": "Answer four unsure cells",
+          "goal": "Answer four unsure cells",
+          "success": true,
+          "durationMs": 30000,
+          "clicks": 10,
+          "deadClicks": 1,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 6,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1001
+        },
+        {
+          "id": "queue-decision",
+          "idx": 2,
+          "title": "Settle a disagreement",
+          "goal": "Settle a disagreement",
+          "success": true,
+          "durationMs": 20000,
+          "clicks": 5,
+          "deadClicks": 0,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 5,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1002
+        }
+      ],
+      "final": {
+        "sus": [5, 1, 5, 1, 5, 1, 5, 1, 5, 1],
+        "susScore": 100,
+        "open": {
+          "like": "Clean screens"
+        },
+        "changes": [],
+        "finishedAt": 1790000000001
+      }
+    },
+    {
+      "id": "s-p-bbbb",
+      "round": 1,
+      "participant": "P-BBBB",
+      "startedAt": 1790000000000,
+      "consentAt": 1790000000000,
+      "results": [
+        {
+          "taskId": "open-case",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000010000,
+          "outcome": "done"
+        },
+        {
+          "taskId": "check-cells",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000025000,
+          "outcome": "gave-up"
+        },
+        {
+          "taskId": "queue-decision",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000040000,
+          "outcome": "done"
+        }
+      ],
+      "blocks": [],
+      "tasks": [
+        {
+          "id": "open-case",
+          "idx": 0,
+          "title": "Open the slide to review",
+          "goal": "Open the slide to review",
+          "success": true,
+          "durationMs": 10000,
+          "clicks": 4,
+          "deadClicks": 1,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 6,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1000
+        },
+        {
+          "id": "check-cells",
+          "idx": 1,
+          "title": "Answer four unsure cells",
+          "goal": "Answer four unsure cells",
+          "success": false,
+          "durationMs": 25000,
+          "clicks": 12,
+          "deadClicks": 3,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 3,
+          "notes": {
+            "dislike": "Could not find | the cells"
+          },
+          "reason": "where-to-look",
+          "endedAt": 1001
+        },
+        {
+          "id": "queue-decision",
+          "idx": 2,
+          "title": "Settle a disagreement",
+          "goal": "Settle a disagreement",
+          "success": true,
+          "durationMs": 40000,
+          "clicks": 8,
+          "deadClicks": 2,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 4,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1002
+        }
+      ],
+      "final": {
+        "sus": [4, 2, 4, 2, 4, 2, 4, 2, 4, 2],
+        "susScore": 75,
+        "open": {
+          "dislike": "Too many buttons"
+        },
+        "changes": [],
+        "finishedAt": 1790000000001
+      }
+    },
+    {
+      "id": "s-p-cccc",
+      "round": 1,
+      "participant": "P-CCCC",
+      "startedAt": 1790000000000,
+      "consentAt": 1790000000000,
+      "results": [
+        {
+          "taskId": "open-case",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000008000,
+          "outcome": "done"
+        },
+        {
+          "taskId": "check-cells",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000050000,
+          "outcome": "done"
+        },
+        {
+          "taskId": "queue-decision",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000030000,
+          "outcome": "gave-up"
+        }
+      ],
+      "blocks": [],
+      "tasks": [
+        {
+          "id": "open-case",
+          "idx": 0,
+          "title": "Open the slide to review",
+          "goal": "Open the slide to review",
+          "success": true,
+          "durationMs": 8000,
+          "clicks": 3,
+          "deadClicks": 0,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 7,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1000
+        },
+        {
+          "id": "check-cells",
+          "idx": 1,
+          "title": "Answer four unsure cells",
+          "goal": "Answer four unsure cells",
+          "success": true,
+          "durationMs": 50000,
+          "clicks": 20,
+          "deadClicks": 0,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 5,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1001
+        },
+        {
+          "id": "queue-decision",
+          "idx": 2,
+          "title": "Settle a disagreement",
+          "goal": "Settle a disagreement",
+          "success": false,
+          "durationMs": 30000,
+          "clicks": 6,
+          "deadClicks": 4,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 2,
+          "notes": {},
+          "reason": "unclear-task",
+          "endedAt": 1002
+        }
+      ],
+      "final": {
+        "sus": [3, 3, 3, 3, 3, 3, 3, 3, 3, null],
+        "susScore": null,
+        "open": {},
+        "changes": [],
+        "finishedAt": null
+      }
+    },
+    {
+      "id": "s-p-dryy",
+      "round": 1,
+      "participant": "P-DRYY",
+      "startedAt": 1790000000000,
+      "consentAt": 1790000000000,
+      "results": [
+        {
+          "taskId": "open-case",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000001000,
+          "outcome": "done"
+        }
+      ],
+      "blocks": [],
+      "tasks": [
+        {
+          "id": "open-case",
+          "idx": 0,
+          "title": "Open the slide to review",
+          "goal": "Open the slide to review",
+          "success": true,
+          "durationMs": 1000,
+          "clicks": 1,
+          "deadClicks": 0,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 1,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1000
+        }
+      ],
+      "final": {
+        "sus": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        "susScore": 50,
+        "open": {},
+        "changes": [],
+        "finishedAt": 1790000000001
+      },
+      "dryRun": true
+    },
+    {
+      "id": "s-p-pilt",
+      "round": 1,
+      "participant": "P-PILT",
+      "startedAt": 1790000000000,
+      "consentAt": 1790000000000,
+      "results": [
+        {
+          "taskId": "open-case",
+          "startedAt": 1790000000000,
+          "endedAt": 1790000099000,
+          "outcome": "gave-up"
+        }
+      ],
+      "blocks": [],
+      "tasks": [
+        {
+          "id": "open-case",
+          "idx": 0,
+          "title": "Open the slide to review",
+          "goal": "Open the slide to review",
+          "success": false,
+          "durationMs": 99000,
+          "clicks": 99,
+          "deadClicks": 99,
+          "blocked": 0,
+          "keys": 1,
+          "wheels": 2,
+          "seq": 1,
+          "notes": {},
+          "reason": null,
+          "endedAt": 1000
+        }
+      ],
+      "final": {
+        "sus": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        "susScore": 50,
+        "open": {},
+        "changes": [],
+        "finishedAt": 1790000000001
+      }
+    }
+  ]
+}

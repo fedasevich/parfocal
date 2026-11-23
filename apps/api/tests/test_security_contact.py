@@ -50,13 +50,11 @@ def test_a_malformed_address_is_refused(api: ApiAs, database: str) -> None:
 
 
 @pytest.mark.db
-def test_only_admins_change_the_security_contact_and_reviewers_never_see_it(
-    api: ApiAs, database: str
-) -> None:
+def test_only_admins_read_or_change_the_security_contact(api: ApiAs, database: str) -> None:
     people = make_workspace(database, PEOPLE, admins={"admin"}).people
     api(people["admin"]).put(CONTACT, json={"email": "security@clinic.example"})
-    assert api(people["reviewer"]).get(CONTACT).status_code == 403
-    assert api(people["researcher"]).get(CONTACT).json() == {"email": "security@clinic.example"}
+    for who in ("researcher", "reviewer"):
+        assert api(people[who]).get(CONTACT).status_code == 403
     for who in ("researcher", "reviewer"):
         refused = api(people[who]).put(CONTACT, json={"email": "me@clinic.example"})
         assert refused.status_code == 403

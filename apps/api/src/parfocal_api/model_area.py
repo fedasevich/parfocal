@@ -193,7 +193,7 @@ async def running_now(connection: AsyncConnection) -> list[AiModelRun]:
     ]
 
 
-@tenant_router.get("", operation_id="listAiModels", **require(Permission.INTEGRATIONS))
+@tenant_router.get("", operation_id="listAiModels", **require(Permission.INTEGRATIONS, admin=True))
 async def list_ai_models(connection: TenantConnection) -> AiModels:
     hidden = await hidden_names(connection)
     counts = await result_set_counts(connection)
@@ -240,7 +240,7 @@ async def list_ai_models(connection: TenantConnection) -> AiModels:
 @tenant_router.get(
     "/connection",
     operation_id="getLabModelConnection",
-    **require(Permission.INTEGRATIONS),
+    **require(Permission.INTEGRATIONS, admin=True),
 )
 async def get_lab_model_connection(connection: TenantConnection) -> LabModelConnection:
     row = (

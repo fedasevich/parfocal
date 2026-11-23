@@ -262,7 +262,7 @@ async def audited(
 @router.get(
     "/{project_id}/webhook",
     operation_id="getProjectWebhook",
-    **require(Permission.INTEGRATIONS),
+    **require(Permission.INTEGRATIONS, admin=True),
 )
 async def get_project_webhook(
     project_id: ProjectId, request: Request, connection: TenantConnection

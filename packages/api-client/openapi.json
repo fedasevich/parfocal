@@ -9682,7 +9682,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -9911,7 +9912,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/overview": {
@@ -10021,7 +10023,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/storage": {
@@ -10131,7 +10134,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/security": {
@@ -10241,7 +10245,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/webhooks": {
@@ -10355,7 +10360,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/invitations/{token}/preview": {
@@ -13249,7 +13255,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/tenant/models/{model_id}/test": {
@@ -22901,7 +22908,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/projects/{project_id}/webhook/secret": {
@@ -23732,7 +23740,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -24121,7 +24130,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       }
     },
     "/api/projects/{project_id}/event-targets/{target_id}/events/{event_id}/replay": {
@@ -33542,7 +33552,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "put": {
         "tags": [
@@ -33775,7 +33786,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -47895,7 +47907,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       }
     },
     "/api/review-tasks/{task_id}/evaluation-versions": {
@@ -54206,7 +54219,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "put": {
         "tags": [
@@ -56240,7 +56254,8 @@
             }
           }
         },
-        "x-permission": "integrations"
+        "x-permission": "integrations",
+        "x-permission-admin": true
       },
       "post": {
         "tags": [
@@ -58053,7 +58068,8 @@
             }
           }
         },
-        "x-permission": "workspace-settings"
+        "x-permission": "workspace-settings",
+        "x-permission-admin": true
       },
       "put": {
         "tags": [
