@@ -101,6 +101,7 @@ export function ObjectDots({
         <button
           type="button"
           onClick={() => onJump("cells")}
+          aria-pressed={Boolean(onCell)}
           title={t`Cells in the sample, ${cellsDone} of ${cells.length} decided. Opens the first open cell`}
           className={cn(
             "inline-flex h-5.5 cursor-pointer items-center gap-1.5 rounded-full border-0 bg-chrome-2 px-2.5 text-caption text-fg-dim",
