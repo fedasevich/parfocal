@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-23
-note: Annotate cell C1 is picked but the camera stays at the fit on the deployed app.
+note: Merged. Waits for the deployed rerun of apps/web/e2e/deployed-search-hit-task.ts after the next deploy.
