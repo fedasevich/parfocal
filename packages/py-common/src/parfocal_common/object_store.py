@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import hmac
 from collections.abc import Mapping, Sequence
@@ -17,6 +18,9 @@ MAX_PRESIGN_SECONDS = 7 * 24 * 3600
 LIST_PAGE_LIMIT = 1000
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 PREFIXED_ROOTS = ("t/", "ops/")
+TRANSIENT_STATUSES = frozenset({429, 500, 502, 503, 504})
+STORAGE_ATTEMPTS = 4
+STORAGE_BACKOFF_SECONDS = 0.5
 
 
 @dataclass(frozen=True)
@@ -285,11 +289,16 @@ class ObjectStore:
         body: bytes = b"",
         extra: Mapping[str, str] | None = None,
     ) -> httpx2.Response:
-        url, headers = self.signed_request(method, key, query, body, extra)
-        response = await self.http.request(method, url, headers=headers, content=body or None)
-        if response.status_code >= 300:
-            raise error_of(response.status_code, response.content)
-        return response
+        attempt = 0
+        while True:
+            url, headers = self.signed_request(method, key, query, body, extra)
+            response = await self.http.request(method, url, headers=headers, content=body or None)
+            if response.status_code < 300:
+                return response
+            attempt += 1
+            if response.status_code not in TRANSIENT_STATUSES or attempt == STORAGE_ATTEMPTS:
+                raise error_of(response.status_code, response.content)
+            await asyncio.sleep(STORAGE_BACKOFF_SECONDS * 2 ** (attempt - 1))
 
     async def create_bucket(self) -> None:
         try:
