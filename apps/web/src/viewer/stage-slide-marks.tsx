@@ -130,7 +130,8 @@ export function StageSlideMarks({
         (sample.box.left + sample.box.right) / 2,
         (sample.box.top + sample.box.bottom) / 2,
       );
-      chip.current.style.transform = `translate(${Math.round(x - 24)}px, ${Math.round(y)}px) translateY(-50%)`;
+      const left = Math.max(0, Math.round(x - 24));
+      chip.current.style.transform = `translate(${left}px, ${Math.round(y)}px) translateY(-50%)`;
     }
   }, [engine, regions, sample]);
   const wholeShown = useWholeSlideShown(engine, size);
