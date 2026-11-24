@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.51.0 (2026-11-24)
+
+### Features
+
+- PILOT-014: Add the tour chapters from projects to the participant study
+- PILOT-014: Resolve tour names per role and report fallback anchors in the deployed run
+
+### Docs
+
+- PILOT-014: Log the merge and move to review
+
+### Other
+
+- PILOT-014: Rebaseline the all code budget after the tour chapters
+
 ## v0.50.0 (2026-11-24)
 
 ### Features
