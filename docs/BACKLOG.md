@@ -7258,7 +7258,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when an API test lists the seeded export for the agent account, a browser spec on the fake API downloads a listed export after a reload, and on the deployed app the agent account downloads the seeded COCO export of "Every outcome review" from the Dataset page.
   Depends on TEST-058. Size: S.
 
-- [ ] PROTO-167 · Round seven slips from the deployed walk of v0.46.0
+- [x] PROTO-167 · Round seven slips from the deployed walk of v0.46.0
   From docs/results/2026-11-23-deployed-walk-v0.46.0.md. After the GPU answered Best at 26 s, the Smart select chip read only "Outlining" for 35 s with no wait or progress, so say what it is doing or make the step faster. RT-11's evaluation JSON lists its 30 cells under one class "unclassified" while its decisions and objects CSVs name Immune and Stroma, so the evaluation must use the cell classes too. Privacy and session reads "1 other devices are signed in", so make the count plural only when it is not one.
   Done when each slip has a test, and a deployed check shows the Outlining step, the evaluation classes of a cell task and the singular device line.
   Depends on nothing. Size: S.
