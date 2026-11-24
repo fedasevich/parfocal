@@ -48,7 +48,13 @@ const summary = (values: readonly number[]) => ({
 test("open, jump and decision against the local stack after a real sign-in", async ({ page }) => {
   test.setTimeout(120_000 + rounds * 90_000);
   await watchStageReady(page);
+  const tiles: Record<string, number> = {};
   page.on("response", (response) => {
+    if (new URL(response.url()).pathname.startsWith("/tiles/")) {
+      const cache = /cache;desc=([a-z-]+)/.exec(response.headers()["server-timing"] ?? "")?.[1];
+      const key = `${response.status()} ${cache ?? "miss"}`;
+      tiles[key] = (tiles[key] ?? 0) + 1;
+    }
     if (response.status() >= 400 && ![404, 409].includes(response.status())) {
       console.log(`${response.status()} ${response.request().method()} ${response.url()}`);
     }
@@ -68,6 +74,6 @@ test("open, jump and decision against the local stack after a real sign-in", asy
   const report = Object.fromEntries(
     Object.entries(samples).map(([key, values]) => [key, { ...summary(values), values }]),
   );
-  console.log(JSON.stringify(report));
+  console.log(JSON.stringify({ ...report, tiles }));
   for (const values of Object.values(samples)) expect(values.every(Number.isFinite)).toBe(true);
 });

@@ -5,7 +5,23 @@ import { researcherWorkspace } from "./workspaces.ts";
 
 const fixture = `${root}packages/test-fixtures/synthetic/synthetic-jpeg.tiff`;
 const slideLabels = ["CMU-1-Small-Region.svs", "CMU-1.ndpi", "Leica-1.scn"];
-const jumpTarget = { x: 512, y: 384, magnification: 10 };
+const ownSlide = process.env["PARFOCAL_MAIN_PATH_SLIDE_KEY"];
+const [ownWidth, ownHeight] = (process.env["PARFOCAL_MAIN_PATH_SLIDE_SIZE"] ?? "1024x768")
+  .split("x")
+  .map(Number);
+const jumpTarget = { x: (ownWidth ?? 1024) / 2, y: (ownHeight ?? 768) / 2, magnification: 10 };
+
+function slideColumns(): string {
+  if (ownSlide === undefined) {
+    return `original_key = 'e2e/' || id || '/slide.tiff', file_bytes = ${statSync(fixture).size}`;
+  }
+  const bytes = Number(process.env["PARFOCAL_MAIN_PATH_SLIDE_BYTES"]);
+  const format = process.env["PARFOCAL_MAIN_PATH_SLIDE_FORMAT"] ?? "";
+  return (
+    `original_key = '${ownSlide}', file_bytes = ${bytes}, format = '${format}', ` +
+    `width = ${ownWidth}, height = ${ownHeight}`
+  );
+}
 
 type PageNode = { getAttribute(name: string): string | null };
 type ObserveOptions = { attributes: boolean; subtree?: boolean; attributeFilter: string[] };
@@ -51,9 +67,7 @@ export async function freshSample(
   const project = idOf(sample);
   const labels = slideLabels.map((label) => `'${label}'`).join(", ");
   const slides = sql(
-    `UPDATE slides SET original_key = 'e2e/' || id || '/slide.tiff', ` +
-      `file_bytes = ${statSync(fixture).size} ` +
-      `WHERE project_id = '${project}' AND label IN (${labels}) RETURNING id`,
+    `UPDATE slides SET ${slideColumns()} WHERE project_id = '${project}' AND label IN (${labels}) RETURNING id`,
   )
     .split("\n")
     .filter((line) => /^[0-9a-f-]{36}$/.test(line));

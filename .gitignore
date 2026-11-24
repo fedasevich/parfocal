@@ -100,3 +100,4 @@ bench-out/
 !packages/test-fixtures/reference-tiles/**
 bundle-report/
 packages/ui/visual/
+.main-paths/

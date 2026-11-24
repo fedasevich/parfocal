@@ -1,4 +1,10 @@
 {
   "extends": "@parfocal/typescript-config/node.json",
-  "include": ["playwright.config.ts", "global-setup.ts", "dev-home.ts", "tests"]
+  "include": [
+    "playwright.config.ts",
+    "playwright.production.config.ts",
+    "global-setup.ts",
+    "dev-home.ts",
+    "tests"
+  ]
 }

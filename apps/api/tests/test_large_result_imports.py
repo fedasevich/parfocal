@@ -95,6 +95,7 @@ def worker(
     work_dir: Path,
     workflow: str | None,
     timed: Path | None = None,
+    idle_exit: float = 2,
 ) -> subprocess.Popen[bytes]:
     command = [
         sys.executable,
@@ -105,7 +106,7 @@ def worker(
         "--worker",
         name,
         "--idle-exit",
-        "2",
+        str(idle_exit),
         "--poll",
         "0.1",
         "--workspace",
