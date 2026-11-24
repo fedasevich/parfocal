@@ -11,6 +11,7 @@ import {
   recentClick,
   reloads,
   screenAt,
+  silentControlClicks,
   type TraceEvent,
   taskSpans,
   viewBoxOf,
@@ -74,6 +75,7 @@ export function ReplayPanel(props: { events: TraceEvent[]; titles: Record<string
 
   const spans = useMemo(() => taskSpans(events), [events]);
   const dead = useMemo(() => deadClicks(events), [events]);
+  const silent = useMemo(() => silentControlClicks(events), [events]);
   const reloaded = useMemo(() => reloads(events), [events]);
   const screen = useMemo(() => screenAt(events, time), [events, time]);
   const wireframe = wireframeAt(events, time);
@@ -111,6 +113,7 @@ export function ReplayPanel(props: { events: TraceEvent[]; titles: Record<string
         className="relative h-6 rounded bg-surf-field"
         data-testid="replay-strip"
         data-dead-clicks={dead.length}
+        data-silent-control-clicks={silent.length}
         data-reloads={reloaded.length}
       >
         {spans.map((span, index) => (

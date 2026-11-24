@@ -4646,6 +4646,10 @@ msgstr ""
 msgid "Both are told by email."
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Both count a click in the app on nothing that reacts, but this round judges it by whether the page changed within 800 ms and skips drags, where round 4 listed which mock elements could be clicked."
+msgstr ""
+
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Both of you deleted it."
 msgstr ""
@@ -4662,6 +4666,10 @@ msgstr ""
 #. placeholder {0}: row.object
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Both reviewers have {0} open again with your note. It comes back here when they decide."
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Both run from the task start to the first click or key that does something, but this round counts a key only when the page changed after it."
 msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
@@ -6064,6 +6072,10 @@ msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Continue with your institution"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Control presses with no change, the earlier round 5 rule"
 msgstr ""
 
 #: src/screens/admin/storage.tsx
@@ -10491,6 +10503,10 @@ msgstr ""
 msgid "Median time to first action"
 msgstr ""
 
+#: src/study/study-results-panel.tsx
+msgid "Median time to first input, the earlier round 5 rule"
+msgstr ""
+
 #: src/screens/project/settings-zones.tsx
 msgid "Member"
 msgstr ""
@@ -14895,6 +14911,10 @@ msgstr ""
 
 #: src/study/study-results-panel.tsx
 msgid "Round 4 against this round"
+msgstr ""
+
+#: src/study/study-results-panel.tsx
+msgid "Round 4 did not measure this."
 msgstr ""
 
 #. placeholder {0}: four.roundOneSus

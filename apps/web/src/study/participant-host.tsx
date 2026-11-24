@@ -160,9 +160,16 @@ function TaskBar({
     ended.current = true;
     writeGuard(undefined);
     drainBlocks();
-    const counts = meter.current?.counts() ?? { clicks: 0, deadClicks: 0, keys: 0, wheels: 0 };
+    const counts = meter.current?.counts() ?? {
+      clicks: 0,
+      deadClicks: 0,
+      silentControlClicks: 0,
+      keys: 0,
+      wheels: 0,
+    };
     const moves = meter.current?.firstMoves() ?? {
       timeToFirstActionMs: null,
+      timeToFirstInputMs: null,
       firstClickCorrect: null,
       pathStraightness: null,
     };
@@ -180,6 +187,7 @@ function TaskBar({
           durationMs: Math.max(0, end - startedAt),
           clicks: counts.clicks,
           deadClicks: counts.deadClicks,
+          silentControlClicks: counts.silentControlClicks,
           blocked: known === undefined ? 0 : blockedCount(known, task.id),
           keys: counts.keys,
           wheels: counts.wheels,
