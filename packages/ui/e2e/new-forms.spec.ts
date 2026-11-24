@@ -66,6 +66,7 @@ test("New case in a de-identified project has no patient fields", async ({ page 
     label: "S26-04830",
     specimen: "Sentinel lymph node, left",
     patient: null,
+    requestedBy: "",
   });
 });
 

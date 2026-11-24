@@ -51,6 +51,7 @@ const slidesBody = (
       blocks: ["A1", "A2"],
       task: "RT-14 · Round 2 · CAMELYON v1.0",
       researcher: "Demo Researcher",
+      requestedBy: "Dr. Demo Requester, surgery",
     }}
     caseSlides={[
       {
@@ -122,6 +123,7 @@ export const CaseDetailsClinical: Story = {
           blocks: ["A1"],
           task: "RT-2 · Second read",
           researcher: "Demo Researcher",
+          requestedBy: "Dr. Demo Requester, dermatology",
           clinical: true,
           clinicalNote: "Fake note for the demo. Lesion growing over three months.",
         }}
