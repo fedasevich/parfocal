@@ -8,7 +8,7 @@ from pathlib import Path
 from parfocal_deploy import migrations, neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.environments import Environment, environment
-from parfocal_deploy.modal_app import APP_NAME, SECRETS, WEB_FUNCTION
+from parfocal_deploy.modal_app import APP_NAME, SECRETS, SEED_SECRET, WEB_FUNCTION
 from parfocal_deploy.smoke import SmokeCheckError, smoke_check
 from parfocal_deploy.tools import (
     MODAL,
@@ -21,8 +21,10 @@ from parfocal_deploy.tools import (
     required,
     run,
     sql,
+    write_modal_secret,
 )
 from parfocal_deploy.tour_switch import ensure_tour_secret
+from parfocal_ingest.study_seed import SEED_DATABASE_VARIABLE
 
 CI_SETTINGS = (
     "CLOUDFLARE_API_TOKEN",
@@ -111,6 +113,16 @@ def revisions(text: str) -> frozenset[str]:
     return frozenset(name.strip() for name in text.split(",") if name.strip())
 
 
+def write_seed_secret(target: Environment, tools: Tools, owner_uri: str) -> None:
+    write_modal_secret(
+        tools,
+        target.modal_environment,
+        SEED_SECRET,
+        {SEED_DATABASE_VARIABLE: owner_uri},
+        overwrite=True,
+    )
+
+
 def deploy(
     target: Environment,
     tools: Tools,
@@ -135,6 +147,7 @@ def deploy(
         direct = neon.owner_uri(tools.neon, project, branch, database, pooled=False)
         migrations.check(migrations.current_revision(tools, direct), allow_destructive, versions)
         tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
+        write_seed_secret(target, tools, neon.engine_uri(direct))
     for command in modal_commands(target, modules):
         tools.run(command.argv, None, command.extra)
     for command in edge_commands(target, settings["CLOUDFLARE_ACCOUNT_ID"], web_url(target)):

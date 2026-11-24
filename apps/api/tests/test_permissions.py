@@ -26,7 +26,7 @@ from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
-from parfocal_api import tour_switch
+from parfocal_api import study_participants, tour_switch
 from parfocal_api.dataset_versions import dataset_version_key
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
@@ -480,6 +480,7 @@ def link_site_serving() -> threading.Thread:
 
 INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile", "typeOutlines", "embedSlideView"})
 TOUR_OPERATIONS = frozenset({"switchToTourRole"})
+STUDY_SEED_OPERATIONS = frozenset({"prepareStudyParticipant", "removeStudyParticipant"})
 
 
 OUTLINE_TYPED: dict[str, object] = {
@@ -515,6 +516,23 @@ def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
     link_site_serving()
     trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
     monkeypatch.setattr(api.app, "settings", trusted)
+
+
+class MatrixStudySeeder:
+    async def seed(self, code: str, seat_email: str) -> study_participants.SeededParticipant:
+        return study_participants.SeededParticipant(code, uuid.uuid4(), uuid.uuid4())
+
+    async def remove(self, code: str) -> int:
+        return 0
+
+
+def fake_study_seed(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api.app.state, "study_seeder", MatrixStudySeeder(), raising=False)
+
+    async def matrix_email(*_: object) -> str:
+        return "seat@matrix.invalid"
+
+    monkeypatch.setattr(study_participants, "seat_email_of", matrix_email)
 
 
 def allow_tour_switch(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1249,6 +1267,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "markStudyDryRun": lambda _: Call(
         "PUT", "/api/tenant/study-sessions/matrix-session/dry-run", {"dry_run": True}
     ),
+    "prepareStudyParticipant": lambda _: Call("POST", "/api/tenant/study-participants/P-MX"),
+    "removeStudyParticipant": lambda _: Call("DELETE", "/api/tenant/study-participants/P-MX"),
     "setRetentionPolicy": lambda _: Call("PUT", "/api/tenant/retention", {}),
     "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
     "placeLegalHold": lambda _: Call("POST", "/api/tenant/legal-holds", {"reason": "Matrix hold"}),
@@ -3169,6 +3189,8 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
         answer_view_maps(api, monkeypatch)
     if operation in TOUR_OPERATIONS:
         allow_tour_switch(api, monkeypatch)
+    if operation in STUDY_SEED_OPERATIONS:
+        fake_study_seed(api, monkeypatch)
     permission = guarded_operations()[operation]
     workspace = workspaces[seat]
     status = send(api, principal_for(workspace, seat), GUARDED_CALLS[operation](workspace))

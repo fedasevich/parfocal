@@ -31,6 +31,7 @@ KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
 TOUR_SECRET = "parfocal-api-tour"
+SEED_SECRET = "parfocal-api-seed"
 SECRETS = (KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET)
 FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
     WEB_FUNCTION: (*SECRETS, TOUR_SECRET),
@@ -39,7 +40,7 @@ FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
     BACKFILL_FUNCTION: SECRETS,
     CROPS_BACKFILL_FUNCTION: SECRETS,
     LEVELS_BACKFILL_FUNCTION: SECRETS,
-    SEED_FUNCTION: SECRETS,
+    SEED_FUNCTION: (*SECRETS, SEED_SECRET),
 }
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
@@ -253,6 +254,7 @@ def serve() -> Any:
     from parfocal_api.event_emit import set_waker
     from parfocal_common.jobs import set_job_waker
     from parfocal_common.warm_gate import ModalPools, WarmGate
+    from parfocal_deploy.study_seeder import ModalStudySeeder
 
     set_waker(spawn_events())
     set_job_waker(spawn_ingest())
@@ -261,6 +263,7 @@ def serve() -> Any:
     pools = ModalPools()
     app.state.gpu_pools = pools
     app.state.warm_gate = WarmGate(pools)
+    app.state.study_seeder = ModalStudySeeder()
     app.router.lifespan_context = timed_lifespan(app.router.lifespan_context)
     logging.getLogger(STARTUP_LOGGER).info(
         "web app created",

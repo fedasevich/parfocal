@@ -42,6 +42,7 @@ from parfocal_deploy.modal_app import (
     SEED_FUNCTION,
     SEED_OPTIONS,
     SEED_ROOT,
+    SEED_SECRET,
     TOUR_SECRET,
     WEB_CONCURRENCY,
     WEB_ENDPOINT,
@@ -217,7 +218,12 @@ def test_secrets_are_attached_per_function_and_not_to_the_app(
 
     assert sorted(FUNCTION_SECRETS) == sorted(FUNCTIONS)
     assert FUNCTION_SECRETS[WEB_FUNCTION] == (*SECRETS, TOUR_SECRET)
-    assert all(FUNCTION_SECRETS[name] == SECRETS for name in FUNCTIONS if name != WEB_FUNCTION)
+    assert FUNCTION_SECRETS[SEED_FUNCTION] == (*SECRETS, SEED_SECRET)
+    assert all(
+        FUNCTION_SECRETS[name] == SECRETS
+        for name in FUNCTIONS
+        if name not in {WEB_FUNCTION, SEED_FUNCTION}
+    )
     monkeypatch.setattr(modal, "App", recording_app)
     try:
         importlib.reload(modal_app)

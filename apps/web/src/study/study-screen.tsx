@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { now } from "../clock.ts";
+import { PrepareParticipant } from "./prepare-participant.tsx";
 import { useStudyContext } from "./study-context.ts";
 import {
   checkMet,
@@ -266,6 +267,8 @@ export function StudyScreen() {
           <Trans>Open the participant page</Trans>
         </Link>
       </header>
+
+      <PrepareParticipant />
 
       <section className="grid gap-3" aria-label={t`Run a session`}>
         <h2 className="font-semibold text-fg">

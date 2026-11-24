@@ -14,28 +14,48 @@ import type { StudyContext } from "./study-model.ts";
 
 type SlideRow = StudyContext["slides"][number];
 
-export function useParticipantProject(
-  code: string | undefined,
-  slides: SlideRow[],
-): ParticipantProject | undefined {
-  const projects = okData(useListProjects().data) ?? [];
+export type ParticipantLookup =
+  | { state: "none" }
+  | { state: "loading" }
+  | { state: "missing" }
+  | { state: "found"; project: ParticipantProject };
+
+export function useParticipantLookup(code: string | undefined): ParticipantLookup {
+  const slideList = useListMySlides();
+  const projectList = useListProjects();
+  const projects = okData(projectList.data);
   const project =
     code === undefined
       ? undefined
-      : projects.find((row) => row.name === participantProjectName(code));
-  const tasks = okData(useListReviewTasks(project?.id ?? "").data) ?? [];
-  if (code === undefined || project === undefined) return undefined;
-  return participantProjectOf(code, {
+      : projects?.find((row) => row.name === participantProjectName(code));
+  const taskList = useListReviewTasks(project?.id ?? "", {
+    query: { enabled: project !== undefined },
+  });
+  if (code === undefined) return { state: "none" };
+  if (projects === undefined) return { state: projectList.isError ? "missing" : "loading" };
+  if (project === undefined) return { state: "missing" };
+  const tasks = okData(taskList.data);
+  const slides = okData(slideList.data)?.slides;
+  if (tasks === undefined || slides === undefined) {
+    return { state: taskList.isError || slideList.isError ? "missing" : "loading" };
+  }
+  const found = participantProjectOf(code, {
     projects: projects.map((row) => ({ id: row.id, name: row.name })),
     tasks: tasks.map((row) => ({ id: row.id, name: row.name, projectId: row.project_id })),
     slides,
   });
+  return found === undefined ? { state: "missing" } : { state: "found", project: found };
+}
+
+export function useParticipantProject(code: string | undefined): ParticipantProject | undefined {
+  const lookup = useParticipantLookup(code);
+  return lookup.state === "found" ? lookup.project : undefined;
 }
 
 export function useStudyContext(participantCode?: string): StudyContext {
-  const slides = okData(useListMySlides().data)?.slides ?? [];
+  const slides: SlideRow[] = okData(useListMySlides().data)?.slides ?? [];
   const resume = okData(useGetMyHome().data)?.resume ?? null;
-  const participant = useParticipantProject(participantCode, slides);
+  const participant = useParticipantProject(participantCode);
   return {
     slides,
     resume:

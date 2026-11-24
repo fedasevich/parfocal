@@ -1,4 +1,5 @@
 import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,7 +26,13 @@ from parfocal_deploy.deploy import (
     revisions,
 )
 from parfocal_deploy.environments import ENVIRONMENTS, UnknownEnvironmentError, environment
-from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET, TOUR_SECRET
+from parfocal_deploy.modal_app import (
+    CONFIG_SECRET,
+    KEYS_SECRET,
+    LOGIN_SECRET,
+    SEED_SECRET,
+    TOUR_SECRET,
+)
 from parfocal_deploy.smoke import ISOLATION_HEADERS, SmokeCheckError
 from parfocal_deploy.tools import REPOSITORY, MissingSettingsError, Read, Tools
 from parfocal_deploy.tour_switch import (
@@ -260,10 +267,15 @@ def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> Non
     )
     deploy(PRODUCTION, cloud.tools(), LOCAL, web_url=lambda _: "https://api.modal.example")
     lines = [" ".join(argv) for argv, _ in cloud.commands]
+    lines = [
+        re.sub(r"--from-json \S+", "--from-json SEED", line) if SEED_SECRET in line else line
+        for line in lines
+    ]
     assert [
         line.split(" ", 4)[-1] if line.startswith("uv run --package") else line for line in lines
     ] == [
         "alembic -c apps/api/alembic.ini upgrade head",
+        f"modal secret create {SEED_SECRET} --from-json SEED -e main --force",
         "modal deploy -e main -m parfocal_deploy.modal_app",
         "modal deploy -e main -m parfocal_ml.modal_pool",
         "pnpm --filter @parfocal/web build",
@@ -275,7 +287,8 @@ def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> Non
     assert "neondb_owner" in migration
     assert "-pooler" not in migration
     assert migration.endswith("/neondb?ssl=require")
-    assert cloud.commands[3][1] == {"PARFOCAL_PUBLIC_APP_ENV": "prod"}
+    assert cloud.commands[4][1] == {"PARFOCAL_PUBLIC_APP_ENV": "prod"}
+    assert cloud.modal_secrets[SEED_SECRET] == {"SEED_DATABASE_URL": migration}
     assert cloud.neon_writes == []
 
 
@@ -339,7 +352,7 @@ def test_deploy_runs_a_destructive_migration_the_owner_named(tmp_path: Path) -> 
         versions=versions(tmp_path),
     )
     assert "alembic" in cloud.commands[0][0]
-    assert len(cloud.commands) == 5
+    assert len(cloud.commands) == 6
 
 
 def test_a_rollback_ships_the_code_and_never_touches_the_database() -> None:
@@ -419,7 +432,7 @@ def test_deploy_keeps_a_tour_secret_that_is_switched_on() -> None:
     )
     deploy(PRODUCTION, cloud.tools(), LOCAL, web_url=lambda _: "https://api.modal.example")
     assert cloud.modal_secrets[TOUR_SECRET] == on
-    assert not any("create" in argv for argv, _ in cloud.commands)
+    assert not any("create" in argv and TOUR_SECRET in argv for argv, _ in cloud.commands)
 
 
 def test_the_tour_switch_writes_only_its_own_secret_on_a_development_target() -> None:

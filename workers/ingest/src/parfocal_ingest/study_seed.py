@@ -15,6 +15,7 @@ from parfocal_common.settings import AppEnv, StorageSettings
 PARTICIPANT_VARIABLE = "STUDY_PARTICIPANT"
 ACTION_VARIABLE = "STUDY_ACTION"
 SEAT_VARIABLE = "STUDY_SEAT_EMAIL"
+SEED_DATABASE_VARIABLE = "SEED_DATABASE_URL"
 SEED = "seed"
 REMOVE = "remove"
 ACTIONS = (SEED, REMOVE)
@@ -22,7 +23,7 @@ ACTIONS = (SEED, REMOVE)
 
 async def run(environ: Mapping[str, str], action: str, code: str, seat: str | None) -> None:
     started = time.monotonic()
-    database_url = environ["DATABASE_URL"]
+    database_url = environ.get(SEED_DATABASE_VARIABLE) or environ["DATABASE_URL"]
     if action == REMOVE:
         removed = await remove_participant(database_url, code)
         print(f"study: removed {removed} project of {code} in {time.monotonic() - started:.1f} s")

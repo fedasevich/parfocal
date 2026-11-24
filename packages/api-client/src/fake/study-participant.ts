@@ -27,20 +27,58 @@ const slideLabels: [string, string][] = [
   ["Study annotate", annotateSlideId],
 ];
 
-export function fakeParticipantActive(): boolean {
+const preparedKey = "parfocal.fake.study-prepared";
+export const fakeStudyProjectId = studyProjectId;
+export const fakeStudyWorkspaceName = "ČVUT · Usability study";
+
+function preparedCodes(): string[] {
   try {
-    const raw = globalThis.sessionStorage?.getItem(runKey);
-    if (raw == null) return false;
-    return (JSON.parse(raw) as { code?: unknown }).code === fakeParticipantCode;
+    const raw = globalThis.localStorage?.getItem(preparedKey);
+    return raw == null ? [] : (JSON.parse(raw) as string[]);
   } catch {
-    return false;
+    return [];
   }
 }
 
-export const withParticipantProjectName = (project: Project): Project =>
-  fakeParticipantActive() && project.id === studyProjectId
-    ? { ...project, name: `Study ${fakeParticipantCode}` }
+function writePrepared(codes: string[]): void {
+  globalThis.localStorage?.setItem(preparedKey, JSON.stringify(codes));
+}
+
+export function prepareFakeParticipant(code: string): void {
+  const upper = code.toUpperCase();
+  writePrepared([...preparedCodes().filter((known) => known !== upper), upper]);
+}
+
+export function removeFakeParticipant(code: string): number {
+  const upper = code.toUpperCase();
+  const known = preparedCodes();
+  writePrepared(known.filter((entry) => entry !== upper));
+  return known.includes(upper) ? 1 : 0;
+}
+
+function activeCode(): string | undefined {
+  try {
+    const raw = globalThis.sessionStorage?.getItem(runKey);
+    if (raw == null) return undefined;
+    const code = (JSON.parse(raw) as { code?: unknown }).code;
+    if (typeof code !== "string") return undefined;
+    const upper = code.toUpperCase();
+    return upper === fakeParticipantCode || preparedCodes().includes(upper) ? upper : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function fakeParticipantActive(): boolean {
+  return activeCode() !== undefined;
+}
+
+export const withParticipantProjectName = (project: Project): Project => {
+  const code = activeCode();
+  return code !== undefined && project.id === studyProjectId
+    ? { ...project, name: `Study ${code}` }
     : project;
+};
 
 export function withParticipantTasks(projectId: string, tasks: ReviewTask[]): ReviewTask[] {
   if (!fakeParticipantActive() || projectId !== studyProjectId) return tasks;
