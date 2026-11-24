@@ -6,7 +6,7 @@ import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useId, useState } from "react";
 import { freshRun, type ParticipantRun, useParticipantRun, writeRun } from "./participant-run.ts";
 import { RatingScale } from "./rating-scale.tsx";
-import { useStudyContext } from "./study-context.ts";
+import { useParticipantLookup, useStudyContext } from "./study-context.ts";
 import {
   finalQuestions,
   readDelayMs,
@@ -178,6 +178,7 @@ function Consent({ run, taskCount }: { run: ParticipantRun; taskCount: number })
 
 function TaskIntro({ run, task, total }: { run: ParticipantRun; task: StudyTask; total: number }) {
   const context = useStudyContext(run.code);
+  const lookup = useParticipantLookup(run.code);
   const router = useRouter();
   const [readyAt] = useState(() => Date.now() + readDelayMs);
   const [left, setLeft] = useState(() => Math.ceil(readDelayMs / 1000));
@@ -232,6 +233,15 @@ function TaskIntro({ run, task, total }: { run: ParticipantRun; task: StudyTask;
       <p className="text-body-sm text-fg-dim">
         <Trans>The goal stays at the bottom of the screen while you work.</Trans>
       </p>
+      {startPath === undefined && lookup.state === "missing" ? (
+        <p role="status" className="text-body-sm text-danger" data-testid="study-start-blocked">
+          <Trans>
+            Start task is off because no project is prepared for the code{" "}
+            <span className="font-mono">{run.code}</span>. Ask the moderator to prepare the
+            participant in the study console.
+          </Trans>
+        </p>
+      ) : null}
       <Actions>
         <Button
           variant="primary"

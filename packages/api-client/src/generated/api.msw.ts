@@ -150,6 +150,7 @@ import type {
   PointGeometry,
   PolygonGeometry,
   Preference,
+  PreparedStudyParticipant,
   Project,
   ProjectAccess,
   ProjectAccessRequest,
@@ -168,6 +169,7 @@ import type {
   Reassignment,
   RegionMetrics,
   RegistryEntry,
+  RemovedStudyParticipant,
   ReportLink,
   ReportPreview,
   Resolved,
@@ -18597,6 +18599,24 @@ export const getMarkStudyDryRunResponseMock = (
   overrideResponse: Partial<Extract<StudyDryRun, object>> = {},
 ): StudyDryRun => ({ dry_run: faker.datatype.boolean(), ...overrideResponse });
 
+export const getPrepareStudyParticipantResponseMock = (
+  overrideResponse: Partial<Extract<PreparedStudyParticipant, object>> = {},
+): PreparedStudyParticipant => ({
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  project_id: faker.string.uuid(),
+  workspace_id: faker.string.uuid(),
+  workspace_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getRemoveStudyParticipantResponseMock = (
+  overrideResponse: Partial<Extract<RemovedStudyParticipant, object>> = {},
+): RemovedStudyParticipant => ({
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  removed: faker.number.int(),
+  ...overrideResponse,
+});
+
 export const getListTemplateOffersResponseHeadlineNumbersMock = (
   overrideResponse: Partial<HeadlineNumbers> = {},
 ): HeadlineNumbers => ({
@@ -29696,6 +29716,54 @@ export const getMarkStudyDryRunMockHandler = (
   );
 };
 
+export const getPrepareStudyParticipantMockHandler = (
+  overrideResponse?:
+    | PreparedStudyParticipant
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PreparedStudyParticipant> | PreparedStudyParticipant),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/study-participants/:code",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPrepareStudyParticipantResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRemoveStudyParticipantMockHandler = (
+  overrideResponse?:
+    | RemovedStudyParticipant
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<RemovedStudyParticipant> | RemovedStudyParticipant),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/study-participants/:code",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRemoveStudyParticipantResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTemplateOffersMockHandler = (
   overrideResponse?:
     | TemplateOffer[]
@@ -31891,6 +31959,8 @@ export const getParfocalAPIMock = () => [
   getListStudySessionsMockHandler(),
   getGetStudyTraceMockHandler(),
   getMarkStudyDryRunMockHandler(),
+  getPrepareStudyParticipantMockHandler(),
+  getRemoveStudyParticipantMockHandler(),
   getListTemplateOffersMockHandler(),
   getOfferStudyTemplateMockHandler(),
   getAcceptTemplateOfferMockHandler(),

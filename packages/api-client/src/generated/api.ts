@@ -5983,6 +5983,13 @@ export interface PreferenceChanges {
   preferences: PreferenceChange[];
 }
 
+export interface PreparedStudyParticipant {
+  code: string;
+  project_id: string;
+  workspace_id: string;
+  workspace_name: string;
+}
+
 /**
  * @minLength 1
  * @maxLength 40
@@ -6549,6 +6556,11 @@ export interface RegistryEntry {
  * @items.maximum 60
  */
 export type Reminders = number[];
+
+export interface RemovedStudyParticipant {
+  code: string;
+  removed: number;
+}
 
 export interface ReportLink {
   id: string;
@@ -77857,6 +77869,306 @@ export const useMarkStudyDryRun = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getMarkStudyDryRunMutationOptions(options), queryClient);
+};
+
+export type prepareStudyParticipantResponse200 = {
+  data: PreparedStudyParticipant;
+  status: 200;
+};
+
+export type prepareStudyParticipantResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type prepareStudyParticipantResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type prepareStudyParticipantResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type prepareStudyParticipantResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type prepareStudyParticipantResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type prepareStudyParticipantResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type prepareStudyParticipantResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type prepareStudyParticipantResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type prepareStudyParticipantResponseSuccess = prepareStudyParticipantResponse200 & {
+  headers: Headers;
+};
+export type prepareStudyParticipantResponseError = (
+  | prepareStudyParticipantResponse400
+  | prepareStudyParticipantResponse401
+  | prepareStudyParticipantResponse403
+  | prepareStudyParticipantResponse404
+  | prepareStudyParticipantResponse409
+  | prepareStudyParticipantResponse422
+  | prepareStudyParticipantResponse429
+  | prepareStudyParticipantResponse500
+) & {
+  headers: Headers;
+};
+
+export type prepareStudyParticipantResponse =
+  | prepareStudyParticipantResponseSuccess
+  | prepareStudyParticipantResponseError;
+
+export const getPrepareStudyParticipantUrl = (code: string) => {
+  return `/api/tenant/study-participants/${code}`;
+};
+
+/**
+ * @summary Prepare Study Participant
+ */
+export const prepareStudyParticipant = async (
+  code: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<prepareStudyParticipantResponse> => {
+  return apiFetch<prepareStudyParticipantResponse>(getPrepareStudyParticipantUrl(code), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getPrepareStudyParticipantMutationKey = () => ["prepareStudyParticipant"] as const;
+
+export const getPrepareStudyParticipantMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof prepareStudyParticipant>>,
+    TError,
+    PrepareStudyParticipantMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof prepareStudyParticipant>>,
+  TError,
+  PrepareStudyParticipantMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPrepareStudyParticipantMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof prepareStudyParticipant>>,
+    PrepareStudyParticipantMutationVariables
+  > = (props) => {
+    const { code } = props ?? {};
+
+    return prepareStudyParticipant(code, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PrepareStudyParticipantMutationResult = NonNullable<
+  Awaited<ReturnType<typeof prepareStudyParticipant>>
+>;
+
+export type PrepareStudyParticipantMutationError = Problem;
+export type PrepareStudyParticipantMutationVariables = { code: string };
+
+/**
+ * @summary Prepare Study Participant
+ */
+export const usePrepareStudyParticipant = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof prepareStudyParticipant>>,
+      TError,
+      PrepareStudyParticipantMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof prepareStudyParticipant>>,
+  TError,
+  PrepareStudyParticipantMutationVariables,
+  TContext
+> => {
+  return useMutation(getPrepareStudyParticipantMutationOptions(options), queryClient);
+};
+
+export type removeStudyParticipantResponse200 = {
+  data: RemovedStudyParticipant;
+  status: 200;
+};
+
+export type removeStudyParticipantResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type removeStudyParticipantResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type removeStudyParticipantResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type removeStudyParticipantResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type removeStudyParticipantResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type removeStudyParticipantResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type removeStudyParticipantResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type removeStudyParticipantResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type removeStudyParticipantResponseSuccess = removeStudyParticipantResponse200 & {
+  headers: Headers;
+};
+export type removeStudyParticipantResponseError = (
+  | removeStudyParticipantResponse400
+  | removeStudyParticipantResponse401
+  | removeStudyParticipantResponse403
+  | removeStudyParticipantResponse404
+  | removeStudyParticipantResponse409
+  | removeStudyParticipantResponse422
+  | removeStudyParticipantResponse429
+  | removeStudyParticipantResponse500
+) & {
+  headers: Headers;
+};
+
+export type removeStudyParticipantResponse =
+  | removeStudyParticipantResponseSuccess
+  | removeStudyParticipantResponseError;
+
+export const getRemoveStudyParticipantUrl = (code: string) => {
+  return `/api/tenant/study-participants/${code}`;
+};
+
+/**
+ * @summary Remove Study Participant
+ */
+export const removeStudyParticipant = async (
+  code: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<removeStudyParticipantResponse> => {
+  return apiFetch<removeStudyParticipantResponse>(getRemoveStudyParticipantUrl(code), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemoveStudyParticipantMutationKey = () => ["removeStudyParticipant"] as const;
+
+export const getRemoveStudyParticipantMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeStudyParticipant>>,
+    TError,
+    RemoveStudyParticipantMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeStudyParticipant>>,
+  TError,
+  RemoveStudyParticipantMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveStudyParticipantMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeStudyParticipant>>,
+    RemoveStudyParticipantMutationVariables
+  > = (props) => {
+    const { code } = props ?? {};
+
+    return removeStudyParticipant(code, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveStudyParticipantMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeStudyParticipant>>
+>;
+
+export type RemoveStudyParticipantMutationError = Problem;
+export type RemoveStudyParticipantMutationVariables = { code: string };
+
+/**
+ * @summary Remove Study Participant
+ */
+export const useRemoveStudyParticipant = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeStudyParticipant>>,
+      TError,
+      RemoveStudyParticipantMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeStudyParticipant>>,
+  TError,
+  RemoveStudyParticipantMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveStudyParticipantMutationOptions(options), queryClient);
 };
 
 export type listTemplateOffersResponse200 = {

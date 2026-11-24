@@ -808,6 +808,11 @@ msgstr "{0} GB"
 msgid "{0} gets it in My work."
 msgstr "{0} gets it in My work."
 
+#. placeholder {0}: outcome.code
+#: src/study/prepare-participant.tsx
+msgid "{0} had no project to remove."
+msgstr "{0} had no project to remove."
+
 #. placeholder {0}: nameOf(row.user_id)
 #. placeholder {1}: plural(row.slides_left, "slide")
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -5748,6 +5753,10 @@ msgstr "Coasting"
 #: ../../packages/ui/src/components/connect-model.tsx
 msgid "Code example"
 msgstr "Code example"
+
+#: src/study/prepare-participant.tsx
+msgid "Code to prepare"
+msgstr "Code to prepare"
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "Cohen kappa"
@@ -12311,6 +12320,10 @@ msgstr "One unsure"
 msgid "Only {0} can co-sign this report."
 msgstr "Only {0} can co-sign this report."
 
+#: src/study/prepare-participant.tsx
+msgid "Only a workspace admin can prepare or remove a participant."
+msgstr "Only a workspace admin can prepare or remove a participant."
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "Only an annotate task counts how the experts changed the AI."
 msgstr "Only an annotate task counts how the experts changed the AI."
@@ -12856,6 +12869,10 @@ msgstr "Owners can switch a project later. Clinical projects log every slide ope
 #: src/screens/admin/sections.tsx
 msgid "Owners can switch a project later. Clinical projects need a security contact."
 msgstr "Owners can switch a project later. Clinical projects need a security contact."
+
+#: src/study/prepare-participant.tsx
+msgid "P-ABCD"
+msgstr "P-ABCD"
 
 #: src/study/study-screen.tsx
 msgid "P1"
@@ -13551,6 +13568,14 @@ msgstr "Preferences"
 msgid "Prefetch ahead of motion"
 msgstr "Prefetch ahead of motion"
 
+#: src/study/prepare-participant.tsx
+msgid "Prepare the participant"
+msgstr "Prepare the participant"
+
+#: src/study/prepare-participant.tsx
+msgid "Preparing {typed}. This takes up to a minute."
+msgstr "Preparing {typed}. This takes up to a minute."
+
 #: src/screens/review/review-order-state.tsx
 msgid "Preparing this slide"
 msgstr "Preparing this slide"
@@ -14180,6 +14205,14 @@ msgstr "Remove the 4 largest slides from this upload"
 #: src/screens/settings/settings-screen.tsx
 msgid "Remove the passkey {0}"
 msgstr "Remove the passkey {0}"
+
+#: src/study/prepare-participant.tsx
+msgid "Remove the project"
+msgstr "Remove the project"
+
+#: src/study/prepare-participant.tsx
+msgid "Removing the project of {typed}."
+msgstr "Removing the project of {typed}."
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Rename"
@@ -16907,6 +16940,11 @@ msgstr "Start task"
 msgid "Start task ({left})"
 msgstr "Start task ({left})"
 
+#. placeholder {0}: run.code
+#: src/study/participant-screen.tsx
+msgid "Start task is off because no project is prepared for the code <0>{0}</0>. Ask the moderator to prepare the participant in the study console."
+msgstr "Start task is off because no project is prepared for the code <0>{0}</0>. Ask the moderator to prepare the participant in the study console."
+
 #: src/annotations/smart-layer.tsx
 msgid "Start the model"
 msgstr "Start the model"
@@ -17114,6 +17152,12 @@ msgstr "Strongly disagree"
 msgid "Study"
 msgstr "Study"
 
+#. placeholder {0}: outcome.prepared.code
+#. placeholder {1}: outcome.prepared.workspace_name
+#: src/study/prepare-participant.tsx
+msgid "Study {0} is ready in {1}."
+msgstr "Study {0} is ready in {1}."
+
 #: src/shell/page-title-names.ts
 msgid "Study console"
 msgstr "Study console"
@@ -17243,6 +17287,11 @@ msgstr "Swipe line between the two sets"
 #: src/app-tour/tour-steps.ts
 msgid "Switch from Guided to Review to scan the whole slide. Both ways save to the same review."
 msgstr "Switch from Guided to Review to scan the whole slide. Both ways save to the same review."
+
+#. placeholder {0}: prepared.workspace_name
+#: src/study/prepare-participant.tsx
+msgid "Switch to {0}"
+msgstr "Switch to {0}"
 
 #: src/app-tour/tour-host.tsx
 msgid "Switch to the {who}"
@@ -17521,6 +17570,10 @@ msgstr "That did not work, and nothing was changed. Reload the page and try agai
 #: src/results/painted-map-layer.tsx
 msgid "That did not work, try again"
 msgstr "That did not work, try again"
+
+#: src/study/prepare-participant.tsx
+msgid "That did not work. Try again in a moment."
+msgstr "That did not work. Try again in a moment."
 
 #: src/screens/admin/people.tsx
 #: src/screens/admin/template-offers.tsx
@@ -18032,6 +18085,11 @@ msgstr "the Parfocal sample tile"
 msgid "The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses your connection and closing the tab stops nothing."
 msgstr "The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses your connection and closing the tab stops nothing."
 
+#. placeholder {0}: prepared.workspace_name
+#: src/study/prepare-participant.tsx
+msgid "The participant page only finds it in {0}."
+msgstr "The participant page only finds it in {0}."
+
 #: src/viewer/patch-export-dialog.tsx
 msgid "The patches are ready"
 msgstr "The patches are ready"
@@ -18068,6 +18126,11 @@ msgstr "The preset Annotate by hand has no result set, so there is nothing to ch
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "The preset was not saved. Try again."
 msgstr "The preset was not saved. Try again."
+
+#. placeholder {0}: outcome.code
+#: src/study/prepare-participant.tsx
+msgid "The project of {0} is removed."
+msgstr "The project of {0} is removed."
 
 #: ../../packages/ui/src/components/new-forms.tsx
 msgid "The project owner can switch to clinical in project settings."
@@ -19345,6 +19408,10 @@ msgstr "Type at least two letters to search."
 #: src/screens/review/type-bar.tsx
 msgid "Type for {object}"
 msgstr "Type for {object}"
+
+#: src/study/prepare-participant.tsx
+msgid "Type or accept the code the participant page shows. Preparing seeds a fresh project for that code, with you as its seat, and replaces an earlier one."
+msgstr "Type or accept the code the participant page shows. Preparing seeds a fresh project for that code, with you as its seat, and replaces an earlier one."
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Typer"

@@ -62,7 +62,71 @@ def render(report: dict[str, Any], code: str, seed_seconds: str) -> str:
     )
 
 
+def participant_of(report: dict[str, Any]) -> str:
+    pending = list(report.get("suites", []))
+    while pending:
+        suite = pending.pop(0)
+        pending.extend(suite.get("suites", []))
+        for spec in suite.get("specs", []):
+            for test in spec.get("tests", []):
+                notes = [
+                    *test.get("annotations", []),
+                    *(
+                        note
+                        for result in test.get("results", [])
+                        for note in result.get("annotations", [])
+                    ),
+                ]
+                for note in notes:
+                    if note.get("type") == "participant":
+                        return str(note.get("description", ""))
+    return "not reached"
+
+
+def render_prepared(report: dict[str, Any]) -> str:
+    code = participant_of(report)
+    steps = steps_of(report)
+    rows = [
+        f"| {step['title']} | {outcome_of(step)} | {round(step.get('duration', 0) / 1000)} s |"
+        for step in steps
+    ]
+    reached = sum(1 for step in steps if step.get("error") is None)
+    today = datetime.now(UTC).date().isoformat()
+    return "\n".join(
+        [
+            f"# Result: a deployed dry run from Prepare to the thank you page reached "
+            f"{reached} of {len(steps)} steps",
+            "",
+            f"- Date: {today}",
+            "- Backlog: EXP-018 (the moderator prepares a participant project from the console)",
+            "- Kind: deployed dry run",
+            "- Environment: app.parfocal.eu, the deployed development app",
+            f"- Data: one participant project, code {code}, fictional names only, no PHI",
+            "",
+            "## Method",
+            "",
+            "`scripts/study-prepare-dry-run.sh` ran `apps/web/smoke/study-prepare.spec.ts`, which "
+            "signed in as the smoke account, read the code the participant page made, pressed "
+            "Prepare the participant in the study console, switched to the study workspace when "
+            "the console offered it, walked `/study` through every round 5 task answering each "
+            "SEQ with 5, answered the last questions and reached the thank you page. It then "
+            "removed the project from the console.",
+            "",
+            "## Results",
+            "",
+            "| Step | Outcome | Time |",
+            "| --- | --- | --- |",
+            *rows,
+            "",
+        ]
+    )
+
+
 def main() -> None:
+    if sys.argv[1] == "--prepared":
+        report = json.loads(Path(sys.argv[2]).read_text())
+        sys.stdout.write(render_prepared(report))
+        return
     report_path, code, seed_seconds = sys.argv[1], sys.argv[2], sys.argv[3]
     report = json.loads(Path(report_path).read_text())
     sys.stdout.write(render(report, code, seed_seconds))

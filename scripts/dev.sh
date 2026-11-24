@@ -71,6 +71,7 @@ export APP_ENV=dev
 export PARFOCAL_PUBLIC_APP_ENV=dev
 export DATABASE_URL="postgresql://parfocal_app@localhost:$PARFOCAL_POOLER_PORT/parfocal"
 export MIGRATION_DATABASE_URL="postgresql://parfocal@localhost:$PARFOCAL_PG_PORT/parfocal"
+export SEED_DATABASE_URL="$MIGRATION_DATABASE_URL"
 export STORAGE_ENDPOINT="http://127.0.0.1:$PARFOCAL_STORAGE_PORT"
 export PUBLIC_ORIGIN="http://localhost:$PARFOCAL_WEB_PORT"
 export EMAIL_BACKEND="${EMAIL_BACKEND:-file}"

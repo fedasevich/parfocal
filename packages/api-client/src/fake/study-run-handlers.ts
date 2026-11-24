@@ -3,6 +3,8 @@ import {
   getGetStudyTraceMockHandler,
   getListStudySessionsMockHandler,
   getMarkStudyDryRunMockHandler,
+  getPrepareStudyParticipantMockHandler,
+  getRemoveStudyParticipantMockHandler,
   getSaveStudySessionMockHandler,
   getSaveStudyTracePartMockHandler,
 } from "../generated/api.msw.ts";
@@ -13,6 +15,14 @@ import type {
   StudyTracePart,
   StudyTraceUpload,
 } from "../generated/api.ts";
+import { tenant } from "./scenario-admin.ts";
+import {
+  fakeStudyProjectId,
+  fakeStudyWorkspaceName,
+  prepareFakeParticipant,
+  removeFakeParticipant,
+} from "./study-participant.ts";
+import { activeFakeWorkspace } from "./workspace-scene.ts";
 
 export const fakeStudyRunsKey = "parfocal.fake.study-runs";
 
@@ -51,8 +61,24 @@ async function gunzipJson(encoded: string): Promise<unknown> {
 
 const keyOf = (params: Record<string, unknown>): string => String(params.sessionKey);
 
+const codeOf = (params: Record<string, unknown>): string => String(params.code).toUpperCase();
+
 export function studyRunHandlers(): RequestHandler[] {
   return [
+    getPrepareStudyParticipantMockHandler(({ params }) => {
+      const code = codeOf(params);
+      prepareFakeParticipant(code);
+      return {
+        code,
+        project_id: fakeStudyProjectId,
+        workspace_id: activeFakeWorkspace() ?? tenant.id,
+        workspace_name: fakeStudyWorkspaceName,
+      };
+    }),
+    getRemoveStudyParticipantMockHandler(({ params }) => {
+      const code = codeOf(params);
+      return { code, removed: removeFakeParticipant(code) };
+    }),
     getSaveStudySessionMockHandler(async ({ request, params }) => {
       const upload = (await request.json()) as StudySessionUpload;
       const sessionKey = keyOf(params);

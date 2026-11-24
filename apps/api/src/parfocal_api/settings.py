@@ -34,6 +34,7 @@ def whole_mib(value: int) -> int:
 
 class ApiSettings(StorageSettings):
     database_url: PostgresDsn
+    seed_database_url: PostgresDsn | None = None
     public_origin: AnyHttpUrl
     session_key: SecretStr
     master_keys: SecretStr
@@ -64,6 +65,8 @@ class ApiSettings(StorageSettings):
     def services_over_tls(self) -> ApiSettings:
         if self.encrypted_transport():
             require_tls_database("DATABASE_URL", self.database_url)
+            if self.seed_database_url is not None:
+                require_tls_database("SEED_DATABASE_URL", self.seed_database_url)
             require_https("PUBLIC_ORIGIN", self.public_origin)
             require_https("ZITADEL_ISSUER", self.zitadel_issuer)
             require_https("REALTIME_INTERNAL_URL", self.realtime_internal_url)

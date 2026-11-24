@@ -806,6 +806,11 @@ msgstr ""
 msgid "{0} gets it in My work."
 msgstr ""
 
+#. placeholder {0}: outcome.code
+#: src/study/prepare-participant.tsx
+msgid "{0} had no project to remove."
+msgstr ""
+
 #. placeholder {0}: nameOf(row.user_id)
 #. placeholder {1}: plural(row.slides_left, "slide")
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -5745,6 +5750,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/connect-model.tsx
 msgid "Code example"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "Code to prepare"
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
@@ -12306,6 +12315,10 @@ msgstr ""
 msgid "Only {0} can co-sign this report."
 msgstr ""
 
+#: src/study/prepare-participant.tsx
+msgid "Only a workspace admin can prepare or remove a participant."
+msgstr ""
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "Only an annotate task counts how the experts changed the AI."
 msgstr ""
@@ -12850,6 +12863,10 @@ msgstr ""
 
 #: src/screens/admin/sections.tsx
 msgid "Owners can switch a project later. Clinical projects need a security contact."
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "P-ABCD"
 msgstr ""
 
 #: src/study/study-screen.tsx
@@ -13542,6 +13559,14 @@ msgstr ""
 msgid "Prefetch ahead of motion"
 msgstr ""
 
+#: src/study/prepare-participant.tsx
+msgid "Prepare the participant"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "Preparing {typed}. This takes up to a minute."
+msgstr ""
+
 #: src/screens/review/review-order-state.tsx
 msgid "Preparing this slide"
 msgstr ""
@@ -14170,6 +14195,14 @@ msgstr ""
 #. placeholder {0}: item.name
 #: src/screens/settings/settings-screen.tsx
 msgid "Remove the passkey {0}"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "Remove the project"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "Removing the project of {typed}."
 msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
@@ -16898,6 +16931,11 @@ msgstr ""
 msgid "Start task ({left})"
 msgstr ""
 
+#. placeholder {0}: run.code
+#: src/study/participant-screen.tsx
+msgid "Start task is off because no project is prepared for the code <0>{0}</0>. Ask the moderator to prepare the participant in the study console."
+msgstr ""
+
 #: src/annotations/smart-layer.tsx
 msgid "Start the model"
 msgstr ""
@@ -17105,6 +17143,12 @@ msgstr ""
 msgid "Study"
 msgstr ""
 
+#. placeholder {0}: outcome.prepared.code
+#. placeholder {1}: outcome.prepared.workspace_name
+#: src/study/prepare-participant.tsx
+msgid "Study {0} is ready in {1}."
+msgstr ""
+
 #: src/shell/page-title-names.ts
 msgid "Study console"
 msgstr ""
@@ -17233,6 +17277,11 @@ msgstr ""
 
 #: src/app-tour/tour-steps.ts
 msgid "Switch from Guided to Review to scan the whole slide. Both ways save to the same review."
+msgstr ""
+
+#. placeholder {0}: prepared.workspace_name
+#: src/study/prepare-participant.tsx
+msgid "Switch to {0}"
 msgstr ""
 
 #: src/app-tour/tour-host.tsx
@@ -17511,6 +17560,10 @@ msgstr ""
 
 #: src/results/painted-map-layer.tsx
 msgid "That did not work, try again"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "That did not work. Try again in a moment."
 msgstr ""
 
 #: src/screens/admin/people.tsx
@@ -18023,6 +18076,11 @@ msgstr ""
 msgid "The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses your connection and closing the tab stops nothing."
 msgstr ""
 
+#. placeholder {0}: prepared.workspace_name
+#: src/study/prepare-participant.tsx
+msgid "The participant page only finds it in {0}."
+msgstr ""
+
 #: src/viewer/patch-export-dialog.tsx
 msgid "The patches are ready"
 msgstr ""
@@ -18058,6 +18116,11 @@ msgstr ""
 
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "The preset was not saved. Try again."
+msgstr ""
+
+#. placeholder {0}: outcome.code
+#: src/study/prepare-participant.tsx
+msgid "The project of {0} is removed."
 msgstr ""
 
 #: ../../packages/ui/src/components/new-forms.tsx
@@ -19335,6 +19398,10 @@ msgstr ""
 
 #: src/screens/review/type-bar.tsx
 msgid "Type for {object}"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "Type or accept the code the participant page shows. Preparing seeds a fresh project for that code, with you as its seat, and replaces an earlier one."
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
