@@ -2,6 +2,20 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.50.0 (2026-11-24)
+
+### Features
+
+- EXP-018: Prepare a study participant from the console through the seed function
+- EXP-018: Skip non JSON seed lines and let the dry run pass a refused remove
+
+### Docs
+
+- EXP-018: Name the removal of the seed secret before production
+- EXP-018: Log the merge, move to review and ask about removal
+- PILOT-013: Record the v0.49.0 deployed checks and tick
+- PROTO-167: Record the deployed check and tick
+
 ## v0.49.0 (2026-11-24)
 
 ### Features
