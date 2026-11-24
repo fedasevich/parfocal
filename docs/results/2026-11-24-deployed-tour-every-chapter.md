@@ -15,20 +15,20 @@ Every chapter reached its end, every seeded name resolved exactly and every step
 | 2 Review as reviewer A | 6 | Reviewer A Role |
 | 3 Projects and their settings | 6 | Researcher Role, Viewer |
 | 4 The viewer and its tabs | 9 | Researcher Role, Viewer |
-| 5 Annotate as an expert | 6 | role accounts as the chapter names them |
+| 5 Annotate as an expert | 6 | Annotator, Viewer |
 | 6 Create a review task | 8 | Researcher Role |
-| 7 Review as reviewer B and as a viewer | 6 | Reviewer B, Viewer |
-| 8 The queue and adjudication | 8 | role accounts as the chapter names them |
-| 9 Sign off, evaluation and dataset | 7 | role accounts as the chapter names them |
-| 10 Cases and reports | 7 | role accounts as the chapter names them |
-| 11 Jobs and model runs | 5 | role accounts as the chapter names them |
-| 12 Search | 6 | role accounts as the chapter names them |
-| 13 Notifications and comments | 7 | role accounts as the chapter names them |
-| 14 Team and settings | 8 | role accounts as the chapter names them |
+| 7 Review as reviewer B and as a viewer | 6 | Reviewer B, Reviewer A Role, Viewer, Agent Tester |
+| 8 The queue and adjudication | 8 | Researcher Role, Adjudicator, Reviewer A Role |
+| 9 Sign off, evaluation and dataset | 7 | Researcher Role, Agent Tester |
+| 10 Cases and reports | 7 | Agent Tester, Researcher Role |
+| 11 Jobs and model runs | 5 | Researcher Role, Agent Tester |
+| 12 Search | 6 | Researcher Role, Viewer |
+| 13 Notifications and comments | 7 | Adjudicator, Agent Tester, Reviewer A Role, Researcher Role, Reviewer B |
+| 14 Team and settings | 8 | Researcher Role, Reviewer A Role |
 | 15 Admin | 11 | Agent Tester (the starting admin), Researcher Role and Reviewer B on the refused page |
 | 16 The participant study | 4 | Agent Tester |
 
-Across the run the chips named Agent Tester 14 times, Researcher Role 47, Reviewer A Role 16, Reviewer B 3 and Viewer 5 in chapters 1 to 14. Two steps of chapter 16 rang a fallback anchor (the study screen instead of the task card), which the script allows. Eight admin steps ring the page's main area rather than one control.
+Seven accounts appear: Agent Tester (the admin who started the tour) and the six role accounts. Two steps of chapter 16 rang a fallback anchor (the study screen instead of the task card), which the script allows. Eight admin steps ring the page's main area rather than one control.
 
 ## What went wrong first
 
