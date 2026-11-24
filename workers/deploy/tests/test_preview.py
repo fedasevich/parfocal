@@ -9,7 +9,7 @@ import pytest
 from smoke_site import secured_page_headers
 
 from parfocal_deploy import neon, preview
-from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET
+from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET, TOUR_SECRET
 from parfocal_deploy.preview import (
     BadNumberError,
     PreviewLimitError,
@@ -235,7 +235,7 @@ def test_a_new_preview_gets_a_branch_environment_secrets_deploy_and_seed() -> No
         "expires_at": "2026-11-23T12:00:00Z",
     }
     assert "pr-7" in cloud.environments
-    assert set(cloud.secrets["pr-7"]) == {KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET}
+    assert set(cloud.secrets["pr-7"]) == {KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET, TOUR_SECRET}
     config = cloud.secrets["pr-7"][CONFIG_SECRET]
     assert config["APP_ENV"] == "preview"
     assert config["STORAGE_BUCKET"] == "parfocal-dev-eu"

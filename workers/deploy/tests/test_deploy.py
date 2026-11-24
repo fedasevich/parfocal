@@ -25,9 +25,14 @@ from parfocal_deploy.deploy import (
     revisions,
 )
 from parfocal_deploy.environments import ENVIRONMENTS, UnknownEnvironmentError, environment
-from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET
+from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET, TOUR_SECRET
 from parfocal_deploy.smoke import ISOLATION_HEADERS, SmokeCheckError
 from parfocal_deploy.tools import REPOSITORY, MissingSettingsError, Read, Tools
+from parfocal_deploy.tour_switch import (
+    TOUR_ROLE_SWITCH,
+    TourSwitchOutsideDevelopmentError,
+    set_tour_switch,
+)
 
 PRODUCTION = environment("production")
 OWNER_HOST = "ep-quiet.us-east-1.aws.neon.tech"
@@ -250,7 +255,9 @@ def test_deploy_refuses_an_environment_without_the_login_secret() -> None:
 
 
 def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> None:
-    cloud = Cloud(modal_secrets={KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}})
+    cloud = Cloud(
+        modal_secrets={KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}, TOUR_SECRET: {}}
+    )
     deploy(PRODUCTION, cloud.tools(), LOCAL, web_url=lambda _: "https://api.modal.example")
     lines = [" ".join(argv) for argv, _ in cloud.commands]
     assert [
@@ -293,7 +300,7 @@ def test_deploy_fails_when_health_or_the_isolation_headers_are_wrong() -> None:
         )
 
 
-READY = {KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}}
+READY = {KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}, TOUR_SECRET: {}}
 DROP = """revision: str = "0002"
 down_revision: str | None = "0001"
 
@@ -397,3 +404,38 @@ def test_the_workflow_deploys_main_only_behind_the_repository_variable() -> None
     assert "ONLY_HEAD_OF: ${{ github.event_name == 'workflow_run' && 'main' || '' }}" in job
     reset = (REPOSITORY / ".github/workflows/reset-production.yml").read_text()
     assert "group: deploy-production" in reset
+
+
+def test_deploy_adds_the_tour_secret_switched_off_when_it_is_missing() -> None:
+    cloud = Cloud(modal_secrets={KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}})
+    deploy(PRODUCTION, cloud.tools(), LOCAL, web_url=lambda _: "https://api.modal.example")
+    assert cloud.modal_secrets[TOUR_SECRET] == {TOUR_ROLE_SWITCH: "false"}
+
+
+def test_deploy_keeps_a_tour_secret_that_is_switched_on() -> None:
+    on = {TOUR_ROLE_SWITCH: "true"}
+    cloud = Cloud(
+        modal_secrets={KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}, TOUR_SECRET: on}
+    )
+    deploy(PRODUCTION, cloud.tools(), LOCAL, web_url=lambda _: "https://api.modal.example")
+    assert cloud.modal_secrets[TOUR_SECRET] == on
+    assert not any("create" in argv for argv, _ in cloud.commands)
+
+
+def test_the_tour_switch_writes_only_its_own_secret_on_a_development_target() -> None:
+    config = {"APP_ENV": "prod"}
+    cloud = Cloud(modal_secrets={CONFIG_SECRET: config, TOUR_SECRET: {TOUR_ROLE_SWITCH: "false"}})
+    set_tour_switch(PRODUCTION, cloud.tools(), "on")
+    assert cloud.modal_secrets == {CONFIG_SECRET: config, TOUR_SECRET: {TOUR_ROLE_SWITCH: "true"}}
+    set_tour_switch(PRODUCTION, cloud.tools(), "off")
+    assert cloud.modal_secrets[TOUR_SECRET] == {TOUR_ROLE_SWITCH: "false"}
+    assert cloud.neon_writes == []
+
+
+def test_the_tour_switch_refuses_to_turn_on_outside_development() -> None:
+    cloud = Cloud()
+    with pytest.raises(TourSwitchOutsideDevelopmentError):
+        set_tour_switch(environment("staging"), cloud.tools(), "on")
+    assert cloud.commands == []
+    set_tour_switch(environment("staging"), cloud.tools(), "off")
+    assert cloud.modal_secrets[TOUR_SECRET] == {TOUR_ROLE_SWITCH: "false"}

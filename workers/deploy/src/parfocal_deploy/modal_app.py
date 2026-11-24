@@ -30,9 +30,10 @@ SEED_FUNCTION = "seed"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
+TOUR_SECRET = "parfocal-api-tour"
 SECRETS = (KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET)
 FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
-    WEB_FUNCTION: SECRETS,
+    WEB_FUNCTION: (*SECRETS, TOUR_SECRET),
     INGEST_FUNCTION: SECRETS,
     EVENTS_FUNCTION: SECRETS,
     BACKFILL_FUNCTION: SECRETS,
