@@ -5015,7 +5015,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   TEST-057 (the seed shows every review outcome) starts one COCO patch export of the frozen "Every outcome review" version through the app's route and marks the job done in the same transaction, so no worker cuts tiles during a reseed. No zip is stored, so the export shows as finished but its download fails. Cut the zip once with the ingest worker's patch writer from the small fixture slides, outside the reseed (for example as a published fixture copied into the tenant's export key by the seed), so the download is real and no Modal or GPU work runs on reseed.
   Done when a seed test downloads the seeded export and finds a COCO file with at least one annotation, and the reseed time from PROTO-139 (the production reseed finishes in under 15 minutes) still holds.
   Depends on TEST-057. Size: S.
-- [ ] TEST-060 · The main paths the performance measurement still lacks
+- [x] TEST-060 · The main paths the performance measurement still lacks
   TEST-019 (application performance on main paths) measured opening, a jump, imports, a model run and a decision, but not the export of a reviewed slide, and it timed the decision with the API imitated in the browser and opening from a plain file server. Measure locally, with no cloud spend: the time from asking for the export of a signed-off slide with a stated number of annotations, in GeoJSON and as COCO patches, until the file is ready and downloaded, and the decision and the slide opening on a production build through the real API and the application's own slide delivery. Fix each budget in the result file before the first measured run, warm up once, and report the median and p95 with the machine, browser, data and method, as TEST-019 did.
   Done when a result file records the export, decision and opening numbers against budgets fixed before measuring, and the scripts run again with one command.
   Depends on TEST-019. Size: M.
@@ -5787,6 +5787,11 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when an API test exports an annotate task report with the ai-changes block and its hand-counted values, and a review task export is unchanged.
   Depends on EVAL-013.
   Size: S.
+
+- [ ] EVAL-017 · A large COCO patch export is never empty
+  TEST-060 (the main paths the performance measurement still lacks) found that a COCO patch export of a signed-off slide with 10,000 annotations finishes as done with a zip of about 1 KB, no image and no COCO annotation, and a manifest that lists the slide as skipped for `unreadable`. The patch cut runs in the ingest's isolated parse process and sends its facts, the COCO annotations among them, back to the worker in one message of about 3 MB, over the 1 MiB the worker allows, and the failure is reported as an unreadable slide. Send the cut's results so that their size does not matter, for example written to a file or streamed in parts, and make an export that loses a slide for any reason other than a truly unreadable file fail visibly instead of finishing as done.
+  Done when a test exports a slide with 10,000 annotations as COCO patches and finds every annotation in the zip, an export whose cut fails is marked failed with its reason, and `bash scripts/main-path-exports.sh` records the COCO budget at 10,000 annotations within its 30,000 ms in the TEST-060 result file.
+  Depends on EVAL-015, TEST-060. Size: S.
 
 ## 47 JOBS · Model runs, the jobs tray and lab models
 
