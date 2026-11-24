@@ -74,8 +74,13 @@ test("the focus mode minimap stays pinned while its view rectangle follows a pan
   await openLink(page, "Focus mode");
   await expect(page.getByTestId("focus-mode")).toBeVisible({ timeout: 20_000 });
   await expect(minimap(page)).toHaveCount(0);
-  await zoomIntoStage(page);
-  await expect(minimap(page)).toBeVisible();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 20_000,
+  });
+  await expect(async () => {
+    await zoomIntoStage(page);
+    await expect(minimap(page)).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
   const pinned = await settledBox(page);
   const viewport = minimap(page).locator('[data-slot="map-viewport"]');
   const startBox = await viewport.boundingBox();
