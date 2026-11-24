@@ -56,19 +56,20 @@ const picker = (page: Page) => page.getByTestId("slide-picker");
 const card = (page: Page) => page.getByTestId("object-foot");
 const firstOpen = (page: Page) => page.getByRole("button", { name: /, the first open object$/ });
 
-async function openFirstOpen(page: Page, kind = ""): Promise<string> {
+const isCell = (object: string) => /(^|·)C\d+$/.test(object);
+
+async function openFirstOpen(page: Page, cellsOnly = false): Promise<string> {
   await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
-  const goTo = firstOpen(page);
-  const object = /^Go to (\S+),/.exec((await goTo.textContent()) ?? "")?.[1] ?? "";
-  expect(object).toContain(kind);
-  await goTo.click();
-  await expect(card(page)).toHaveAttribute("data-object", object);
+  await firstOpen(page).click();
+  await expect(card(page)).toHaveAttribute("data-object", /\S/);
+  const object = (await card(page).getAttribute("data-object")) ?? "";
+  if (cellsOnly) expect(isCell(object)).toBe(true);
   return object;
 }
 
 async function answerFirstOpen(page: Page) {
   const object = await openFirstOpen(page);
-  if (object.includes("·C")) {
+  if (isCell(object)) {
     await page.getByTestId("cell-type-bar").getByRole("button", { name: /Agree/ }).click();
   } else {
     await card(page).locator('button[data-counts-as="agree"]').click();
@@ -76,10 +77,26 @@ async function answerFirstOpen(page: Page) {
   await card(page).getByRole("button", { name: "Close" }).click();
 }
 
+const acceptableQuestion = "Is the AI result acceptable for this slide?";
+
+async function answerOpinionIfAsked(page: Page) {
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Opinion" }).click();
+  const asked = page.getByRole("radiogroup", { name: acceptableQuestion });
+  await expect(asked.or(page.getByText("No opinion asked")).first()).toBeVisible();
+  if ((await asked.count()) > 0) await asked.getByRole("radio", { name: "4" }).click();
+}
+
 async function answerEveryOpenObject(page: Page) {
   await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
-  for (let step = 0; step < 300 && (await firstOpen(page).count()) > 0; step += 1) {
+  const openChip = page.getByRole("button", { name: /^Open \d+$/ });
+  await expect(openChip).toBeVisible();
+  const openCount = async () =>
+    Number(/\d+/.exec((await openChip.textContent()) ?? "")?.[0] ?? Number.NaN);
+  for (let step = 0; step < 300; step += 1) {
+    const before = await openCount();
+    if (before === 0) break;
     await answerFirstOpen(page);
+    await expect.poll(openCount).toBeLessThan(before);
   }
 }
 
@@ -117,7 +134,7 @@ const steps: ((page: Page, places: WalkPlaces) => Promise<void>)[] = [
   },
   async (page) => {
     await stageReady(page);
-    await openFirstOpen(page, "·C");
+    await openFirstOpen(page, true);
     await page
       .getByTestId("cell-type-bar")
       .getByRole("button", { name: /Immune/ })
@@ -150,6 +167,7 @@ const steps: ((page: Page, places: WalkPlaces) => Promise<void>)[] = [
   async (page) => {
     await stageReady(page);
     await answerEveryOpenObject(page);
+    await answerOpinionIfAsked(page);
     const submit = page.getByTestId("top-submit");
     await expect(submit).toBeEnabled({ timeout: 15_000 });
     await submit.click();

@@ -54,6 +54,13 @@ test("one code goes from Prepare in the console to the thank you page on the dep
     secondSlide: /^Study review 2\b/,
   });
   await test.step("thank you", () => answerLastQuestions(page));
+  await test.step("dry run", async () => {
+    await page.goto("/study/console");
+    const session = page.getByTestId(`study-result-${code}`);
+    await expect(session).toBeVisible({ timeout: 60_000 });
+    await session.getByRole("checkbox", { name: "Dry run" }).click();
+    await expect(session).toHaveAttribute("data-dry-run", "true");
+  });
   await test.step("remove", async () => {
     await page.goto("/study/console");
     await page.getByRole("textbox", { name: "Code to prepare" }).fill(code);
