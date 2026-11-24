@@ -5,7 +5,7 @@ import {
   pasteWindowOutputs,
   touchesInnerEdge,
 } from "./embedding-window.ts";
-import type { ModelCache } from "./model-cache.ts";
+import type { ModelCache, ModelLoad } from "./model-cache.ts";
 import type { SamRuntime, SamSession, SamTensor } from "./runtime.ts";
 import {
   largeDecoderGraphs,
@@ -92,6 +92,7 @@ export interface InferenceEngine {
   init(): Promise<SamReady>;
   encode(id: string, pixels: Float32Array): Promise<SamEncoded>;
   adopt(id: string, embedding: Float32Array, model?: SamEncoderModel): Promise<SamEncoded>;
+  prepare(model: SamEncoderModel): Promise<void>;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
   pool(id: string, outlines: readonly Float32Array[]): Float32Array[];
@@ -244,10 +245,11 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     graph: SamGraph,
     onProvider: SamProvider,
     loads: SamGraphLoad[],
+    fetched: Promise<ModelLoad> | null = null,
   ): Promise<SamSession> {
     return inSession(async () => {
       options.onStage?.(graph);
-      const load = await cache.load(`${modelsBase}${graph}`);
+      const load = await (fetched ?? cache.load(`${modelsBase}${graph}`));
       loads.push({ graph, message: load.message });
       return runtime.createSession(load.bytes, onProvider);
     });
@@ -328,21 +330,32 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
   async function loadWindowDecoder(
     onProvider: SamProvider,
     graph: SamGraph = samVariant(onProvider).windowDecoder,
+    fetched: Promise<ModelLoad> | null = null,
   ): Promise<SamSession | null> {
     try {
-      return await createSession(graph, onProvider, []);
+      return await createSession(graph, onProvider, [], fetched);
     } catch {
       return null;
     }
   }
 
+  function prefetch(graph: SamGraph): Promise<ModelLoad> {
+    const pending = cache.load(`${modelsBase}${graph}`);
+    pending.catch(() => undefined);
+    return pending;
+  }
+
   function loadLargeDecoders(): Promise<DecoderPair> {
     largeDecoders ??= (async () => {
-      const session = await createSession(largeDecoderGraphs.decoder, provider, []);
+      const decoderBytes = prefetch(largeDecoderGraphs.decoder);
+      const windowBytes =
+        options.windowDecoder === true ? prefetch(largeDecoderGraphs.windowDecoder) : null;
+      await starting?.catch(() => undefined);
+      const session = await createSession(largeDecoderGraphs.decoder, provider, [], decoderBytes);
       const window =
-        options.windowDecoder === true
-          ? await loadWindowDecoder(provider, largeDecoderGraphs.windowDecoder)
-          : null;
+        windowBytes === null
+          ? null
+          : await loadWindowDecoder(provider, largeDecoderGraphs.windowDecoder, windowBytes);
       return { decoder: session, window };
     })().catch((error: unknown) => {
       largeDecoders = null;
@@ -501,6 +514,11 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
         }
         return { id, ms: performance.now() - started, evicted };
       });
+    },
+
+    async prepare(model) {
+      if (model !== "vit-l" || closed) return;
+      await loadLargeDecoders();
     },
 
     prompt(id, prompt) {

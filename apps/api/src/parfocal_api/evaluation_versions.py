@@ -42,6 +42,7 @@ from parfocal_api.tables import (
     threads,
 )
 from parfocal_api.task_kinds import review_only
+from parfocal_common.result_store import ResultStore
 
 type ConfirmedWith = Annotated[str, StringConstraints(pattern="^(sso|password)$")]
 type VersionReason = Annotated[
@@ -209,8 +210,9 @@ async def record_signature(
     confirmed_with: ConfirmedWith,
     http: Request,
     background: BackgroundTasks,
+    store: ResultStore,
 ) -> int:
-    evaluation = await evaluate(connection, task)
+    evaluation = await evaluate(connection, task, store)
     blocks, report_format = await task_layout(connection, task)
     signed = {
         "signed_at": func.now(),

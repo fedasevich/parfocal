@@ -229,7 +229,7 @@ async def test_a_shared_report_link_opens_the_case_review(showcase: str) -> None
                 select(*report_links.c, EXPIRED).where(report_links.c.tenant_id == owner.tenant_id)
             )
         ).all()
-        shared = [await shared_report(connection, row) for row in links]
+        shared = [await shared_report(connection, row, None) for row in links]
     assert [report.task_name for report in shared] == [SHOWCASE_TASK]
 
 

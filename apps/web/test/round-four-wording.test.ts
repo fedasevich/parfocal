@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { emptyPrompts } from "../src/aiseg/smart-select.ts";
-import { smartStatusOf } from "../src/annotations/smart-status.ts";
+import { wholeSecondsSince } from "../src/annotations/elapsed-seconds.ts";
+import { smartStatusOf, smartStepOf } from "../src/annotations/smart-status.ts";
 import { slidesTimeLeft } from "../src/screens/review/slides-time-left.ts";
 import { liveSlideList, timeLeftText } from "../src/viewer/live-slides.ts";
 import { readOnlyCodeOf } from "../src/viewer/viewer-access.ts";
@@ -61,4 +62,18 @@ test("the banner of a task you are not assigned to uses its own notice, not a re
     "not-assigned-notice",
   );
   assert.equal(readOnlyCodeOf({ kind: "read-only", reason: "withdrawn" }), "task-withdrawn");
+});
+
+test("Smart select names the step it is on while Best is outlining", () => {
+  assert.equal(smartStepOf("asking"), "asking-best");
+  assert.equal(smartStepOf("preparing"), "loading-model");
+  assert.equal(smartStepOf("server"), "outlining");
+  assert.equal(smartStepOf("offline"), "outlining");
+  assert.equal(smartStepOf(null), "outlining");
+});
+
+test("the elapsed seconds of a step count whole seconds and never go below zero", () => {
+  assert.equal(wholeSecondsSince(1_000, 1_999), 0);
+  assert.equal(wholeSecondsSince(1_000, 36_400), 35);
+  assert.equal(wholeSecondsSince(5_000, 1_000), 0);
 });

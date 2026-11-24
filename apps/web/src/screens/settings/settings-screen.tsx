@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMeQueryKey,
@@ -907,7 +908,12 @@ function LoadedSettings({
               onSuccess: (response) => {
                 const count = response.status === 200 ? response.data.ended : others.length;
                 setSignedOutAt({ count, at: now() });
-                notify(t`Signed out of the ${count} other devices`);
+                notify(
+                  plural(count, {
+                    one: "Signed out of the # other device",
+                    other: "Signed out of the # other devices",
+                  }),
+                );
                 void queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
               },
             })
@@ -995,12 +1001,19 @@ function LoadedSettings({
   const help = (item: SettingRow): string => {
     if (item.key !== "otherDevices") return item.help;
     if (signedOutAt && others.length === 0) {
-      return t`Signed out of ${signedOutAt.count} other devices at ${clockTime(signedOutAt.at)}. They ask for a sign-in next time.`;
+      const at = clockTime(signedOutAt.at);
+      return plural(signedOutAt.count, {
+        one: `Signed out of # other device at ${at}. They ask for a sign-in next time.`,
+        other: `Signed out of # other devices at ${at}. They ask for a sign-in next time.`,
+      });
     }
     if (others.length === 0) return t`No other device is signed in.`;
-    return t`${others.length === 2 ? "Two" : others.length} other devices are signed in: ${andJoin(
-      others.map((session) => withArticle(deviceName(session.user_agent))),
-    )}.`;
+    const names = andJoin(others.map((session) => withArticle(deviceName(session.user_agent))));
+    if (others.length === 2) return t`Two other devices are signed in: ${names}.`;
+    return plural(others.length, {
+      one: `# other device is signed in: ${names}.`,
+      other: `# other devices are signed in: ${names}.`,
+    });
   };
 
   const facts: RowKey[] = ["presetKeys", "lockAfter", "patientBanner"];

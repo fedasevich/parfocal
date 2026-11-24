@@ -472,6 +472,27 @@ describe("inference engine ViT-L embeddings from the server", () => {
     assert.equal(runtime.session(samGraphs.largeDecoder).feedsSeen.length, 1);
   });
 
+  it("starts the ViT-L decoder download at once when asked to prepare, and adopts without another", async () => {
+    const { runtime, cache, engine } = build({ warm: false });
+    const ready = engine.init();
+    const prepared = engine.prepare("vit-l");
+    assert.deepEqual(cache.urls, [`/models/${samGraphs.largeDecoder}`]);
+    await ready;
+    await prepared;
+    await engine.adopt("view-l", large(), "vit-l");
+    await engine.prompt("view-l", click);
+    assert.equal(cache.urls.filter((url) => url === `/models/${samGraphs.largeDecoder}`).length, 1);
+    assert.equal(runtime.session(samGraphs.largeDecoder).feedsSeen.length, 1);
+  });
+
+  it("prepares nothing for the browser's own ViT-B model", async () => {
+    const { cache, engine } = build({ warm: false });
+    await engine.init();
+    const before = cache.urls.length;
+    await engine.prepare("vit-b");
+    assert.equal(cache.urls.length, before);
+  });
+
   it("uses the ViT-L window decoder near the click when windows are on", async () => {
     const { runtime, engine } = build({ warm: false, windowDecoder: true });
     await engine.init();

@@ -635,6 +635,7 @@ async def seed_outcomes(
         seed_request(),
         BackgroundTasks(),
         NoRealtime(),
+        results=results,
         signed_in=datetime.now(UTC),
         confirmation=SignOffConfirmation(confirmed_with="password"),
     )

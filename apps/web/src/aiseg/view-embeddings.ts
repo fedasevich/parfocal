@@ -22,7 +22,7 @@ export const viewGiveUpMs = 90_000;
 
 export type BestFallback = "unsendable" | "refused" | "offline" | "gave-up" | "cancelled";
 
-export type EncoderSource = "asking" | "server" | BestFallback;
+export type EncoderSource = "asking" | "preparing" | "server" | BestFallback;
 
 export type ViewAnswer =
   | { readonly embedding: Float32Array<ArrayBuffer> }
@@ -54,7 +54,7 @@ export interface SlideSize {
   readonly height: number;
 }
 
-export type ViewSam = Pick<SamClient, "encode" | "adopt">;
+export type ViewSam = Pick<SamClient, "encode" | "adopt"> & Partial<Pick<SamClient, "prepare">>;
 
 export class BestRefusedError extends Error {
   readonly reason: "refused" | "offline";
@@ -199,11 +199,13 @@ export function withViewEmbeddings<S extends ViewSam>(sam: S, context: ViewEmbed
     }
     try {
       context.onSource?.("asking");
+      sam.prepare?.("vit-l");
       const answer = await context.views.embedding(parsed.slideId, view);
       if ("fallback" in answer) {
         context.onSource?.(answer.fallback);
         return answer.fallback;
       }
+      context.onSource?.("preparing");
       const adopted = await sam.adopt(id, answer.embedding, "vit-l");
       context.onSource?.("server");
       return adopted;

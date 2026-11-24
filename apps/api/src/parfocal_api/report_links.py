@@ -24,6 +24,7 @@ from parfocal_api.principals import Principal
 from parfocal_api.problems import NotFoundError, ProblemError, TooManyRequestsError
 from parfocal_api.projects import kept_row_of, owned
 from parfocal_api.rate_limits import report_link_wait
+from parfocal_api.review_order import result_store
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
     ActorKind,
@@ -34,6 +35,7 @@ from parfocal_api.tables import (
     tenants,
 )
 from parfocal_common.db import DatabaseScope, scoped_transaction
+from parfocal_common.result_store import ResultStore
 
 LINK_LIFETIME = timedelta(days=30)
 SHARED_PATH = "/shared-reports"
@@ -310,7 +312,7 @@ async def get_shared_report(token: str, request: Request) -> SharedReport:
             .where(review_tasks.c.id == link.task_id)
         )
         gone = link.revoked_at is not None or link.expired or project_deleted_at is not None
-        shared = None if gone else await shared_report(connection, link)
+        shared = None if gone else await shared_report(connection, link, result_store(request))
         await record(
             connection,
             LINK_ACTOR,
@@ -325,14 +327,16 @@ async def get_shared_report(token: str, request: Request) -> SharedReport:
     return shared
 
 
-async def shared_report(connection: AsyncConnection, link: Any) -> SharedReport:
+async def shared_report(
+    connection: AsyncConnection, link: Any, store: ResultStore | None
+) -> SharedReport:
     task = (
         await connection.execute(select(review_tasks).where(review_tasks.c.id == link.task_id))
     ).one()
     project_name = await connection.scalar(
         select(projects.c.name).where(projects.c.id == task.project_id)
     )
-    evaluation = await evaluate(connection, task)
+    evaluation = await evaluate(connection, task, store)
     await connection.execute(
         update(report_links)
         .where(report_links.c.id == link.id)

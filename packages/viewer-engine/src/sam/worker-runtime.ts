@@ -93,6 +93,10 @@ export function startSamWorker(scope: SamWorkerScope, dependencies: SamWorkerDep
       );
       return;
     }
+    if (message.type === "prepare") {
+      engine?.prepare(message.model).catch(() => undefined);
+      return;
+    }
     engine?.drop(message.id);
   });
 }

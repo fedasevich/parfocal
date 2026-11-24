@@ -207,3 +207,24 @@ def test_the_decisions_csv_names_the_class_of_chunked_cells(api: ApiAs, database
     assert classes["T1"] == "unclassified"
     _, objects = rows_of(exported(api, r, "objects.csv").text)
     assert {row["class"] for row in objects if row["kind"] == "cell"} == {"Stroma cell"}
+
+
+@pytest.mark.db
+def test_the_evaluation_names_the_class_of_chunked_cells(api: ApiAs, database: str) -> None:
+    r = scenario(api, database)
+    tenant = r.people["owner"].tenant_id
+    owner(
+        database,
+        "DO $$ BEGIN PERFORM set_config('session_replication_role', 'replica', true); "
+        "INSERT INTO result_set_classes (tenant_id, project_id, result_set_id, position, "
+        f"source_name) VALUES ('{tenant}', '{r.project}', '{r.result_set}', 0, 'Stroma cell'); "
+        "END $$",
+    )
+    cells: list[CellRow] = [(number, 0, 100, number * 100.0, 100.0) for number in range(1, 6)]
+    key = chunk_key(result_set_prefix(tenant, r.slide, r.result_set), 0)
+    put_chunk(key, chunk_bytes(cells, None))
+    response = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/evaluation")
+    assert response.status_code == 200, response.text
+    classes = {(row["kind"], row["class_name"]) for row in response.json()["classes"]}
+    assert ("cell", "Stroma cell") in classes
+    assert ("cell", "unclassified") not in classes

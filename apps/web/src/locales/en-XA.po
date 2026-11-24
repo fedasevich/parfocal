@@ -336,6 +336,11 @@ msgstr ""
 msgid "{0, plural, one {# object} other {# objects}}"
 msgstr ""
 
+#. placeholder {0}: others.length
+#: src/screens/settings/settings-screen.tsx
+msgid "{0, plural, one {# other device is signed in: {names}.} other {# other devices are signed in: {names}.}}"
+msgstr ""
+
 #. placeholder {0}: missing.length
 #: src/screens/review/first-read.tsx
 msgid "{0, plural, one {# required question is not answered.} other {# required questions are not answered.}}"
@@ -355,6 +360,11 @@ msgstr ""
 #. placeholder {0}: row.reviewer_decisions
 #: src/screens/disagreements/adjudication-rows.tsx
 msgid "{0, plural, one {Kept beside # reviewer decision} other {Kept beside # reviewer decisions}}"
+msgstr ""
+
+#. placeholder {0}: signedOutAt.count
+#: src/screens/settings/settings-screen.tsx
+msgid "{0, plural, one {Signed out of # other device at {at}. They ask for a sign-in next time.} other {Signed out of # other devices at {at}. They ask for a sign-in next time.}}"
 msgstr ""
 
 #. placeholder {0}: summary.reviews.slides
@@ -1318,12 +1328,6 @@ msgstr ""
 msgid "{0} or less"
 msgstr ""
 
-#. placeholder {0}: others.length === 2 ? "Two" : others.length
-#. placeholder {1}: andJoin( others.map((session) => withArticle(deviceName(session.user_agent))), )
-#: src/screens/settings/settings-screen.tsx
-msgid "{0} other devices are signed in: {1}."
-msgstr ""
-
 #. placeholder {0}: scattered.length
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "{0} outside every zone"
@@ -1735,6 +1739,11 @@ msgstr ""
 msgid "{0}, {required} required"
 msgstr ""
 
+#. placeholder {0}: stepText[step]
+#: src/annotations/smart-layer.tsx
+msgid "{0}, {seconds} s"
+msgstr ""
+
 #. placeholder {0}: plural(picked.length, "slide")
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "{0}, {slidesWithResult} with a result set"
@@ -1949,6 +1958,10 @@ msgstr ""
 
 #: src/screens/developer/bench-section.tsx
 msgid "{count, plural, one {Export CSV, # run} other {Export CSV, # runs}}"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "{count, plural, one {Signed out of the # other device} other {Signed out of the # other devices}}"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-state.tsx
@@ -4217,6 +4230,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Asked to join {wsName}"
+msgstr ""
+
+#: src/annotations/smart-layer.tsx
+msgid "Asking Best's GPU"
 msgstr ""
 
 #: src/screens/my-work/to-review-tab.tsx
@@ -7778,6 +7795,10 @@ msgstr ""
 
 #: src/screens/new-task/reviewers-step.tsx
 msgid "Faster, with no agreement numbers."
+msgstr ""
+
+#: src/annotations/smart-layer.tsx
+msgid "Fetching Best's outline model"
 msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
@@ -16288,16 +16309,6 @@ msgstr ""
 msgid "Signed out {0} by {1}"
 msgstr ""
 
-#. placeholder {0}: signedOutAt.count
-#. placeholder {1}: clockTime(signedOutAt.at)
-#: src/screens/settings/settings-screen.tsx
-msgid "Signed out of {0} other devices at {1}. They ask for a sign-in next time."
-msgstr ""
-
-#: src/screens/settings/settings-screen.tsx
-msgid "Signed out of the {count} other devices"
-msgstr ""
-
 #: src/screens/clinical-report/modals.tsx
 msgid "Signing locks this version."
 msgstr ""
@@ -19264,6 +19275,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Two fingers"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Two other devices are signed in: {names}."
 msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx

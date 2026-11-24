@@ -478,7 +478,10 @@ def report_decisions(rows: list[dict[str, Any]]) -> tuple[ReportDecision, ...]:
 
 
 async def compared_tasks(
-    connection: AsyncConnection, principal: Any, blocks: tuple[ReportBlock, ...]
+    connection: AsyncConnection,
+    principal: Any,
+    blocks: tuple[ReportBlock, ...],
+    store: Results | None,
 ) -> dict[str, ReportCompared]:
     compared: dict[str, ReportCompared] = {}
     for block in blocks:
@@ -490,7 +493,7 @@ async def compared_tasks(
         except ProblemError:
             continue
         if whole:
-            found = await evaluate(connection, other)
+            found = await evaluate(connection, other, store)
             compared[str(block.task_id)] = ReportCompared(other.name, headline_of(found))
     return compared
 
@@ -524,7 +527,7 @@ async def rendered_report(
         decision_rows=report_decisions(await decision_rows(connection, task, version, store))
         if "decisions" in report_format.appendices
         else (),
-        compared=await compared_tasks(connection, principal, blocks),
+        compared=await compared_tasks(connection, principal, blocks, store),
         changes=version.changes,
     )
     return render_report(data, locale)
@@ -591,7 +594,7 @@ async def task_report(
 ) -> tuple[RenderedReport, Version]:
     if task.kind == TaskKind.ANNOTATE:
         return await annotate_report(connection, principal, task, results, locale)
-    evaluation = await evaluate(connection, task)
+    evaluation = await evaluate(connection, task, results)
     version = await version_of(connection, task, evaluation)
     rendered = await rendered_report(
         connection, principal, task, evaluation, version, locale, results
@@ -694,7 +697,7 @@ async def export_task_evaluation(
     if kind is ExportKind.PDF:
         report, version = await task_report(connection, principal, task, results, locale)
         return attachment(kind, task_pdf(principal, task, report, version), version)
-    evaluation = await evaluate(connection, task)
+    evaluation = await evaluate(connection, task, results)
     version = await version_of(connection, task, evaluation)
     content: str | bytes
     match kind:

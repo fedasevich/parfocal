@@ -16,7 +16,7 @@ from parfocal_api.drawn_sources import reviews_ai
 from parfocal_api.opinions import form_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ForbiddenError
-from parfocal_api.review_order import read_chunk
+from parfocal_api.review_order import Results, read_chunk
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
     DecisionStyle,
@@ -481,19 +481,22 @@ def fleiss_of(objects: list[engine.AiObject]) -> float | None:
 
 @router.get("", operation_id="getTaskEvaluation", **require(Permission.SEE_SLIDES, emergency=True))
 async def get_task_evaluation(
-    task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    task_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
 ) -> Evaluation:
     task, whole = await readable_task(connection, principal, task_id)
     review_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
-    return await evaluate(connection, task)
+    return await evaluate(connection, task, results)
 
 
-async def evaluate(connection: AsyncConnection, task: Any) -> Evaluation:
+async def evaluate(connection: AsyncConnection, task: Any, store: ResultStore | None) -> Evaluation:
     task_id = task.id
     names = await class_names(connection, task.project_id)
-    objects = await ai_objects(connection, task_id, names)
+    objects = await ai_objects(connection, task_id, names, store)
     added, added_regions = await added_objects(connection, task_id, names)
     table = engine.confusion(objects, added)
     pairs = engine.pairwise_kappa(objects)

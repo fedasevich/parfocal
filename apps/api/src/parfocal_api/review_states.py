@@ -38,7 +38,7 @@ from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, 
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError, visible
 from parfocal_api.realtime import Realtime, RealtimeClient
-from parfocal_api.review_order import unchecked_objects
+from parfocal_api.review_order import Results, unchecked_objects
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import task_slide
 from parfocal_api.submit_gate import require_done
@@ -645,6 +645,7 @@ async def sign_off_review_task(
     http: Request,
     background: BackgroundTasks,
     live: RealtimeClient,
+    results: Results,
     signed_in: SignedInAt,
     confirmation: SignOffConfirmation | None = None,
 ) -> TaskStates:
@@ -656,7 +657,9 @@ async def sign_off_review_task(
         .where(review_tasks.c.id == task_id)
         .values(signed_off_at=func.now(), signed_off_by_user_id=user_of(principal))
     )
-    number = await record_signature(connection, principal, task, confirmed_with, http, background)
+    number = await record_signature(
+        connection, principal, task, confirmed_with, http, background, results
+    )
     await build_final_layer(connection, task, principal)
     await record(
         connection,
