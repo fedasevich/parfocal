@@ -69,7 +69,7 @@ import {
   slides,
 } from "./scenario.ts";
 import { assignedTo, toAnnouncement, toProjectRef } from "./scenario-handlers.ts";
-import { rt18 } from "./scenario-review.ts";
+import { annotateStubTaskId, rt18 } from "./scenario-review.ts";
 import { type SentTask, sentTasks } from "./sent-tasks.ts";
 import { withParticipantSlides } from "./study-participant.ts";
 import { outlineOverlapOf } from "./task-outline-overlap.ts";
@@ -556,7 +556,10 @@ const canonicalObject = (token: string): string =>
 
 const knownObjects: Record<number, readonly string[]> = {
   1: ["T1", "T2", "T3", "T4", "T5", "C145", "C1394", "T1·C145", "T2·C145", "T2·C1394", "R1", "T1+"],
+  5: ["C1", "C3"],
 };
+
+const taskOfSlide: Record<number, string> = { 5: annotateStubTaskId };
 
 const exactObjectHits = (query: string, slideId: string | null): SearchHit[] => {
   const words = query
@@ -573,6 +576,7 @@ const exactObjectHits = (query: string, slideId: string | null): SearchHit[] => 
     if (!objects.includes(object) || elsewhere) return [];
     const where = fold([slide.project, slide.caseLabel, slide.label].filter(Boolean).join(" "));
     if (!slideWords.every((word) => where.includes(word))) return [];
+    const task = taskOfSlide[Number(index)];
     return [
       {
         kind: "object" as const,
@@ -582,6 +586,7 @@ const exactObjectHits = (query: string, slideId: string | null): SearchHit[] => 
         case_label: slide.caseLabel,
         slide_id: slide.id,
         object_id: object,
+        ...(task === undefined ? {} : { task_id: task }),
       },
     ];
   });

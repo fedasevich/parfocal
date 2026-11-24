@@ -117,3 +117,125 @@ test("a cell hit inside an annotate task lands on the cell and picks it", async 
     .poll(() => screenOffsetOf(page, cell), { timeout: 20_000 })
     .toBeLessThan(screenReach);
 });
+
+const byHandSlide = "00000000-0000-4000-8005-000000000014";
+const cellId = "C3";
+const cellSelector = `[data-testid="ai-object"][data-object="${cellId}"]`;
+const annotateSlideUrl = `/projects/${p07}/slides/${tumor044}?task=${annotateTask}`;
+
+type Point = { x: number; y: number };
+
+async function cellCentreOf(page: Page, object: string): Promise<Point> {
+  return page.evaluate(
+    async ([task, slideId, wanted]) => {
+      const response = await fetch(
+        `/api/review-tasks/${task}/slides/${slideId}/shared-layer/ai?limit=5000`,
+      );
+      const body = (await response.json()) as {
+        objects: { object: string; geometry: { coordinates: number[][][] } }[];
+      };
+      const ring = body.objects.find((item) => item.object === wanted)?.geometry.coordinates[0];
+      if (ring === undefined) throw new Error(`no cell ${wanted}`);
+      const xs = ring.map((point) => point[0] ?? 0);
+      const ys = ring.map((point) => point[1] ?? 0);
+      return {
+        x: (Math.min(...xs) + Math.max(...xs)) / 2,
+        y: (Math.min(...ys) + Math.max(...ys)) / 2,
+      };
+    },
+    [annotateTask, tumor044, object] as const,
+  );
+}
+
+async function expectLanded(page: Page, fitZoom: number) {
+  const centre = await cellCentreOf(page, cellId);
+  await expect(page.locator(cellSelector).first()).toHaveAttribute("data-selected", "true", {
+    timeout: 30_000,
+  });
+  await expect
+    .poll(
+      async () => {
+        const camera = await cameraOf(page);
+        return camera === null ? Infinity : Math.hypot(camera.x - centre.x, camera.y - centre.y);
+      },
+      { timeout: 20_000 },
+    )
+    .toBeLessThan(reach);
+  await expectZoomAbove(page, fitZoom);
+}
+
+async function openPalette(page: Page) {
+  const palette = page.getByRole("dialog", { name: "Command palette" });
+  await expect(async () => {
+    if (!(await palette.isVisible())) await page.keyboard.press("ControlOrMeta+k");
+    await expect(palette).toBeVisible({ timeout: 500 });
+  }).toPass();
+  return palette;
+}
+
+async function pickFromPalette(page: Page, typed: string) {
+  const palette = await openPalette(page);
+  await palette.getByRole("combobox").fill(typed);
+  await palette
+    .getByRole("option", { name: new RegExp(`^${cellId} on tumor_044`) })
+    .first()
+    .click();
+}
+
+test("a cell hit lands on the cell when the AI layer arrives after the stage is ready", async ({
+  page,
+}) => {
+  const fitZoom = await fitZoomOf(page, annotateSlideUrl);
+  await page.goto(`${annotateSlideUrl}&object=${cellId}&aiDelay=4000`);
+  await stageReady(page);
+  await expect(page.locator(cellSelector)).toHaveCount(0);
+  await expectLanded(page, fitZoom);
+});
+
+test("a cell hit picked on the search page opens its annotate task slide centred on it", async ({
+  page,
+}) => {
+  const fitZoom = await fitZoomOf(page, annotateSlideUrl);
+  await page.goto("/search");
+  await page.getByRole("textbox", { name: "Search everything" }).fill(cellId);
+  await page
+    .getByRole("button", { name: new RegExp(`^${cellId} on tumor_044`) })
+    .first()
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/slides/${tumor044}\\?.*task=${annotateTask}`));
+  await expect(page).toHaveURL(new RegExp(`object=${cellId}`));
+  await stageReady(page);
+  await expectLanded(page, fitZoom);
+});
+
+test("a cell hit picked in the palette from home opens its annotate task slide centred on it", async ({
+  page,
+}) => {
+  const fitZoom = await fitZoomOf(page, annotateSlideUrl);
+  await page.goto("/");
+  await pickFromPalette(page, cellId);
+  await expect(page).toHaveURL(new RegExp(`/slides/${tumor044}\\?.*task=${annotateTask}`));
+  await stageReady(page);
+  await expectLanded(page, fitZoom);
+});
+
+test("a cell hit picked in the palette from another slide of the task lands centred on it", async ({
+  page,
+}) => {
+  const fitZoom = await fitZoomOf(page, annotateSlideUrl);
+  await page.goto(`/projects/${p07}/slides/${byHandSlide}?task=${annotateTask}`);
+  await stageReady(page);
+  await pickFromPalette(page, `tumor_044 ${cellId}`);
+  await expect(page).toHaveURL(new RegExp(`/slides/${tumor044}\\?.*object=${cellId}`));
+  await stageReady(page);
+  await expectLanded(page, fitZoom);
+});
+
+test("a cell hit picked in the palette on its own slide moves the camera to the cell", async ({
+  page,
+}) => {
+  const fitZoom = await fitZoomOf(page, annotateSlideUrl);
+  await pickFromPalette(page, cellId);
+  await expect(page).toHaveURL(new RegExp(`object=${cellId}`));
+  await expectLanded(page, fitZoom);
+});
