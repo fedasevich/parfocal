@@ -19,5 +19,5 @@ status=$?
 set -e
 
 python3 "$root/scripts/study_dry_run_result.py" --prepared "$report" > "$result"
-echo "Wrote $result"
+echo "Wrote $result. If the remove step says only an admin can remove, run: uv run --package parfocal-deploy python -m parfocal_deploy.study remove CODE"
 exit "$status"

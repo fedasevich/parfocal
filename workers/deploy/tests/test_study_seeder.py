@@ -25,7 +25,9 @@ class FakeSeed:
 
 def test_the_modal_seeder_passes_only_the_participant_and_reads_the_project_back() -> None:
     printed = json.dumps({"code": "P-AB", "tenant_id": str(TENANT), "project_id": str(PROJECT)})
-    fake = FakeSeed(['{"level": "info", "message": "seeding"}', printed, "study: seeded P-AB"])
+    fake = FakeSeed(
+        ['{"level": "info", "message": "seeding"}', "{not json", printed, "study: seeded P-AB"]
+    )
     made = asyncio.run(ModalStudySeeder(fake).seed("P-AB", "seat@example.test"))
     assert (made.code, made.tenant_id, made.project_id) == ("P-AB", TENANT, PROJECT)
     assert fake.calls == [

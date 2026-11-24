@@ -42,8 +42,11 @@ def seeded_from(lines: Iterable[str], code: str) -> SeededParticipant:
     for line in lines:
         if not line.startswith("{"):
             continue
-        made: Mapping[str, str] = json.loads(line)
-        if "project_id" not in made:
+        try:
+            made: Mapping[str, str] = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(made, dict) or "project_id" not in made:
             continue
         return SeededParticipant(
             made["code"], uuid.UUID(made["tenant_id"]), uuid.UUID(made["project_id"])

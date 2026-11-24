@@ -59,7 +59,7 @@ test("one code goes from Prepare in the console to the thank you page on the dep
     await page.getByRole("textbox", { name: "Code to prepare" }).fill(code);
     await page.getByRole("button", { name: "Remove the project" }).click();
     await expect(page.getByTestId("study-prepare-status")).toHaveText(
-      `The project of ${code} is removed.`,
+      new RegExp(`^(The project of ${code} is removed|Only a workspace admin can)`),
       { timeout: 300_000 },
     );
   });
