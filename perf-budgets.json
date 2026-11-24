@@ -784,6 +784,78 @@
       "result": "docs/results/2026-11-16-application-main-paths.md"
     },
     {
+      "id": "app.export-geojson-1k-p95-ms",
+      "measures": "95th percentile of the time from asking for the training dataset of an annotate task with one signed-off slide of 1,000 annotations until the QuPath GeoJSON zip is downloaded, after one warm-up export",
+      "kind": "manual",
+      "unit": "ms",
+      "baseline": null,
+      "limit": 2000,
+      "environment": "Local Postgres and MinIO in Docker, API in process, Apple M4 shared with other agents",
+      "check": "apps/api/tests/test_export_main_paths.py",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "result": "docs/results/2026-11-25-export-decision-and-opening-main-paths.md"
+    },
+    {
+      "id": "app.export-geojson-10k-p95-ms",
+      "measures": "95th percentile of the time from asking for the training dataset of an annotate task with one signed-off slide of 10,000 annotations until the QuPath GeoJSON zip is downloaded, after one warm-up export",
+      "kind": "manual",
+      "unit": "ms",
+      "baseline": null,
+      "limit": 5000,
+      "environment": "Local Postgres and MinIO in Docker, API in process, Apple M4 shared with other agents",
+      "check": "apps/api/tests/test_export_main_paths.py",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "result": "docs/results/2026-11-25-export-decision-and-opening-main-paths.md"
+    },
+    {
+      "id": "app.export-coco-1k-p95-ms",
+      "measures": "95th percentile of the time from starting a COCO patch export, level 0 and 512 px tiles, of an annotate task with one signed-off CMU-1-Small-Region.svs of 1,000 annotations until the zip is downloaded, with the worker already running, after one warm-up export",
+      "kind": "manual",
+      "unit": "ms",
+      "baseline": null,
+      "limit": 15000,
+      "environment": "Local Postgres and MinIO in Docker, API in process, ingest worker as its own process, Apple M4 shared with other agents",
+      "check": "apps/api/tests/test_export_main_paths.py",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "result": "docs/results/2026-11-25-export-decision-and-opening-main-paths.md"
+    },
+    {
+      "id": "app.export-coco-10k-p95-ms",
+      "measures": "95th percentile of the time from starting a COCO patch export, level 0 and 512 px tiles, of an annotate task with one signed-off CMU-1-Small-Region.svs of 10,000 annotations until the zip is downloaded, with the worker already running, after one warm-up export",
+      "kind": "manual",
+      "unit": "ms",
+      "baseline": null,
+      "limit": 30000,
+      "environment": "Local Postgres and MinIO in Docker, API in process, ingest worker as its own process, Apple M4 shared with other agents",
+      "check": "apps/api/tests/test_export_main_paths.py",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "result": "docs/results/2026-11-25-export-decision-and-opening-main-paths.md"
+    },
+    {
+      "id": "app.open-production-ready-p95-ms",
+      "measures": "95th percentile of the time from the start of a page load of the live slide page to the stage being ready, CMU-1.svs, production build served by the edge Worker with its tiles from a simulated R2 bucket and the real API, after one warm-up round",
+      "kind": "manual",
+      "unit": "ms",
+      "baseline": null,
+      "limit": 3000,
+      "environment": "Chrome headless, 1440 x 900, wrangler dev with local R2, API under uvicorn, local Zitadel, Postgres and MinIO in Docker, loopback, Apple M4 shared with other agents",
+      "check": "apps/e2e/tests/main-paths.spec.ts",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "result": "docs/results/2026-11-25-export-decision-and-opening-main-paths.md"
+    },
+    {
+      "id": "app.decision-production-p95-ms",
+      "measures": "95th percentile of the time from the key press of a decision in the guided check to the next object being current and a frame painted, production build served by the edge Worker with the real API, after one warm-up round",
+      "kind": "manual",
+      "unit": "ms",
+      "baseline": null,
+      "limit": 100,
+      "environment": "Chrome headless, 1440 x 900, wrangler dev with local R2, API under uvicorn, local Zitadel, Postgres and MinIO in Docker, loopback, Apple M4 shared with other agents",
+      "check": "apps/e2e/tests/main-paths.spec.ts",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "result": "docs/results/2026-11-25-export-decision-and-opening-main-paths.md"
+    },
+    {
       "id": "app.import-10k-cells-ms",
       "measures": "The result import job, step start to step end, of a generated 10,000 cell GeoJSON uploaded through the API and imported by a real worker process, fastest of three imports",
       "kind": "ms",
