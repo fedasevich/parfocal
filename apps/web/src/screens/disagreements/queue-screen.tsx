@@ -555,6 +555,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   </div>
                   <Button
                     variant="primary"
+                    data-tour="queue-send"
                     onClick={() => setSend({ keys: checked, excluded: reviewerIds })}
                   >
                     <Icon name="user" />

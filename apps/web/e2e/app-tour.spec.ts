@@ -19,14 +19,31 @@ const chapterTitles = [
   "The participant study",
 ];
 
+const fakeDataFallbacks = [
+  "#annotate-task-panel|#live-top-bar",
+  "#start-run|",
+  "#mark-slide-checked|",
+  "decision-buttons|main",
+  "queue-send|",
+  "main|[data-slot=",
+  "#dataset-",
+  "#sign-off-undecided|",
+  "#co-sign|main",
+  "#study-",
+  "#slides-table",
+  '[data-slot="jobs-button"]|',
+];
+
 type Rect = { x: number; y: number; width: number; height: number };
 
 const shownBox = (page: Page, selector: string) =>
   page.evaluate((query) => {
-    for (const element of document.querySelectorAll(query)) {
-      const rect = element.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+    for (const one of query.split("\n")) {
+      for (const element of document.querySelectorAll(one)) {
+        const rect = element.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+        }
       }
     }
     return null;
@@ -56,7 +73,9 @@ async function playChapter(page: Page, title: string, reloadAt: number | null) {
     const number = Number(await bubble.getAttribute("data-step"));
     const switchButton = bubble.getByTestId("tour-switch");
     if (await switchButton.isVisible()) {
+      const loaded = page.waitForEvent("load", { timeout: 30_000 });
       await switchButton.click();
+      await loaded;
       await expect(bubble).toHaveAttribute("data-step", String(number), { timeout: 20_000 });
       await expect(switchButton).toBeHidden({ timeout: 20_000 });
     }
@@ -84,6 +103,12 @@ async function playChapter(page: Page, title: string, reloadAt: number | null) {
       expect(overlaps(anchor, bubbleBox), `${label} bubble covers the anchor`).toBe(false);
     }
     await expect(bubble.getByTestId("tour-anchor-missing")).toHaveCount(0);
+    expect(["exact", "fallback"], `${label} route`).toContain(
+      await bubble.getAttribute("data-route"),
+    );
+    if (!fakeDataFallbacks.some((prefix) => anchorName.startsWith(prefix))) {
+      expect(await bubble.getAttribute("data-match"), `${label} ringed a fallback`).toBe("0");
+    }
     if ((await bubble.getAttribute("data-gpu")) === "yes") {
       await expect(bubble.getByTestId("tour-gpu-note")).toBeVisible();
     }
@@ -95,7 +120,7 @@ async function playChapter(page: Page, title: string, reloadAt: number | null) {
     if (advance === "next") {
       await bubble.getByTestId("tour-next").click();
     } else {
-      await page.locator(selector).locator("visible=true").first().click();
+      await page.locator(selector.split("\n").join(",")).locator("visible=true").first().click();
     }
     const gone = await bubble
       .waitFor({ state: "hidden", timeout: 1500 })

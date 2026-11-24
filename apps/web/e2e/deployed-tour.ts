@@ -28,10 +28,12 @@ if (values.help || !existsSync(values.state)) {
 
 const shownBox = (page: Page, selector: string) =>
   page.evaluate((query) => {
-    for (const element of document.querySelectorAll(query)) {
-      const rect = element.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+    for (const one of query.split("\n")) {
+      for (const element of document.querySelectorAll(one)) {
+        const rect = element.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+        }
       }
     }
     return null;
@@ -44,6 +46,7 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 let failures = 0;
+let fallbackAnchors = 0;
 const stepLimit = 60;
 
 async function openMenu() {
@@ -63,8 +66,12 @@ async function playOne(index: number, title: string) {
     const number = Number(await bubble.getAttribute("data-step"));
     const switchButton = bubble.getByTestId("tour-switch");
     if (await switchButton.isVisible()) {
+      const loaded = page.waitForEvent("load", { timeout: 20_000 }).then(
+        () => true,
+        () => false,
+      );
       await switchButton.click();
-      await page.waitForLoadState("load");
+      await loaded;
       if (await bubble.getByTestId("tour-switch-failed").isVisible()) {
         throw new Error(`step ${number}: the server refused the role switch`);
       }
@@ -79,14 +86,26 @@ async function playOne(index: number, title: string) {
     );
     const box = selector ? await shownBox(page, selector) : null;
     const who = (await bubble.locator("p").nth(1).textContent()) ?? "";
-    const ok = ringed && box !== null;
+    await page
+      .waitForFunction(
+        () =>
+          document.querySelector('[data-testid="tour-bubble"]')?.getAttribute("data-route") !==
+          "pending",
+        undefined,
+        { timeout: 20_000 },
+      )
+      .catch(() => undefined);
+    const routeKind = (await bubble.getAttribute("data-route")) ?? "";
+    const match = (await bubble.getAttribute("data-match")) ?? "";
+    const ok = ringed && box !== null && routeKind === "exact" && match !== "none";
+    if (match !== "0" && match !== "none") fallbackAnchors += 1;
     process.stdout.write(
-      `${index + 1}.${number} ${anchor} ${ok ? "ringed" : "MISSING"}${gpu ? " gpu-skipped" : ""} ${who.trim()} ${page.url()}\n`,
+      `${index + 1}.${number} ${anchor} ${ok ? "ringed" : "MISSING"} route=${routeKind} alternative=${match}${gpu ? " gpu-skipped" : ""} ${who.trim()} ${page.url()}\n`,
     );
     if (!ok) failures += 1;
     const advance = await bubble.getAttribute("data-advance");
     if (advance !== "next" && box !== null && !gpu) {
-      await page.locator(selector).locator("visible=true").first().click();
+      await page.locator(selector.split("\n").join(",")).locator("visible=true").first().click();
     } else {
       await bubble.getByTestId("tour-next").click();
     }
@@ -104,7 +123,7 @@ async function playOne(index: number, title: string) {
 
 try {
   const menu = await openMenu();
-  const titles = (await menu.getByRole("button", { name: /^Play / }).allTextContents()).map(
+  const titles = (await menu.getByRole("button", { name: /^Play (?!all)/ }).allTextContents()).map(
     (text) => text.replace(/^Play /, ""),
   );
   for (const [index, title] of titles.entries()) {
@@ -116,6 +135,11 @@ try {
   await browser.close();
 }
 process.stdout.write(
-  failures === 0 ? "every step ringed its control\n" : `${failures} steps missed\n`,
+  `${fallbackAnchors} steps ringed a fallback anchor, which is expected on refused and empty pages\n`,
+);
+process.stdout.write(
+  failures === 0
+    ? "every step resolved its seeded names and ringed its control\n"
+    : `${failures} steps missed or used a stand-in seeded name\n`,
 );
 process.exit(failures === 0 ? 0 : 1);

@@ -5,4 +5,6 @@ const one = (name: string) => {
   return `[data-tour="${name}"]`;
 };
 
-export const anchorSelector = (anchor: string) => anchor.split("|").map(one).join(",");
+export const anchorSelectors = (anchor: string) => anchor.split("|").map(one);
+
+export const anchorSelector = (anchor: string) => anchorSelectors(anchor).join(",");

@@ -6560,13 +6560,13 @@ msgstr "Debug handle"
 msgid "Decide"
 msgstr "Decide"
 
-#: src/app-tour/tour-chapters.ts
-msgid "Decide a row by agreeing with one reviewer, choosing a class or drawing the outline again. The decision becomes the final answer."
-msgstr "Decide a row by agreeing with one reviewer, choosing a class or drawing the outline again. The decision becomes the final answer."
-
 #: src/routes/issue-states.tsx
 msgid "Decide objects"
 msgstr "Decide objects"
+
+#: src/app-tour/tour-chapters.ts
+msgid "Decide the row by agreeing with one reviewer, choosing a class or drawing the outline again. The decision becomes the final answer."
+msgstr "Decide the row by agreeing with one reviewer, choosing a class or drawing the outline again. The decision becomes the final answer."
 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Decided by"
@@ -9859,8 +9859,8 @@ msgid "Leave a comment on an object ID"
 msgstr "Leave a comment on an object ID"
 
 #: src/app-tour/tour-chapters.ts
-msgid "Leave a row open, or ask the reviewers to look again. Send to an adjudicator hands the hard rows to one person."
-msgstr "Leave a row open, or ask the reviewers to look again. Send to an adjudicator hands the hard rows to one person."
+msgid "Leave a row open, or ask the reviewers to look again. Send to an adjudicator hands the ticked rows to one person."
+msgstr "Leave a row open, or ask the reviewers to look again. Send to an adjudicator hands the ticked rows to one person."
 
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
@@ -10481,6 +10481,10 @@ msgstr "Maps to"
 #: src/screens/notifications/notifications-screen.tsx
 msgid "Mark all read"
 msgstr "Mark all read"
+
+#: src/app-tour/tour-chapters.ts
+msgid "Mark all read clears the bell. You can also mute a kind of notification in the settings."
+msgstr "Mark all read clears the bell. You can also mute a kind of notification in the settings."
 
 #: src/viewer/annotate-task-panel.tsx
 msgid "Mark slide checked"
@@ -13252,6 +13256,10 @@ msgstr "Password strength"
 msgid "Patch exports"
 msgstr "Patch exports"
 
+#: src/app-tour/tour-chapters.ts
+msgid "Patch exports make the training files, patches with masks and a COCO file, from a frozen version."
+msgstr "Patch exports make the training files, patches with masks and a COCO file, from a frozen version."
+
 #: src/viewer/patch-export-dialog.tsx
 msgid "Patches of version {datasetVersion}"
 msgstr "Patches of version {datasetVersion}"
@@ -13750,6 +13758,10 @@ msgstr "press <0/> or <1/>"
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Press a key"
 msgstr "Press a key"
+
+#: src/app-tour/tour-chapters.ts
+msgid "Press a row to see the evidence. It shows both reviewers' answers, their notes and what the AI said."
+msgstr "Press a row to see the evidence. It shows both reviewers' answers, their notes and what the AI said."
 
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "Press any key to see what it does…"
@@ -18097,8 +18109,8 @@ msgid "The dashed orange outline is theirs. Yours is deleted."
 msgstr "The dashed orange outline is theirs. Yours is deleted."
 
 #: src/app-tour/tour-chapters.ts
-msgid "The dataset page holds the final layer, the frozen versions and the patch exports with masks and COCO files for training."
-msgstr "The dataset page holds the final layer, the frozen versions and the patch exports with masks and COCO files for training."
+msgid "The dataset page holds the final layer and the frozen versions. A version never changes after it is frozen."
+msgstr "The dataset page holds the final layer and the frozen versions. A version never changes after it is frozen."
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "The decision cutoff is {value}%."
@@ -18121,8 +18133,8 @@ msgid "The diagonal is agreement between the AI and the consensus."
 msgstr "The diagonal is agreement between the AI and the consensus."
 
 #: src/app-tour/tour-chapters.ts
-msgid "The disagreement queue lists every object where reviewers differ. A row shows both answers, the evidence and what the AI said."
-msgstr "The disagreement queue lists every object where reviewers differ. A row shows both answers, the evidence and what the AI said."
+msgid "The disagreement queue lists every object where reviewers differ, one row each. Tick rows to act on several at once."
+msgstr "The disagreement queue lists every object where reviewers differ, one row each. Tick rows to act on several at once."
 
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "The display settings you have now, on {slideLabel} in {taskCode}"
@@ -18162,8 +18174,8 @@ msgid "The due date is in the past."
 msgstr "The due date is in the past."
 
 #: src/app-tour/tour-chapters.ts
-msgid "The evaluation report compares the AI with the final answers, with agreement and a table per class. Share it by link or export a PDF."
-msgstr "The evaluation report compares the AI with the final answers, with agreement and a table per class. Share it by link or export a PDF."
+msgid "The evaluation report compares the AI with the final answers. Share it by link or export a PDF from the bar above it."
+msgstr "The evaluation report compares the AI with the final answers. Share it by link or export a PDF from the bar above it."
 
 #: src/annotations/task-export.ts
 #: src/viewer/slide-export-menu.tsx
@@ -18311,8 +18323,8 @@ msgid "The nine chapters from upload to the co-signed clinical report"
 msgstr "The nine chapters from upload to the co-signed clinical report"
 
 #: src/app-tour/tour-chapters.ts
-msgid "The notifications page lists them all. Press one to open its target, mark it read or mute that kind."
-msgstr "The notifications page lists them all. Press one to open its target, mark it read or mute that kind."
+msgid "The notifications page lists them all, newest first. Press one to open its target."
+msgstr "The notifications page lists them all, newest first. Press one to open its target."
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "The object in focus"
@@ -18829,6 +18841,10 @@ msgstr "The test fills this in."
 #: src/screens/review/pinned-thread.tsx
 msgid "The thread did not save. Try again."
 msgstr "The thread did not save. Try again."
+
+#: src/app-tour/tour-chapters.ts
+msgid "The tiles give the agreement and the error counts. The table beneath shows each class and where the AI and the final answers part."
+msgstr "The tiles give the agreement and the error counts. The table beneath shows each class and where the AI and the final answers part."
 
 #: src/app-tour/tour-chapters.ts
 msgid "The tool rail holds the tools. Measure draws a ruler, Compare opens a second slide, and the drawing tools appear when a task asks for them."

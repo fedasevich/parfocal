@@ -81,11 +81,16 @@ export function NotificationsScreen({ size }: { size: number }) {
             <Trans>Every notification, read and unread, newest first</Trans>
           </p>
         </div>
-        <Button onClick={() => void markAll()} disabled={markRead.isPending}>
+        <Button
+          data-tour="notifications-mark-all"
+          onClick={() => void markAll()}
+          disabled={markRead.isPending}
+        >
           <Trans>Mark all read</Trans>
         </Button>
       </header>
       <ul
+        data-tour="notifications-list"
         aria-label={t`All notifications`}
         className="m-0 max-w-[760px] list-none overflow-hidden rounded-lg border border-line p-0"
         data-phi=""
