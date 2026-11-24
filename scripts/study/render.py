@@ -199,8 +199,8 @@ COMPARISON_HEADER = ["Measure", "Round 4", "Round 4 source", "Round 5", "Round 5
 
 DEAD_CLICK_DIFFERENCE = (
     "Both count a click in the app on nothing that reacts, but round 5 judges it by whether "
-    "the page changed within 800 ms and skips drags, where round 4 listed the mock's "
-    "clickable attributes"
+    "the page or the slide view changed within 800 ms and skips drags, where round 4 listed "
+    "the mock's clickable attributes"
 )
 
 

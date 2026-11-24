@@ -97,3 +97,14 @@ test("the replay marks round 4 dead clicks and the earlier silent control presse
   assert.deepEqual(deadClicks(log), [1000]);
   assert.deepEqual(silentControlClicks(log), [2000]);
 });
+
+test("a click on the slide that only moved the camera reacted", () => {
+  const camera = { slide: "s", x: 1, y: 2, zoom: 1, w: 10, h: 10, vw: 5, vh: 5 };
+  const log: TraceEvent[] = [
+    { t: 0, k: "load", path: "/", reload: false, w: 1, h: 1, head: [] },
+    { t: 1000, k: "click", x: 0, y: 0, target: "canvas", interactive: false, held: 60 },
+    { t: 1250, k: "camera", ...camera },
+    { t: 3000, k: "key", key: "a" },
+  ];
+  assert.deepEqual(deadClicks(log), []);
+});

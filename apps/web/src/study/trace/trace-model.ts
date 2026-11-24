@@ -131,7 +131,7 @@ const reactedBetween = (events: TraceEvent[], from: number, to: number): boolean
     (event) =>
       event.t >= from &&
       event.t <= to &&
-      (event.k === "mutation" || event.k === "load" || event.k === "route"),
+      (event.k === "mutation" || event.k === "load" || event.k === "route" || event.k === "camera"),
   );
 
 export function deadClicks(events: TraceEvent[], windowMs = deadClickWindowMs): number[] {

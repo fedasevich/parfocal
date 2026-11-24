@@ -4649,8 +4649,8 @@ msgid "Both are told by email."
 msgstr "Both are told by email."
 
 #: src/study/study-results-panel.tsx
-msgid "Both count a click in the app on nothing that reacts, but this round judges it by whether the page changed within 800 ms and skips drags, where round 4 listed which mock elements could be clicked."
-msgstr "Both count a click in the app on nothing that reacts, but this round judges it by whether the page changed within 800 ms and skips drags, where round 4 listed which mock elements could be clicked."
+msgid "Both count a click in the app on nothing that reacts, but this round judges it by whether the page or the slide view changed within 800 ms and skips drags, where round 4 listed which mock elements could be clicked."
+msgstr "Both count a click in the app on nothing that reacts, but this round judges it by whether the page or the slide view changed within 800 ms and skips drags, where round 4 listed which mock elements could be clicked."
 
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Both of you deleted it."

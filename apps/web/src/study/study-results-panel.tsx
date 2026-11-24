@@ -198,8 +198,8 @@ function RoundCompare({ sessions }: { sessions: ServerSession[] }) {
       differs: (
         <Trans>
           Both count a click in the app on nothing that reacts, but this round judges it by whether
-          the page changed within 800 ms and skips drags, where round 4 listed which mock elements
-          could be clicked.
+          the page or the slide view changed within 800 ms and skips drags, where round 4 listed
+          which mock elements could be clicked.
         </Trans>
       ),
     },
@@ -207,7 +207,7 @@ function RoundCompare({ sessions }: { sessions: ServerSession[] }) {
       key: "silent",
       label: <Trans>Control presses with no change, the earlier round 5 rule</Trans>,
       four: dash,
-      now: `${now.silentControlClicks} of ${now.clicks}`,
+      now: now.silentControlClicks === null ? dash : `${now.silentControlClicks} of ${now.clicks}`,
       differs: <Trans>Round 4 did not measure this.</Trans>,
     },
     {

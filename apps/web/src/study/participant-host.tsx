@@ -142,7 +142,9 @@ function TaskBar({
 
   useEffect(() => {
     if (taskId === undefined) return;
-    meter.current = startTaskMeter(document, undefined, firstClick);
+    meter.current = startTaskMeter(document, undefined, firstClick, () =>
+      JSON.stringify(readStageCameras()),
+    );
     recorder.current?.mark(taskId, "start");
     return () => {
       meter.current?.stop();

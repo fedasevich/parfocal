@@ -135,16 +135,26 @@ export function startTaskMeter(
   doc: Document,
   clock: () => number = () => performance.now(),
   firstClickTarget?: string,
+  camera: () => string = () => "",
 ): TaskMeter {
   const startedAt = clock();
   const events: MeterEvent[] = [];
   let firstClickCorrect: boolean | null = null;
   let clicked = false;
-  let press: { t: number; x: number; y: number } | null = null;
+  let press: { t: number; x: number; y: number; camera: string } | null = null;
   const path: { x: number; y: number }[] = [];
   let lastWheel = Number.NEGATIVE_INFINITY;
   let lastChange = Number.NEGATIVE_INFINITY;
   const view = doc.defaultView ?? window;
+  const timers = new Set<number>();
+
+  const watchCamera = (at: number, before: string) => {
+    const timer = view.setTimeout(() => {
+      timers.delete(timer);
+      if (camera() !== before) events.push({ k: "change", t: at });
+    }, deadClickWindowMs);
+    timers.add(timer);
+  };
 
   const onPointerMove = (event: Event) => {
     if (clicked || !("clientX" in event)) return;
@@ -156,7 +166,7 @@ export function startTaskMeter(
     if (inStudyUi(event.target)) return;
     const at = clock();
     const { clientX = 0, clientY = 0 } = event as Partial<PointerEvent>;
-    press = { t: at, x: clientX, y: clientY };
+    press = { t: at, x: clientX, y: clientY, camera: camera() };
     events.push({ k: "press", t: at, control: isClickable(event.target) });
     if (clicked) return;
     clicked = true;
@@ -172,9 +182,11 @@ export function startTaskMeter(
   const onClick = (event: Event) => {
     if (inStudyUi(event.target) || press === null) return;
     const { clientX = press.x, clientY = press.y } = event as Partial<MouseEvent>;
+    const at = clock();
+    watchCamera(at, press.camera);
     events.push({
       k: "click",
-      t: clock(),
+      t: at,
       pressedAt: press.t,
       control: isClickable(event.target),
       dragged: Math.hypot(clientX - press.x, clientY - press.y) >= dragDistancePx,
@@ -185,7 +197,9 @@ export function startTaskMeter(
   const onKey = (event: Event) => {
     const target = elementOf(event.target);
     if (inStudyUi(target)) return;
-    events.push({ k: "key", t: clock(), field: target?.closest(fieldSelector) != null });
+    const at = clock();
+    watchCamera(at, camera());
+    events.push({ k: "key", t: at, field: target?.closest(fieldSelector) != null });
   };
 
   const onWheel = (event: Event) => {
@@ -237,6 +251,8 @@ export function startTaskMeter(
       doc.removeEventListener("keydown", onKey, options);
       doc.removeEventListener("wheel", onWheel, options);
       observer.disconnect();
+      for (const timer of timers) view.clearTimeout(timer);
+      timers.clear();
     },
   };
 }
