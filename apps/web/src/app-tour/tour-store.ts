@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { tourMenuEvent } from "./tour-menu-event.ts";
 import { firstStepOf, type TourRole, tourRoles, tourSteps } from "./tour-steps.ts";
 
 export type TourState = {
@@ -8,7 +9,6 @@ export type TourState = {
 };
 
 const storageKey = "parfocal.app-tour";
-export const tourMenuEvent = "app-tour-menu";
 
 const listeners = new Set<() => void>();
 let menuOpen = false;
@@ -58,8 +58,6 @@ window.addEventListener(tourMenuEvent, () => {
   menuOpen = true;
   emit();
 });
-
-export const openTourMenu = () => window.dispatchEvent(new Event(tourMenuEvent));
 
 export const closeTourMenu = () => {
   menuOpen = false;

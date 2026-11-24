@@ -1,5 +1,5 @@
 import type { IconName } from "@parfocal/ui/components/icon";
-import { openTourMenu } from "../app-tour/tour-store.ts";
+import { openTourMenu } from "../app-tour/tour-menu-event.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
 import { developerNav } from "../screens/developer/developer-data.ts";
 import { keyAction } from "../screens/settings/keymap.ts";

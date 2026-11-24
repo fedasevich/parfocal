@@ -13,7 +13,7 @@ import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { openTourMenu } from "../app-tour/tour-store.ts";
+import { openTourMenu } from "../app-tour/tour-menu-event.ts";
 import { now } from "../clock.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
 import { toPersonInfo } from "../screens/people.ts";
