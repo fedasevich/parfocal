@@ -9,7 +9,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { type Box, bubblePlace, ringBox } from "./tour-geometry.ts";
-import { resolveRoute } from "./tour-routes.ts";
+import { type ResolvedRoute, resolveRoute } from "./tour-routes.ts";
+import { anchorSelectors } from "./tour-selector.ts";
 import { type PlacedStep, type TourRole, tourChapters, tourSteps } from "./tour-steps.ts";
 import {
   closeTourMenu,
@@ -26,18 +27,21 @@ import {
 
 const missingAfter = 4000;
 
-export const anchorSelector = (anchor: string) => `[data-tour="${anchor}"]`;
+type Shown = { element: Element; alternative: number };
 
-function shownAnchor(anchor: string): Element | null {
-  for (const element of document.querySelectorAll(anchorSelector(anchor))) {
-    const rect = element.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) return element;
+function shownAnchor(anchor: string): Shown | null {
+  for (const [alternative, selector] of anchorSelectors(anchor).entries()) {
+    for (const element of document.querySelectorAll(selector)) {
+      const rect = element.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) return { element, alternative };
+    }
   }
   return null;
 }
 
-function useAnchorBox(anchor: string): { box: Box | null; missing: boolean } {
+function useAnchorBox(anchor: string): { box: Box | null; missing: boolean; alternative: number } {
   const [box, setBox] = useState<Box | null>(null);
+  const [alternative, setAlternative] = useState(-1);
   const [missing, setMissing] = useState(false);
   useEffect(() => {
     setBox(null);
@@ -47,7 +51,9 @@ function useAnchorBox(anchor: string): { box: Box | null; missing: boolean } {
     let watched: Element | null = null;
     const measure = () => {
       frame = 0;
-      const element = shownAnchor(anchor);
+      const shown = shownAnchor(anchor);
+      const element = shown?.element ?? null;
+      setAlternative(shown?.alternative ?? -1);
       if (element !== watched) {
         if (watched) resize.unobserve(watched);
         if (element) resize.observe(element);
@@ -85,7 +91,7 @@ function useAnchorBox(anchor: string): { box: Box | null; missing: boolean } {
       window.removeEventListener("resize", schedule);
     };
   }, [anchor]);
-  return { box, missing };
+  return { box, missing, alternative };
 }
 
 async function leaveRole(acting: TourRole) {
@@ -123,24 +129,30 @@ function useRoleLabel() {
 function useStepRoute(step: PlacedStep, ready: boolean) {
   const router = useRouter();
   const location = useLocation();
-  const [route, setRoute] = useState<string | null | undefined>(undefined);
+  const [resolved, setResolved] = useState<ResolvedRoute | undefined>(undefined);
+  const queried = useRef(false);
   useEffect(() => {
     if (!ready) return;
     let live = true;
-    void resolveRoute(step.route).then((resolved) => {
-      if (live) setRoute(resolved);
+    void resolveRoute(step.route).then((found) => {
+      if (live) setResolved(found);
     });
     return () => {
       live = false;
     };
   }, [step.route, ready]);
   const here = `${location.pathname}${location.searchStr}`;
+  const route = resolved?.route;
   useEffect(() => {
-    if (!ready || typeof route !== "string" || step.stay?.test(here)) return;
-    const path = route.split("?")[0];
-    if (path !== location.pathname) void router.navigate({ href: route });
-  }, [route, ready, location.pathname, here, step.stay, router]);
-  return route;
+    if (!ready || typeof route !== "string" || step.stay?.test(here) || queried.current) return;
+    queried.current = true;
+    const [path = "", query = ""] = route.split("?");
+    const wanted = new URLSearchParams(query);
+    const current = new URLSearchParams(location.searchStr);
+    const differs = [...wanted].some(([key, value]) => current.get(key) !== value);
+    if (path !== location.pathname || differs) void router.navigate({ href: route });
+  }, [route, ready, location.pathname, location.searchStr, here, step.stay, router]);
+  return resolved;
 }
 
 function useAdvance(step: PlacedStep, state: TourState, ready: boolean) {
@@ -149,7 +161,7 @@ function useAdvance(step: PlacedStep, state: TourState, ready: boolean) {
   useEffect(() => {
     if (!ready || step.advance.kind !== "click") return;
     const onClick = (event: MouseEvent) => {
-      const anchor = shownAnchor(step.anchor);
+      const anchor = shownAnchor(step.anchor)?.element;
       if (anchor && event.target instanceof Node && anchor.contains(event.target)) {
         window.setTimeout(() => after(goToStep(state.index + 1), state.acting), 0);
       }
@@ -181,7 +193,7 @@ function RoleSwitch({ step, state }: { step: PlacedStep; state: TourState }) {
       }
     }
     setActing(step.role);
-    const route = await resolveRoute(step.route);
+    const { route } = await resolveRoute(step.route);
     window.location.assign(route ?? "/");
   };
   const who = roleLabel(step.role);
@@ -199,7 +211,13 @@ function RoleSwitch({ step, state }: { step: PlacedStep; state: TourState }) {
         </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button size="xs" variant="secondary" disabled={busy} onClick={() => void switchNow()}>
+        <Button
+          size="xs"
+          variant="secondary"
+          disabled={busy}
+          data-testid="tour-switch"
+          onClick={() => void switchNow()}
+        >
           {t`Switch to the ${who}`}
         </Button>
         <Button size="xs" variant="ghost" onClick={() => setActing(step.role)}>
@@ -216,9 +234,9 @@ function TourBubble({ step, state }: { step: PlacedStep; state: TourState }) {
   const roleLabel = useRoleLabel();
   const me = okData(useGetMe().data);
   const ready = state.acting === step.role;
-  const route = useStepRoute(step, ready);
+  const resolved = useStepRoute(step, ready);
   useAdvance(step, state, ready);
-  const { box, missing } = useAnchorBox(step.anchor);
+  const { box, missing, alternative } = useAnchorBox(step.anchor);
   const shownBox = ready ? box : null;
   const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   useEffect(() => {
@@ -260,6 +278,18 @@ function TourBubble({ step, state }: { step: PlacedStep; state: TourState }) {
         data-testid="tour-bubble"
         data-step={step.number}
         data-anchor={step.anchor}
+        data-selector={anchorSelectors(step.anchor).join("\n")}
+        data-route={
+          resolved === undefined
+            ? "pending"
+            : resolved.route === null
+              ? "none"
+              : resolved.exact
+                ? "exact"
+                : "fallback"
+        }
+        data-match={shownBox === null ? "none" : alternative}
+        data-gpu={step.gpu === true ? "yes" : undefined}
         data-advance={step.advance.kind}
         className="fixed z-[71] grid w-75 gap-2 rounded-lg bg-accent p-3 text-body-sm text-on-accent shadow-pop"
         style={{ left: place.left, top: place.top }}
@@ -281,7 +311,12 @@ function TourBubble({ step, state }: { step: PlacedStep; state: TourState }) {
           </p>
         ) : null}
         {ready ? <p>{i18n._(step.text)}</p> : <RoleSwitch step={step} state={state} />}
-        {ready && route === null ? (
+        {ready && step.gpu === true ? (
+          <p data-testid="tour-gpu-note" className="font-semibold">
+            <Trans>This step uses the GPU. Press Next to skip it.</Trans>
+          </p>
+        ) : null}
+        {ready && resolved?.route === null ? (
           <p>
             <Trans>The seeded data for this step is missing, so the tour stays on this page.</Trans>
           </p>
@@ -314,6 +349,7 @@ function TourBubble({ step, state }: { step: PlacedStep; state: TourState }) {
           <Button
             size="xs"
             variant="secondary"
+            data-testid="tour-next"
             onClick={() => after(goToStep(state.index + 1), state.acting)}
           >
             {tourSteps[state.index + 1] === undefined ? t`Done` : t`Next`}

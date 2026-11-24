@@ -5,17 +5,18 @@ import { parseArgs } from "node:util";
 import { chromium, type Page } from "@playwright/test";
 
 const USAGE = [
-  "Usage: pnpm --filter @parfocal/web deployed-tour [--app https://app.parfocal.eu]",
+  "Usage: pnpm --filter @parfocal/web deployed-tour [--app https://app.parfocal.eu] [--chapter N]",
   "Signs in with the agent-walk session from python3 scripts/agent_session.py,",
-  "plays chapters 1 and 2 of the tour of the app across the role switch and",
-  "prints one line per step. The server must have TOUR_ROLE_SWITCH set.",
+  "plays every chapter of the tour of the app, switching between the role accounts,",
+  "and prints one line per step. --chapter N plays only chapter N.",
+  "The server must have TOUR_ROLE_SWITCH set. GPU steps are skipped, never run.",
 ].join("\n");
 
 const { values } = parseArgs({
   options: {
     app: { type: "string", default: "https://app.parfocal.eu" },
     state: { type: "string", default: join(homedir(), ".config/parfocal/agent-session.json") },
-    steps: { type: "string", default: "12" },
+    chapter: { type: "string", default: "" },
     help: { type: "boolean", default: false },
   },
 });
@@ -25,16 +26,18 @@ if (values.help || !existsSync(values.state)) {
   process.exit(values.help ? 0 : 1);
 }
 
-const shownBox = (page: Page, anchor: string) =>
-  page.evaluate((name) => {
-    for (const element of document.querySelectorAll(`[data-tour="${name}"]`)) {
-      const rect = element.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+const shownBox = (page: Page, selector: string) =>
+  page.evaluate((query) => {
+    for (const one of query.split("\n")) {
+      for (const element of document.querySelectorAll(one)) {
+        const rect = element.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+        }
       }
     }
     return null;
-  }, anchor);
+  }, selector);
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const context = await browser.newContext({
@@ -43,53 +46,100 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 let failures = 0;
-try {
+let fallbackAnchors = 0;
+const stepLimit = 60;
+
+async function openMenu() {
   await page.goto(`${values.app}/`);
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: "Tour of the app" }).click();
-  await page
-    .getByRole("dialog", { name: "Tour of the app" })
-    .getByRole("button", { name: "Play all" })
-    .click();
+  return page.getByRole("dialog", { name: "Tour of the app" });
+}
+
+async function playOne(index: number, title: string) {
+  const menu = await openMenu();
+  await menu.getByRole("button", { name: `Play ${title}`, exact: true }).click();
   const bubble = page.getByTestId("tour-bubble");
-  for (let number = 1; number <= Number(values.steps); number += 1) {
-    await bubble.and(page.locator(`[data-step="${number}"]`)).waitFor({ timeout: 30_000 });
-    const switchButton = bubble.getByRole("button", { name: /^Switch to the / });
+  const ring = page.getByTestId("tour-ring");
+  for (let count = 0; count < stepLimit; count += 1) {
+    await bubble.waitFor({ timeout: 30_000 });
+    const number = Number(await bubble.getAttribute("data-step"));
+    const switchButton = bubble.getByTestId("tour-switch");
     if (await switchButton.isVisible()) {
+      const loaded = page.waitForEvent("load", { timeout: 20_000 }).then(
+        () => true,
+        () => false,
+      );
       await switchButton.click();
-      await page.waitForLoadState("load");
+      await loaded;
       if (await bubble.getByTestId("tour-switch-failed").isVisible()) {
         throw new Error(`step ${number}: the server refused the role switch`);
       }
       await bubble.and(page.locator(`[data-step="${number}"]`)).waitFor({ timeout: 30_000 });
     }
-    const ring = page.getByTestId("tour-ring");
+    const anchor = (await bubble.getAttribute("data-anchor")) ?? "";
+    const selector = (await bubble.getAttribute("data-selector")) ?? "";
+    const gpu = (await bubble.getAttribute("data-gpu")) === "yes";
     const ringed = await ring.waitFor({ timeout: 20_000 }).then(
       () => true,
       () => false,
     );
-    const anchor = await page.evaluate(
-      () =>
-        document.querySelector('[data-testid="tour-bubble"]')?.getAttribute("data-anchor") ?? "",
-    );
-    const box = anchor ? await shownBox(page, anchor) : null;
+    const box = selector ? await shownBox(page, selector) : null;
     const who = (await bubble.locator("p").nth(1).textContent()) ?? "";
+    await page
+      .waitForFunction(
+        () =>
+          document.querySelector('[data-testid="tour-bubble"]')?.getAttribute("data-route") !==
+          "pending",
+        undefined,
+        { timeout: 20_000 },
+      )
+      .catch(() => undefined);
+    const routeKind = (await bubble.getAttribute("data-route")) ?? "";
+    const match = (await bubble.getAttribute("data-match")) ?? "";
+    const ok = ringed && box !== null && routeKind === "exact" && match !== "none";
+    if (match !== "0" && match !== "none") fallbackAnchors += 1;
     process.stdout.write(
-      `${number} ${anchor} ${ringed && box ? "ringed" : "MISSING"} ${who.trim()} ${page.url()}\n`,
+      `${index + 1}.${number} ${anchor} ${ok ? "ringed" : "MISSING"} route=${routeKind} alternative=${match}${gpu ? " gpu-skipped" : ""} ${who.trim()} ${page.url()}\n`,
     );
-    if (!ringed || box === null) failures += 1;
+    if (!ok) failures += 1;
     const advance = await bubble.getAttribute("data-advance");
-    if (advance !== "next" && box !== null) {
-      await page.locator(`[data-tour="${anchor}"]:visible`).first().click();
+    if (advance !== "next" && box !== null && !gpu) {
+      await page.locator(selector.split("\n").join(",")).locator("visible=true").first().click();
     } else {
-      await bubble.getByRole("button", { name: /^(Next|Done)$/ }).click();
+      await bubble.getByTestId("tour-next").click();
+    }
+    const gone = await bubble.waitFor({ state: "hidden", timeout: 1500 }).then(
+      () => true,
+      () => false,
+    );
+    if (gone) {
+      await page.waitForLoadState("load");
+      return;
     }
   }
-  await bubble.waitFor({ state: "hidden", timeout: 30_000 });
+  throw new Error(`chapter ${title} did not end in ${stepLimit} steps`);
+}
+
+try {
+  const menu = await openMenu();
+  const titles = (await menu.getByRole("button", { name: /^Play (?!all)/ }).allTextContents()).map(
+    (text) => text.replace(/^Play /, ""),
+  );
+  for (const [index, title] of titles.entries()) {
+    if (values.chapter !== "" && Number(values.chapter) !== index + 1) continue;
+    process.stdout.write(`chapter ${index + 1} ${title}\n`);
+    await playOne(index, title);
+  }
 } finally {
   await browser.close();
 }
 process.stdout.write(
-  failures === 0 ? "every step ringed its control\n" : `${failures} steps missed\n`,
+  `${fallbackAnchors} steps ringed a fallback anchor, which is expected on refused and empty pages\n`,
+);
+process.stdout.write(
+  failures === 0
+    ? "every step resolved its seeded names and ringed its control\n"
+    : `${failures} steps missed or used a stand-in seeded name\n`,
 );
 process.exit(failures === 0 ? 0 : 1);

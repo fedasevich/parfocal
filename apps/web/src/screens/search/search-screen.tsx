@@ -113,7 +113,10 @@ export function SearchScreen({
           <Trans>Projects, cases, slides, object IDs like T2·C145, people and actions</Trans>
         </p>
       </header>
-      <search className="flex max-w-[640px] items-center gap-2.5 rounded-lg border border-line-strong bg-chrome px-3.5 py-2.5 text-lead focus-within:border-accent">
+      <search
+        data-tour="search-input"
+        className="flex max-w-[640px] items-center gap-2.5 rounded-lg border border-line-strong bg-chrome px-3.5 py-2.5 text-lead focus-within:border-accent"
+      >
         <Icon name="search" className="text-fg-dim" />
         <input
           aria-label={t`Search everything`}
@@ -127,6 +130,7 @@ export function SearchScreen({
         />
       </search>
       <SegmentedControl
+        data-tour="search-scope"
         aria-label={t`Search scope`}
         wrap
         value={state.scope}

@@ -295,7 +295,7 @@ export function ProjectPage({
           </div>
         </header>
         <Tabs value={view.tab} onValueChange={(value) => goTab(value as ProjectTab)}>
-          <TabsList variant="page">
+          <TabsList variant="page" data-tour="project-tabs">
             <TabsTrigger value="slides">
               <Trans>Slides</Trans>
               {overview ? <TabCount>{overview.slides}</TabCount> : null}
