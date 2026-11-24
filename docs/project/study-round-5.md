@@ -314,12 +314,12 @@ Round 4 and round 1 numbers are quoted from the round 4 deck, "Viewer Usability 
 | Round 4 task texts, success rules and metric names | | `poc/study/README.md` and `poc/study/public/study.js` |
 | Round 5 tasks, checks and questions | | `apps/web/src/study/study-model.ts` and `study-copy.ts` |
 | Round 5 figures | | Computed by `python3 scripts/study` from the export, never typed |
-| Seed time | 1.32 to 1.73 s locally, deployed TODO | [results/2026-11-23-participant-seed-time.md](../results/2026-11-23-participant-seed-time.md) |
+| Seed time | 1.32 to 1.73 s locally, 29 s on the deployed app through the console and 36.3 s with a cold seed function ([results/2026-11-24-study-prepare-dry-run.md](../results/2026-11-24-study-prepare-dry-run.md)) | [results/2026-11-23-participant-seed-time.md](../results/2026-11-23-participant-seed-time.md) |
 
 ## Open items
 
 - TODO: moderated or remote, in decisions.md.
 - TODO: the moderator cut-off for a task without progress.
 - TODO: how long recordings and exports are kept.
-- TODO: the deployed seed time and the session length, from the pilot.
-- TODO: whether the server export of EXP-015 (study sessions reach the server) marks dry runs. The script already honours `dryRun`, `dry` and `pilot`.
+- TODO: the session length, from the pilot.
+- The server marks dry runs. The console's Dry run tick sets `dry_run` on a session, the results page leaves those out, and the EXP-018 dry run sessions were marked so on 2026-11-24.

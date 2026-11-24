@@ -2,41 +2,37 @@
 
 Start here. Every file in `docs/` is listed below, and agents keep this index current. See [AGENTS.md](../AGENTS.md) for how these files are maintained.
 
-Last consolidated: 2026-11-15
+Last consolidated: 2026-11-24
 
 ## In progress
 
-State on 2026-11-24. The deployed app runs in Europe at v0.51.0, and `app.parfocal.eu` is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The guided tour plays 16 chapters across the role accounts there, with its role switch on through the Modal secret `parfocal-api-tour` ([ADR 0437](adr/0437-the-guided-tour-switches-to-role-accounts-on-the-dev-app.md)), and the study console prepares a participant project through the seed function ([ADR 0439](adr/0439-the-console-prepares-a-participant-through-the-seed-function.md)). Agents sign in with `scripts/agent_session.py` and run the deployed checks themselves. Main CI is red and being repaired. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+State on 2026-11-24. `app.parfocal.eu` runs v0.51.0 in Europe and is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). Agents sign in there with `scripts/agent_session.py`, run the deployed checks themselves and tick tasks on them. The lead fixed main CI on 2026-11-24, and its run was not finished at consolidation. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
-The owner's open steps and the Mac checks are in [decisions.md](decisions.md), which starts with what to do next in order. Answered decisions move to [decisions-answered.md](decisions-answered.md).
+The owner's open steps and questions are in [decisions.md](decisions.md), which starts with what to do next in order. Answered decisions move to [decisions-answered.md](decisions-answered.md).
 
 ## Where we are now
 
-Parfocal is an app for reviewing AI results on whole slides and annotating slides for training data ([ADR 0053](adr/0053-ai-results-review-direction.md), the AI results review direction). No count is written here. `python3 scripts/board.py counts` prints tasks and ticks per milestone gate and per epic.
+Parfocal reviews AI results on whole slides and annotates slides for training data ([ADR 0053](adr/0053-ai-results-review-direction.md), the AI results review direction). `python3 scripts/board.py counts` prints tasks and ticks per milestone gate and per epic. The review loop (M3), AI runs (M4) and collaboration and evaluation (M5) have every gate task ticked.
 
 | Area | State |
 |---|---|
-| Cloud | Open, with a standing yes for additive production writes inside $30 a month ([ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md)). Production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md)). SKEL-001 is open, and SEC-031's guard now refuses agents' destructive cloud actions ([knowledge/platform.md](knowledge/platform.md), [knowledge/agent-tooling.md](knowledge/agent-tooling.md)) |
-| Repository and CI | pnpm and Turborepo with TypeScript and Biome, Python 3.14 with uv, tooling pins raised by FOUND-027. The web suite runs on a built app (FOUND-026), and `bash scripts/lead/ci.sh` prints the result ([knowledge/tooling.md](knowledge/tooling.md)) |
-| Viewer, tiles and ingest (M2) | Viv reads every POC format natively, including NDPI, BIF, Philips, OME-Zarr and JPEG 2000, which stays native ([knowledge/slide-formats.md](knowledge/slide-formats.md)). The deck.gl WebGPU route matches Viv's goldens and a developer setting picks the route. The custom WebGPU route lacks culling and detail tiers (VIEW-073), and per-format CI budgets exist ([knowledge/viewer-build.md](knowledge/viewer-build.md)) |
-| Annotation path (MA) | The tasks [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md) lists are ticked except PILOT-005 (moderated usability study, second round) |
-| Review loop (M3) | Built, from result sets and heatmaps to guided review and decisions. The screens run on fake data through MSW ([ADR 0135](adr/0135-fake-data-through-the-api-client-with-msw.md)), and every screen string is translatable (I18N) |
-| AI runs (M4) | Model runs, layers, heatmaps with pyramid export, interactive segmentation, streamed nuclei, a registry table with a per-task promotion gate and a server patch service. Tumor maps are barely started |
-| Learning and evaluation (M5, M6) | The learner corrects types in the browser, and per-tenant training rounds pool reviewed nuclei on the server and promote through the gate. The Modal pooling job is not built ([knowledge/evaluation.md](knowledge/evaluation.md)) |
-| Security and pilot (M6) | Row-level security, a hash-chained audit log, isolated parsing of uploads in a child process (SEC-026, sandbox in SEC-045) and the [threat model](security/threat-model.md). The OPS cloud parts are open |
-
-Tasks in the review column wait for an owner look, a cloud step or another task, and [decisions.md](decisions.md) says what each one waits for.
+| Cloud | Production is the only cloud environment, with a standing yes for additive writes inside $30 a month ([ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md)). Deploys are cut by hand with `pnpm release` and `deploy.yml`, and CI deploys on main are on hold (SKEL-009, OPS-005) ([knowledge/deploy.md](knowledge/deploy.md)) |
+| Viewer (M2) | Viv reads every POC format natively ([knowledge/slide-formats.md](knowledge/slide-formats.md)). Open are the hardware checks at the owner's Mac (VIEW-021, VIEW-052, DEV-013) and a CDN in front of slide storage (TILES-002) |
+| Review, annotate and AI | Built and walked on the deployed app with real model results, from upload through review, adjudication, sign-off and a frozen dataset. Whole slide runs wait for a free L4, which PROTO-168 measured at 29.6 minutes |
+| Guided tour | 16 chapters ring every control across the six role accounts, switching account through a flagged server switch ([ADR 0437](adr/0437-the-guided-tour-switches-to-role-accounts-on-the-dev-app.md)) |
+| Usability study | Round 5 runs for a participant in one tab, uploads traces to the API, measures as round 4 did, and the console prepares a participant project through the seed function ([ADR 0439](adr/0439-the-console-prepares-a-participant-through-the-seed-function.md), [project/study-round-5.md](project/study-round-5.md)) |
+| Security and pilot (M6) | Row-level security, a hash-chained audit log, sandboxed parsing and an agent guard. Backups, observability, alerting and production readiness are on hold by the owner's answers |
 
 ## Next up
 
-1. TEST-044 (web specs green on the built app) and TEST-043 (the sidecar open check does not depend on machine load).
-2. SKEL-001 (production environment exists) is in review after its production smoke check, and SKEL-009 (CI deploys main to production) follows it.
-3. VIEW-073 (finish the custom WebGPU route): compute culling and detail tiers.
-4. SEC-045 (isolate the remaining parse steps and run them in a Modal sandbox).
-5. FOUND-035 (squash the migrations into one baseline) before any shared database.
-6. FOUND-036 (split the largest source files) while no agent works in them.
-7. AITUM-001 (tumor map job) and MLEVAL-005 (tumor map evaluation), which the promotion gate waits for.
-8. PILOT-004 (pilot data onboarding) for the thesis slice.
+1. PROTO-168 (a queued whole slide run starts in time), after the owner's decision on a bigger GPU fallback.
+2. The ui visual goldens refresh with the `update_goldens` CI run, then a green main CI.
+3. PILOT-005 (moderated usability study, second round), the last open task of the annotation path.
+4. PROTO-129 (the overview map marker follows the camera on every slide).
+5. OPS-036 (view maps and tumor maps open a seeded slide from the folder beside its original).
+6. OPS-009 (storage lifecycle and cost controls): the R2 lifecycle drill and a first live cost report.
+7. TEST-010 (load test tooling): an agent mints the read-only load token that decision 124 (a load workflow token, option A) asked for, now that deploys run.
+8. OPS-014 (prepare production for the first real user), which removes the tour switch and the seed secret.
 
 ## Index
 
