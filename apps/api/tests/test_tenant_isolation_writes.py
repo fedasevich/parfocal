@@ -101,6 +101,10 @@ PROBED_ELSEWHERE: dict[str, tuple[str, str]] = {
         "test_a_reset_link_for_an_unknown_user_or_wrong_code_is_refused",
     ),
     "removePasskey": ("test_passkeys", "test_only_the_callers_own_passkeys_can_be_removed"),
+    "switchToTourRole": (
+        "test_tour_switch",
+        "test_a_role_account_in_another_workspace_is_not_a_target",
+    ),
 }
 
 CONFLICT = frozenset({409})
@@ -734,6 +738,11 @@ UNAIMED_WRITES: dict[str, str] = {
     "saveStudyTracePart": "stores a trace part under a key in the caller's workspace",
     "markStudyDryRun": "marks a session by its key, and row security hides other workspaces' keys",
     "endOtherSessions": "ends the caller's own other sessions",
+    "returnFromTourRole": "restores the caller's own session to the account it started from",
+    **dict.fromkeys(
+        ("prepareStudyParticipant", "removeStudyParticipant"),
+        "seeds or removes a project by its plain code in the one shared study workspace",
+    ),
     "sendFeedback": "files feedback under the caller's workspace",
     "acceptInvitation": "takes a secret token, which is the invitation itself",
     "updateMe": "changes the caller's own profile",
