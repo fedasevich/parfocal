@@ -309,7 +309,7 @@ export function TeamScreen({
           change({ tab: value as TeamState["tab"], project: undefined, reviewer: undefined });
         }}
       >
-        <TabsList variant="page">
+        <TabsList variant="page" data-tour="team-tabs">
           <TabsTrigger value="open">
             <Trans>Open tasks</Trans>
             <TabCount>{team.open.length}</TabCount>

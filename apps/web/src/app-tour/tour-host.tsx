@@ -10,6 +10,7 @@ import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { type Box, bubblePlace, ringBox } from "./tour-geometry.ts";
 import { resolveRoute } from "./tour-routes.ts";
+import { anchorSelector } from "./tour-selector.ts";
 import { type PlacedStep, type TourRole, tourChapters, tourSteps } from "./tour-steps.ts";
 import {
   closeTourMenu,
@@ -25,8 +26,6 @@ import {
 } from "./tour-store.ts";
 
 const missingAfter = 4000;
-
-export const anchorSelector = (anchor: string) => `[data-tour="${anchor}"]`;
 
 function shownAnchor(anchor: string): Element | null {
   for (const element of document.querySelectorAll(anchorSelector(anchor))) {
@@ -124,6 +123,7 @@ function useStepRoute(step: PlacedStep, ready: boolean) {
   const router = useRouter();
   const location = useLocation();
   const [route, setRoute] = useState<string | null | undefined>(undefined);
+  const queried = useRef(false);
   useEffect(() => {
     if (!ready) return;
     let live = true;
@@ -137,9 +137,16 @@ function useStepRoute(step: PlacedStep, ready: boolean) {
   const here = `${location.pathname}${location.searchStr}`;
   useEffect(() => {
     if (!ready || typeof route !== "string" || step.stay?.test(here)) return;
-    const path = route.split("?")[0];
-    if (path !== location.pathname) void router.navigate({ href: route });
-  }, [route, ready, location.pathname, here, step.stay, router]);
+    if (queried.current) return;
+    const [path = "", query = ""] = route.split("?");
+    const wanted = new URLSearchParams(query);
+    const current = new URLSearchParams(location.searchStr);
+    const differs = [...wanted].some(([key, value]) => current.get(key) !== value);
+    if (path !== location.pathname || differs) {
+      queried.current = true;
+      void router.navigate({ href: route });
+    }
+  }, [route, ready, location.pathname, location.searchStr, here, step.stay, router]);
   return route;
 }
 
@@ -199,7 +206,13 @@ function RoleSwitch({ step, state }: { step: PlacedStep; state: TourState }) {
         </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button size="xs" variant="secondary" disabled={busy} onClick={() => void switchNow()}>
+        <Button
+          size="xs"
+          variant="secondary"
+          disabled={busy}
+          data-testid="tour-switch"
+          onClick={() => void switchNow()}
+        >
           {t`Switch to the ${who}`}
         </Button>
         <Button size="xs" variant="ghost" onClick={() => setActing(step.role)}>
@@ -260,6 +273,8 @@ function TourBubble({ step, state }: { step: PlacedStep; state: TourState }) {
         data-testid="tour-bubble"
         data-step={step.number}
         data-anchor={step.anchor}
+        data-selector={anchorSelector(step.anchor)}
+        data-gpu={step.gpu === true ? "yes" : undefined}
         data-advance={step.advance.kind}
         className="fixed z-[71] grid w-75 gap-2 rounded-lg bg-accent p-3 text-body-sm text-on-accent shadow-pop"
         style={{ left: place.left, top: place.top }}
@@ -281,6 +296,11 @@ function TourBubble({ step, state }: { step: PlacedStep; state: TourState }) {
           </p>
         ) : null}
         {ready ? <p>{i18n._(step.text)}</p> : <RoleSwitch step={step} state={state} />}
+        {ready && step.gpu === true ? (
+          <p data-testid="tour-gpu-note" className="font-semibold">
+            <Trans>This step uses the GPU. Press Next to skip it.</Trans>
+          </p>
+        ) : null}
         {ready && route === null ? (
           <p>
             <Trans>The seeded data for this step is missing, so the tour stays on this page.</Trans>
@@ -314,6 +334,7 @@ function TourBubble({ step, state }: { step: PlacedStep; state: TourState }) {
           <Button
             size="xs"
             variant="secondary"
+            data-testid="tour-next"
             onClick={() => after(goToStep(state.index + 1), state.acting)}
           >
             {tourSteps[state.index + 1] === undefined ? t`Done` : t`Next`}

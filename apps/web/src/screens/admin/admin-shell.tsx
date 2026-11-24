@@ -132,6 +132,7 @@ export function AdminShell({
       side={
         folded ? null : (
           <Sidebar
+            data-tour="admin-sections"
             aria-label={t`Admin sections`}
             sections={sections}
             active={section}

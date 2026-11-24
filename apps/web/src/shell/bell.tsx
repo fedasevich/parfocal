@@ -145,6 +145,7 @@ export function Bell() {
             variant="ghost"
             size="icon"
             className="relative"
+            data-tour="bell"
             aria-label={t`Notifications, ${unread} unread`}
             title={t`Notifications: ${unread} unread. Mentions, replies, tasks and jobs`}
           />

@@ -6,6 +6,7 @@ export type TourState = {
   index: number;
   playAll: boolean;
   acting: TourRole;
+  ids?: Record<string, string>;
 };
 
 const storageKey = "parfocal.app-tour";
@@ -22,9 +23,14 @@ function read(): TourState | null {
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(storageKey) ?? "null");
     if (typeof parsed !== "object" || parsed === null) return null;
-    const { index, playAll, acting } = parsed as Record<string, unknown>;
+    const { index, playAll, acting, ids } = parsed as Record<string, unknown>;
     if (typeof index !== "number" || tourSteps[index] === undefined) return null;
-    return { index, playAll: playAll === true, acting: isRole(acting) ? acting : "owner" };
+    return {
+      index,
+      playAll: playAll === true,
+      acting: isRole(acting) ? acting : "owner",
+      ...(typeof ids === "object" && ids !== null ? { ids: ids as Record<string, string> } : {}),
+    };
   } catch {
     return null;
   }
@@ -84,7 +90,12 @@ export function playChapter(chapter: number, playAll: boolean) {
   const index = firstStepOf(chapter);
   if (index < 0) return;
   menuOpen = false;
-  write({ index, playAll, acting: current?.acting ?? "owner" });
+  write({
+    index,
+    playAll,
+    acting: current?.acting ?? "owner",
+    ...(current?.ids ? { ids: current.ids } : {}),
+  });
 }
 
 export function goToStep(index: number): TourMove {
@@ -115,3 +126,11 @@ export const setActing = (acting: TourRole) => {
 };
 
 export const endTour = () => write(null);
+
+export const rememberedId = (key: string) => current?.ids?.[key];
+
+export function rememberId(key: string, value: string) {
+  if (current === null || current.ids?.[key] === value) return;
+  current = { ...current, ids: { ...current.ids, [key]: value } };
+  window.localStorage.setItem(storageKey, JSON.stringify(current));
+}

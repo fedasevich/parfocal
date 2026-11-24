@@ -81,6 +81,7 @@ function AccountMenu({
             variant="ghost"
             size="icon"
             className="rounded-full"
+            data-tour="account-menu"
             title={
               person.name
                 ? t`${person.name}: theme, settings, log out`

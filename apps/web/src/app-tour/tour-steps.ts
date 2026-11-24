@@ -1,6 +1,7 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import type { TourSwitch } from "@parfocal/api-client";
+import { moreChapters } from "./tour-chapters.ts";
 
 export type TourAccount = TourSwitch["account"];
 
@@ -24,6 +25,8 @@ export type TourStep = {
   text: MessageDescriptor;
   advance: TourAdvance;
   stay?: RegExp;
+  gpu?: boolean;
+  role?: TourRole;
 };
 
 export type TourChapter = {
@@ -42,7 +45,7 @@ const roleReview = "Role account review";
 const guided = `/projects/{task_project:${roleReview}}/slides/{task_slide:${roleReview}|1}?task={task:${roleReview}}&mode=guided`;
 const inGuided = /mode=guided|\/guided/;
 
-export const tourChapters: TourChapter[] = [
+export const baseChapters: TourChapter[] = [
   {
     title: msg`Upload and import`,
     role: "researcher",
@@ -131,9 +134,11 @@ export const tourChapters: TourChapter[] = [
   },
 ];
 
+export const tourChapters: TourChapter[] = [...baseChapters, ...moreChapters];
+
 export const tourSteps: PlacedStep[] = tourChapters
   .flatMap((chapter, index) =>
-    chapter.steps.map((step) => ({ ...step, chapter: index, role: chapter.role })),
+    chapter.steps.map((step) => ({ ...step, chapter: index, role: step.role ?? chapter.role })),
   )
   .map((step, index) => ({ ...step, number: index + 1 }));
 

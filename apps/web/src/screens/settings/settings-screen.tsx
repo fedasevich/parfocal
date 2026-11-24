@@ -1112,6 +1112,7 @@ function LoadedSettings({
       }}
       nav={
         <SettingsNav
+          data-tour="settings-nav"
           query={typed}
           onQueryChange={onQuery}
           onKeyDown={(event) => {

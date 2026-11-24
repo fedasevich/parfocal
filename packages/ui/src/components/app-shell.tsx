@@ -131,6 +131,7 @@ function TopBar({
       <span className="flex-1" />
       <button
         type="button"
+        data-tour="top-search"
         onClick={onSearch}
         className="flex w-105 min-w-40 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-transparent px-2.5 py-1.5 text-left text-body-sm text-fg-faint"
       >
@@ -141,7 +142,7 @@ function TopBar({
         <Keycap keys="⌘K" />
       </button>
       <span className="flex-1" />
-      <Button variant="ghost" onClick={onNewProject}>
+      <Button variant="ghost" data-tour="top-new-project" onClick={onNewProject}>
         <Icon name="folder" />
         <Trans>New project</Trans>
       </Button>
@@ -216,6 +217,7 @@ function Sidebar({ sections, active, renderLink = anchorLink, className, ...prop
   return (
     <nav
       data-slot="sidebar"
+      data-tour="sidebar"
       aria-label={t`Main`}
       className={cn("flex w-60 flex-col gap-0.5 overflow-hidden px-3 py-4.5", className)}
       {...props}
