@@ -32,3 +32,4 @@ The participant seed creates the study workspace and its people in platform scop
 - An admin of any workspace can prepare and remove study projects. That fits the development app (ADR 0390, the deployed app is dev). It needs a narrower rule before the app holds real data (TODO).
 - The owner URI in `parfocal-api-seed` follows the deploy. A rollback with `--skip-migrations` keeps the last one written, and a rotated owner password needs one migrating deploy before preparing works again.
 - The fake API keeps prepared codes in localStorage, and `P-FAKE` stays prepared so the existing study specs run unchanged.
+- OPS-014 (prepare production for the first real user) deletes the `parfocal-api-seed` secret and the deploy step that writes it, or narrows this rule, before the app holds real data.
