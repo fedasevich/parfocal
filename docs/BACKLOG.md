@@ -6892,7 +6892,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Row 11 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): someone not assigned gets live answer buttons, each refused with 403 not-assigned while the card moves on, and row 31: raw codes such as not-assigned and unknown-object reach the screen.
   Done when a spec opens another reviewer's task and finds no answer controls and a read only note, and every refused action shows a plain sentence.
   Depends on PROTO-033. Size: S.
-- [ ] PROTO-073 · Guided steps and Smart select stay in sensible bounds
+- [x] PROTO-073 · Guided steps and Smart select stay in sensible bounds
   Rows 24 and 26 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): guided steps zoom to 118x and 321x on slides scanned at 20x or 40x, and Smart select with Best keeps saying Best is not answering yet with no end.
   Done when guided steps stop at the slide's scan power, and Smart select ends its Best wait with the Good outline or a clear message within a set time, with specs.
   Depends on AISEG-024. Size: S.
@@ -7167,7 +7167,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 3, 8, 9 and 19. Patches with masks and COCO from a review task held no labels (0 annotations, no category, blank masks, 199 objects dropped as unclassed) because the manifest's class snapshot is empty, and the dataset page shows class IDs instead of names. A patch export of one object wrote 575 MB in 1,115 tiles in 240 s and polled with 409 answers, 110 console errors.
   Done when the class snapshot of a review task's final layer and dataset holds the project classes, a test exports patches with masks and COCO from a review task and finds labelled masks and annotations, the patch export of one object cuts only tiles that object touches, and the job poll stops on a finished or refused job.
   Depends on nothing. Size: M.
-- [ ] PROTO-145 · Whole slide cell detection starts, and a review shows only its own runs
+- [x] PROTO-145 · Whole slide cell detection starts, and a review shows only its own runs
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 4, 18 and 20. Find nuclei on the whole slide stayed queued for at least 17 minutes on "0 of 0 tiles" and never started. A queued run of another result set shows inside a review. One Best click asks the GPU twice.
   Done when a whole slide run on a seeded slide starts and finishes on the deployed app with its time and GPU cost logged, a test covers a run with no tiles planned, a review lists only its own result set's runs, and one Best click makes one GPU call.
   Depends on nothing. Size: M.
