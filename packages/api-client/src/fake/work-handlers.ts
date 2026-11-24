@@ -297,10 +297,12 @@ const looseTaskSlides: Record<string, number[]> = { "RT-14": [4, 5] };
 
 export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail => {
   const project = projectByCode(task.project);
-  const own = [
-    ...slides.filter((slide) => slide.project === task.project).slice(0, 2),
+  const projectSlides = slides.filter((slide) => slide.project === task.project);
+  const lead = [
+    ...projectSlides.slice(0, 2),
     ...(looseTaskSlides[task.code] ?? []).map(slideByIndex),
   ];
+  const own = [...lead, ...projectSlides.filter((slide) => !lead.includes(slide))];
   return {
     id: task.id,
     project_id: project.id,

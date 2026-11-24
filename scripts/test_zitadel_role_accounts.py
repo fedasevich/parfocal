@@ -3,6 +3,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+try:
+    import jwt  # noqa: F401
+
+    import parfocal_api  # noqa: F401
+except ImportError as missing:
+    raise unittest.SkipTest("needs the uv workspace") from missing
+
 from agent_session import REPOSITORY, ROLES, RefusedError
 from zitadel_role_accounts import (
     SYMBOLS,

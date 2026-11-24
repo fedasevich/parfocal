@@ -3,6 +3,7 @@ import { expect, type Page, test } from "./a11y.ts";
 const p07 = "00000000-0000-4000-8003-000000000007";
 const a1 = "00000000-0000-4000-8005-000000000001";
 const noCells = "00000000-0000-4000-8005-000000000004";
+const tumor044 = "00000000-0000-4000-8005-000000000005";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const p03 = "00000000-0000-4000-8003-000000000003";
 const sentinelCase = "00000000-0000-4000-8004-000000000006";
@@ -48,7 +49,7 @@ test("an annotate task opened as guided lands in annotate with the address corre
 }) => {
   await page.goto(`/tasks/${annotateTask}/guided?as=DH`);
   await expect(page).toHaveURL(/mode=annotate/);
-  await page.goto(`/projects/${p07}/slides/${a1}?task=${annotateTask}&mode=guided&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${annotateTask}&mode=guided&as=DH`);
   await expect(page).toHaveURL(/mode=annotate/);
   await expect(page.getByTestId("mode-fallback")).toContainText("opened in Annotate");
 });

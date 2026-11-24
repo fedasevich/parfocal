@@ -264,11 +264,12 @@ test("a slide goes from upload through detection, review, adjudication and sign-
       .poll(
         async () => {
           listed = await call(page, "GET", `${slide}/objects`);
-          return listed.status;
+          const preparing = Reflect.get(listed.json ?? {}, "order") === "preparing";
+          return listed.status === 409 || preparing ? "preparing" : "answered";
         },
         { timeout: 60_000, intervals: [500, 1_000] },
       )
-      .not.toBe(409);
+      .toBe("answered");
     expect(listed.status, JSON.stringify(listed.json)).toBe(200);
     const listedObjects = Reflect.get(listed.json ?? {}, "objects") as {
       object: string;

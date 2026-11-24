@@ -26,11 +26,15 @@ test("a new task whose scope reads cells gets its review order and one object is
   const slide = `/api/review-tasks/${idOf(made)}/slides/${slideId}`;
 
   await expect
-    .poll(async () => (await call(page, "GET", `${slide}/objects`)).status, {
-      timeout: 60_000,
-      intervals: [1_000],
-    })
-    .toBe(200);
+    .poll(
+      async () => {
+        const reply = await call(page, "GET", `${slide}/objects`);
+        const preparing = Reflect.get(reply.json ?? {}, "order") === "preparing";
+        return reply.status === 200 && !preparing ? "answered" : `${reply.status} preparing`;
+      },
+      { timeout: 60_000, intervals: [1_000] },
+    )
+    .toBe("answered");
   const listed = await call(page, "GET", `${slide}/objects`);
   const objects = Reflect.get(listed.json ?? {}, "objects") as { object: string }[];
   const first = objects[0]?.object ?? "";
