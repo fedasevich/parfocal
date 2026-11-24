@@ -1,6 +1,7 @@
 import argparse
 import contextlib
 import json
+import math
 import re
 import sys
 import webbrowser
@@ -48,6 +49,53 @@ ACTIVE_STATUSES = ("in-progress", "review", "blocked", "on-hold")
 ACTIVE_FIELDS = ("status", "by", "branch", "since", "note")
 README_SECTIONS = ("In progress", "Where we are now", "Next up")
 SIZES = ("S", "M", "L")
+KNOWLEDGE_DIR = Path("docs/knowledge")
+LESSON_HEADING = re.compile(r"^## (.+)$", re.MULTILINE)
+WORD = re.compile(r"[a-z][a-z0-9]{2,}")
+COMMON_WORDS = frozenset(
+    {
+        "the",
+        "and",
+        "for",
+        "with",
+        "that",
+        "this",
+        "from",
+        "are",
+        "was",
+        "not",
+        "has",
+        "have",
+        "its",
+        "one",
+        "all",
+        "can",
+        "into",
+        "when",
+        "then",
+        "than",
+        "every",
+        "each",
+        "which",
+        "while",
+        "where",
+        "after",
+        "before",
+        "under",
+        "over",
+        "only",
+        "also",
+        "both",
+        "task",
+        "tasks",
+        "done",
+        "app",
+        "real",
+        "per",
+    }
+)
+SHOWN_LESSONS = 4
+LESSON_WIDTH = 1200
 NEEDS = ("owner",)
 
 
@@ -99,6 +147,13 @@ class Doc:
     ids: list[str]
     status: str = ""
     date: str = ""
+
+
+@dataclass
+class Lesson:
+    file: str
+    heading: str
+    body: str
 
 
 @dataclass
@@ -312,6 +367,46 @@ def find_tasks(tasks: dict[str, Task], query: str) -> list[Task]:
         for task in tasks.values()
         if all(word in f"{task.id} {task.title}".lower() for word in words)
     ]
+
+
+def lesson_words(text: str) -> set[str]:
+    return set(WORD.findall(text.lower())) - COMMON_WORDS
+
+
+def parse_lessons(root: Path) -> list[Lesson]:
+    lessons: list[Lesson] = []
+    for path in sorted((root / KNOWLEDGE_DIR).glob("*.md")):
+        if path.name == "README.md":
+            continue
+        parts = LESSON_HEADING.split(path.read_text())
+        for heading, body in zip(parts[1::2], parts[2::2], strict=False):
+            lessons.append(Lesson(file=path.name, heading=heading.strip(), body=body.strip()))
+    return lessons
+
+
+def find_lessons(
+    lessons: list[Lesson], query: str, limit: int, *, in_heading: bool = False
+) -> list[Lesson]:
+    wanted = lesson_words(query)
+    if not wanted or not lessons:
+        return []
+    texts = [lesson_words(f"{lesson.heading} {lesson.body}") for lesson in lessons]
+    weight = {
+        word: math.log(len(lessons) / count)
+        for word in wanted
+        if (count := sum(word in text for text in texts))
+    }
+    scored: list[tuple[float, int]] = []
+    for index, (lesson, text) in enumerate(zip(lessons, texts, strict=True)):
+        heading = lesson_words(lesson.heading)
+        hits = [word for word in weight if word in text]
+        score = sum(weight[word] * (3 if word in heading else 1) for word in hits)
+        score /= math.log(len(text) + 20)
+        named = not in_heading or any(word in heading for word in hits)
+        if len(hits) >= min(2, len(weight)) and score > 0 and named:
+            scored.append((score, index))
+    scored.sort(key=lambda pair: (-pair[0], pair[1]))
+    return [lessons[index] for _, index in scored[:limit]]
 
 
 def doc_kind(relative: Path) -> str:
@@ -594,6 +689,10 @@ def command_show(args: argparse.Namespace) -> int:
     if task.docs:
         print("\nDocs:")
         print("\n".join(f"  {path}" for path in task.docs))
+    lessons = find_lessons(parse_lessons(ROOT), task.title, SHOWN_LESSONS, in_heading=True)
+    if lessons:
+        print("\nLessons that may apply (read one with `board.py know WORDS`):")
+        print("\n".join(f"  {lesson.file} · {lesson.heading}" for lesson in lessons))
     entries = [entry for entry in board.log if task.id in entry.ids]
     if entries:
         print("\nLog:")
@@ -672,6 +771,14 @@ def command_find(args: argparse.Namespace) -> int:
     found = find_tasks(board.tasks, " ".join(args.words))
     for task in found[: args.limit]:
         print(f"{task.id}  [{task.status}]  {task.title}")
+    return 0 if found else 1
+
+
+def command_know(args: argparse.Namespace) -> int:
+    found = find_lessons(parse_lessons(ROOT), " ".join(args.words), args.limit)
+    for lesson in found:
+        body = lesson.body[:LESSON_WIDTH]
+        print(f"{KNOWLEDGE_DIR.as_posix()}/{lesson.file} · {lesson.heading}\n{body}\n")
     return 0 if found else 1
 
 
@@ -820,6 +927,11 @@ def parser() -> argparse.ArgumentParser:
     find.add_argument("words", nargs="+")
     find.add_argument("--limit", type=int, default=20)
     find.set_defaults(run=command_find)
+
+    know = commands.add_parser("know", help="print the knowledge lessons that match the words")
+    know.add_argument("words", nargs="+")
+    know.add_argument("--limit", type=int, default=3)
+    know.set_defaults(run=command_know)
 
     recent = commands.add_parser("recent", help="print the newest log entries, shortened")
     recent.add_argument("count", type=int, nargs="?", default=8)

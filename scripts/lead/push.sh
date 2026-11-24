@@ -4,4 +4,5 @@ source "$(dirname "$0")/env.sh"
 cd "$LEAD" || exit 1
 git push -q origin HEAD:main 2>&1 | grep -i "error\|reject" || echo "PUSHED $(git log --oneline -1)"
 echo 0 > "$COUNTER"
+python3 "$HERE/consolidate_due.py" "$LEAD/docs/README.md"
 nohup "$HERE/prune-worktrees.sh" >"$(dirname "$COUNTER")/prune-worktrees.log" 2>&1 &

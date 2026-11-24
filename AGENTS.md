@@ -12,7 +12,7 @@ The design source is the React app in `apps/web` and its Storybook in `packages/
 
 Anything not written in `docs/` is forgotten by the next session. `docs/log.md` is append-only raw memory. `docs/README.md`, `docs/project/` and `docs/knowledge/` are rewritten to stay short and current.
 
-Never read `docs/BACKLOG.md` or `docs/log.md` whole. Use `scripts/board.py` (`brief`, `show ID`, `find`, `recent`, `ready`, `counts`, `note`, `tick`). A hook blocks whole reads.
+Never read `docs/BACKLOG.md` or `docs/log.md` whole. Use `scripts/board.py` (`brief`, `show ID`, `find`, `know WORDS` for knowledge lessons, `recent`, `ready`, `counts`, `note`, `tick`). A hook blocks whole reads.
 
 ## The task loop
 
@@ -20,7 +20,7 @@ Never read `docs/BACKLOG.md` or `docs/log.md` whole. Use `scripts/board.py` (`br
 2. Build it with the tests its "Done when" line names. Untested work is not done.
 3. Finish with `/finish ID`: run `bash scripts/verify-changed.sh` (changed packages only, CI runs everything), add a log entry with `board.py note`, tick the task or move it to `review`, add an ADR, result or knowledge entry if one is due, stage files by name, commit and push.
 
-Write an ADR for every choice between real alternatives that is costly to undo. Write a result file for everything measured, and never invent a number. Put every open question for the owner in `docs/decisions.md`, never only in chat. Formats are in [agent-workflow.md](docs/knowledge/agent-workflow.md).
+Write an ADR for a choice between real alternatives that is costly to undo and sets a rule later tasks must follow. A smaller choice gets a log line. Write a result file for everything measured, and never invent a number. Put every open question for the owner in `docs/decisions.md`, never only in chat. Formats are in [agent-workflow.md](docs/knowledge/agent-workflow.md).
 
 ## Working rules
 

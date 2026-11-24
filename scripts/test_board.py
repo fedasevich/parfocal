@@ -7,14 +7,17 @@ from board import (
     PARKED,
     ROOT,
     Active,
+    Lesson,
     add_log_entry,
     check,
     count_lines,
+    find_lessons,
     find_tasks,
     guess_size,
     load,
     parse_active,
     parse_depends,
+    parse_lessons,
     readable_path,
     render_static,
     tick_backlog,
@@ -288,6 +291,39 @@ class BoardTest(unittest.TestCase):
         self.assertIn("- [x] STACK-002 · Routing", ticked)
         self.assertIn("- [ ] STACK-003 · Licensing", ticked)
         self.assertIsNone(tick_backlog(ticked, "STACK-002"))
+
+    def test_lessons_are_the_second_level_sections_of_knowledge_files(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            knowledge = Path(folder) / "docs" / "knowledge"
+            knowledge.mkdir(parents=True)
+            (knowledge / "README.md").write_text("# Knowledge\n\n## Not a lesson\n\nIndex.\n")
+            (knowledge / "api.md").write_text(
+                "# API\n\nIntro.\n\n## Errors are problem details\n\nUse RFC 9457.\n\n"
+                "## The client is generated\n\nNever edit it.\n"
+            )
+            lessons = parse_lessons(Path(folder))
+        self.assertEqual(
+            [(lesson.file, lesson.heading, lesson.body) for lesson in lessons],
+            [
+                ("api.md", "Errors are problem details", "Use RFC 9457."),
+                ("api.md", "The client is generated", "Never edit it."),
+            ],
+        )
+
+    def test_find_lessons_ranks_heading_matches_first_and_drops_weak_ones(self) -> None:
+        lessons = [
+            Lesson("api.md", "Errors are problem details", "Every error answers as RFC 9457."),
+            Lesson("jobs.md", "A job claim expires", "A worker that dies frees its export job."),
+            Lesson("api.md", "Exports stream as files", "A patch export job writes a zip."),
+            Lesson("auth.md", "Sessions are cookies", "The login sets one cookie."),
+        ]
+        found = find_lessons(lessons, "The patch export job downloads a real zip", 5)
+        self.assertEqual(next(lesson.heading for lesson in found), "Exports stream as files")
+        self.assertNotIn("Sessions are cookies", [lesson.heading for lesson in found])
+        self.assertEqual(find_lessons(lessons, "the and for", 5), [])
+        self.assertEqual(len(find_lessons(lessons, "export job zip", 1)), 1)
+        named = find_lessons(lessons, "error answers", 5, in_heading=True)
+        self.assertEqual(named, [])
 
     def test_find_matches_every_word_in_id_or_title(self) -> None:
         board = load(self.root)

@@ -4,18 +4,21 @@ The procedures [AGENTS.md](../../AGENTS.md) points to. Read a section only when 
 
 ## Reading the big docs
 
-`docs/BACKLOG.md` (about 430 KB) and `docs/log.md` (about 320 KB) are never read whole. A hook in `.claude/settings.json` blocks `cat`, `head`, `tail`, `less` and wide `sed` ranges on them.
+`docs/BACKLOG.md` (about 840 KB) and `docs/log.md` (about 1.2 MB) are never read whole. A hook in `.claude/settings.json` blocks `cat`, `head`, `tail`, `less` and wide `sed` ranges on them.
 
 | Need | Command |
 |---|---|
 | What is going on | `python3 scripts/board.py brief` |
 | A task with its refs, trees, docs and log | `python3 scripts/board.py show ID` |
 | Find a task | `python3 scripts/board.py find WORDS` or `grep -n` |
+| Lessons for a topic, without opening a knowledge file | `python3 scripts/board.py know WORDS` |
 | Recent work | `python3 scripts/board.py recent 10` |
 | Free tasks | `python3 scripts/board.py ready [--epic X]` |
 | Tasks and ticks in total, per milestone gate and per epic | `python3 scripts/board.py counts` |
 | Log a finished task | `python3 scripts/board.py note "ID (name) ..."` |
 | Tick a task | `python3 scripts/board.py tick ID` |
+
+`board.py show ID` also lists up to four knowledge lessons whose heading matches the task title. Before this, almost no agent opened a topic knowledge file, because tasks rarely link one. The same hook refuses whole reads of any `docs/results/*.md` over 20 KB. Read its first 60 lines, `grep -n` for the finding and read only that part.
 
 ## Output budget
 
@@ -166,11 +169,15 @@ A UI task that adds a screen adds at least one `@real` spec for it in `apps/web/
 
 ## Decision records
 
+Write an ADR only when the choice sets a rule that later tasks must follow, such as a contract, a data shape, a policy or a vendor. A choice that stays inside one task gets a log line and, when a later session could trip on it, a knowledge lesson. Thirty ADRs were written on 2026-11-17 alone and the median agent reads none.
+
 Copy `docs/adr/0000-template.md` to the next free number. Status stays `Proposed` until the owner agrees. Never rewrite an accepted record. Write a new one and mark the old one `Superseded by NNNN`. If the ADR changes a backlog task, edit that task in the same change. Add a row to `docs/adr/README.md`.
 
 ## Results
 
 Copy `docs/results/_template.md` to `docs/results/YYYY-MM-DD-topic.md`. Record the task, commit, environment and exact method, put raw numbers in tables, keep facts apart from interpretation and compare against the budget or the POC number. Add a row to `docs/results/README.md`. Never invent a number. Write `TODO` and say what would measure it.
+
+A result that lists findings, such as a deployed walkthrough, starts with a findings table inside its first 60 lines: one row per finding with a number, one line of what is wrong, and the task it became or `none`. The lead puts each finding's own text into the task that fixes it, so the fixing agent never needs the whole file.
 
 ## The owner's decisions file
 
@@ -183,11 +190,11 @@ Copy `docs/results/_template.md` to `docs/results/YYYY-MM-DD-topic.md`. Record t
 
 ## Consolidation
 
-The lead does this at the end of every parallel run, after the last `push.sh` and before the report. Also do it when a milestone closes or when the owner asks. `/consolidate` runs it.
+The lead does this at the end of every parallel run, after the last `push.sh` and before the report. `push.sh` prints `CONSOLIDATE DUE` when "Last consolidated" in `docs/README.md` is more than three days old. Also do it when a milestone closes or when the owner asks. `/consolidate` runs it.
 
 1. Read the log since the last consolidation with `board.py recent`.
 2. Rewrite "In progress", "Where we are now" and "Next up" from scratch within the output budget. Write no task count by hand in `docs/README.md`, the roadmap or the risks. `board.py counts` prints them, and its per-epic lines say which milestone has started.
-3. Move repeated or costly lessons into `docs/knowledge/`, merging into an existing topic file.
+3. Move repeated or costly lessons into `docs/knowledge/`, merging into an existing topic file. Give each lesson a `## ` heading that names its subject in plain words, because `board.py show` and `board.py know` match on headings.
 4. Update `docs/project/roadmap.md` and `docs/project/risks.md`.
 5. Check that ticks and log entries match, that every ADR and result is indexed, that every task, decision and risk the README names still exists and is open, and that no `Proposed` ADR has been overtaken.
 6. Resolve or re-file stale `TODO`s, set "Last consolidated" to today and log it.
