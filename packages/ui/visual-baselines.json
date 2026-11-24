@@ -2012,43 +2012,43 @@
     },
     {
       "file": "components-new-project-and-case--new-case-clinical--dark--comfortable.png",
-      "sha256": "7354b3d8d7062890f738fb3e0ed6c18fa7bcbeb74995731dd8e2eadaa617c11b",
-      "bytes": 58293
+      "sha256": "f0831f3fc35f6a20ace70271b5078b57adf5764f20ac72ebb11b042ee575c48a",
+      "bytes": 62934
     },
     {
       "file": "components-new-project-and-case--new-case-clinical--dark--compact.png",
-      "sha256": "71e2696baa34e82a6d02ab6288553a29030c5de357af1616588368f0ce700c77",
-      "bytes": 58249
+      "sha256": "98da8c6bc8477ab95f459706e0850671272fb75561c5a056c448646e02eaa8b1",
+      "bytes": 62788
     },
     {
       "file": "components-new-project-and-case--new-case-clinical--light--comfortable.png",
-      "sha256": "3a7ea4772d75275621096a665965502b1a44217ab7693f58d19a3275c538282c",
-      "bytes": 59401
+      "sha256": "00acaa9a387daa18b3d7a65a75b1b8cf919cfc49f50e6a7208c77c0e1d224e16",
+      "bytes": 64419
     },
     {
       "file": "components-new-project-and-case--new-case-clinical--light--compact.png",
-      "sha256": "956f116fa73835c59b3cb540dc031874d1be1ba5bf305637c8d1b8636766ab9f",
-      "bytes": 59376
+      "sha256": "dc916766c59d41382938d9d572ee75059053598b403fa067da42cb614abc1b62",
+      "bytes": 64289
     },
     {
       "file": "components-new-project-and-case--new-case-deidentified--dark--comfortable.png",
-      "sha256": "696ee384ab967f973d4d70dc05ace157089da1f7b1f35a4e10da00c0190b8241",
-      "bytes": 54116
+      "sha256": "5272709026767a78ee338bc1b31629be576c7b82df6a5f39df2b0cb1fef488fb",
+      "bytes": 59380
     },
     {
       "file": "components-new-project-and-case--new-case-deidentified--dark--compact.png",
-      "sha256": "b1246f0d44c530d6f761f13c63a885b0d3387fddeaf009b209061741bccc8a33",
-      "bytes": 54972
+      "sha256": "7ca93aed8296455e404d6e91346df6cf393710cd8364e9941be9831ff1e72166",
+      "bytes": 60291
     },
     {
       "file": "components-new-project-and-case--new-case-deidentified--light--comfortable.png",
-      "sha256": "302db6ffef480b165608deb35bfe51b04fed46ccfae382f54c1606ac07d932cf",
-      "bytes": 55261
+      "sha256": "d1461c54ee888559afa3a00969be1893cde2e78dd2e034e7d6c7f4ff42c419e5",
+      "bytes": 60440
     },
     {
       "file": "components-new-project-and-case--new-case-deidentified--light--compact.png",
-      "sha256": "3ca9adf78fbf80131fd415b41d87aa851530c7434c2b12611e06424e35a38ac6",
-      "bytes": 56353
+      "sha256": "417957ddb2c7a55883eb69dd398b544ce433f185da991c78212066948b3d3214",
+      "bytes": 61434
     },
     {
       "file": "components-new-project-and-case--new-project--dark--comfortable.png",
@@ -2682,23 +2682,23 @@
     },
     {
       "file": "components-review-popovers--case-details-clinical--dark--comfortable.png",
-      "sha256": "799eb8d7939e5d8da8538609bbd0f12f795d7fd1d19e52256193adc6cf10a3bd",
-      "bytes": 26722
+      "sha256": "cd2cbf529d17628e8bcc9c4a0b584b3ea3d61e07d74439e1392da00625eb935c",
+      "bytes": 30408
     },
     {
       "file": "components-review-popovers--case-details-clinical--light--comfortable.png",
-      "sha256": "d32badeba84ff8ba3d7cc6f36b4e15bf6107ae9533c604a2bad5192806869a96",
-      "bytes": 29114
+      "sha256": "9dfdc10a47e408e160dc328d2efcfa9b1dc031e72ee25259e856484419ff9756",
+      "bytes": 33150
     },
     {
       "file": "components-review-popovers--case-details-missing--dark--comfortable.png",
-      "sha256": "56af49b8bdc2fc0a2740d9e0cb28a6aaec34364bc969e8ecf5035b64a346bbe9",
-      "bytes": 26389
+      "sha256": "b5aea9b5f7be1c19af94fe81d52d35356fcc65a46ca7b89e2b69b84b67476f7c",
+      "bytes": 29159
     },
     {
       "file": "components-review-popovers--case-details-missing--light--comfortable.png",
-      "sha256": "a11aeaa292e45a461dbb5d35f45a2e9cb887a393a8865ae096d78c189c39d9d5",
-      "bytes": 29024
+      "sha256": "ce1af8f81f1d1be8cc45345c998bd54c93d2014e6904bb43d927703ed221d48d",
+      "bytes": 32008
     },
     {
       "file": "components-review-popovers--review-progress--dark--comfortable.png",
@@ -2742,13 +2742,13 @@
     },
     {
       "file": "components-review-popovers--slides-in-case--dark--comfortable.png",
-      "sha256": "336fbb229a5facc4582d261988aaa371cd4f728816ca23c0559f581020ff6c9c",
-      "bytes": 76322
+      "sha256": "40b1c42cbf2ada69995aafd1cee77adffd64735d0975e1a20cb9de73317baded",
+      "bytes": 79732
     },
     {
       "file": "components-review-popovers--slides-in-case--light--comfortable.png",
-      "sha256": "4402013c3a5ed1eef31e64ef718c1748e4aba56555acee9b436c1f6710338e7a",
-      "bytes": 79646
+      "sha256": "e549aac05f2bbb686f7ea6cb68b2cf022a25ecac56e30a3a05fbe9e52272fb96",
+      "bytes": 83376
     },
     {
       "file": "components-review-popovers--slides-many-with-long-names--dark--comfortable.png",
