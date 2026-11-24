@@ -32,7 +32,7 @@ SEED_OWNER_EMAIL="$(grep '^ZITADEL_TEST_USERNAME=' .zitadel/e2e.env | cut -d= -f
 export SEED_OWNER_EMAIL
 
 uv run --frozen --package parfocal-api python scripts/stack_fixtures.py
-uv run --frozen --package parfocal-api python -m parfocal_api.showcase
+uv run --frozen --package parfocal-ingest python -m parfocal_ingest.showcase_seed
 
 echo "The stack is up. The API container answers on http://localhost:$PARFOCAL_API_PORT."
 echo "Run the end-to-end suite with pnpm test:e2e and stop the stack with pnpm stack:down."
