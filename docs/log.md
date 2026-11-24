@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-25
+
+- Main CI repair, round 2 (branch ci-repair-2: 81ca54b0, 04d54b30, 00cecec8, 495d3e2a): infra/local/stack-up.sh seeded through the old parfocal_api.showcase, which has had no main since the seeded export cut, so the e2e account was never seated and every @real spec got 403. It now runs parfocal_ingest.showcase_seed, and the 7 failing @real files pass locally. The focus mode minimap spec waits for the ready stage and retries the zoom (not reproduced locally). hints-once and issue-pages get timing waits. 14 ui goldens for the five case detail and new case stories that show who requested the case were approved through update_goldens run 45501580869 and published write-once to R2 parfocal-dev-eu fixtures/ui-visual/ under ADR 0151, negligible cost.
+
 ## 2026-11-24
 
 - TEST-010 (load test tooling) by an agent (docs/results/2026-11-24-load-api-and-tiles-on-production.md): with a minted read-only token load-test-read (see slides only, expires 2026-12-24), a local run at 2 users for 60 s against production had 0 failures, API p50 270 ms and tile range p50 76 ms, about 0.002 dollars. Production touches: secret PARFOCAL_LOAD_TOKEN, variable PARFOCAL_LOAD_SLIDES, workflow runs 45503422340 (refused from main, production admits only v tags) and 45503594810 from v0.51.0, which waits for the owner's approval. The room scenario was not run.
