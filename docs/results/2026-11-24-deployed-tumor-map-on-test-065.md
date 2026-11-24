@@ -32,8 +32,8 @@ The pool log shows the three claims. The first container was preempted by Modal 
 ## Interpretation
 
 - The folder fix of OPS-036 works on the deployed app. The job opened `test_065` from its sample folder and scored 237 tiles, where before it stopped at once with `tumor-map-slide-missing`.
-- The map did not finish, so the "Done when" line is not met yet. The cause is outside OPS-036: `ObjectStore.send` raised on the first 503 from R2, and a whole-slide map makes hundreds of writes, so one passing R2 hiccup ends a claim.
-- A job failed by the claim limit leaves its result set in `importing`, because that path in `claim` does not call the job's settle hooks. Not fixed here.
+- The map did not finish, so the "Done when" line is not met yet. The cause is outside OPS-036: `ObjectStore.send` raised on the first 503 from R2, and two claims in a row died that way, the last about 37 s after it started. Whether R2 answered 503 by chance or throttled the tile writes is not known, so the retry below is unproven until a rerun after a deploy.
+- A job failed by the claim limit leaves its result set in `importing`, because that path in `claim` does not call the job's settle hooks. Not fixed here. The stuck result set `2c762641` was deleted through `DELETE /api/result-sets/{id}` at the end of the check, so `test_065` carries no half map.
 
 ## Follow-ups
 
