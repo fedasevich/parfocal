@@ -110,7 +110,8 @@ def render_prepared(report: dict[str, Any]) -> str:
             "Prepare the participant in the study console, switched to the study workspace when "
             "the console offered it, walked `/study` through every round 5 task answering each "
             "SEQ with 5, answered the last questions and reached the thank you page. It then "
-            "removed the project from the console.",
+            "ticked Dry run on the session in the console results, so the round does not count "
+            "it, and removed the project from the console.",
             "",
             "## Results",
             "",
