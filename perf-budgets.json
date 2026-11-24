@@ -812,7 +812,7 @@
       "measures": "95th percentile of the time from starting a COCO patch export, level 0 and 512 px tiles, of an annotate task with one signed-off CMU-1-Small-Region.svs of 1,000 annotations until the zip is downloaded, with the worker already running, after one warm-up export",
       "kind": "manual",
       "unit": "ms",
-      "baseline": 1850,
+      "baseline": 1823,
       "limit": 15000,
       "environment": "Local Postgres and MinIO in Docker, API in process, ingest worker as its own process, Apple M4 shared with other agents",
       "check": "apps/api/tests/test_export_main_paths.py",
