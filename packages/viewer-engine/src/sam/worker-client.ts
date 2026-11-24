@@ -25,6 +25,7 @@ export interface SamClient {
     embedding: Float32Array<ArrayBuffer>,
     model?: SamEncoderModel,
   ): Promise<SamEncoded>;
+  prepare(model: SamEncoderModel): void;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
   pool(id: string, outlines: readonly Float32Array[]): Promise<Float32Array[]>;
@@ -180,6 +181,11 @@ export function createSamClient(options: SamClientOptions): SamClient {
         copies.map((copy) => copy.buffer),
       );
       return reply.type === "pooled" ? [...reply.features] : unexpected(reply);
+    },
+    prepare(model) {
+      if (!closed) {
+        worker.postMessage({ type: "prepare", model }, []);
+      }
     },
     drop(id) {
       if (!closed) {

@@ -49,6 +49,9 @@ function recordingSam(failAdopt = false) {
       calls.push(`adopt ${id} ${model ?? "vit-b"} ${embedding[0]}`);
       return failAdopt ? Promise.reject(new Error("no decoder")) : Promise.resolve(done(id));
     },
+    prepare(model) {
+      calls.push(`prepare ${model}`);
+    },
   };
   return { sam, calls };
 }
@@ -263,9 +266,26 @@ describe("Best outlines with the server embedding and falls back to the browser"
   it("adopts the ViT-L embedding and never runs the browser encoder", async () => {
     const { best, calls, asked, sources } = wrapped({ embedding: new Float32Array(8).fill(0.5) });
     await best.encode(id, pixels());
-    assert.deepEqual(calls, [`adopt ${id} vit-l 0.5`]);
+    assert.deepEqual(calls, ["prepare vit-l", `adopt ${id} vit-l 0.5`]);
     assert.deepEqual(asked, [view]);
-    assert.deepEqual(sources, ["asking", "server"]);
+    assert.deepEqual(sources, ["asking", "preparing", "server"]);
+  });
+
+  it("starts loading the ViT-L decoder while the GPU is still being asked", async () => {
+    const { sam, calls } = recordingSam();
+    let answer: (value: ViewAnswer) => void = () => undefined;
+    const best = withViewEmbeddings(sam, {
+      views: { embedding: () => new Promise((resolve) => (answer = resolve)) },
+      slideId,
+      slide,
+      downsampleOf: () => 1,
+    });
+    const encoded = best.encode(id, pixels());
+    await tick();
+    assert.deepEqual(calls, ["prepare vit-l"]);
+    answer({ embedding: new Float32Array(8) });
+    await encoded;
+    assert.equal(calls.at(-1), `adopt ${id} vit-l 0`);
   });
 
   it("encodes in the browser and says why when the server cannot answer", async () => {
@@ -273,7 +293,11 @@ describe("Best outlines with the server embedding and falls back to the browser"
       [{ fallback: "refused" }, {}, ["asking", "refused"]],
       [{ fallback: "cancelled" }, {}, ["asking", "cancelled"]],
       ["throw", {}, ["asking", "unsendable"]],
-      [{ embedding: new Float32Array(8) }, { failAdopt: true }, ["asking", "unsendable"]],
+      [
+        { embedding: new Float32Array(8) },
+        { failAdopt: true },
+        ["asking", "preparing", "unsendable"],
+      ],
       [{ embedding: new Float32Array(8) }, { downsample: undefined }, ["unsendable"]],
     ] as const) {
       const { best, calls, sources } = wrapped(answer, options);

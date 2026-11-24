@@ -168,3 +168,19 @@ test("the evaluation carries the mock's headline numbers and the retired templat
   assert.equal(report.confusion.counts[0]?.[0], 412);
   assert.equal(report.changes.length, 1);
 });
+
+test("a cell task's evaluation names its cell classes, not unclassified", async () => {
+  const rt11 = reviewTasks.find((task) => task.code === "RT-11")?.id ?? "";
+  const evaluation = await getTaskEvaluation(rt11);
+  assert.ok(evaluation.status === 200);
+  const classes = evaluation.data.classes.map((row) => `${row.kind} ${row.class_name}`);
+  assert.deepEqual(classes, ["cell Immune", "cell Stroma"]);
+  assert.equal(evaluation.data.overall[0]?.kind, "cell");
+  assert.equal(
+    evaluation.data.classes.reduce(
+      (sum, row) => sum + row.true_positives + row.false_positives + row.unsure,
+      0,
+    ),
+    30,
+  );
+});

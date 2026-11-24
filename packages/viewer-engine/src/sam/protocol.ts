@@ -35,6 +35,7 @@ export type SamRequest =
       readonly id: string;
       readonly outlines: readonly Float32Array<ArrayBuffer>[];
     }
+  | { readonly type: "prepare"; readonly model: SamEncoderModel }
   | { readonly type: "drop"; readonly id: string };
 
 export type SamReply =

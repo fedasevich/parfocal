@@ -451,7 +451,51 @@ const decisionsOf = (taskId: string): Evaluation["decisions"] => {
   };
 };
 
-export const toTaskEvaluation = (taskId: string, drawn = false): Evaluation => {
+const cellScopes: ReadonlySet<string> = new Set(["random-cells", "cells-below-score"]);
+
+const ratio = (numerator: number, denominator: number) => ({
+  value: denominator === 0 ? null : numerator / denominator,
+  numerator,
+  denominator,
+});
+
+const cellClass = (
+  className: string,
+  truePositives: number,
+  falsePositives: number,
+  unsure: number,
+): Evaluation["classes"][number] => ({
+  kind: "cell",
+  class_name: className,
+  true_positives: truePositives,
+  false_positives: falsePositives,
+  false_negatives: 0,
+  unsure,
+  undecided: 0,
+  precision: ratio(truePositives, truePositives + falsePositives),
+  sensitivity: ratio(truePositives, truePositives),
+});
+
+export const cellTaskClasses: readonly Evaluation["classes"][number][] = [
+  cellClass("Immune", 22, 3, 1),
+  cellClass("Stroma", 3, 1, 0),
+];
+
+const cellOverall = (): Evaluation["classes"][number] => {
+  const sum = (pick: (row: Evaluation["classes"][number]) => number) =>
+    cellTaskClasses.reduce((total, row) => total + pick(row), 0);
+  return cellClass(
+    "all",
+    sum((row) => row.true_positives),
+    sum((row) => row.false_positives),
+    sum((row) => row.unsure),
+  );
+};
+
+const isCellTask = (taskId: string) =>
+  cellScopes.has(reviewTasks.find((candidate) => candidate.id === taskId)?.scope ?? "");
+
+const regionEvaluation = (taskId: string, drawn: boolean): Evaluation => {
   const numbers = taskId === comparisonId() ? comparisonNumbers : evaluationNumbers;
   const tumor = {
     kind: "region",
@@ -497,6 +541,12 @@ export const toTaskEvaluation = (taskId: string, drawn = false): Evaluation => {
       },
     ],
   };
+};
+
+export const toTaskEvaluation = (taskId: string, drawn = false): Evaluation => {
+  const base = regionEvaluation(taskId, drawn);
+  if (!isCellTask(taskId)) return base;
+  return { ...base, classes: [...cellTaskClasses], overall: [cellOverall()], dice: {} };
 };
 
 const loggedChanges = (signed: boolean): EvaluationChange[] =>

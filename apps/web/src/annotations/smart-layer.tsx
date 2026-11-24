@@ -25,8 +25,9 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { ContextExtra, contextChip } from "./context-extras.tsx";
 import type { AnnotationDocument } from "./document.ts";
+import { useElapsedSeconds } from "./elapsed-seconds.ts";
 import { ModelTierChoice } from "./model-tier-choice.tsx";
-import { smartStatusOf } from "./smart-status.ts";
+import { type SmartStep, smartStatusOf, smartStepOf } from "./smart-status.ts";
 import {
   bindSpacePan,
   buttonReleased,
@@ -429,10 +430,20 @@ export function SmartLayer({
   });
 
   const status = smartStatusOf(snapshot);
+  const step = smartStepOf(tier === "best" ? encoderSource : null);
+  const seconds = useElapsedSeconds(status === "outlining" ? step : null);
   const fallback =
-    encoderSource === null || encoderSource === "asking" || encoderSource === "server"
+    encoderSource === null ||
+    encoderSource === "asking" ||
+    encoderSource === "preparing" ||
+    encoderSource === "server"
       ? null
       : encoderSource;
+  const stepText: Record<SmartStep, string> = {
+    "asking-best": t`Asking Best's GPU`,
+    "loading-model": t`Fetching Best's outline model`,
+    outlining: t`Outlining`,
+  };
   const fallbackText: Record<BestFallback, string> = {
     unsendable: t`Best cannot outline this view, Good outlined it`,
     refused: t`The server refused Best here, Good outlined this view`,
@@ -515,11 +526,14 @@ export function SmartLayer({
             <span
               data-testid="smart-status"
               data-status={status}
+              data-step={status === "outlining" ? step : undefined}
               role="status"
               className={contextChip}
             >
               {status === "outlining"
-                ? t`Outlining`
+                ? seconds > 0
+                  ? t`${stepText[step]}, ${seconds} s`
+                  : stepText[step]
                 : status === "found"
                   ? t`Outline found`
                   : snapshot.message}

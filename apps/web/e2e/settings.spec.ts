@@ -21,7 +21,7 @@ const settingsScenes: { scene: string; section: string; title: string; shows: st
     scene: "privacy",
     section: "privacy",
     title: "Privacy and session",
-    shows: "a Windows workstation in room 214 and an iPad",
+    shows: "Two other devices are signed in: a Windows device and an iOS device.",
   },
   { scene: "account", section: "account", title: "Account", shows: "Consultant · breast, nodes" },
   {
@@ -198,6 +198,26 @@ test("signing out other devices leaves only this one", async ({ page }) => {
   await dialog(page).getByRole("button", { name: "Sign out on other devices" }).click();
   await expect(dialog(page).getByText("Only this device")).toBeVisible();
   await expect(dialog(page).getByText(/Signed out of 2 other devices at/)).toBeVisible();
+});
+
+test("one other device is counted in the singular", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  const ended = await page.evaluate(async () => {
+    const response = await fetch("/api/auth/sessions/00000000-0000-4000-8050-000000000003", {
+      method: "DELETE",
+    });
+    return response.status;
+  });
+  expect(ended).toBe(204);
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: /^Settings/ }).click();
+  await dialog(page).getByRole("button", { name: "Privacy and session" }).click();
+  await expect(
+    dialog(page).getByText("1 other device is signed in: a Windows device."),
+  ).toBeVisible();
+  await dialog(page).getByRole("button", { name: "Sign out on other devices" }).click();
+  await expect(dialog(page).getByText(/Signed out of 1 other device at/)).toBeVisible();
 });
 
 test("rebinding J in Settings changes the key shown on Skip for now", async ({ page }) => {

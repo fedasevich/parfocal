@@ -35,6 +35,9 @@ test("a slow Best shows the GPU wait and then outlines with the server embedding
   await expect(wait(page)).toBeVisible();
   await expect(wait(page)).toHaveAttribute("data-kinds", "encoder");
   await expect(layer(page)).toHaveAttribute("data-phase", "thinking");
+  const chip = page.getByTestId("smart-status");
+  await expect(chip).toHaveAttribute("data-step", "asking-best");
+  await expect(chip).toHaveText(/^Asking Best's GPU, \d+ s$/);
   await expect(layer(page)).toHaveAttribute("data-phase", "ready", { timeout: 15_000 });
   await expect(layer(page)).toHaveAttribute("data-encoder", "server");
   await expect(page.getByTestId("proposal-layer")).toHaveAttribute("data-proposals", "1");

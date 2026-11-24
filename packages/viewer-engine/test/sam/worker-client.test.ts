@@ -169,6 +169,23 @@ describe("inference worker client", () => {
     client.close();
   });
 
+  it("prepares the ViT-L decoder across the message boundary before any embedding comes", async () => {
+    const stages: SamGraph[] = [];
+    const { worker, posted } = linkedWorker(new FakeRuntime());
+    const client = createSamClient({
+      modelsUrl: "/models",
+      spawn: () => worker,
+      onStage: (graph) => stages.push(graph),
+    });
+    await client.ready;
+    client.prepare("vit-l");
+    await tick();
+    await tick();
+    assert.deepEqual(posted.at(-1), { type: "prepare", model: "vit-l" });
+    assert.equal(stages.at(-1), samGraphs.largeDecoder);
+    client.close();
+  });
+
   it("rejects a request for an unknown embedding with the worker message", async () => {
     const { worker } = linkedWorker(new FakeRuntime());
     const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });

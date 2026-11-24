@@ -19,10 +19,12 @@ import { noticeChannels, sessions } from "./scenario-settings.ts";
 import { fakeView } from "./view.ts";
 
 let othersEnded = false;
+const endedSessions = new Set<string>();
 let myAvailability: AvailabilityChange = { status: "available" };
 
 export const resetSettingsActions = () => {
   othersEnded = false;
+  endedSessions.clear();
   myAvailability = { status: "available" };
 };
 
@@ -54,7 +56,7 @@ const hoursAfter = (at: string, hours: number) =>
 
 export const toSessions = (): SessionSummary[] =>
   sessions
-    .filter((session) => session.current || !othersEnded)
+    .filter((session) => session.current || (!othersEnded && !endedSessions.has(session.id)))
     .map((session) => ({
       id: session.id,
       created_at: session.createdAt,
@@ -78,6 +80,10 @@ export const toPreferences = (): Preference[] =>
 export function settingsHandlers(): RequestHandler[] {
   return [
     getListSessionsMockHandler(() => toSessions()),
+    http.delete("*/api/auth/sessions/:sessionId", ({ params }) => {
+      endedSessions.add(String(params["sessionId"]));
+      return new HttpResponse(null, { status: 204 });
+    }),
     getListNotificationPreferencesMockHandler(() => toPreferences()),
     http.put("*/api/me/notification-preferences", async ({ request }) => {
       const { preferences } = (await request.json()) as { preferences: PreferenceChange[] };
@@ -97,7 +103,9 @@ export function settingsHandlers(): RequestHandler[] {
       return HttpResponse.json(toMyAvailability());
     }),
     getEndOtherSessionsMockHandler(() => {
-      const ended = othersEnded ? 0 : sessions.filter((session) => !session.current).length;
+      const ended = othersEnded
+        ? 0
+        : sessions.filter((session) => !session.current && !endedSessions.has(session.id)).length;
       othersEnded = true;
       return { ended };
     }),
