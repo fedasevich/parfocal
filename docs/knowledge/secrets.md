@@ -8,7 +8,7 @@ Where every runtime secret lives, who writes it and how to rotate it. Source: SE
 
 ## Inventory
 
-Deployed code reads secrets only from its environment, which Modal fills from the three secrets in `parfocal_deploy.modal_app.SECRETS` and Cloudflare from Worker secrets. `workers/deploy/tests/test_secret_inventory.py` fails when a `SecretStr` setting, a bootstrap value, a Worker secret or a workflow `secrets.` reference is missing from this table, when a row has no rotation step, and when `wrangler.jsonc` or a workflow `env:` holds a literal secret. Production refuses to start on the local storage secret. The production clients for email, errors and analytics take no key yet, so add their rows when they do.
+Deployed code reads secrets only from its environment, which Modal fills from the three secrets in `parfocal_deploy.modal_app.SECRETS` and Cloudflare from Worker secrets. The web function also reads `parfocal-api-tour`, which holds only the non secret `TOUR_ROLE_SWITCH` flag of ADR 0437 (the guided tour switches role accounts on the dev app), set by `pnpm --filter @parfocal/deploy tour-switch on|off`. `workers/deploy/tests/test_secret_inventory.py` fails when a `SecretStr` setting, a bootstrap value, a Worker secret or a workflow `secrets.` reference is missing from this table, when a row has no rotation step, and when `wrangler.jsonc` or a workflow `env:` holds a literal secret. Production refuses to start on the local storage secret. The production clients for email, errors and analytics take no key yet, so add their rows when they do.
 
 | Secret | Store | Written by | Rotation |
 |---|---|---|---|

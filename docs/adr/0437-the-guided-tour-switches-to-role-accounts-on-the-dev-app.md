@@ -23,10 +23,14 @@ Option 3.
 - The switch keeps the same session row. It changes the row's subject to the role account and keeps the starting account's subject, name and email inside the encrypted token blob that already holds the identity tokens. No password and no token reaches the client, and no migration is needed. A token refresh keeps the starting account in the blob.
 - `DELETE /api/tour/role-switch` returns the session to the starting account. It is the only call a role account may make about the switch, and it can only ever return to the account that really signed in. Role to role goes back first and then forward, in one click of the tour.
 - Both calls write an audit event, `user.tour-role-switched` and `user.tour-role-returned`, in the workspace.
-- Both answer 404 unless the API setting `TOUR_ROLE_SWITCH` is true. It defaults to false. The deploy bootstrap writes it only when `TOUR_ROLE_SWITCH=on` is in the shell and the deploy target is marked `development`, which today is only the `production` entry that ADR 0390 calls a development environment. Asking for it on any other target stops the bootstrap.
+- Both answer 404 unless the API setting `TOUR_ROLE_SWITCH` is true. It defaults to false. It lives alone in the Modal secret `parfocal-api-tour`, which only the web function reads. `pnpm --filter @parfocal/deploy tour-switch on --env production` writes `true` into that secret and nothing else, and refuses any deploy target not marked `development`, which today is only the `production` entry that ADR 0390 calls a development environment. `tour-switch off` writes `false` on any target. Every deploy adds the secret as `false` when it is missing and keeps it as it is otherwise.
 
 ## Consequences
 
 - The tour menu plays every chapter with one click per change of role, and the chip shows the account the session really belongs to.
-- The deployed run needs the lead to run `TOUR_ROLE_SWITCH=on uv run --package parfocal-deploy python -m parfocal_deploy.bootstrap --env production` and then redeploy the API, which writes only the config secret.
-- OPS-014 sets `development=False` on that deploy target, removes the setting from the config secret and deletes the switch with the role accounts. Until then an admin of the dev app can act as any role account of their own workspace, which is the point.
+- The deployed run needs the lead to run `pnpm --filter @parfocal/deploy tour-switch on --env production` and then redeploy the API. It needs only the Modal login, no Neon key, and it never rewrites `parfocal-api-config`.
+- OPS-014 sets `development=False` on that deploy target, writes `tour-switch off`, deletes the `parfocal-api-tour` secret and deletes the switch with the role accounts. Until then an admin of the dev app can act as any role account of their own workspace, which is the point.
+
+## Amendment of 2026-11-24
+
+The first version put the flag in `parfocal-api-config` through the deploy bootstrap. That run rewrites the whole config secret from the lead's shell with `--force`, so any passed through setting missing from the shell, such as the email or error backend, would be dropped, and it needs a Neon key the lead no longer has. The flag moved to its own secret, as the Decision above now says, so turning the tour on is an additive write of one value.

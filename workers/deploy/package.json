@@ -9,6 +9,7 @@
     "smoke": "uv run --package parfocal-deploy python -m parfocal_deploy.smoke",
     "bootstrap": "uv run --package parfocal-deploy python -m parfocal_deploy.bootstrap",
     "rotate": "uv run --package parfocal-deploy python -m parfocal_deploy.rotate",
+    "tour-switch": "uv run --package parfocal-deploy python -m parfocal_deploy.tour_switch",
     "costs": "uv run --package parfocal-deploy python -m parfocal_deploy.costs",
     "preview": "uv run --package parfocal-deploy python -m parfocal_deploy.preview"
   },

@@ -22,6 +22,7 @@ from parfocal_deploy.tools import (
     run,
     sql,
 )
+from parfocal_deploy.tour_switch import ensure_tour_secret
 
 CI_SETTINGS = (
     "CLOUDFLARE_API_TOKEN",
@@ -126,6 +127,7 @@ def deploy(
     absent = [name for name in SECRETS if name not in found]
     if absent:
         raise NotBootstrappedError(target, absent)
+    ensure_tour_secret(target, tools, found)
     if migrate:
         project = settings["NEON_PROJECT_ID"]
         branch = neon.ensure_branch(tools.neon, project, target.neon_branch)

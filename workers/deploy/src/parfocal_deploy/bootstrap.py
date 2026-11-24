@@ -38,7 +38,6 @@ PASSED_THROUGH = (
     "ANALYTICS_BACKEND",
     "FLAG_BACKEND",
 )
-TOUR_ROLE_SWITCH = "TOUR_ROLE_SWITCH"
 MASTER_KEY_ID = "k1"
 KEY_BYTES = 32
 
@@ -55,21 +54,6 @@ class RoleWithoutKeysError(Exception):
             f"the role {neon.APP_ROLE} exists but the Modal secret {KEYS_SECRET} does not. "
             "Its password is lost. Run again with --reset-app-role-password after the owner agrees"
         )
-
-
-class TourSwitchOutsideDevelopmentError(Exception):
-    def __init__(self, name: str) -> None:
-        super().__init__(
-            f"{TOUR_ROLE_SWITCH}=on is only for a development deployment, and {name} is not one"
-        )
-
-
-def tour_switch_values(target: Environment, local: Mapping[str, str]) -> dict[str, str]:
-    if local.get(TOUR_ROLE_SWITCH, "").lower() != "on":
-        return {}
-    if not target.development:
-        raise TourSwitchOutsideDevelopmentError(target.name)
-    return {TOUR_ROLE_SWITCH: "true"}
 
 
 class MissingOutputError(Exception):
@@ -111,7 +95,7 @@ def config_values(
     if target.storage_prefix:
         values["STORAGE_KEY_PREFIX"] = target.storage_prefix
     passed = {name: local[name] for name in PASSED_THROUGH if local.get(name)}
-    return values | passed | tour_switch_values(target, local)
+    return values | passed
 
 
 def new_key() -> str:
