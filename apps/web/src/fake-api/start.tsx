@@ -10,6 +10,7 @@ import {
   setFakeQueueScene,
   setFakeRefusal,
   setFakeSearchDelay,
+  setFakeSharedAiDelay,
   setFakeSuspendedWorkspace,
   setFakeTeamScene,
   setFakeView,
@@ -60,6 +61,7 @@ export async function startFakeApi(
   setFakeBestScene(search["best"]);
   setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);
   setFakeSearchDelay(Number(search["searchDelay"] ?? 0) || 0);
+  setFakeSharedAiDelay(Number(search["aiDelay"] ?? 0) || 0);
   const sessionLock = scope === "all" ? sessionLockHandlers() : [];
   await startFakeWorker([...sessionLock, ...fakeApiHandlers(scope)]);
   mountFakeDataBadge(scope, queryClient);

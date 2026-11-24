@@ -28,6 +28,7 @@ const annotateCell = "C1";
 const reach = 2;
 const aboveFit = 1;
 const waitMs = 30_000;
+const pickWaitMs = 120_000;
 
 type Camera = { x: number; y: number; zoom: number };
 type Point = { x: number; y: number };
@@ -152,19 +153,41 @@ async function annotateCase(page: Page): Promise<Case> {
         (await shown
           .locator(`[data-testid="ai-object"][data-object="${annotateCell}"]`)
           .first()
-          .getAttribute("data-selected")
+          .getAttribute("data-selected", { timeout: 1_000 })
           .catch(() => null)) === "true",
     };
   }
   throw new Error(`no ${annotateCell} in ${annotateTaskName}`);
 }
 
+async function pickedWithin(page: Page, item: Case): Promise<boolean> {
+  const until = Date.now() + pickWaitMs;
+  while (Date.now() < until) {
+    if (await item.picked(page).catch(() => false)) return true;
+    await page.waitForTimeout(500);
+  }
+  return item.picked(page).catch(() => false);
+}
+
+async function landedCamera(page: Page, item: Case, fit: Camera | null): Promise<Camera | null> {
+  const until = Date.now() + waitMs;
+  let camera = await cameraOf(page);
+  while (Date.now() < until) {
+    const near =
+      camera !== null && Math.hypot(camera.x - item.centre.x, camera.y - item.centre.y) < reach;
+    if (near && fit !== null && camera !== null && camera.zoom > fit.zoom + aboveFit) break;
+    await page.waitForTimeout(500);
+    camera = await cameraOf(page);
+  }
+  return settledCamera(page);
+}
+
 async function check(page: Page, item: Case): Promise<boolean> {
   await openStage(page, item.slideUrl);
   const fit = await settledCamera(page);
   await openStage(page, `${item.slideUrl}&object=${item.object}`);
-  const landed = await settledCamera(page);
-  const picked = await item.picked(page);
+  const picked = await pickedWithin(page, item);
+  const landed = await landedCamera(page, item, fit);
   const offset =
     landed === null ? Infinity : Math.hypot(landed.x - item.centre.x, landed.y - item.centre.y);
   const zoomed = landed !== null && fit !== null && landed.zoom > fit.zoom + aboveFit;

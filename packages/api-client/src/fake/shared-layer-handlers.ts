@@ -1,4 +1,4 @@
-import { HttpResponse, http, type RequestHandler } from "msw";
+import { delay, HttpResponse, http, type RequestHandler } from "msw";
 import type {
   AiObjectChanges,
   AiObjectEdit,
@@ -379,13 +379,20 @@ function pickedCellOf(
   };
 }
 
+let sharedAiDelayMs = 0;
+
+export function setFakeSharedAiDelay(ms: number): void {
+  sharedAiDelayMs = Math.max(0, Math.floor(ms));
+}
+
 export const sharedLayerHandlers = (): RequestHandler[] => {
   listenForColleagues();
   return layerHandlers();
 };
 
 const layerHandlers = (): RequestHandler[] => [
-  http.get<Params>(`${base}/shared-layer/ai`, ({ params, request }) => {
+  http.get<Params>(`${base}/shared-layer/ai`, async ({ params, request }) => {
+    if (sharedAiDelayMs > 0) await delay(sharedAiDelayMs);
     const query = new URL(request.url).searchParams;
     const offset = Number(query.get("offset") ?? 0);
     const limit = Number(query.get("limit") ?? 1000);

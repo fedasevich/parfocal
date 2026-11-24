@@ -217,6 +217,7 @@ export {
   annotateTaskClasses,
   annotateTaskSlides,
   resetFakeSharedLayer,
+  setFakeSharedAiDelay,
   toAnnotateSlideStatus,
   toSharedAiObjects,
 } from "./shared-layer-handlers.ts";
