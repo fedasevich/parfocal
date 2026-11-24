@@ -63,6 +63,11 @@ export const median = (values: readonly number[]): number | null => {
     : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2;
 };
 
+function silentTotal(tasks: readonly TaskRecord[]): number | null {
+  const known = present(tasks.map((task) => task.silentControlClicks));
+  return known.length === 0 ? null : known.reduce((sum, value) => sum + value, 0);
+}
+
 export type MetricRow = {
   key: string;
   label: string;
@@ -71,11 +76,13 @@ export type MetricRow = {
   medianDurationMs: number | null;
   meanClicks: number | null;
   deadClicks: number;
+  silentControlClicks: number | null;
   clicks: number;
   meanSeq: number | null;
   firstClickCorrect: number;
   firstClickJudged: number;
   medianTimeToFirstActionMs: number | null;
+  medianTimeToFirstInputMs: number | null;
   meanPathStraightness: number | null;
 };
 
@@ -89,11 +96,13 @@ function metricRow(key: string, label: string, tasks: readonly TaskRecord[]): Me
     medianDurationMs: median(tasks.map((task) => task.durationMs)),
     meanClicks: mean(tasks.map((task) => task.clicks)),
     deadClicks: tasks.reduce((sum, task) => sum + task.deadClicks, 0),
+    silentControlClicks: silentTotal(tasks),
     clicks: tasks.reduce((sum, task) => sum + task.clicks, 0),
     meanSeq: mean(present(tasks.map((task) => task.seq))),
     firstClickCorrect: judged.filter(Boolean).length,
     firstClickJudged: judged.length,
     medianTimeToFirstActionMs: median(present(tasks.map((task) => task.timeToFirstActionMs))),
+    medianTimeToFirstInputMs: median(present(tasks.map((task) => task.timeToFirstInputMs))),
     meanPathStraightness: mean(present(tasks.map((task) => task.pathStraightness))),
   };
 }
@@ -195,8 +204,10 @@ export type RoundFigures = {
   meanSus: number | null;
   susByParticipant: { participant: string; score: number }[];
   deadClicks: number;
+  silentControlClicks: number | null;
   clicks: number;
   medianTimeToFirstActionMs: number | null;
+  medianTimeToFirstInputMs: number | null;
 };
 
 export function thisRound(sessions: readonly ServerSession[]): RoundFigures {
@@ -213,8 +224,10 @@ export function thisRound(sessions: readonly ServerSession[]): RoundFigures {
     meanSus: sus.mean,
     susByParticipant: sus.rows,
     deadClicks: tasks.reduce((sum, task) => sum + task.deadClicks, 0),
+    silentControlClicks: silentTotal(tasks),
     clicks: tasks.reduce((sum, task) => sum + task.clicks, 0),
     medianTimeToFirstActionMs: median(present(tasks.map((task) => task.timeToFirstActionMs))),
+    medianTimeToFirstInputMs: median(present(tasks.map((task) => task.timeToFirstInputMs))),
   };
 }
 
@@ -229,12 +242,14 @@ export const csvColumns = [
   "durationMs",
   "clicks",
   "deadClicks",
+  "silentControlClicks",
   "blocked",
   "keys",
   "wheels",
   "seq",
   "firstClickCorrect",
   "timeToFirstActionMs",
+  "timeToFirstInputMs",
   "pathStraightness",
   "reason",
   "like",
@@ -261,12 +276,14 @@ export function attemptsCsv(sessions: readonly ServerSession[]): string {
       task.durationMs,
       task.clicks,
       task.deadClicks,
+      task.silentControlClicks,
       task.blocked,
       task.keys,
       task.wheels,
       task.seq,
       task.firstClickCorrect,
       task.timeToFirstActionMs,
+      task.timeToFirstInputMs,
       task.pathStraightness,
       task.reason,
       task.notes.like,

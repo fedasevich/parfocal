@@ -88,7 +88,12 @@ const sessions = [
     session(
       "P-AAAA",
       [
-        task("open", { notes: { like: "clear list" }, firstClickCorrect: true }),
+        task("open", {
+          notes: { like: "clear list" },
+          firstClickCorrect: true,
+          silentControlClicks: 2,
+          timeToFirstInputMs: 1500,
+        }),
         task("look", {
           success: false,
           seq: 3,
@@ -176,8 +181,10 @@ test("dry runs are left out of every table, the SUS mean, the notes and the roun
       { participant: "P-BBBB", score: 90 },
     ],
     deadClicks: 7,
+    silentControlClicks: 2,
     clicks: 50,
     medianTimeToFirstActionMs: 4000,
+    medianTimeToFirstInputMs: 1500,
   });
   const exported = JSON.parse(resultsJson(sessions)) as { sessions: unknown[]; dryRuns: string[] };
   assert.equal(exported.sessions.length, 2);

@@ -4648,6 +4648,10 @@ msgstr "Both"
 msgid "Both are told by email."
 msgstr "Both are told by email."
 
+#: src/study/study-results-panel.tsx
+msgid "Both count a click in the app on nothing that reacts, but this round judges it by whether the page or the slide view changed within 800 ms and skips drags, where round 4 listed which mock elements could be clicked."
+msgstr "Both count a click in the app on nothing that reacts, but this round judges it by whether the page or the slide view changed within 800 ms and skips drags, where round 4 listed which mock elements could be clicked."
+
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Both of you deleted it."
 msgstr "Both of you deleted it."
@@ -4665,6 +4669,10 @@ msgstr "Both reviewers have {0} open again"
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Both reviewers have {0} open again with your note. It comes back here when they decide."
 msgstr "Both reviewers have {0} open again with your note. It comes back here when they decide."
+
+#: src/study/study-results-panel.tsx
+msgid "Both run from the task start to the first click or key that does something, but this round counts a key only when the page changed after it."
+msgstr "Both run from the task start to the first click or key that does something, but this round counts a key only when the page changed after it."
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Both versions stay in the case. The clinician has version 2."
@@ -6067,6 +6075,10 @@ msgstr "Continue where you left off"
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Continue with your institution"
 msgstr "Continue with your institution"
+
+#: src/study/study-results-panel.tsx
+msgid "Control presses with no change, the earlier round 5 rule"
+msgstr "Control presses with no change, the earlier round 5 rule"
 
 #: src/screens/admin/storage.tsx
 #: src/screens/evaluation/share-links.tsx
@@ -10496,6 +10508,10 @@ msgstr "Median time per area visit"
 msgid "Median time to first action"
 msgstr "Median time to first action"
 
+#: src/study/study-results-panel.tsx
+msgid "Median time to first input, the earlier round 5 rule"
+msgstr "Median time to first input, the earlier round 5 rule"
+
 #: src/screens/project/settings-zones.tsx
 msgid "Member"
 msgstr "Member"
@@ -14905,6 +14921,10 @@ msgstr "Round {0}. No session has run yet, so the tasks can change."
 #: src/study/study-results-panel.tsx
 msgid "Round 4 against this round"
 msgstr "Round 4 against this round"
+
+#: src/study/study-results-panel.tsx
+msgid "Round 4 did not measure this."
+msgstr "Round 4 did not measure this."
 
 #. placeholder {0}: four.roundOneSus
 #: src/study/study-results-panel.tsx

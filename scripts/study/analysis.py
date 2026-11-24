@@ -22,6 +22,11 @@ def median(values: list[float]) -> float | None:
     return (ordered[middle - 1] + ordered[middle]) / 2
 
 
+def silent_total(attempts: list[Attempt]) -> int | None:
+    known = [a.silent_control_clicks for a in attempts if a.silent_control_clicks is not None]
+    return sum(known) if known else None
+
+
 def mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
@@ -71,6 +76,9 @@ class Overall:
     clicks: int
     dead_clicks: int
     attempts_without_dead_click: int
+    silent_control_clicks: int | None
+    first_action_ms: float | None
+    first_input_ms: float | None
     tasks_per_participant: int
 
 
@@ -231,6 +239,11 @@ def analyse(
         clicks=sum(a.clicks for a in attempts),
         dead_clicks=sum(a.dead_clicks for a in attempts),
         attempts_without_dead_click=sum(a.dead_clicks == 0 for a in attempts),
+        silent_control_clicks=silent_total(attempts),
+        first_action_ms=median(
+            [a.first_action_ms for a in attempts if a.first_action_ms is not None]
+        ),
+        first_input_ms=median([a.first_input_ms for a in attempts if a.first_input_ms is not None]),
         tasks_per_participant=len(order),
     )
     return Analysis(

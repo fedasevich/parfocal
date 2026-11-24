@@ -63,10 +63,11 @@ test("a scripted session is recorded with masked text and replays with task jump
   await task.evaluate((value) => {
     document.body.insertAdjacentHTML(
       "beforeend",
-      `<div id="e2e-probe"><input id="e2e-name" type="text" value="${value}" /><button id="e2e-dead" type="button">Nothing</button></div>`,
+      `<div id="e2e-probe"><input id="e2e-name" type="text" value="${value}" /><button id="e2e-silent" type="button">Nothing</button><div id="e2e-dead">Plain text</div></div>`,
     );
   }, secret);
   await task.locator("#e2e-name").pressSequentially(secret);
+  await task.locator("#e2e-silent").click();
   await task.locator("#e2e-dead").click();
   await task.waitForTimeout(1500);
   await task.reload();
@@ -91,6 +92,10 @@ test("a scripted session is recorded with masked text and replays with task jump
   await expect(page.getByTestId("replay-span-t2")).toBeVisible();
   await expect(page.getByTestId("replay-strip")).toHaveAttribute("data-reloads", "1");
   await expect(page.getByTestId("replay-strip")).not.toHaveAttribute("data-dead-clicks", "0");
+  await expect(page.getByTestId("replay-strip")).not.toHaveAttribute(
+    "data-silent-control-clicks",
+    "0",
+  );
 
   const srcdoc = await page.getByTitle("Replay screen").getAttribute("srcdoc");
   expect(srcdoc ?? "").not.toContain("Jane");

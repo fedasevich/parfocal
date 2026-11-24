@@ -112,14 +112,30 @@ Each task record in the export keeps round 4's field names (`TaskRecord` in `stu
 | `success` | true when the automatic check passed or the participant pressed "I'm done", false after "I can't find it" | Round 4 had no give-up and ended every task by a check |
 | `durationMs` | From "Start task" to the end of the task | Same idea, after the same 5 s read delay |
 | `clicks` | Every pointer press in the application, not on the study's own bar, drag starts included | Same rule: round 4 counted every `pointerdown` inside the app frame (`study.js`, line 216) |
-| `deadClicks` | A press on a control (link, button, field, tab and so on) after which nothing on the page changed within 800 ms (`deadClickWindowMs`) | Different. Round 4 counted a click on nothing clickable inside the app (`poc/study/README.md`). The comparison table marks it |
+| `deadClicks` | A click in the application, not on the study's own bar and not a drag of 5 px or more, on no control (`clickableSelector` in `apps/web/src/study/task-metrics.ts`), after which neither the page nor the slide camera changed from the press to 800 ms after the release (`deadClickWindowMs`) | Round 4's rule, below. Round 5 judges "reacts" by a page or camera change because the app has no list of clickable attributes |
+| `silentControlClicks` | The earlier round 5 rule: a press on a control after which nothing on the page changed within 800 ms | Round 4 did not measure it. Kept beside the round 4 rule. Sessions recorded before EXP-019 (round 5 measures dead clicks and time to first action as round 4 did) hold this earlier rule in `deadClicks` and the first press, key or wheel in `timeToFirstActionMs`, and they have no `silentControlClicks`, which is how to tell them apart |
+| `timeToFirstActionMs` | From the task start to the first click that is not dead, or the first key outside a text field after which the page changed within 800 ms | Round 4's rule, below. Round 4 knew which keys ran an action, round 5 needs the page change |
+| `timeToFirstInputMs` | The earlier round 5 rule: from the task start to the first press, key or wheel | Round 4 did not measure it |
 | `blocked` | Times the task guard stopped the participant leaving the task's screen | Same idea, different screens |
 | `keys`, `wheels` | Key presses outside text fields, and wheel gestures at most one per 100 ms | Same names |
 | `seq` | The SEQ answer, 1 to 7 | Same question and scale |
 | `notes` | Like, dislike and recommend after the task, optional | New, from nur |
 | `reason` | The give-up reason | New |
 
-Not recorded in round 5's export: round 4's time from reading a task to the first action, first-click accuracy, straightness of the reach and the expert time per task. Those round 4 figures appear in the comparison only where round 5 has a measure beside them, and the 4.8 s first action time is shown with "not recorded in the export".
+The export also holds `firstClickCorrect` and `pathStraightness`. Not in the export: round 4's expert time per task.
+
+### Round 4's dead click and time to first action
+
+Read from `poc/study` (never modified) and the round 4 deck, which `poc/study` does not contain.
+
+- Dead click. `poc/study/public/proto.js`, lines 2484 to 2498: a `click` listener on the app frame `#app`. A click first closes an open popover (`ui.pop`) or compare picker (`ui.cmpPick`) when it lands outside them, and that click is not dead. Otherwise it is an action when its target is inside `[data-itab]`, `[data-tool]`, `[data-cell]`, `[data-act]` or `[data-go]`. Every other click calls `studyHook('deadclick')` at line 2498, and `poc/study/public/study.js`, lines 337 to 339, logs it as `dead` and adds one to the task's `deadClicks`. There is no time window: a control that did nothing is never dead, a click on empty space always is.
+- The dead click share. Its denominator is `clicks`, every `pointerdown` inside `#app` during a task (`study.js`, lines 216 to 220). The deck's 42 of 277 (slide 05) is the sum of `deadClicks` over the sum of `clicks`, and its speaker notes say "clicks inside the app on something that does nothing". 13 were on zone outlines and 15 on magnification numbers that the mock drew as pictures (slide 07 notes).
+- Time to first action. No code in `poc/study` computes it, and `public/results.js` shows only success, time, SEQ, clicks, dead clicks and screens. The only definition is the deck's, slide 05 speaker notes: "the first real action of a task", timed "from the task appearing to that action". How the deck mapped that onto the event log is not written down. Our reading: the task appears at `task-start` (`study.js`, line 469, when the participant presses Start task). The task card shows 5 s before that (`READ_DELAY_MS`, `study.js`, line 8) and is not logged, and a 4.8 s median could not start at the card. A real action is a click or key the mock handled: most write an `act` entry (`study.js`, line 335, from `act()` in `proto.js`, line 2267, for `data-act`, `data-go` and `data-cell` clicks and most shortcuts), while tool and tab clicks and some keys (`proto.js`, lines 736 to 743) only show as a `state` or `screen` entry. Dead clicks and wheel turns are not actions, and the mock had no wheel zoom. This reading is an open question for the owner.
+
+Round 5 follows both on the real app in `scoreTask` in `apps/web/src/study/task-metrics.ts`. What still differs, one sentence each:
+
+- Dead clicks: round 5 decides whether a click on no control reacted by any page change or slide camera move from the press to 800 ms after the release, which also covers an overlay closing, but a click that changes only the WebGL drawing and nothing else on the page counts as dead, and leaves out drags of 5 px or more, because on the real slide a drag pans or draws, where round 4 counted any press and release on the same element as a click.
+- Time to first action: round 5 counts a key as the first action only when the page changed within 800 ms after it, where round 4's mock knew which keys ran an action.
 
 ## Questionnaires, word for word
 
@@ -258,7 +274,7 @@ Standard library Python, in `scripts/study/`:
 python3 scripts/study round5/*.json --exclude P-PILT --scored round5/scored.csv --out round5/tables
 ```
 
-- Input: the console's "Download results" JSON (the whole study state), a list of sessions, or a CSV with the same field names and one row per task attempt (`participant`, `session`, `round`, `id`, `idx`, `title`, `success`, `durationMs`, `clicks`, `deadClicks`, `blocked`, `keys`, `wheels`, `seq`, `like`, `dislike`, `recommend`, `reason`, and optionally `sus1` to `sus10`, `susScore` and `final.like` and so on). Several files merge by session id.
+- Input: the console's "Download results" JSON (the whole study state), a list of sessions, or a CSV with the same field names and one row per task attempt (`participant`, `session`, `round`, `id`, `idx`, `title`, `success`, `durationMs`, `clicks`, `deadClicks`, `blocked`, `keys`, `wheels`, `seq`, `like`, `dislike`, `recommend`, `reason`, and optionally `silentControlClicks`, `timeToFirstActionMs`, `timeToFirstInputMs`, `sus1` to `sus10`, `susScore` and `final.like` and so on). Several files merge by session id.
 - Excluded: sessions marked `dryRun`, `dry` or `pilot`, every code given with `--exclude`, and sessions with no task records. When two files hold the same session, the finished or fuller copy wins.
 - `--scored` takes a CSV with `participant`, `task` and `success`, the moderator's scoring against the success rules above. The tables say how many attempts it scored, and a row that matches no included attempt is listed as a warning. Without it, the success column is what the app recorded, and every table says which source it used.
 - `--round` keeps one console round only.
@@ -270,7 +286,7 @@ Outputs in the `--out` folder, each with its thesis place written in the folder'
 |---|---|
 | `tasks.md`, `tasks.csv` | Per task: success, gave up, median and range of time for successful attempts, median and range of clicks, dead clicks, SEQ mean, median and range, SEQ 6 or 7, blocked |
 | `sus.md`, `sus.csv` | SUS per participant and the mean |
-| `comparison.md`, `comparison.csv` | Round 4 against round 5, each figure labelled with its source |
+| `comparison.md`, `comparison.csv` | Round 4 against round 5, each figure labelled with its source and a note saying in one sentence what still differs. The earlier round 5 rules for dead clicks and first action sit in their own rows |
 | `per-task-comparison.md`, `.csv` | Round 4's median time and SEQ per task from the deck beside round 5's, with a comparability note per task: reworded goals, and round 5 times that include pressing "I'm done" |
 | `notes.md` | The per-task notes, give-up reasons and final answers, grouped by task and quoted |
 | `attempts.csv` | One row per included attempt, in the CSV input format |
@@ -292,7 +308,7 @@ Round 4 and round 1 numbers are quoted from the round 4 deck, "Viewer Usability 
 | Round 4 mean SUS | 83.8 | Deck, slide 04 |
 | Round 4 SUS per participant | P1 100, P2 95, P3 80, P4 60 | Deck, slide 04 |
 | Round 4 dead clicks | 15% of clicks hit nothing (42 of 277), 29 of 40 tasks had none | Deck, slide 05 (Study · movement metrics) |
-| Round 4 median time to first action | 4.8 s | Deck, slide 05 |
+| Round 4 median time to first action | 4.8 s | Deck, slide 05, defined in its speaker notes |
 | Round 1 SUS | 52.5, one participant | Deck, slide 06 (Study · before and after) |
 | Round 4 median time and SEQ per task | 5.9 s and 7.0 for open a case, and so on for all ten tasks | Deck, slide 07 (Study · per task) |
 | Round 4 task texts, success rules and metric names | | `poc/study/README.md` and `poc/study/public/study.js` |

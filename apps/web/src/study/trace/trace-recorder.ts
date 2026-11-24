@@ -1,3 +1,4 @@
+import { dragDistancePx, isClickable } from "../task-metrics.ts";
 import type { CameraSample, Frame, TraceEvent } from "./trace-model.ts";
 import { loggedKey, sameCamera } from "./trace-model.ts";
 import type { Batcher } from "./trace-store.ts";
@@ -19,9 +20,6 @@ const frameGapMs = 2000;
 const settleMs = 500;
 const pollMs = 250;
 const frameLimit = 400;
-
-const interactiveSelector =
-  'button, a[href], input, select, summary, label, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="switch"]';
 
 const textFieldSelector =
   'input:not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]), textarea, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
@@ -58,6 +56,7 @@ export function createRecorder(options: {
   let target: Window | null = null;
   let current: Document | undefined;
   let lastPath = "";
+  let press: { t: number; x: number; y: number } | null = null;
   let lastMove = 0;
   let lastMutation = 0;
   let lastFrame = 0;
@@ -110,17 +109,30 @@ export function createRecorder(options: {
       { capture: true, passive: true },
     );
     doc.addEventListener(
+      "pointerdown",
+      (event) => {
+        press = { t: now(), x: event.clientX, y: event.clientY };
+      },
+      { capture: true, passive: true },
+    );
+    doc.addEventListener(
       "click",
       (event) => {
         const element = asElement(event.target);
+        const stamp = now();
         emit({
-          t: now(),
+          t: stamp,
           k: "click",
           x: Math.round(event.clientX),
           y: Math.round(event.clientY),
           target: describe(element),
-          interactive: element?.closest(interactiveSelector) != null,
+          interactive: isClickable(element),
+          held: press === null ? 0 : stamp - press.t,
+          dragged:
+            press !== null &&
+            Math.hypot(event.clientX - press.x, event.clientY - press.y) >= dragDistancePx,
         });
+        press = null;
         dirty = true;
       },
       { capture: true, passive: true },

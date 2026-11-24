@@ -83,6 +83,7 @@ export type TaskRecord = {
   durationMs: number;
   clicks: number;
   deadClicks: number;
+  silentControlClicks?: number | undefined;
   blocked: number;
   keys: number;
   wheels: number;
@@ -91,6 +92,7 @@ export type TaskRecord = {
   reason: string | null;
   endedAt: number;
   timeToFirstActionMs?: number | null | undefined;
+  timeToFirstInputMs?: number | null | undefined;
   firstClickCorrect?: boolean | null | undefined;
   pathStraightness?: number | null | undefined;
 };
@@ -702,6 +704,7 @@ const taskRecordSchema = z.object({
   durationMs: z.number(),
   clicks: z.number(),
   deadClicks: z.number(),
+  silentControlClicks: z.number().optional(),
   blocked: z.number(),
   keys: z.number(),
   wheels: z.number(),
@@ -710,6 +713,7 @@ const taskRecordSchema = z.object({
   reason: z.string().nullable(),
   endedAt: z.number(),
   timeToFirstActionMs: z.number().nullable().optional(),
+  timeToFirstInputMs: z.number().nullable().optional(),
   firstClickCorrect: z.boolean().nullable().optional(),
   pathStraightness: z.number().nullable().optional(),
 });

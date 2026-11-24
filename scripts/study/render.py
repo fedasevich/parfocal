@@ -197,6 +197,17 @@ def percent(part: int, whole: int) -> str:
 COMPARISON_HEADER = ["Measure", "Round 4", "Round 4 source", "Round 5", "Round 5 source", "Note"]
 
 
+DEAD_CLICK_DIFFERENCE = (
+    "Both count a click in the app on nothing that reacts, but round 5 judges it by whether "
+    "the page or the slide view changed within 800 ms and skips drags, where round 4 listed "
+    "the mock's clickable attributes"
+)
+
+
+def seconds(ms: float | None) -> str:
+    return "n/a" if ms is None else f"{fixed(ms / 1000)} s"
+
+
 def comparison_table(analysis: Analysis) -> list[list[object]]:
     overall = analysis.overall
     scored = [row for row in analysis.sus if row.score is not None]
@@ -255,9 +266,17 @@ def comparison_table(analysis: Analysis) -> list[list[object]]:
             f"{percent(overall.dead_clicks, overall.clicks)} "
             f"({of(overall.dead_clicks, overall.clicks)})",
             five,
-            "Not the same measure. Round 4 counted a click on nothing clickable, "
-            "round 5 counts a click on a control after which the page did not change "
-            "within 800 ms",
+            DEAD_CLICK_DIFFERENCE,
+        ],
+        [
+            "Control presses with no page change, the earlier round 5 rule",
+            "not measured",
+            round4.MOVEMENT,
+            "n/a"
+            if overall.silent_control_clicks is None
+            else of(overall.silent_control_clicks, overall.clicks),
+            five,
+            "Kept beside the round 4 rule because round 5 counted dead clicks this way first",
         ],
         [
             "Tasks with no dead click",
@@ -265,15 +284,24 @@ def comparison_table(analysis: Analysis) -> list[list[object]]:
             round4.MOVEMENT,
             of(overall.attempts_without_dead_click, overall.attempts),
             five,
-            "Same caveat as the dead click share",
+            DEAD_CLICK_DIFFERENCE,
         ],
         [
             "Median time from reading a task to the first action",
             f"{round4.FIRST_ACTION_SECONDS} s",
             round4.MOVEMENT,
-            "not recorded in the export",
-            "Round 5 task records hold no first action time",
-            "Only the session replay could give it",
+            seconds(overall.first_action_ms),
+            five,
+            "Both run from the task start to the first click or key that does something, "
+            "but round 5 counts a key only when the page changed within 800 ms after it",
+        ],
+        [
+            "Median time to the first press, key or wheel, the earlier round 5 rule",
+            "not measured",
+            round4.MOVEMENT,
+            seconds(overall.first_input_ms),
+            five,
+            "Kept beside the round 4 rule because round 5 measured the first action this way first",
         ],
         [
             "Mean SUS",
@@ -396,10 +424,13 @@ ATTEMPT_HEADER = [
     "durationMs",
     "clicks",
     "deadClicks",
+    "silentControlClicks",
     "blocked",
     "keys",
     "wheels",
     "seq",
+    "timeToFirstActionMs",
+    "timeToFirstInputMs",
     "like",
     "dislike",
     "recommend",
@@ -420,10 +451,13 @@ def attempt_csv(analysis: Analysis) -> list[list[object]]:
             int(a.duration_ms),
             a.clicks,
             a.dead_clicks,
+            raw(a.silent_control_clicks),
             a.blocked,
             a.keys,
             a.wheels,
             "" if a.seq is None else a.seq,
+            raw(a.first_action_ms),
+            raw(a.first_input_ms),
             a.notes.get("like", ""),
             a.notes.get("dislike", ""),
             a.notes.get("recommend", ""),

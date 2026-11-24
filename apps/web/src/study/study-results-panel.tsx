@@ -147,7 +147,13 @@ function NoteList({
 function RoundCompare({ sessions }: { sessions: ServerSession[] }) {
   const now = thisRound(sessions);
   const four = roundFourReported;
-  const rows: { key: string; label: ReactNode; four: string; now: string }[] = [
+  const rows: {
+    key: string;
+    label: ReactNode;
+    four: string;
+    now: string;
+    differs?: ReactNode;
+  }[] = [
     {
       key: "completed",
       label: <Trans>Tasks completed</Trans>,
@@ -189,12 +195,39 @@ function RoundCompare({ sessions }: { sessions: ServerSession[] }) {
       label: <Trans>Dead clicks</Trans>,
       four: `${four.deadClickPercent}% (${four.deadClicks} of ${four.clicks})`,
       now: `${percent(now.deadClicks, now.clicks)} (${now.deadClicks} of ${now.clicks})`,
+      differs: (
+        <Trans>
+          Both count a click in the app on nothing that reacts, but this round judges it by whether
+          the page or the slide view changed within 800 ms and skips drags, where round 4 listed
+          which mock elements could be clicked.
+        </Trans>
+      ),
+    },
+    {
+      key: "silent",
+      label: <Trans>Control presses with no change, the earlier round 5 rule</Trans>,
+      four: dash,
+      now: now.silentControlClicks === null ? dash : `${now.silentControlClicks} of ${now.clicks}`,
+      differs: <Trans>Round 4 did not measure this.</Trans>,
     },
     {
       key: "first-action",
       label: <Trans>Median time to first action</Trans>,
       four: `${four.medianTimeToFirstActionSeconds} s`,
       now: seconds(now.medianTimeToFirstActionMs),
+      differs: (
+        <Trans>
+          Both run from the task start to the first click or key that does something, but this round
+          counts a key only when the page changed after it.
+        </Trans>
+      ),
+    },
+    {
+      key: "first-input",
+      label: <Trans>Median time to first input, the earlier round 5 rule</Trans>,
+      four: dash,
+      now: seconds(now.medianTimeToFirstInputMs),
+      differs: <Trans>Round 4 did not measure this.</Trans>,
     },
   ];
   return (
@@ -225,7 +258,14 @@ function RoundCompare({ sessions }: { sessions: ServerSession[] }) {
         <tbody>
           {rows.map((row) => (
             <tr key={row.key} className="border-t border-line" data-testid={`compare-${row.key}`}>
-              <td className={`${cell} text-fg`}>{row.label}</td>
+              <td className={`${cell} text-fg`}>
+                {row.label}
+                {row.differs === undefined ? null : (
+                  <span className="block text-caption text-fg-dim" data-testid="compare-differs">
+                    {row.differs}
+                  </span>
+                )}
+              </td>
               <td className={`${cell} font-mono`} data-testid="round-four">
                 {row.four}
               </td>

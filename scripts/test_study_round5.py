@@ -143,11 +143,32 @@ class ComparisonTest(unittest.TestCase):
         self.assertEqual(rows["SUS per participant"][1], "P1 100, P2 95, P3 80, P4 60")
         self.assertEqual(
             rows["Median time from reading a task to the first action"][1:4],
-            ["4.8 s", round4.MOVEMENT, "not recorded in the export"],
+            ["4.8 s", round4.MOVEMENT, "n/a"],
         )
         self.assertEqual(rows["SUS in round 1"][1:3], ["52.5", round4.BEFORE_AFTER])
         for row in rows.values():
             self.assertTrue(row[2].startswith(round4.DECK))
+
+    def test_first_action_and_the_earlier_rule_columns_come_from_the_records(self):
+        export = read_exports([FIXTURE])
+        timings = iter([(3000, 900, 1), (5000, 1200, 0), (4000, 400, 2)])
+        for session in export.sessions:
+            for attempt in session.attempts:
+                action, first_input, silent = next(timings, (None, None, None))
+                attempt.first_action_ms = action
+                attempt.first_input_ms = first_input
+                attempt.silent_control_clicks = silent
+        rows = {row[0]: row for row in render.comparison_table(analyse(export, exclude={"p-pilt"}))}
+        first = rows["Median time from reading a task to the first action"]
+        self.assertEqual(first[3], "4.0 s")
+        self.assertIn("counts a key only when the page changed", first[5])
+        earlier = rows["Median time to the first press, key or wheel, the earlier round 5 rule"]
+        self.assertEqual(earlier[1:4], ["not measured", round4.MOVEMENT, "0.9 s"])
+        silent = rows["Control presses with no page change, the earlier round 5 rule"]
+        self.assertEqual(silent[3], "3 of 70")
+        for label in ("Dead clicks, share of task clicks", "Tasks with no dead click"):
+            self.assertEqual(rows[label][5], render.DEAD_CLICK_DIFFERENCE)
+            self.assertNotIn("Not the same measure", rows[label][5])
 
     def test_round_4_figures_agree_with_each_other(self):
         scores = [score for _, score in round4.SUS_PER_PARTICIPANT]

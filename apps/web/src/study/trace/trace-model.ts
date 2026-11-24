@@ -13,7 +13,16 @@ export type TraceEvent =
   | { t: number; k: "load"; path: string; reload: boolean; w: number; h: number; head: string[] }
   | { t: number; k: "route"; path: string }
   | { t: number; k: "move"; x: number; y: number }
-  | { t: number; k: "click"; x: number; y: number; target: string; interactive: boolean }
+  | {
+      t: number;
+      k: "click";
+      x: number;
+      y: number;
+      target: string;
+      interactive: boolean;
+      held?: number;
+      dragged?: boolean;
+    }
   | { t: number; k: "key"; key: string }
   | { t: number; k: "mutation" }
   | { t: number; k: "frame"; frame: Frame }
@@ -117,23 +126,33 @@ export function taskSpans(events: TraceEvent[]): TaskSpan[] {
 
 export const deadClickWindowMs = 800;
 
+const reactedBetween = (events: TraceEvent[], from: number, to: number): boolean =>
+  events.some(
+    (event) =>
+      event.t >= from &&
+      event.t <= to &&
+      (event.k === "mutation" || event.k === "load" || event.k === "route" || event.k === "camera"),
+  );
+
 export function deadClicks(events: TraceEvent[], windowMs = deadClickWindowMs): number[] {
   const origin = startOf(events);
   const lastAt = events[events.length - 1]?.t ?? 0;
-  const result: number[] = [];
-  events.forEach((event, index) => {
-    if (event.k !== "click" || !event.interactive) return;
-    if (lastAt - event.t < windowMs) return;
-    const reacted = events
-      .slice(index + 1)
-      .some(
-        (later) =>
-          later.t - event.t <= windowMs &&
-          (later.k === "mutation" || later.k === "load" || later.k === "route"),
-      );
-    if (!reacted) result.push(event.t - origin);
+  return events.flatMap((event) => {
+    if (event.k !== "click" || event.interactive || event.dragged === true) return [];
+    if (lastAt - event.t < windowMs) return [];
+    const reacted = reactedBetween(events, event.t - (event.held ?? 0), event.t + windowMs);
+    return reacted ? [] : [event.t - origin];
   });
-  return result;
+}
+
+export function silentControlClicks(events: TraceEvent[], windowMs = deadClickWindowMs): number[] {
+  const origin = startOf(events);
+  const lastAt = events[events.length - 1]?.t ?? 0;
+  return events.flatMap((event) => {
+    if (event.k !== "click" || !event.interactive) return [];
+    if (lastAt - event.t < windowMs) return [];
+    return reactedBetween(events, event.t, event.t + windowMs) ? [] : [event.t - origin];
+  });
 }
 
 export function reloads(events: TraceEvent[]): number[] {

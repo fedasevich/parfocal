@@ -11,6 +11,7 @@ import {
   mergeBatches,
   reloads,
   screenAt,
+  silentControlClicks,
   type TraceEvent,
   taskSpans,
   wireframeAt,
@@ -127,8 +128,9 @@ test("task spans run from start to end and the last one stays open to the end", 
   );
 });
 
-test("a dead click is an interactive click with no reaction in the next 800 ms", () => {
-  assert.deepEqual(deadClicks(log), [1000]);
+test("a dead click is a click on no control with no reaction in the next 800 ms", () => {
+  assert.deepEqual(deadClicks(log), [1100]);
+  assert.deepEqual(silentControlClicks(log), [1000]);
 });
 
 test("a click near the end of the log is not judged", () => {

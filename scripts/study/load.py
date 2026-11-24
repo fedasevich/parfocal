@@ -30,6 +30,9 @@ class Attempt:
     seq: int | None
     notes: dict[str, str]
     reason: str | None
+    silent_control_clicks: int | None = None
+    first_action_ms: float | None = None
+    first_input_ms: float | None = None
 
 
 @dataclass
@@ -116,6 +119,9 @@ def attempt_of(record: dict, notes: dict) -> Attempt:
         seq=optional_integer(record.get("seq")),
         notes=kept,
         reason=text(record.get("reason")),
+        silent_control_clicks=optional_integer(record.get("silentControlClicks")),
+        first_action_ms=number(record.get("timeToFirstActionMs")),
+        first_input_ms=number(record.get("timeToFirstInputMs")),
     )
 
 
