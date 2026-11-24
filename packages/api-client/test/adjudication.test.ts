@@ -175,7 +175,10 @@ test("a cell task's evaluation names its cell classes, not unclassified", async 
   assert.ok(evaluation.status === 200);
   const classes = evaluation.data.classes.map((row) => `${row.kind} ${row.class_name}`);
   assert.deepEqual(classes, ["cell Immune", "cell Stroma"]);
-  assert.equal(evaluation.data.overall[0]?.kind, "cell");
+  assert.deepEqual(
+    evaluation.data.overall.map((row) => row.kind),
+    ["region", "cell"],
+  );
   assert.equal(
     evaluation.data.classes.reduce(
       (sum, row) => sum + row.true_positives + row.false_positives + row.unsure,

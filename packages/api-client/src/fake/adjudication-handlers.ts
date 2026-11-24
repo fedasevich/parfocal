@@ -546,7 +546,13 @@ const regionEvaluation = (taskId: string, drawn: boolean): Evaluation => {
 export const toTaskEvaluation = (taskId: string, drawn = false): Evaluation => {
   const base = regionEvaluation(taskId, drawn);
   if (!isCellTask(taskId)) return base;
-  return { ...base, classes: [...cellTaskClasses], overall: [cellOverall()], dice: {} };
+  const noRegions = { ...cellClass("all", 0, 0, 0), kind: "region" };
+  return {
+    ...base,
+    classes: [...cellTaskClasses],
+    overall: [noRegions, cellOverall()],
+    dice: {},
+  };
 };
 
 const loggedChanges = (signed: boolean): EvaluationChange[] =>
