@@ -171,9 +171,10 @@ async function playOne(index: number, title: string, ownEmail: string) {
 try {
   const ownEmail = await setActiveWorkspace(values.workspace);
   const menu = await openMenu();
-  const titles = (await menu.getByRole("button", { name: /^Play (?!all)/ }).allTextContents()).map(
-    (text) => text.replace(/^Play /, ""),
-  );
+  const plays = menu.getByRole("button", { name: /^Play (?!all)/ });
+  await plays.first().waitFor({ timeout: 30_000 });
+  const titles = (await plays.allTextContents()).map((text) => text.replace(/^Play /, ""));
+  if (titles.length === 0) throw new Error("the tour menu listed no chapters");
   for (const [index, title] of titles.entries()) {
     if (values.chapter !== "" && Number(values.chapter) !== index + 1) continue;
     process.stdout.write(`chapter ${index + 1} ${title}\n`);
