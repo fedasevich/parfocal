@@ -35,6 +35,16 @@ const editRequest = (page: Page, method: string, object: string) =>
       request.method() === method && decodeURIComponent(request.url()).endsWith(`/edits/${object}`),
   );
 
+async function zoomOntoCells(page: Page) {
+  const box = await page.getByTestId("slide-host").boundingBox();
+  if (box === null) throw new Error("the slide host has no box");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (let step = 0; step < 5; step += 1) {
+    await page.mouse.wheel(0, -600);
+    await page.waitForTimeout(60);
+  }
+}
+
 async function drawSquare(page: Page) {
   const box = (await page.getByTestId("slide-host").boundingBox()) ?? {
     x: 0,
@@ -107,8 +117,9 @@ test("a reviewer changes the type of a cell from the live card and keeps its out
   const body = (await saved).postDataJSON() as { class_id: string | null; geometry: unknown };
   expect(body.class_id).not.toBeNull();
   expect(body.geometry).toBeNull();
-  await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-reviewed", object);
   await expect(panel.getByTestId("review-type-picker")).toHaveCount(0);
+  await zoomOntoCells(page);
+  await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-reviewed", object);
 
   await panel.getByRole("button", { name: "Redraw the outline" }).click();
   const again = editRequest(page, "PUT", object);
@@ -128,6 +139,7 @@ test("a reviewer changes the type of a cell from the live card and keeps its out
   await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-ready", "true", {
     timeout: 25_000,
   });
+  await zoomOntoCells(page);
   await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-reviewed", object);
 });
 
