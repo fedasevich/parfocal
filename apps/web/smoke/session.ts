@@ -27,6 +27,15 @@ export async function signIn(page: Page, origin: string) {
     await page.locator("button[type='submit']").first().click();
   }
   const app = new URL(origin).origin;
+  const later = page.getByRole("button", { name: "Not now", exact: true });
+  const inApp = () => {
+    const url = new URL(page.url());
+    return url.origin === app && !url.pathname.startsWith("/sign-in");
+  };
+  await expect
+    .poll(async () => inApp() || (await later.isVisible()), { timeout: 60_000 })
+    .toBe(true);
+  if (await later.isVisible()) await later.click();
   await page.waitForURL((url) => url.origin === app && !url.pathname.startsWith("/sign-in"));
 }
 
