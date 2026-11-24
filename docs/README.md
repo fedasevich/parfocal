@@ -6,7 +6,7 @@ Last consolidated: 2026-11-15
 
 ## In progress
 
-State on 2026-11-18. The deployed app runs in Europe, and `app.parfocal.eu` is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The owner answered decisions 138 to 154 on 2026-11-18, which put database backups on hold. Most tasks in review now wait for one owner step, the password of the agent test account of decision 153, after which an agent walks the deployed app signed in and ticks them. Main CI is being repaired on a branch. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+State on 2026-11-24. The deployed app runs in Europe at v0.51.0, and `app.parfocal.eu` is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The guided tour plays 16 chapters across the role accounts there, with its role switch on through the Modal secret `parfocal-api-tour` ([ADR 0437](adr/0437-the-guided-tour-switches-to-role-accounts-on-the-dev-app.md)), and the study console prepares a participant project through the seed function ([ADR 0439](adr/0439-the-console-prepares-a-participant-through-the-seed-function.md)). Agents sign in with `scripts/agent_session.py` and run the deployed checks themselves. Main CI is red and being repaired. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
 The owner's open steps and the Mac checks are in [decisions.md](decisions.md), which starts with what to do next in order. Answered decisions move to [decisions-answered.md](decisions-answered.md).
 
