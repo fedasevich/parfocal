@@ -99,5 +99,7 @@ test("going back and forth between two tools writes each tool hint once", async 
     await page.keyboard.press(key);
     await page.waitForLoadState("networkidle");
   }
+  await expect.poll(() => writes.length).toBe(2);
+  await page.waitForTimeout(500);
   expect(writes).toHaveLength(2);
 });

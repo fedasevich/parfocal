@@ -69,6 +69,7 @@ test("a lost connection shows the banner, keeps what was typed, retries and conf
   context,
 }) => {
   await page.goto("/search");
+  await page.waitForLoadState("networkidle");
   const box = page.getByRole("textbox", { name: "Search everything" });
   await box.fill("kept note");
   await context.setOffline(true);
