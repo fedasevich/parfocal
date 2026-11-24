@@ -16,6 +16,7 @@ from parfocal_api.outline_types import (
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.result_sets import list_slide_result_sets
 from parfocal_api.showcase import VIEWER_SAMPLE, WORKSPACES, seed
+from parfocal_api.study_projects import STUDY_WORKSPACE
 from parfocal_api.tables import Role
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.outline_types import outline_types_call_of
@@ -134,4 +135,5 @@ def test_the_agent_session_script_trusts_exactly_the_seeded_workspaces() -> None
     declared = json.loads(
         (repository_root(__file__, 3) / "infra/app-environments.json").read_text()
     )
-    assert sorted(declared["seeded_workspaces"]) == sorted(w.slug for w in WORKSPACES)
+    seeded = [*WORKSPACES, STUDY_WORKSPACE]
+    assert sorted(declared["seeded_workspaces"]) == sorted(w.slug for w in seeded)

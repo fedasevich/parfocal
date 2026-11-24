@@ -23,5 +23,5 @@
     "role-viewer@parfocal.eu",
     "role-annotator@parfocal.eu"
   ],
-  "seeded_workspaces": ["cvut-biomedical", "cvut-imaging", "cvut-ml"]
+  "seeded_workspaces": ["cvut-biomedical", "cvut-imaging", "cvut-ml", "cvut-study"]
 }
