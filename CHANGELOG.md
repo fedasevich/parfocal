@@ -2,6 +2,36 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.49.0 (2026-11-24)
+
+### Features
+
+- PILOT-013: Keep the tour role switch flag in its own Modal secret
+- EXP-019: Count dead clicks and time to first action by round 4's rules
+- EXP-019: Count a slide camera move as a reaction and mark the first action reading
+
+### Fixes
+
+- PILOT-013: Fix the palette test import, list the tour key, rebaseline the code budget
+- PROTO-104: Wait for the pick before reading the camera and cover annotate cell hits
+- PROTO-167: Name the Smart select step, use cell classes in evaluations, count one device
+- PROTO-167: Give the fake cell evaluation both overall rows and word the budget rebaseline
+
+### Docs
+
+- PROTO-104: Record the v0.48.0 deployed checks
+- PILOT-014: Log the owner's run until 19:30
+- PILOT-013: Log the tour switch secret
+- PROTO-104: Log the merge and move to review
+- EXP-019: Log, tick and ask where the clock starts
+- PROTO-167: Log the merge and move to review
+
+### Other
+
+- agents: Pause repeated check runs, quiet lefthook and batch agent reads
+- PROTO-167: Claim PROTO-167 for the parallel run
+- EXP-018: Claim EXP-018 for the parallel run
+
 ## v0.48.0 (2026-11-23)
 
 ### Features
