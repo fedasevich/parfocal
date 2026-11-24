@@ -9,6 +9,8 @@ const USAGE = [
   "Signs in with the agent-walk session from python3 scripts/agent_session.py,",
   "plays every chapter of the tour of the app, switching between the role accounts,",
   "and prints one line per step. --chapter N plays only chapter N.",
+  "--workspace SLUG (default cvut-biomedical) is made the active workspace first, because the",
+  "seeded names differ per workspace and the study console can switch it under a running tour.",
   "The server must have TOUR_ROLE_SWITCH set. GPU steps are skipped, never run.",
 ].join("\n");
 
@@ -17,6 +19,7 @@ const { values } = parseArgs({
     app: { type: "string", default: "https://app.parfocal.eu" },
     state: { type: "string", default: join(homedir(), ".config/parfocal/agent-session.json") },
     chapter: { type: "string", default: "" },
+    workspace: { type: "string", default: "cvut-biomedical" },
     help: { type: "boolean", default: false },
   },
 });
@@ -45,9 +48,52 @@ const context = await browser.newContext({
   viewport: { width: 1440, height: 900 },
 });
 const page = await context.newPage();
+page.on("response", (response) => {
+  if (response.status() >= 500) {
+    process.stdout.write(
+      `http ${response.status()} ${response.request().method()} ${response.url()}\n`,
+    );
+  }
+});
 let failures = 0;
 let fallbackAnchors = 0;
 const stepLimit = 60;
+
+type Me = {
+  email: string;
+  active_tenant_id: string;
+  workspaces: { tenant_id: string; slug: string }[];
+};
+
+const sameOrigin = { origin: values.app };
+
+async function whoAmI(): Promise<Me> {
+  const response = await context.request.get(`${values.app}/api/me`);
+  return (await response.json()) as Me;
+}
+
+async function setActiveWorkspace(slug: string) {
+  await context.request.delete(`${values.app}/api/tour/role-switch`, { headers: sameOrigin });
+  const me = await whoAmI();
+  const wanted = me.workspaces.find((workspace) => workspace.slug === slug);
+  if (wanted === undefined) throw new Error(`${me.email} is not in the workspace ${slug}`);
+  if (me.active_tenant_id !== wanted.tenant_id) {
+    const response = await context.request.put(`${values.app}/api/me/workspace`, {
+      data: { tenant_id: wanted.tenant_id },
+      headers: sameOrigin,
+    });
+    if (!response.ok()) throw new Error(`could not switch to ${slug}: ${response.status()}`);
+  }
+  return me.email;
+}
+
+async function backToOwn(email: string) {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    if ((await whoAmI()).email === email) return;
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`the session did not return to ${email}`);
+}
 
 async function openMenu() {
   await page.goto(`${values.app}/`);
@@ -56,7 +102,8 @@ async function openMenu() {
   return page.getByRole("dialog", { name: "Tour of the app" });
 }
 
-async function playOne(index: number, title: string) {
+async function playOne(index: number, title: string, ownEmail: string) {
+  await backToOwn(ownEmail);
   const menu = await openMenu();
   await menu.getByRole("button", { name: `Play ${title}`, exact: true }).click();
   const bubble = page.getByTestId("tour-bubble");
@@ -122,6 +169,7 @@ async function playOne(index: number, title: string) {
 }
 
 try {
+  const ownEmail = await setActiveWorkspace(values.workspace);
   const menu = await openMenu();
   const titles = (await menu.getByRole("button", { name: /^Play (?!all)/ }).allTextContents()).map(
     (text) => text.replace(/^Play /, ""),
@@ -129,7 +177,7 @@ try {
   for (const [index, title] of titles.entries()) {
     if (values.chapter !== "" && Number(values.chapter) !== index + 1) continue;
     process.stdout.write(`chapter ${index + 1} ${title}\n`);
-    await playOne(index, title);
+    await playOne(index, title, ownEmail);
   }
 } finally {
   await browser.close();
