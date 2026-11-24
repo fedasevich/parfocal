@@ -98,7 +98,12 @@ function SlideView() {
   );
   return (
     <SlideAddressCheck projectId={projectId} slideId={slideId} search={search}>
-      <TaskSlideCheck projectId={projectId} taskId={search.task} slideId={slideId}>
+      <TaskSlideCheck
+        projectId={projectId}
+        taskId={search.task}
+        slideId={slideId}
+        comparedSlideId={search.layout === "compare" ? search.with : undefined}
+      >
         {search.task === undefined ? (
           viewer
         ) : (

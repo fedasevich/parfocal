@@ -14,11 +14,13 @@ export function TaskSlideCheck({
   projectId,
   taskId,
   slideId,
+  comparedSlideId,
   children,
 }: {
   projectId: string;
   taskId: string | undefined;
   slideId: string;
+  comparedSlideId?: string | undefined;
   children: ReactNode;
 }) {
   const { t } = useLingui();
@@ -26,7 +28,10 @@ export function TaskSlideCheck({
   const taskQuery = useGetReviewTask(taskId ?? "", { query: { enabled: taskId !== undefined } });
   const task = okData(taskQuery.data);
   const taskGone = taskId !== undefined && notFound(taskQuery.error);
-  const outside = taskId !== undefined && slideOutsideTask(task, slideId);
+  const outside =
+    taskId !== undefined &&
+    slideOutsideTask(task, slideId) &&
+    (comparedSlideId === undefined || slideOutsideTask(task, comparedSlideId));
   if (taskId !== undefined && taskQuery.isPending) return null;
   if (!taskGone && !outside) return children;
   const firstSlide = task?.slides[0]?.slide_id;
