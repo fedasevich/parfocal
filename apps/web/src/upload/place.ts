@@ -181,11 +181,14 @@ export function duplicatesOf(server: Sorting): Duplicate[] {
 }
 
 export async function checkSorting(input: PlaceInput): Promise<SortCheck> {
-  const response = await sortDroppedFiles(sortingRequestOf(input));
+  const [own, asPlaced] = await Promise.all([
+    sortDroppedFiles(sortingRequestOf(input)),
+    sortDroppedFiles(sortingRequestOf(input, true)),
+  ]);
   return {
-    differences: compareSorting(input, response.data),
-    duplicates: duplicatesOf(response.data),
-    room: response.data.room,
+    differences: compareSorting(input, own.data),
+    duplicates: duplicatesOf(asPlaced.data),
+    room: asPlaced.data.room,
   };
 }
 

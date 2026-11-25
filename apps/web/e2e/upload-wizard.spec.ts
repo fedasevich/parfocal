@@ -511,7 +511,7 @@ test("a skipped duplicate stays out of the upload", async ({ page }) => {
   await page.getByTestId("folder-input").setInputFiles(join(root, "dupes"));
   await page.getByTestId("upload-next").click();
   await page.getByTestId("upload-problem").getByRole("button", { name: "Skip it" }).click();
-  await expect(page.getByTestId("start-upload")).toContainText("Upload 2 slides");
+  await expect(page.getByTestId("start-upload")).toContainText("Upload 1 slide and 0 results");
   await page.getByTestId("start-upload").click();
   await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
   await expect.poll(() => gate.created.map((item) => item.filename)).toEqual(["fine.svs"]);

@@ -122,7 +122,6 @@ export function createLiveModel<T extends DropRecord>(items: readonly T[], state
     mrxsLeftOut,
     dataFolderOf,
     problems: unplaced.length + empty.length + mrxsWaiting.length,
-    canStart: uploadSlides.length > 0,
   };
 }
 

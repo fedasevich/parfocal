@@ -28,11 +28,12 @@ from parfocal_api.result_pairing import (
     PairedSlide,
     ResultPairing,
     existing_slides,
+    pairing_name,
     slide_of,
 )
 from parfocal_api.result_sets import require_uploading
 from parfocal_api.slide_ingest import label_of
-from parfocal_api.tables import CaseSource, cases, slides
+from parfocal_api.tables import CaseSource, cases, projects, slides, uploads
 from parfocal_api.uploads import Settings, paired_slide
 from parfocal_common.pairing import (
     Certainty,
@@ -180,13 +181,19 @@ async def duplicates(
     if not labels:
         return {}
     rows = await connection.execute(
-        select(slides.c.id, slides.c.case_id, slides.c.label, slides.c.file_bytes).where(
-            slides.c.project_id == project_id,
-            slides.c.label.in_(labels),
-            slides.c.deleted_at.is_(None),
+        select(
+            slides.c.id,
+            slides.c.case_id,
+            slides.c.label,
+            slides.c.file_bytes,
+            uploads.c.file_name,
+            projects.c.privacy_mode,
         )
+        .join(projects, projects.c.id == slides.c.project_id)
+        .outerjoin(uploads, uploads.c.id == slides.c.upload_id)
+        .where(slides.c.project_id == project_id, slides.c.deleted_at.is_(None))
     )
-    held = {(row.case_id, row.label): row for row in rows}
+    held = {(row.case_id, name): row for row in rows if (name := pairing_name(row)) in labels}
     found: dict[str, uuid.UUID] = {}
     for path, case_id in places.items():
         row = held.get((case_id, label_of(path)))

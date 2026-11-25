@@ -80,6 +80,22 @@ const stepOfScene = (scene: LiveScene) =>
 
 type Change = (change: Partial<LiveState>) => void;
 
+function goingUp(
+  model: LiveModel<DroppedItem>,
+  state: LiveState,
+  duplicates: readonly Duplicate[],
+) {
+  const held = new Set(
+    duplicates.filter((found) => state.duplicate[found.path] !== "keep").map((found) => found.path),
+  );
+  const slides = model.uploadSlides.filter((slide) => !held.has(slide.path));
+  const results = model.uploadResults.filter((result) => {
+    const slide = result.slide === null ? undefined : model.slides[result.slide];
+    return slide !== undefined && !held.has(slide.path);
+  });
+  return { slides: slides.length, results: results.length };
+}
+
 const ServerCheck = lazy(() => import("./server-check.tsx"));
 
 export function LiveWizard({ project, scene }: { project: Project; scene: LiveScene }) {
@@ -184,7 +200,8 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
       <Trans>Back</Trans>
     </Button>
   );
-  const uploadLabel = t`Upload ${plural(model.uploadSlides.length, "slide")} and ${plural(model.uploadResults.length, "result")}`;
+  const going = goingUp(model, state, duplicates);
+  const uploadLabel = t`Upload ${plural(going.slides, "slide")} and ${plural(going.results, "result")}`;
   const bar =
     step === 0 ? (
       <FlowBar
@@ -227,7 +244,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
           <Button
             variant="primary"
             data-testid="start-upload"
-            disabled={!model.canStart || full || phase === "busy"}
+            disabled={going.slides === 0 || full || phase === "busy"}
             onClick={startUpload}
           >
             <Icon name="upload" />
@@ -826,18 +843,19 @@ function CheckStep({
         ? t`${plural(left, "result file")} ${left === 1 ? "is" : "are"} left out. The other files are fine and upload.`
         : t`Every file is readable and has its place. Nothing needs you.`;
   const placedBack = model.results.filter((result) => result.picked);
+  const going = goingUp(model, state, duplicates);
   return (
     <>
       <Zone title={t`In this upload`} sub={lead} data-testid="check-summary">
         <FactList
           rows={[
-            { icon: "slides", label: t`Slides`, value: String(model.uploadSlides.length) },
+            { icon: "slides", label: t`Slides`, value: String(going.slides) },
             {
               icon: "layers",
               label: "AI results",
               value: left
-                ? t`${plural(model.uploadResults.length, "file")}, ${left} left out`
-                : plural(model.uploadResults.length, "file"),
+                ? t`${plural(going.results, "file")}, ${left} left out`
+                : plural(going.results, "file"),
             },
             {
               icon: "link",
