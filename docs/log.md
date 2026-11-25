@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25 from screenshots: Add a result set in the viewer is a bare card with the browser's file input and takes only GeoJSON, added as PROTO-191 (adding a result set from the viewer is designed with Fable and matches the import), with Fable to be consulted first.
 - PROTO-189: the owner found on 2026-11-25 that a pin dropped on a cell shows the cell's card but saves as a point pin listed as Pin Pin, so the task now anchors such a click to the object and says what it will attach to.
 - Owner request 2026-11-25 from a screenshot: the viewer's slide switcher popover is cut off on the right, added as PROTO-190 (the viewer's slide switcher fits its popover).
 - PROTO-189 (comment on objects, selections, regions and layers, and reach what a comment mentions): the owner added on 2026-11-25 comments on layers and groups and links from anything a comment mentions, so the task grows to size L with a new layer anchor kind.
