@@ -94,7 +94,7 @@ ORDER_SEED = 20261123
 STUDY_LOCK = "study-seed"
 CODE_PATTERN = re.compile(r"^[A-Za-z0-9-]{1,32}$")
 PARTICIPANT_SEAT = SeededAccount(
-    "Study participant", "SP", Role.RESEARCHER, False, ProjectRole.OWNER
+    "Study participant", "SP", Role.RESEARCHER, True, ProjectRole.OWNER
 )
 
 

@@ -94,7 +94,8 @@ export function PrepareParticipant() {
       <p className="text-body-sm text-fg-dim">
         <Trans>
           Type or accept the code the participant page shows. Preparing seeds a fresh project for
-          that code, with you as its seat, and replaces an earlier one.
+          that code, with you as its seat, and replaces an earlier one. If you are new to the study
+          workspace, you join it as an admin, so you can remove the project from there.
         </Trans>
       </p>
       <div className="flex flex-wrap gap-2">
