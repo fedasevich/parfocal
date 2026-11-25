@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- PROTO-180 (the Smart select and Auto region bars stay one compact row with the mock's model picker): the owner found the Auto region bar huge too on 2026-11-25 and asked for the mock's model picker dropdown with model descriptions instead of Good and Best, now part of the task.
 - PROTO-182 (found cells show their type color and are typed automatically): the owner asked on 2026-11-25 for an on the fly switch for automatic typing, now part of the task.
 - Owner request 2026-11-25 from a screenshot: the viewer rail tool tooltip is pale grey on light grey and unreadable, added as PROTO-183 (tool tooltips on the viewer rail are readable).
 - Owner request 2026-11-25 from a screenshot: Smart select cells draw in one light blue with no type, and the automatic typing is not visible, added as PROTO-182 (found cells show their type color and are typed automatically).
