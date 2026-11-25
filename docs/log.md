@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25 from a screenshot: the magnification bar in the disagreement queue overlaps and clips, and the adjudicator should be able to open the slide bigger, added as PROTO-178 (the adjudication slide view opens bigger and its magnification bar fits).
 - Owner request 2026-11-25 from a screenshot: the Decide panel in the disagreement queue overflows its column, added as PROTO-177 (the disagreement queue's Decide panel fits its column).
 - Added PROTO-175 (add what the AI missed fits the task and can be turned off) and PROTO-176 (guided review reaches the final form as soon as every object is checked, and goes back from it) for the owner's guided review findings of 2026-11-25.
 - Owner request 2026-11-25 from a guided review screenshot, to add as tasks for later: the add something the AI missed step makes little sense on tumor outlines and cannot be turned off, and moving to the final opinion form is unreliable, lags behind every object being checked and gives no way back to fix something.
