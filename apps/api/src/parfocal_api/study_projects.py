@@ -96,6 +96,9 @@ CODE_PATTERN = re.compile(r"^[A-Za-z0-9-]{1,32}$")
 PARTICIPANT_SEAT = SeededAccount(
     "Study participant", "SP", Role.RESEARCHER, True, ProjectRole.OWNER
 )
+MODERATOR = SeededAccount("Study moderator", "SM", Role.RESEARCHER, True, ProjectRole.OWNER)
+STUDY_SEAT_PREFIX = f"{PLACEHOLDER_PREFIX}study-"
+STUDY_SEAT_DOMAIN = "@showcase.invalid"
 
 
 class BadParticipantCodeError(ValueError):
@@ -144,7 +147,11 @@ def project_name(code: str) -> str:
 
 
 def seat_subject(code: str) -> str:
-    return f"{PLACEHOLDER_PREFIX}study-{checked_code(code).lower()}@showcase.invalid"
+    return f"{STUDY_SEAT_PREFIX}{checked_code(code).lower()}{STUDY_SEAT_DOMAIN}"
+
+
+def is_study_seat(subject: str) -> bool:
+    return subject.startswith(STUDY_SEAT_PREFIX) and subject.endswith(STUDY_SEAT_DOMAIN)
 
 
 async def study_lock(connection: AsyncConnection) -> None:
@@ -489,6 +496,7 @@ async def seed_participant(
     results: ResultStore,
     code: str,
     seat_email: str | None = None,
+    moderator_email: str | None = None,
 ) -> StudyProject:
     checked_code(code)
     engine = create_engine(database_url)
@@ -499,6 +507,8 @@ async def seed_participant(
             await study_lock(connection)
             tenant_id = await study_workspace(connection)
             seat_id = await add_seat(connection, tenant_id, code, seat_email)
+            if moderator_email:
+                await add_account(connection, tenant_id, moderator_email, MODERATOR)
             people = await people_in(connection)
             await pseudonymise(connection, shared_actors(False))
         async with scoped_transaction(

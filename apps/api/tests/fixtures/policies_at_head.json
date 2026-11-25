@@ -77,6 +77,7 @@
     "specimens",
     "sso_connections",
     "stage_throughput",
+    "study_links",
     "study_sessions",
     "study_template_versions",
     "study_templates",
@@ -372,6 +373,15 @@
       true,
       "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
       "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
+      []
+    ],
+    [
+      "study_links",
+      "auth_read",
+      "r",
+      true,
+      "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
+      null,
       []
     ],
     [

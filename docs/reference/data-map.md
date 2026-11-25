@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 53 |
-| `personal` | 112 |
-| `secret` | 15 |
-| `operational` | 951 |
+| `personal` | 114 |
+| `secret` | 16 |
+| `operational` | 956 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1390,6 +1390,19 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `units` | operational |
 | `seconds` | operational |
 | `finished_at` | operational |
+
+## study_links
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `participant` | personal |
+| `token_hash` | secret |
+| `created_by_user_id` | personal |
+| `expires_at` | operational |
+| `redeemed_at` | operational |
+| `created_at` | operational |
 
 ## study_sessions
 

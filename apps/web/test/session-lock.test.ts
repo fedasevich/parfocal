@@ -76,6 +76,8 @@ test("sign-in, sign-up and invite pages never lock", () => {
   assert.equal(locksAt("/sign-in"), false);
   assert.equal(locksAt("/invite"), false);
   assert.equal(locksAt("/shared-reports/abc"), false);
+  assert.equal(locksAt("/study/join"), false);
+  assert.equal(locksAt("/study"), true);
   assert.equal(locksAt("/projects/p7/slides/s1"), true);
   assert.equal(locksAt("/sign-inside"), true);
 });

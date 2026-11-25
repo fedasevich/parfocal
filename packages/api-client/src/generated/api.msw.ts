@@ -234,6 +234,9 @@ import type {
   SourceWatch,
   StorageUsage,
   StudyDryRun,
+  StudyLink,
+  StudyLinkJoined,
+  StudyLinks,
   StudySessions,
   StudyTemplate,
   StudyTemplateReviewDefaults,
@@ -18652,6 +18655,41 @@ export const getRemoveStudyParticipantResponseMock = (
   ...overrideResponse,
 });
 
+export const getPrepareStudyLinkResponseMock = (
+  overrideResponse: Partial<Extract<StudyLink, object>> = {},
+): StudyLink => ({
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  url: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  project_id: faker.string.uuid(),
+  workspace_id: faker.string.uuid(),
+  workspace_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getListStudyLinksResponseMock = (
+  overrideResponse: Partial<Extract<StudyLinks, object>> = {},
+): StudyLinks => ({
+  links: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    expires_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    redeemed_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    state: faker.helpers.arrayElement(["waiting", "joined", "expired"] as const),
+  })),
+  ...overrideResponse,
+});
+
+export const getRedeemStudyLinkResponseMock = (
+  overrideResponse: Partial<Extract<StudyLinkJoined, object>> = {},
+): StudyLinkJoined => ({
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
 export const getListTemplateOffersResponseHeadlineNumbersMock = (
   overrideResponse: Partial<HeadlineNumbers> = {},
 ): HeadlineNumbers => ({
@@ -29799,6 +29837,74 @@ export const getRemoveStudyParticipantMockHandler = (
   );
 };
 
+export const getPrepareStudyLinkMockHandler = (
+  overrideResponse?:
+    | StudyLink
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<StudyLink> | StudyLink),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/study-participants/:code/link",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPrepareStudyLinkResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListStudyLinksMockHandler = (
+  overrideResponse?:
+    | StudyLinks
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<StudyLinks> | StudyLinks),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/study-links",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListStudyLinksResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRedeemStudyLinkMockHandler = (
+  overrideResponse?:
+    | StudyLinkJoined
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<StudyLinkJoined> | StudyLinkJoined),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/study-links/redeem",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRedeemStudyLinkResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTemplateOffersMockHandler = (
   overrideResponse?:
     | TemplateOffer[]
@@ -31996,6 +32102,9 @@ export const getParfocalAPIMock = () => [
   getMarkStudyDryRunMockHandler(),
   getPrepareStudyParticipantMockHandler(),
   getRemoveStudyParticipantMockHandler(),
+  getPrepareStudyLinkMockHandler(),
+  getListStudyLinksMockHandler(),
+  getRedeemStudyLinkMockHandler(),
   getListTemplateOffersMockHandler(),
   getOfferStudyTemplateMockHandler(),
   getAcceptTemplateOfferMockHandler(),

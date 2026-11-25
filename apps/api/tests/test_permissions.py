@@ -26,7 +26,7 @@ from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
-from parfocal_api import study_participants, tour_switch
+from parfocal_api import study_links, study_participants, tour_switch
 from parfocal_api.dataset_versions import dataset_version_key
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
@@ -140,6 +140,7 @@ OPEN_OPERATIONS = {
     "getHealth": "public",
     "getPlatformStatus": "public",
     "getSharedReport": "public",
+    "redeemStudyLink": "public",
     "getInvitePreview": "public",
     "callProjectWebhook": "webhook-signature",
     "returnFromTourRole": "tour-origin",
@@ -480,7 +481,9 @@ def link_site_serving() -> threading.Thread:
 
 INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile", "typeOutlines", "embedSlideView"})
 TOUR_OPERATIONS = frozenset({"switchToTourRole"})
-STUDY_SEED_OPERATIONS = frozenset({"prepareStudyParticipant", "removeStudyParticipant"})
+STUDY_SEED_OPERATIONS = frozenset(
+    {"prepareStudyParticipant", "removeStudyParticipant", "prepareStudyLink"}
+)
 
 
 OUTLINE_TYPED: dict[str, object] = {
@@ -519,7 +522,9 @@ def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class MatrixStudySeeder:
-    async def seed(self, code: str, seat_email: str) -> study_participants.SeededParticipant:
+    async def seed(
+        self, code: str, seat_email: str | None, moderator_email: str | None = None
+    ) -> study_participants.SeededParticipant:
         return study_participants.SeededParticipant(code, uuid.uuid4(), uuid.uuid4())
 
     async def remove(self, code: str) -> int:
@@ -533,6 +538,16 @@ def fake_study_seed(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
         return "seat@matrix.invalid"
 
     monkeypatch.setattr(study_participants, "seat_email_of", matrix_email)
+    monkeypatch.setattr(study_links, "seat_email_of", matrix_email)
+
+    async def matrix_link(*_: object) -> tuple[str, datetime]:
+        return "matrix-token", datetime.now(UTC)
+
+    async def no_retire(*_: object) -> None:
+        return None
+
+    monkeypatch.setattr(study_links, "issue_link", matrix_link)
+    monkeypatch.setattr(study_participants, "retire_in_study_workspace", no_retire)
 
 
 def allow_tour_switch(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1269,6 +1284,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "prepareStudyParticipant": lambda _: Call("POST", "/api/tenant/study-participants/P-MX"),
     "removeStudyParticipant": lambda _: Call("DELETE", "/api/tenant/study-participants/P-MX"),
+    "prepareStudyLink": lambda _: Call("POST", "/api/tenant/study-participants/P-MX/link"),
+    "listStudyLinks": lambda _: Call("GET", "/api/tenant/study-links"),
     "setRetentionPolicy": lambda _: Call("PUT", "/api/tenant/retention", {}),
     "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
     "placeLegalHold": lambda _: Call("POST", "/api/tenant/legal-holds", {"reason": "Matrix hold"}),

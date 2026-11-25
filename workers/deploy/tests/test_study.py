@@ -44,8 +44,8 @@ def test_a_participant_seeds_through_the_eu_function_and_never_truncates(
     assert where == "main"
     assert first["DATABASE_URL"].endswith("//direct")
     assert first["STORAGE_BUCKET"] == environment("production").slide_bucket
-    assert from_environment(first) == ("seed", "P1", None)
-    assert from_environment(second) == ("remove", "P1", "seat@example.test")
+    assert from_environment(first) == ("seed", "P1", None, None)
+    assert from_environment(second) == ("remove", "P1", "seat@example.test", None)
 
 
 def test_the_full_seed_runs_when_no_participant_is_named() -> None:
@@ -70,7 +70,7 @@ def test_the_seed_entry_hands_a_named_participant_to_the_study_seed(
     monkeypatch.setenv("STUDY_ACTION", "remove")
     monkeypatch.delenv("STUDY_SEAT_EMAIL", raising=False)
     asyncio.run(showcase_seed.main())
-    assert handed == [("remove", "P4", None)]
+    assert handed == [("remove", "P4", None, None)]
 
 
 def test_an_unknown_study_action_is_refused() -> None:

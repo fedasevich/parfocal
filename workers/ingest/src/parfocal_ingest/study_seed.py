@@ -15,13 +15,20 @@ from parfocal_common.settings import AppEnv, StorageSettings
 PARTICIPANT_VARIABLE = "STUDY_PARTICIPANT"
 ACTION_VARIABLE = "STUDY_ACTION"
 SEAT_VARIABLE = "STUDY_SEAT_EMAIL"
+MODERATOR_VARIABLE = "STUDY_MODERATOR_EMAIL"
 SEED_DATABASE_VARIABLE = "SEED_DATABASE_URL"
 SEED = "seed"
 REMOVE = "remove"
 ACTIONS = (SEED, REMOVE)
 
 
-async def run(environ: Mapping[str, str], action: str, code: str, seat: str | None) -> None:
+async def run(
+    environ: Mapping[str, str],
+    action: str,
+    code: str,
+    seat: str | None,
+    moderator: str | None = None,
+) -> None:
     started = time.monotonic()
     database_url = environ.get(SEED_DATABASE_VARIABLE) or environ["DATABASE_URL"]
     if action == REMOVE:
@@ -31,19 +38,24 @@ async def run(environ: Mapping[str, str], action: str, code: str, seat: str | No
     settings = StorageSettings(app_env=AppEnv(environ.get("APP_ENV", AppEnv.DEV)))
     async with httpx2.AsyncClient(timeout=60) as http:
         store = ObjectStore(settings.storage(), http)
-        made = await seed_participant(database_url, store, ObjectResultStore(store), code, seat)
+        made = await seed_participant(
+            database_url, store, ObjectResultStore(store), code, seat, moderator
+        )
     print(json.dumps(made.as_json()))
     print(f"study: seeded {made.code} in {time.monotonic() - started:.1f} s")
 
 
-def from_environment(environ: Mapping[str, str]) -> tuple[str, str, str | None] | None:
+def from_environment(
+    environ: Mapping[str, str],
+) -> tuple[str, str, str | None, str | None] | None:
     code = environ.get(PARTICIPANT_VARIABLE)
     if not code:
         return None
     action = environ.get(ACTION_VARIABLE) or SEED
     if action not in ACTIONS:
         raise SystemExit(f"{ACTION_VARIABLE} is {SEED} or {REMOVE}, not {action}")
-    return action, code, environ.get(SEAT_VARIABLE) or None
+    seat = environ.get(SEAT_VARIABLE) or None
+    return action, code, seat, environ.get(MODERATOR_VARIABLE) or None
 
 
 def arguments(argv: Sequence[str] | None = None) -> tuple[str, str, str | None]:

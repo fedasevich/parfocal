@@ -22,9 +22,11 @@ def test_no_participant_in_the_environment_means_no_study_run() -> None:
 
 def test_the_environment_seeds_by_default_and_names_the_seat() -> None:
     environ = {"STUDY_PARTICIPANT": "P-1", "STUDY_SEAT_EMAIL": "seat@study.invalid"}
-    assert study_seed.from_environment(environ) == ("seed", "P-1", "seat@study.invalid")
+    assert study_seed.from_environment(environ) == ("seed", "P-1", "seat@study.invalid", None)
     removing = {"STUDY_PARTICIPANT": "P-1", "STUDY_ACTION": "remove"}
-    assert study_seed.from_environment(removing) == ("remove", "P-1", None)
+    assert study_seed.from_environment(removing) == ("remove", "P-1", None, None)
+    linked = {"STUDY_PARTICIPANT": "P-1", "STUDY_MODERATOR_EMAIL": "mod@study.invalid"}
+    assert study_seed.from_environment(linked) == ("seed", "P-1", None, "mod@study.invalid")
 
 
 def test_an_unknown_action_in_the_environment_stops_the_run() -> None:
@@ -64,7 +66,14 @@ def test_seed_falls_back_to_the_api_database_and_prints_the_project(
 ) -> None:
     called: list[tuple[str, str, str | None]] = []
 
-    async def seed(database_url: str, store: object, results: object, code: str, seat: str | None):
+    async def seed(
+        database_url: str,
+        store: object,
+        results: object,
+        code: str,
+        seat: str | None,
+        moderator: str | None = None,
+    ):
         called.append((database_url, code, seat))
         return Made(code)
 

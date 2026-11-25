@@ -1230,6 +1230,13 @@ msgstr ""
 msgid "{0} of {1} shown. At least one researcher keeps admin rights, and giving or removing them is in the audit log."
 msgstr ""
 
+#. placeholder {0}: row.done
+#. placeholder {1}: row.total
+#. placeholder {2}: timeOf(row.updatedAt)
+#: src/study/remote-progress.tsx
+msgid "{0} of {1} tasks done, last update {2}"
+msgstr ""
+
 #. placeholder {0}: tb(used)
 #. placeholder {1}: tb(totalTb)
 #. placeholder {2}: tb(free)
@@ -6215,6 +6222,7 @@ msgstr ""
 
 #: src/screens/admin/storage.tsx
 #: src/screens/evaluation/share-links.tsx
+#: src/study/prepare-participant.tsx
 msgid "Copied"
 msgstr ""
 
@@ -6247,6 +6255,10 @@ msgstr ""
 
 #: src/viewer/remote-slide-notice.tsx
 msgid "Copy the file once into Parfocal storage."
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "Copy the link"
 msgstr ""
 
 #: src/screens/admin/api-section.tsx
@@ -8115,6 +8127,11 @@ msgstr ""
 msgid "Finished"
 msgstr ""
 
+#. placeholder {0}: row.total
+#: src/study/remote-progress.tsx
+msgid "Finished all {0} tasks and the questions"
+msgstr ""
+
 #: src/viewer/run-tiles-map.tsx
 msgid "Finished tiles"
 msgstr ""
@@ -8234,6 +8251,10 @@ msgstr ""
 
 #: src/screens/admin/api-section.tsx
 msgid "For a pipeline that sends slides or results into Parfocal"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "For a remote session, make a join link instead. It seeds the project with a seat of its own for the participant, who opens it in their own browser with no account."
 msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx
@@ -9571,6 +9592,11 @@ msgstr ""
 msgid "Join first. Your first slide opens after that."
 msgstr ""
 
+#. placeholder {0}: link.code
+#: src/study/prepare-participant.tsx
+msgid "Join link for {0}"
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Join or create one"
 msgstr ""
@@ -9581,6 +9607,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Joined"
+msgstr ""
+
+#: src/study/remote-progress.tsx
+msgid "Joined, reading the consent screen"
 msgstr ""
 
 #: src/screens/upload/formats-drawer.tsx
@@ -10086,6 +10116,15 @@ msgstr ""
 msgid "Link"
 msgstr ""
 
+#: src/study/remote-progress.tsx
+msgid "Link expired or replaced before it was opened"
+msgstr ""
+
+#. placeholder {0}: timeOf(row.expiresAt)
+#: src/study/remote-progress.tsx
+msgid "Link not opened yet, it expires at {0}"
+msgstr ""
+
 #: src/viewer/compare-panes.tsx
 msgid "Linked"
 msgstr ""
@@ -10489,6 +10528,10 @@ msgstr ""
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Main input device"
+msgstr ""
+
+#: src/study/prepare-participant.tsx
+msgid "Make a join link"
 msgstr ""
 
 #: src/screens/evaluation/share-links.tsx
@@ -12851,6 +12894,10 @@ msgstr ""
 msgid "Opening the task"
 msgstr ""
 
+#: src/study/study-join.tsx
+msgid "Opening your study session."
+msgstr ""
+
 #. placeholder {0}: screenTitles[screen]
 #: src/routes/issue-states.tsx
 msgid "Opens {0} in this state"
@@ -13777,6 +13824,10 @@ msgid "Prepare the participant"
 msgstr ""
 
 #: src/study/prepare-participant.tsx
+msgid "Preparing {typed} and making a join link. This takes up to a minute."
+msgstr ""
+
+#: src/study/prepare-participant.tsx
 msgid "Preparing {typed}. This takes up to a minute."
 msgstr ""
 
@@ -14374,6 +14425,10 @@ msgstr ""
 #: src/screens/project/slides-tab.tsx
 #: src/viewer/remote-slide-notice.tsx
 msgid "remote"
+msgstr ""
+
+#: src/study/remote-progress.tsx
+msgid "Remote participants"
 msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
@@ -17470,6 +17525,11 @@ msgstr ""
 msgid "Study {0} is ready in {1}."
 msgstr ""
 
+#. placeholder {0}: outcome.link.code
+#: src/study/prepare-participant.tsx
+msgid "Study {0} is ready. Send this link to the participant. It works once, for one day."
+msgstr ""
+
 #: src/shell/page-title-names.ts
 msgid "Study console"
 msgstr ""
@@ -18861,6 +18921,10 @@ msgstr ""
 msgid "The stored version no longer matches its checksum, so it was not sent."
 msgstr ""
 
+#: src/study/study-join.tsx
+msgid "The study could not open. Reload the page or ask the moderator."
+msgstr ""
+
 #: src/screens/project/task-settings-drawer.tsx
 msgid "The style cannot change once a decision exists."
 msgstr ""
@@ -19181,6 +19245,10 @@ msgstr ""
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "This link was revoked or has expired"
+msgstr ""
+
+#: src/study/study-join.tsx
+msgid "This link was used already or has expired. Ask the moderator for a new one."
 msgstr ""
 
 #: src/results/painted-map-layer.tsx
@@ -20143,6 +20211,7 @@ msgid "URL parameters"
 msgstr ""
 
 #: src/study/participant-screen.tsx
+#: src/study/study-join.tsx
 msgid "Usability study"
 msgstr ""
 

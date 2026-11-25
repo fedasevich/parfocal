@@ -896,7 +896,7 @@ async def logout(request: Request) -> RedirectResponse:
             except InvalidTag:
                 tokens = None
     target = home
-    if tokens is not None:
+    if tokens is not None and "refresh_token" in tokens and "id_token" in tokens:
         try:
             await auth.identity.revoke(str(tokens["refresh_token"]))
             target = await auth.identity.end_session_url(str(tokens["id_token"]), home)

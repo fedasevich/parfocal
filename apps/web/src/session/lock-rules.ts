@@ -70,7 +70,7 @@ export function canShowLock(person: { display_name: string } | undefined): boole
   return person !== undefined && person.display_name.trim() !== "";
 }
 
-const publicPaths = ["/sign-in", "/sign-up", "/invite", "/shared-reports"];
+const publicPaths = ["/sign-in", "/sign-up", "/invite", "/shared-reports", "/study/join"];
 
 export function locksAt(pathname: string): boolean {
   return !publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));

@@ -5,9 +5,11 @@ from typing import Annotated, Protocol, cast
 
 from fastapi import APIRouter, Depends, Path, Request
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
-from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.auth import AUTH_SCOPE
+from parfocal_api.context import CurrentPrincipal, TenantConnection, engine_of
 from parfocal_api.permissions import Permission, member_of, require
 from parfocal_api.problems import BadRequestError, ProblemError
 from parfocal_api.study_projects import (
@@ -15,9 +17,11 @@ from parfocal_api.study_projects import (
     STUDY_WORKSPACE,
     checked_code,
     remove_participant,
+    seat_subject,
     seed_participant,
 )
-from parfocal_api.tables import users
+from parfocal_api.tables import sessions, study_links, tenants, users
+from parfocal_common.db import DatabaseScope, scoped_transaction
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.result_store import ResultStore
 
@@ -34,7 +38,9 @@ class SeededParticipant:
 
 
 class StudySeeder(Protocol):
-    async def seed(self, code: str, seat_email: str) -> SeededParticipant: ...
+    async def seed(
+        self, code: str, seat_email: str | None, moderator_email: str | None = None
+    ) -> SeededParticipant: ...
 
     async def remove(self, code: str) -> int: ...
 
@@ -45,8 +51,12 @@ class InProcessStudySeeder:
         self.store = store
         self.results = results
 
-    async def seed(self, code: str, seat_email: str) -> SeededParticipant:
-        made = await seed_participant(self.database_url, self.store, self.results, code, seat_email)
+    async def seed(
+        self, code: str, seat_email: str | None, moderator_email: str | None = None
+    ) -> SeededParticipant:
+        made = await seed_participant(
+            self.database_url, self.store, self.results, code, seat_email, moderator_email
+        )
         return SeededParticipant(made.code, made.tenant_id, made.project_id)
 
     async def remove(self, code: str) -> int:
@@ -78,6 +88,34 @@ class StudySeedFailedError(ProblemError):
 
 async def seat_email_of(connection: TenantConnection, user_id: uuid.UUID) -> str | None:
     return await connection.scalar(select(users.c.email).where(users.c.id == user_id))
+
+
+async def retire_links(connection: AsyncConnection, code: str) -> None:
+    await connection.execute(
+        update(study_links)
+        .where(
+            study_links.c.participant == code,
+            study_links.c.redeemed_at.is_(None),
+            study_links.c.expires_at > func.now(),
+        )
+        .values(expires_at=func.now())
+    )
+
+
+async def retire_participant(engine: AsyncEngine, tenant_id: uuid.UUID, code: str) -> None:
+    async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant_id)) as connection:
+        await retire_links(connection, code)
+    async with scoped_transaction(engine, AUTH_SCOPE) as connection:
+        await connection.execute(delete(sessions).where(sessions.c.subject == seat_subject(code)))
+
+
+async def retire_in_study_workspace(engine: AsyncEngine, code: str) -> None:
+    async with scoped_transaction(engine, AUTH_SCOPE) as connection:
+        tenant_id = await connection.scalar(
+            select(tenants.c.id).where(tenants.c.slug == STUDY_WORKSPACE.slug)
+        )
+    if tenant_id is not None:
+        await retire_participant(engine, tenant_id, code)
 
 
 def study_seeder_of(request: Request) -> StudySeeder:
@@ -131,7 +169,7 @@ async def prepare_study_participant(
     **require(Permission.MANAGE_PEOPLE, write=True),
 )
 async def remove_study_participant(
-    code: ParticipantCode, seeder: Seeder
+    code: ParticipantCode, request: Request, seeder: Seeder
 ) -> RemovedStudyParticipant:
     checked = checked_code(code)
     try:
@@ -139,4 +177,5 @@ async def remove_study_participant(
     except Exception as error:
         logger.exception("study remove failed")
         raise StudySeedFailedError from error
+    await retire_in_study_workspace(engine_of(request), checked)
     return RemovedStudyParticipant(code=checked, removed=removed)

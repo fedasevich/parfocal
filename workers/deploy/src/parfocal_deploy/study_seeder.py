@@ -11,6 +11,7 @@ from parfocal_api.study_participants import SeededParticipant
 from parfocal_deploy.modal_app import APP_NAME, SEED_FUNCTION
 from parfocal_ingest.study_seed import (
     ACTION_VARIABLE,
+    MODERATOR_VARIABLE,
     PARTICIPANT_VARIABLE,
     REMOVE,
     SEAT_VARIABLE,
@@ -69,8 +70,14 @@ class ModalStudySeeder:
     async def lines(self, settings: dict[str, str]) -> list[str]:
         return await run_in_threadpool(lambda: list(self.call(settings)))
 
-    async def seed(self, code: str, seat_email: str) -> SeededParticipant:
-        settings = {PARTICIPANT_VARIABLE: code, ACTION_VARIABLE: SEED, SEAT_VARIABLE: seat_email}
+    async def seed(
+        self, code: str, seat_email: str | None, moderator_email: str | None = None
+    ) -> SeededParticipant:
+        settings = {PARTICIPANT_VARIABLE: code, ACTION_VARIABLE: SEED}
+        if seat_email:
+            settings[SEAT_VARIABLE] = seat_email
+        if moderator_email:
+            settings[MODERATOR_VARIABLE] = moderator_email
         return seeded_from(await self.lines(settings), code)
 
     async def remove(self, code: str) -> int:

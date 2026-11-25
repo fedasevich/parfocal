@@ -38,6 +38,7 @@ import { Route as SpikesInputTracesRouteImport } from "./routes/spikes.input-tra
 import { Route as SpikesWorklistRouteImport } from "./routes/spikes.worklist.tsx";
 import { Route as StudyIndexRouteImport } from "./routes/study.index.tsx";
 import { Route as StudyConsoleRouteImport } from "./routes/study.console.tsx";
+import { Route as StudyJoinRouteImport } from "./routes/study.join.tsx";
 import { Route as FlowMapWalkthroughIndexRouteImport } from "./routes/flow-map.walkthrough.index.tsx";
 import { Route as FlowMapWalkthroughChapterRouteImport } from "./routes/flow-map.walkthrough.$chapter.tsx";
 import { Route as ProjectsProjectIdIndexRouteImport } from "./routes/projects.$projectId.index.tsx";
@@ -209,6 +210,11 @@ const StudyIndexRoute = StudyIndexRouteImport.update({
 const StudyConsoleRoute = StudyConsoleRouteImport.update({
   id: "/study/console",
   path: "/study/console",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const StudyJoinRoute = StudyJoinRouteImport.update({
+  id: "/study/join",
+  path: "/study/join",
   getParentRoute: () => rootRouteImport,
 } as any);
 const FlowMapWalkthroughIndexRoute = FlowMapWalkthroughIndexRouteImport.update({
@@ -388,6 +394,7 @@ export interface FileRoutesByFullPath {
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
   "/study/console": typeof StudyConsoleRoute;
+  "/study/join": typeof StudyJoinRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/projects/": typeof ProjectsIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
@@ -446,6 +453,7 @@ export interface FileRoutesByTo {
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
   "/study/console": typeof StudyConsoleRoute;
+  "/study/join": typeof StudyJoinRoute;
   "/flow-map": typeof FlowMapIndexRoute;
   "/projects": typeof ProjectsIndexRoute;
   "/settings": typeof SettingsIndexRoute;
@@ -505,6 +513,7 @@ export interface FileRoutesById {
   "/spikes/input-traces": typeof SpikesInputTracesRoute;
   "/spikes/worklist": typeof SpikesWorklistRoute;
   "/study/console": typeof StudyConsoleRoute;
+  "/study/join": typeof StudyJoinRoute;
   "/flow-map/": typeof FlowMapIndexRoute;
   "/projects/": typeof ProjectsIndexRoute;
   "/settings/": typeof SettingsIndexRoute;
@@ -565,6 +574,7 @@ export interface FileRouteTypes {
     | "/spikes/input-traces"
     | "/spikes/worklist"
     | "/study/console"
+    | "/study/join"
     | "/flow-map/"
     | "/projects/"
     | "/settings/"
@@ -623,6 +633,7 @@ export interface FileRouteTypes {
     | "/spikes/input-traces"
     | "/spikes/worklist"
     | "/study/console"
+    | "/study/join"
     | "/flow-map"
     | "/projects"
     | "/settings"
@@ -681,6 +692,7 @@ export interface FileRouteTypes {
     | "/spikes/input-traces"
     | "/spikes/worklist"
     | "/study/console"
+    | "/study/join"
     | "/flow-map/"
     | "/projects/"
     | "/settings/"
@@ -740,6 +752,7 @@ export interface RootRouteChildren {
   SpikesInputTracesRoute: typeof SpikesInputTracesRoute;
   SpikesWorklistRoute: typeof SpikesWorklistRoute;
   StudyConsoleRoute: typeof StudyConsoleRoute;
+  StudyJoinRoute: typeof StudyJoinRoute;
   FlowMapIndexRoute: typeof FlowMapIndexRoute;
   ProjectsIndexRoute: typeof ProjectsIndexRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
@@ -978,6 +991,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof StudyConsoleRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/study/join": {
+      id: "/study/join";
+      path: "/study/join";
+      fullPath: "/study/join";
+      preLoaderRoute: typeof StudyJoinRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/flow-map/walkthrough/": {
       id: "/flow-map/walkthrough/";
       path: "/flow-map/walkthrough";
@@ -1196,6 +1216,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpikesInputTracesRoute: SpikesInputTracesRoute,
   SpikesWorklistRoute: SpikesWorklistRoute,
   StudyConsoleRoute: StudyConsoleRoute,
+  StudyJoinRoute: StudyJoinRoute,
   FlowMapIndexRoute: FlowMapIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,

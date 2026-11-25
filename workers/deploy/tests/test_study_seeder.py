@@ -39,6 +39,19 @@ def test_the_modal_seeder_passes_only_the_participant_and_reads_the_project_back
     ]
 
 
+def test_a_linked_seed_names_the_moderator_and_no_seat() -> None:
+    printed = json.dumps({"code": "P-AB", "tenant_id": str(TENANT), "project_id": str(PROJECT)})
+    fake = FakeSeed([printed])
+    asyncio.run(ModalStudySeeder(fake).seed("P-AB", None, "mod@example.test"))
+    assert fake.calls == [
+        {
+            study_seed.PARTICIPANT_VARIABLE: "P-AB",
+            study_seed.ACTION_VARIABLE: study_seed.SEED,
+            study_seed.MODERATOR_VARIABLE: "mod@example.test",
+        }
+    ]
+
+
 def test_the_modal_seeder_removes_and_counts_the_removed_projects() -> None:
     fake = FakeSeed(["study: removed 1 project of P-AB in 0.4 s"])
     assert asyncio.run(ModalStudySeeder(fake).remove("P-AB")) == 1

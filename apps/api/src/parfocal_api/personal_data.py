@@ -78,6 +78,7 @@ NOT_EXPORTED = {
     "linked_subjects": "identity provider ids that sign in as the same person, deleted on erasure",
     "study_sessions": "usability study answers under an anonymous code that names no user",
     "study_trace_parts": "usability study traces under an anonymous code that names no user",
+    "study_links": "one-use study join links that live a day under an anonymous code",
 }
 
 

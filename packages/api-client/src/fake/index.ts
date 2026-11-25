@@ -30,6 +30,7 @@ import { settingsHandlers } from "./settings-handlers.ts";
 import { sharedLayerHandlers } from "./shared-layer-handlers.ts";
 import { signUpHandlers } from "./sign-up-handlers.ts";
 import { statusHandlers } from "./status-handlers.ts";
+import { studyLinkHandlers } from "./study-link-handlers.ts";
 import { studyRunHandlers } from "./study-run-handlers.ts";
 import { taskExportHandlers } from "./task-export-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
@@ -82,6 +83,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...settingsHandlers(),
     ...correctionsHandlers(),
     ...timingHandlers(),
+    ...studyLinkHandlers(),
     ...studyRunHandlers(),
     ...consoleHandlers(),
     ...teamActionHandlers(),

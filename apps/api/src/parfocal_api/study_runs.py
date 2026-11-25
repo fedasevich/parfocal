@@ -12,7 +12,9 @@ from sqlalchemy.dialects.postgresql import insert
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, member_of, require
-from parfocal_api.problems import BadRequestError, NotFoundError
+from parfocal_api.principals import MemberPrincipal, Principal
+from parfocal_api.problems import BadRequestError, ForbiddenError, NotFoundError
+from parfocal_api.study_projects import is_study_seat
 from parfocal_api.tables import study_sessions, study_trace_parts
 
 PART_LIMIT = 2 * 1024 * 1024
@@ -74,6 +76,16 @@ class NotGzipError(BadRequestError):
 class StudySessionNotFoundError(NotFoundError):
     code = "study-session-not-found"
     title = "This study session was never uploaded"
+
+
+class StudySeatRefusedError(ForbiddenError):
+    code = "study-seat-refused"
+    title = "A study participant cannot read the study results"
+
+
+def refuse_study_seats(principal: Principal) -> None:
+    if isinstance(principal, MemberPrincipal) and is_study_seat(principal.subject):
+        raise StudySeatRefusedError
 
 
 def gunzipped(encoded: str, limit: int) -> tuple[bytes, bytes]:
@@ -159,7 +171,10 @@ async def save_study_trace_part(
 
 
 @tenant_router.get("", operation_id="listStudySessions", **require(Permission.CREATE_CASES))
-async def list_study_sessions(connection: TenantConnection) -> StudySessions:
+async def list_study_sessions(
+    principal: CurrentPrincipal, connection: TenantConnection
+) -> StudySessions:
+    refuse_study_seats(principal)
     parts = (
         select(study_trace_parts.c.session_key, func.count().label("parts"))
         .group_by(study_trace_parts.c.session_key)
@@ -189,7 +204,10 @@ async def list_study_sessions(connection: TenantConnection) -> StudySessions:
 @tenant_router.get(
     "/{session_key}/trace", operation_id="getStudyTrace", **require(Permission.CREATE_CASES)
 )
-async def get_study_trace(session_key: SessionKey, connection: TenantConnection) -> StudyTrace:
+async def get_study_trace(
+    session_key: SessionKey, principal: CurrentPrincipal, connection: TenantConnection
+) -> StudyTrace:
+    refuse_study_seats(principal)
     rows = await connection.execute(
         select(study_trace_parts.c.seq, study_trace_parts.c.body)
         .where(study_trace_parts.c.session_key == session_key)
@@ -209,8 +227,12 @@ async def get_study_trace(session_key: SessionKey, connection: TenantConnection)
     **require(Permission.CREATE_CASES, write=True),
 )
 async def mark_study_dry_run(
-    session_key: SessionKey, mark: StudyDryRun, connection: TenantConnection
+    session_key: SessionKey,
+    mark: StudyDryRun,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
 ) -> StudyDryRun:
+    refuse_study_seats(principal)
     changed = await connection.execute(
         update(study_sessions)
         .where(study_sessions.c.session_key == session_key)

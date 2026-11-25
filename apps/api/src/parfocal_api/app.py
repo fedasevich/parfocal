@@ -120,6 +120,7 @@ from parfocal_api import (
     slide_tissue,
     slide_viewer,
     source_watches,
+    study_links,
     study_participants,
     study_runs,
     study_templates,
@@ -390,6 +391,8 @@ def create_app(
     app.include_router(study_runs.me_router)
     app.include_router(study_runs.tenant_router)
     app.include_router(study_participants.router)
+    app.include_router(study_links.tenant_router)
+    app.include_router(study_links.public_router)
     app.include_router(template_offers.router)
     app.include_router(my_work.router)
     app.include_router(track_record.router)

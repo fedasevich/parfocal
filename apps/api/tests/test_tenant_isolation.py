@@ -113,6 +113,7 @@ from parfocal_api.tables import (
     source_watches,
     sso_connections,
     stage_throughput,
+    study_links,
     study_sessions,
     study_template_versions,
     study_templates,
@@ -1587,6 +1588,19 @@ async def seed_study_trace_parts(connection: AsyncConnection, seeded: Seeded) ->
     seeded.markers.add(base64.b64encode(body).decode())
 
 
+async def seed_study_links(connection: AsyncConnection, seeded: Seeded) -> None:
+    participant = f"P-{uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        insert(study_links).values(
+            tenant_id=seeded.tenant_id,
+            participant=participant,
+            token_hash=hashlib.sha256(participant.encode()).digest(),
+            expires_at=text("now() + interval '1 day'"),
+        )
+    )
+    seeded.markers.add(participant)
+
+
 async def seed_event_attempts(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         insert(event_attempts).values(
@@ -1910,6 +1924,7 @@ SEEDERS: dict[str, Seeder] = {
     "timing_events": seed_timing_events,
     "study_sessions": seed_study_sessions,
     "study_trace_parts": seed_study_trace_parts,
+    "study_links": seed_study_links,
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
@@ -2045,6 +2060,9 @@ GET_ROUTES = {
     ),
     "getTaskTiming": Route(Exposure.TENANT, lambda _: "/api/tenant/task-timing", admin_rights=True),
     "listStudySessions": Route(Exposure.TENANT, lambda _: "/api/tenant/study-sessions"),
+    "listStudyLinks": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/study-links", admin_rights=True
+    ),
     "getStudyTrace": Route(
         Exposure.TENANT, lambda _: f"/api/tenant/study-sessions/{STUDY_SESSION_KEY}/trace"
     ),

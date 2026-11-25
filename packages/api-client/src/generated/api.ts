@@ -7932,6 +7932,47 @@ export const StudyKind = {
   other: "other",
 } as const;
 
+export interface StudyLink {
+  code: string;
+  url: string;
+  expires_at: string;
+  project_id: string;
+  workspace_id: string;
+  workspace_name: string;
+}
+
+export interface StudyLinkJoined {
+  code: string;
+}
+
+export interface StudyLinkRedemption {
+  /**
+   * @minLength 20
+   * @maxLength 100
+   */
+  token: string;
+}
+
+export type StudyLinkRowState = (typeof StudyLinkRowState)[keyof typeof StudyLinkRowState];
+
+export const StudyLinkRowState = {
+  waiting: "waiting",
+  joined: "joined",
+  expired: "expired",
+} as const;
+
+export interface StudyLinkRow {
+  code: string;
+  created_at: string;
+  expires_at: string;
+  redeemed_at: string | null;
+  state: StudyLinkRowState;
+}
+
+export interface StudyLinks {
+  links: StudyLinkRow[];
+}
+
 export type StudySessionRowAnswers = { [key: string]: unknown };
 
 export interface StudySessionRow {
@@ -78171,6 +78212,495 @@ export const useRemoveStudyParticipant = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRemoveStudyParticipantMutationOptions(options), queryClient);
+};
+
+export type prepareStudyLinkResponse200 = {
+  data: StudyLink;
+  status: 200;
+};
+
+export type prepareStudyLinkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type prepareStudyLinkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type prepareStudyLinkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type prepareStudyLinkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type prepareStudyLinkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type prepareStudyLinkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type prepareStudyLinkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type prepareStudyLinkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type prepareStudyLinkResponseSuccess = prepareStudyLinkResponse200 & {
+  headers: Headers;
+};
+export type prepareStudyLinkResponseError = (
+  | prepareStudyLinkResponse400
+  | prepareStudyLinkResponse401
+  | prepareStudyLinkResponse403
+  | prepareStudyLinkResponse404
+  | prepareStudyLinkResponse409
+  | prepareStudyLinkResponse422
+  | prepareStudyLinkResponse429
+  | prepareStudyLinkResponse500
+) & {
+  headers: Headers;
+};
+
+export type prepareStudyLinkResponse =
+  | prepareStudyLinkResponseSuccess
+  | prepareStudyLinkResponseError;
+
+export const getPrepareStudyLinkUrl = (code: string) => {
+  return `/api/tenant/study-participants/${code}/link`;
+};
+
+/**
+ * @summary Prepare Study Link
+ */
+export const prepareStudyLink = async (
+  code: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<prepareStudyLinkResponse> => {
+  return apiFetch<prepareStudyLinkResponse>(getPrepareStudyLinkUrl(code), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getPrepareStudyLinkMutationKey = () => ["prepareStudyLink"] as const;
+
+export const getPrepareStudyLinkMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof prepareStudyLink>>,
+    TError,
+    PrepareStudyLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof prepareStudyLink>>,
+  TError,
+  PrepareStudyLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPrepareStudyLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof prepareStudyLink>>,
+    PrepareStudyLinkMutationVariables
+  > = (props) => {
+    const { code } = props ?? {};
+
+    return prepareStudyLink(code, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PrepareStudyLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof prepareStudyLink>>
+>;
+
+export type PrepareStudyLinkMutationError = Problem;
+export type PrepareStudyLinkMutationVariables = { code: string };
+
+/**
+ * @summary Prepare Study Link
+ */
+export const usePrepareStudyLink = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof prepareStudyLink>>,
+      TError,
+      PrepareStudyLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof prepareStudyLink>>,
+  TError,
+  PrepareStudyLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(getPrepareStudyLinkMutationOptions(options), queryClient);
+};
+
+export type listStudyLinksResponse200 = {
+  data: StudyLinks;
+  status: 200;
+};
+
+export type listStudyLinksResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listStudyLinksResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listStudyLinksResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listStudyLinksResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listStudyLinksResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listStudyLinksResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listStudyLinksResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listStudyLinksResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listStudyLinksResponseSuccess = listStudyLinksResponse200 & {
+  headers: Headers;
+};
+export type listStudyLinksResponseError = (
+  | listStudyLinksResponse400
+  | listStudyLinksResponse401
+  | listStudyLinksResponse403
+  | listStudyLinksResponse404
+  | listStudyLinksResponse409
+  | listStudyLinksResponse422
+  | listStudyLinksResponse429
+  | listStudyLinksResponse500
+) & {
+  headers: Headers;
+};
+
+export type listStudyLinksResponse = listStudyLinksResponseSuccess | listStudyLinksResponseError;
+
+export const getListStudyLinksUrl = () => {
+  return `/api/tenant/study-links`;
+};
+
+/**
+ * @summary List Study Links
+ */
+export const listStudyLinks = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listStudyLinksResponse> => {
+  return apiFetch<listStudyLinksResponse>(getListStudyLinksUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListStudyLinksQueryKey = () => {
+  return [`/api/tenant/study-links`] as const;
+};
+
+export const getListStudyLinksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStudyLinks>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyLinks>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStudyLinksQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStudyLinks>>> = ({ signal }) =>
+    listStudyLinks({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStudyLinks>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListStudyLinksQueryResult = NonNullable<Awaited<ReturnType<typeof listStudyLinks>>>;
+export type ListStudyLinksQueryError = Problem;
+
+export function useListStudyLinks<
+  TData = Awaited<ReturnType<typeof listStudyLinks>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyLinks>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyLinks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyLinks<
+  TData = Awaited<ReturnType<typeof listStudyLinks>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyLinks>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyLinks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyLinks<
+  TData = Awaited<ReturnType<typeof listStudyLinks>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyLinks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Study Links
+ */
+
+export function useListStudyLinks<
+  TData = Awaited<ReturnType<typeof listStudyLinks>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listStudyLinks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListStudyLinksQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type redeemStudyLinkResponse200 = {
+  data: StudyLinkJoined;
+  status: 200;
+};
+
+export type redeemStudyLinkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type redeemStudyLinkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type redeemStudyLinkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type redeemStudyLinkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type redeemStudyLinkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type redeemStudyLinkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type redeemStudyLinkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type redeemStudyLinkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type redeemStudyLinkResponseSuccess = redeemStudyLinkResponse200 & {
+  headers: Headers;
+};
+export type redeemStudyLinkResponseError = (
+  | redeemStudyLinkResponse400
+  | redeemStudyLinkResponse401
+  | redeemStudyLinkResponse403
+  | redeemStudyLinkResponse404
+  | redeemStudyLinkResponse409
+  | redeemStudyLinkResponse422
+  | redeemStudyLinkResponse429
+  | redeemStudyLinkResponse500
+) & {
+  headers: Headers;
+};
+
+export type redeemStudyLinkResponse = redeemStudyLinkResponseSuccess | redeemStudyLinkResponseError;
+
+export const getRedeemStudyLinkUrl = () => {
+  return `/api/study-links/redeem`;
+};
+
+/**
+ * @summary Redeem Study Link
+ */
+export const redeemStudyLink = async (
+  studyLinkRedemption: StudyLinkRedemption,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<redeemStudyLinkResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<redeemStudyLinkResponse>(getRedeemStudyLinkUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(studyLinkRedemption),
+  });
+};
+
+export const getRedeemStudyLinkMutationKey = () => ["redeemStudyLink"] as const;
+
+export const getRedeemStudyLinkMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof redeemStudyLink>>,
+    TError,
+    RedeemStudyLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof redeemStudyLink>>,
+  TError,
+  RedeemStudyLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRedeemStudyLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof redeemStudyLink>>,
+    RedeemStudyLinkMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return redeemStudyLink(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RedeemStudyLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof redeemStudyLink>>
+>;
+export type RedeemStudyLinkMutationBody = StudyLinkRedemption;
+export type RedeemStudyLinkMutationError = Problem;
+export type RedeemStudyLinkMutationVariables = { data: StudyLinkRedemption };
+
+/**
+ * @summary Redeem Study Link
+ */
+export const useRedeemStudyLink = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof redeemStudyLink>>,
+      TError,
+      RedeemStudyLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof redeemStudyLink>>,
+  TError,
+  RedeemStudyLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(getRedeemStudyLinkMutationOptions(options), queryClient);
 };
 
 export type listTemplateOffersResponse200 = {

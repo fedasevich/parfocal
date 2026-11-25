@@ -393,3 +393,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0438](0438-study-sessions-and-traces-upload-to-the-api.md) | Study sessions and traces upload to the API, and the results page reads them there | Accepted | 2026-11-23 |
 | [0439](0439-the-console-prepares-a-participant-through-the-seed-function.md) | The study console prepares a participant through the seed function, with the owner database URL held only by that function | Accepted | 2026-11-24 |
 | [0440](0440-gpu-pools-take-any-card-big-enough.md) | GPU pools take any card big enough for their model, cheapest first, in any region | Accepted | 2026-11-25 |
+| [XXXX](XXXX-a-one-use-link-signs-a-study-participant-into-their-own-seat.md) | A one-use link signs a remote study participant into a seat of their own, with no identity provider account | Accepted | 2026-11-25 |
