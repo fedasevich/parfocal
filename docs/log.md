@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-170: the shared flow page header in packages/ui/src/components/flow-page.tsx joins the breadcrumb and title on one line, drops the last crumb that repeated the title and folds the locked or sent line into the subtitle row. The target is content start at most 108 px below the page top at 1440 x 1011, measured at 105 with the stepper and 73 with the locked line against 163 to 169 before, in page-header-height.spec.ts. The dataset, template editor, queue and evaluation pages keep their own headers.
 - Production touch: release v0.56.0 (PROTO-181, PROTO-185, PROTO-196, PROTO-175) deployed by run 45716931542, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 
 ## 2026-11-25
