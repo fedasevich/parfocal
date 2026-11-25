@@ -1882,23 +1882,23 @@
     },
     {
       "file": "components-models-and-jobs--model-picker-closed--dark--comfortable.png",
-      "sha256": "7a8b0241e934e153d19c3b43c5f8ba2b9e177c59a52de24a5f8b7815c55c83f6",
-      "bytes": 40406
+      "sha256": "254626e52487708c276cc9025a15e2ae8d68b127e4bdb377a7e2ce5305bdd676",
+      "bytes": 39565
     },
     {
       "file": "components-models-and-jobs--model-picker-closed--light--comfortable.png",
-      "sha256": "8bfdd07e68d856fe4c7ddd44e17b2e9581b043fdaf8bdfd4c6e4952b3d77c9da",
-      "bytes": 40497
+      "sha256": "02dcbda142c1fc5c33b236c16aeead0d2e5699172436da1a1452499dabd44ce0",
+      "bytes": 39650
     },
     {
       "file": "components-models-and-jobs--model-picker-open--dark--comfortable.png",
-      "sha256": "4c6d587d4d82f2d76e4956ae31dd99a8e6cdc62963f8e024cf8c55bfd2677f22",
-      "bytes": 58226
+      "sha256": "4e51ab67af984a2853da3440dc686c213d641eb870327c62e7525bbe0f10b53e",
+      "bytes": 57068
     },
     {
       "file": "components-models-and-jobs--model-picker-open--light--comfortable.png",
-      "sha256": "52e4ecfbdbf18d38712d49de6c35b8470dadfe34c735967cbdea80d6bc1bc09c",
-      "bytes": 71312
+      "sha256": "3b8be81a618bf0d1c01ee612878da919d989028aecb43687c75d02b9af6c4e4f",
+      "bytes": 70060
     },
     {
       "file": "components-models-and-jobs--rings--dark--comfortable.png",
