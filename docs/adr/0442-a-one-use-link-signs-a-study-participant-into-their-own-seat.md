@@ -1,4 +1,4 @@
-# XXXX. A one-use link signs a remote study participant into a seat of their own, with no identity provider account
+# 0442. A one-use link signs a remote study participant into a seat of their own, with no identity provider account
 
 - Date: 2026-11-25
 - Status: Accepted
