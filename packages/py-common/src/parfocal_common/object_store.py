@@ -62,6 +62,7 @@ class ListedObject:
     key: str
     size: int
     modified: datetime | None
+    etag: str = ""
 
 
 def parse_modified(text: str | None) -> datetime | None:
@@ -496,6 +497,7 @@ class ObjectStore:
                     key=visible_key(self.location, child_text(item, "Key") or ""),
                     size=int(child_text(item, "Size") or 0),
                     modified=parse_modified(child_text(item, "LastModified")),
+                    etag=unquote_etag(child_text(item, "ETag") or ""),
                 )
                 for item in children(root, "Contents")
             )
