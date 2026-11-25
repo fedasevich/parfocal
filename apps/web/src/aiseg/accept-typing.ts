@@ -66,19 +66,18 @@ type TypablePiece = {
 export function splitForTyping<T extends TypablePiece>(
   pieces: readonly T[],
   autoType: boolean,
-): { readonly typed: T[]; readonly kept: T[] } {
+): { readonly typed: T[]; readonly untyped: T[]; readonly kept: T[] } {
   const typed: T[] = [];
+  const untyped: T[] = [];
   const kept: T[] = [];
   for (const piece of pieces) {
-    const typable =
-      autoType &&
-      typed.length < typerBatch &&
-      piece.run.source !== null &&
-      typedSources.has(piece.run.source) &&
-      typerSized(piece.ring);
-    (typable ? typed : kept).push(piece);
+    const found = piece.run.source !== null && typedSources.has(piece.run.source);
+    if (!found) kept.push(piece);
+    else if (!autoType) untyped.push(piece);
+    else if (typed.length < typerBatch && typerSized(piece.ring)) typed.push(piece);
+    else kept.push(piece);
   }
-  return { typed, kept };
+  return { typed, untyped, kept };
 }
 
 export function typingTargets(doc: AnnotationDocument, shapes: readonly Shape[]): Shape[] {

@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
+const unclassed = "#a3a3a3";
 
 async function openSmart(page: Page, query = "") {
   await page.goto(`/projects/${p07}?tab=slides${query}`);
@@ -56,10 +57,12 @@ test("typing off leaves new cells untyped and turning it on types the next cells
   await expect(toggle(page)).toHaveText("Typing off");
 
   await findCell(page, centre);
-  await expect(accept(page)).toContainText("Accept as");
+  await expect(accept(page)).not.toContainText("Accept as");
   await page.keyboard.press("Enter");
   await expect(cells(page)).toHaveCount(1);
   await expect(cells(page).first()).toHaveAttribute("data-type", "");
+  await expect(cells(page).first()).toHaveAttribute("data-class", "");
+  await expect(cells(page).first()).toHaveAttribute("data-colour", unclassed);
   expect(calls).toHaveLength(0);
 
   await toggle(page).click();
@@ -71,7 +74,14 @@ test("typing off leaves new cells untyped and turning it on types the next cells
   await expect(cells(page).nth(1)).toHaveAttribute("data-type", "stroma");
   await expect(cells(page).nth(1)).toHaveAttribute("data-colour", "#6ee7b7");
   await expect(cells(page).first()).toHaveAttribute("data-type", "");
+  await expect(cells(page).first()).toHaveAttribute("data-colour", unclassed);
   expect(calls).toHaveLength(1);
+
+  await page.keyboard.press("Escape");
+  await page.mouse.click(centre.x, centre.y);
+  await page.keyboard.press("2");
+  await expect(cells(page).first()).toHaveAttribute("data-class", `${p07}-class-2`);
+  await expect(cells(page).first()).toHaveAttribute("data-colour", "#6ee7b7");
 });
 
 test("three accepted cells are typed, drawn in three class colours, named on hover and retyped by key", async ({
@@ -123,4 +133,5 @@ test("a typer failure shows a toast and leaves the cells untyped", async ({ page
   await expect(page.getByTestId("smart-typing")).toHaveText("Typing failed, 2 untyped");
   await expect(cells(page).first()).toHaveAttribute("data-type", "");
   await expect(cells(page).first()).toHaveAttribute("data-class", "");
+  await expect(cells(page).first()).toHaveAttribute("data-colour", unclassed);
 });

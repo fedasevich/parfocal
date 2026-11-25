@@ -231,7 +231,17 @@ describe("typing one-click accepts with the server typer", () => {
     );
     const off = splitForTyping(pending, false);
     assert.equal(off.typed.length, 0);
-    assert.equal(off.kept.length, 3);
+    assert.deepEqual(
+      off.untyped.map((piece) => [piece.runId, piece.piece]),
+      [
+        [1, 0],
+        [1, 1],
+      ],
+    );
+    assert.deepEqual(
+      off.kept.map((piece) => [piece.runId, piece.piece]),
+      [[2, 0]],
+    );
 
     const first = acceptProposals(doc, on.typed, { classKey: null });
     const second = acceptProposals(first.document, on.kept);

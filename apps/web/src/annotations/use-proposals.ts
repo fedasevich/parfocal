@@ -45,9 +45,10 @@ export function useProposals(
 
   const accept = useCallback(() => {
     const { autoType, classOfType, typer = serverTyper } = now.current;
-    const { typed, kept } = splitForTyping(pendingProposals(document), autoType);
+    const { typed, untyped, kept } = splitForTyping(pendingProposals(document), autoType);
     const first = acceptProposals(document, typed, { classKey: null });
-    const second = acceptProposals(first.document, kept);
+    const bare = acceptProposals(first.document, untyped, { classKey: null });
+    const second = acceptProposals(bare.document, kept);
     apply(second.document, "Accept proposals");
     if (first.shapes.length === 0) return;
     const call = ++calls.current;

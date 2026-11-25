@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cellTypeText, shapeColour } from "../src/annotations/cell-type.ts";
+import { cellTypeText, shapeColour, unclassedColour } from "../src/annotations/cell-type.ts";
 import type { OutlineTyping, Shape } from "../src/annotations/shapes.ts";
 
 const typing: OutlineTyping = {
@@ -42,8 +42,8 @@ describe("cell type colour and text", () => {
     assert.match(shapeColour(cell(null, typing), classColour) ?? "", /^#[0-9a-f]{6}$/);
   });
 
-  it("leaves an untyped cell with no class to the selection colour", () => {
-    assert.equal(shapeColour(cell(null, undefined), classColour), null);
+  it("draws an untyped cell with no class in the neutral unclassed colour", () => {
+    assert.equal(shapeColour(cell(null, undefined), classColour), unclassedColour);
   });
 
   it("names the class and the typer's confidence", () => {

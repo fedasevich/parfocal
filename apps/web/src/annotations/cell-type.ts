@@ -17,11 +17,13 @@ const hexOf = (colour: readonly number[]) =>
     .map((channel) => channel.toString(16).padStart(2, "0"))
     .join("")}`;
 
-export function shapeColour(shape: Shape, classColour: ClassColour): string | null {
+export const unclassedColour = "#a3a3a3";
+
+export function shapeColour(shape: Shape, classColour: ClassColour): string {
   const own = shape.classKey === null ? null : classColour(shape.classKey);
   if (own !== null) return own;
   const typing = typingOfShape(shape);
-  return typing === undefined ? null : hexOf(fallbackColour(typing.type));
+  return typing === undefined ? unclassedColour : hexOf(fallbackColour(typing.type));
 }
 
 export type CellTypeText = {

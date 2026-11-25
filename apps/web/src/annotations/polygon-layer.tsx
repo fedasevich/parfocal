@@ -254,12 +254,11 @@ export function PolygonLayer({
             data-testid="polygon-shape"
             data-points={shape.points.length >> 1}
             data-class={shape.classKey ?? ""}
-            data-colour={colour ?? ""}
+            data-colour={colour}
             data-type={typing?.type ?? ""}
             data-confidence={typing === undefined ? undefined : typeConfidence(typing).toFixed(2)}
             data-vertices={Array.from(shape.points, (value) => Math.round(value)).join(" ")}
             d={pathOf(verticesOf(shape.points).map(project), true)}
-            className={colour === null ? "fill-accent/15 stroke-accent" : undefined}
             style={
               colour === null ? undefined : { stroke: colour, fill: colour, fillOpacity: 0.15 }
             }
