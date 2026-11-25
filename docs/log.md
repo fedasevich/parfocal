@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- PROTO-182 (found cells show their type color and are typed automatically): the owner asked on 2026-11-25 for an on the fly switch for automatic typing, now part of the task.
 - Owner request 2026-11-25 from a screenshot: the viewer rail tool tooltip is pale grey on light grey and unreadable, added as PROTO-183 (tool tooltips on the viewer rail are readable).
 - Owner request 2026-11-25 from a screenshot: Smart select cells draw in one light blue with no type, and the automatic typing is not visible, added as PROTO-182 (found cells show their type color and are typed automatically).
 - Owner request 2026-11-25: Smart select should queue clicks made while the model works, as the POC did in src/segment/controller.ts, added as PROTO-181 (Smart select queues clicks made while the model works).
