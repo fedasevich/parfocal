@@ -21,6 +21,7 @@ export type FakeQueueScene = {
   edited: boolean;
   signed: boolean;
   retired: boolean;
+  certainty: boolean;
 };
 
 export const defaultFakeQueueScene: FakeQueueScene = {
@@ -28,6 +29,7 @@ export const defaultFakeQueueScene: FakeQueueScene = {
   edited: false,
   signed: false,
   retired: false,
+  certainty: false,
 };
 
 export type LiveRowState =
@@ -130,7 +132,8 @@ export function setFakeQueueScene(next: FakeQueueScene): boolean {
     next.stage === scene.stage &&
     next.edited === scene.edited &&
     next.signed === scene.signed &&
-    next.retired === scene.retired
+    next.retired === scene.retired &&
+    next.certainty === scene.certainty
   ) {
     return false;
   }

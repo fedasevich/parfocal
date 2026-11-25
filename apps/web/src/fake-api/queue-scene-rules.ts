@@ -31,7 +31,9 @@ const routePattern = /^\/tasks\/[^/]+\/(disagreements|adjudicate|sign-off|evalua
 
 function queueStageFor(page: string, search: Record<string, unknown>): FakeQueueScene | null {
   const stage = typeof search["stage"] === "string" ? queueStages[search["stage"]] : undefined;
-  if (stage !== undefined) return stage;
+  if (stage !== undefined) {
+    return search["style"] === "certainty" ? { ...stage, certainty: true } : stage;
+  }
   if (fakeQueueScene() !== defaultFakeQueueScene) return null;
   return page === "adjudicate" ? scene({ stage: "sent" }) : scene({ stage: "open" });
 }

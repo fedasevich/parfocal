@@ -331,7 +331,7 @@ test("a queue resolves with decisions, three objects sent to Anna and two left o
   await expect(page.getByText("3 with the adjudicator")).toBeVisible();
   await page.getByRole("button", { name: /^T1·C212/ }).click();
   await decide.getByRole("button", { name: "Leave open" }).click();
-  await page.getByRole("button", { name: /^T1 tumor_031/ }).click();
+  await page.getByRole("button", { name: /^T1 CMU-1-Small-Region-tumor_031/ }).click();
   await decide.getByRole("button", { name: "Leave open" }).click();
   await expect(signOff).toHaveAttribute("title", "Sign-off lists what is still open");
   await page.getByRole("button", { name: /^T2·C88/ }).click();
@@ -623,4 +623,71 @@ test("decision keys wait while the adjudicator draws and Finish outline closes t
   expect(Object.keys((await drawn).postDataJSON() as object)).toEqual(["geometry"]);
   await expect(settle).toHaveAttribute("data-settled", "drawn");
   await expect(page.getByTestId("redraw-layer")).toHaveCount(0);
+});
+
+const queueSizes = [
+  { name: "narrow", width: 1024, height: 700 },
+  { name: "wide", width: 1600, height: 900 },
+] as const;
+
+const longSlide = "CMU-1-Small-Region-tumor_031.svs";
+
+for (const size of queueSizes) {
+  for (const style of ["agree", "certainty"] as const) {
+    test(`the Decide panel keeps its chip and ${style} buttons inside it on a ${size.name} window`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await page.goto(`${base}/disagreements?stage=open&style=${style}`);
+      await page.getByRole("button", { name: /^T1 CMU-1-Small-Region/ }).click();
+      const panel = page.getByRole("complementary", { name: "Decide" });
+      const group = panel.getByRole("group", { name: "Your decision on T1" });
+      const buttons = group.getByRole("button");
+      await expect(buttons).toHaveCount(style === "certainty" ? 5 : 3);
+      const heading = panel.locator('[data-slot="object-id-tag"]').first();
+      await expect(heading).toContainText(longSlide);
+      const chip = panel.locator('[data-slot="status-tag"]').first();
+      await expect(chip).toBeVisible();
+      const outer = await panel.boundingBox();
+      if (outer === null) throw new Error("the Decide panel has no box");
+      const targets = [heading, chip, ...(await buttons.all())];
+      for (const target of targets) {
+        const box = await target.boundingBox();
+        if (box === null) throw new Error("a Decide panel part has no box");
+        expect(box.x).toBeGreaterThanOrEqual(outer.x - 0.5);
+        expect(box.x + box.width).toBeLessThanOrEqual(outer.x + outer.width + 0.5);
+      }
+      const overflow = await panel.evaluate((element) => ({
+        panel: element.scrollWidth - element.clientWidth,
+        buttons: [...element.querySelectorAll("button")].map(
+          (button) => button.scrollWidth - button.clientWidth,
+        ),
+      }));
+      expect(overflow.panel).toBeLessThanOrEqual(0);
+      for (const extra of overflow.buttons) expect(extra).toBeLessThanOrEqual(0);
+      const view = await page.evaluate(() => {
+        const root = document.documentElement;
+        const main = document.querySelector("main");
+        return [
+          root.scrollWidth - root.clientWidth,
+          main ? main.scrollWidth - main.clientWidth : 0,
+        ];
+      });
+      expect(view).toEqual([0, 0]);
+      await expect(heading).toHaveAttribute("title", `T1 on ${longSlide}`);
+    });
+  }
+}
+
+test("the selection panel keeps a long slide name inside the Decide panel", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 700 });
+  await page.goto(`${base}/disagreements?stage=open`);
+  await page.getByRole("checkbox", { name: /^Select T1 on CMU-1-Small-Region/ }).check();
+  const panel = page.getByRole("complementary", { name: "Decide" });
+  const tag = panel.locator('[data-slot="object-id-tag"]').first();
+  await expect(tag).toContainText(longSlide);
+  const outer = await panel.boundingBox();
+  const box = await tag.boundingBox();
+  if (outer === null || box === null) throw new Error("nothing to measure");
+  expect(box.x + box.width).toBeLessThanOrEqual(outer.x + outer.width + 0.5);
 });

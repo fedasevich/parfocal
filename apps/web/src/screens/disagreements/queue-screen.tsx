@@ -386,7 +386,10 @@ export function QueueScreen({ taskId }: { taskId: string }) {
           </section>
         ) : row ? (
           <>
-            <section aria-label={t`Evidence for ${rowLabel(row)}`} className="grid gap-3">
+            <section
+              aria-label={t`Evidence for ${rowLabel(row)}`}
+              className="grid grid-cols-[minmax(0,1fr)] gap-3"
+            >
               <div className="relative flex h-[360px] overflow-hidden rounded-zone bg-canvas">
                 <DisagreementStage
                   taskId={taskId}
@@ -534,9 +537,9 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                 </EvidenceRow>
               </EvidenceList>
             </section>
-            <aside aria-label={t`Decide`} className="rounded-zone bg-surf-panel p-4">
+            <aside aria-label={t`Decide`} className="min-w-0 rounded-zone bg-surf-panel p-4">
               {checkedRows.length > 0 ? (
-                <div className="grid gap-3">
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
                   <div className="flex items-center justify-between">
                     <b className="text-body font-semibold">
                       {plural(checkedRows.length, {
@@ -550,7 +553,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {checkedRows.map((item) => (
-                      <ObjectIdTag key={item.key}>{rowLabel(item)}</ObjectIdTag>
+                      <FittedObjectTag key={item.key} label={rowLabel(item)} />
                     ))}
                   </div>
                   <Button
@@ -694,6 +697,14 @@ type DecidePanelProps = {
 const linkClass =
   "inline-flex min-h-6 cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-body-sm text-accent hover:underline";
 
+function FittedObjectTag({ label }: { label: string }) {
+  return (
+    <ObjectIdTag title={label} className="min-w-0 shrink" data-phi="">
+      <span className="truncate">{label}</span>
+    </ObjectIdTag>
+  );
+}
+
 function DecidePanel({
   row,
   rows,
@@ -717,16 +728,16 @@ function DecidePanel({
   const tag = rowTag(row, nameOf, look);
   const label = rowLabel(row);
   const head = (
-    <div className="flex items-center justify-between gap-2">
-      <b className="flex items-center gap-2 text-body font-semibold">
-        <Trans>Decide</Trans> <ObjectIdTag>{label}</ObjectIdTag>
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+      <b className="flex max-w-full min-w-0 items-center gap-2 text-body font-semibold">
+        <Trans>Decide</Trans> <FittedObjectTag label={label} />
       </b>
       <StatusTag tone={tag.tone}>{tag.label}</StatusTag>
     </div>
   );
   if (row.state === "look-again") {
     return (
-      <div className="grid gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
         {head}
         <p className="m-0 text-body-sm text-fg-dim">
           {look.reviewers === 1 ? (
@@ -746,7 +757,7 @@ function DecidePanel({
   }
   if (row.state === "with-adjudicator") {
     return (
-      <div className="grid gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
         {head}
         <p className="m-0 text-body-sm text-fg-dim">
           <Trans>
@@ -759,7 +770,7 @@ function DecidePanel({
   }
   if (row.state === "adjudicated" && row.decision) {
     return (
-      <div className="grid gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
         {head}
         <KeyValueList
           tight
@@ -800,7 +811,7 @@ function DecidePanel({
     ...new Set(row.answers.flatMap((answer) => (answer.retyped_to ? [answer.retyped_to] : []))),
   ];
   return (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
       {head}
       {row.edited ? (
         <div className="grid gap-2.5 rounded-zone bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] p-3 text-body-sm text-fg">

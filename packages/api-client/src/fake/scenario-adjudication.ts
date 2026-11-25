@@ -110,7 +110,7 @@ export const queueRows: QueueSeedRow[] = [
   },
   {
     slide: 4,
-    slideLabel: "tumor_031",
+    slideLabel: "CMU-1-Small-Region-tumor_031.svs",
     object: "T1",
     kind: "region",
     className: "Tumor",
@@ -178,7 +178,7 @@ export const researcherDecisions: Record<string, { raw: QueueValue; note: string
   },
 };
 
-export const leftOpen = ["A1:T1·C212", "tumor_031:T1"];
+export const leftOpen = ["A1:T1·C212", "CMU-1-Small-Region-tumor_031.svs:T1"];
 
 export const editedRow = { key: "A1:T2", by: "LM" as PersonKey, on: "2026-10-16" };
 
