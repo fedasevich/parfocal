@@ -17,6 +17,8 @@ from test_patch_export import CLASSES, FEATURES, LEVEL, SLIDE, TASK, TILE
 from parfocal_common.ingest import original_key
 from parfocal_common.jobs import StepFailedError, StepRun
 from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_ingest import patch_export
+from parfocal_ingest.isolated_child import ScopedStorage
 from parfocal_ingest.isolation import MAX_MESSAGE_BYTES
 from parfocal_ingest.patch_export import (
     COCO,
@@ -191,3 +193,27 @@ async def test_a_cut_that_breaks_fails_instead_of_skipping_the_slide(tmp_path: P
         await isolated_slide(step, resources_in(tmp_path), store, SLIDE_ID, KEY, b"not json")
     assert failure.value.code == CUT_FAILED
     assert leftovers(tmp_path) == []
+
+
+def broken_read(*_arguments: Any, **_keywords: Any) -> None:
+    raise openslide.OpenSlideError("damaged tile")
+
+
+def test_a_slide_that_breaks_while_its_pixels_are_read_is_skipped_as_unreadable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(patch_export, "drawn", broken_read)
+    source = tmp_path / "annotations.geojson"
+    source.write_bytes(GEOJSON)
+    storage = cast("ScopedStorage", SimpleNamespace(fetch=lambda _key: fixture_path(SLIDE)))
+    arguments = {
+        "slide_id": str(SLIDE_ID),
+        "key": KEY,
+        "geojson": str(source),
+        "level": LEVEL,
+        "tile_size": TILE,
+        "coco": True,
+        "out": str(tmp_path),
+    }
+    assert patch_export.patch_slide(arguments, storage) == {"skipped": "unreadable"}
+    assert not (tmp_path / patch_export.FACTS).exists()

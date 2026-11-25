@@ -525,7 +525,6 @@ def patch_slide(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[st
         with zipfile.ZipFile(out / PART, "w", zipfile.ZIP_DEFLATED) as archive:
             rows, slide, cut = drawn(source, level, int(arguments["tile_size"]), archive, coco)
     except READER_ERRORS:
-        (out / PART).unlink(missing_ok=True)
         return {"skipped": "unreadable"}
     facts = {
         "rows": rows,
