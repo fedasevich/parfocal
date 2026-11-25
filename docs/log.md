@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25 from a screenshot: Smart select cells draw in one light blue with no type, and the automatic typing is not visible, added as PROTO-182 (found cells show their type color and are typed automatically).
 - Owner request 2026-11-25: Smart select should queue clicks made while the model works, as the POC did in src/segment/controller.ts, added as PROTO-181 (Smart select queues clicks made while the model works).
 - Owner request 2026-11-25 from a screenshot: the Smart select bar grows huge with a long status sentence, added as PROTO-180 (the Smart select bar stays one compact row and long messages go to a toast).
 - Owner request 2026-11-25 from a screenshot: a project with no slides shows a bare table header, added as PROTO-179 (an empty project and every other table outside Admin show an empty state).
