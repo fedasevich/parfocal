@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from storage_support import ensure_bucket
 from upload_support import Lab, start_upload
 from workspace_support import join_project, make_case, make_slide, owner, person
 
@@ -152,6 +153,28 @@ def test_a_slide_the_project_already_has_is_left_out_and_its_results_go_to_it(
         "in-case",
         None,
     )
+
+
+def test_a_de_identified_slide_is_found_again_by_its_uploaded_file_name(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    ensure_bucket()
+    owner(
+        database, f"UPDATE projects SET privacy_mode = 'de-identified' WHERE id = '{lab.project}'"
+    )
+    case = make_case(database, lab.tenant_id, lab.project, "S26-04812")
+    upload = start_upload(api, lab.lead, lab.project, "A1_HE.svs", 100)
+    held = make_slide(database, lab.tenant_id, lab.project, "Slide 1", case)
+    owner(
+        database,
+        "UPDATE slides SET file_bytes = 100, original_key = 'k', "
+        f"upload_id = '{upload['uploadId']}' "
+        f"WHERE id = '{held}'",
+    )
+    body = sorted_ok(api, lab)
+    duplicate = body["slides"][0]
+    assert (duplicate["outcome"], duplicate["duplicate_of"]) == ("left-out", str(held))
+    assert slides_of(body)["tumor_031.tif"] == ("loose", None, None)
 
 
 def test_applying_creates_the_cases_once_and_answers_their_ids(

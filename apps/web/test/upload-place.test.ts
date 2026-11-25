@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Sorting } from "@parfocal/api-client";
 import {
+  checkSorting,
   compareSorting,
   duplicatesOf,
   type PlaceInput,
@@ -134,4 +135,21 @@ test("a duplicate is listed from the server, and the choice goes out as a keep d
       .slide_decisions?.[0],
     { path: "B/S1/A1.svs", case: "S1", keep: false },
   );
+});
+
+test("duplicates are looked up in the case the browser puts each slide in", async (context) => {
+  const [first, second] = agreeing.slides;
+  assert.ok(first && second);
+  const loose = { ...first, outcome: "loose" as const, case: null, rule: null };
+  context.mock.method(globalThis, "fetch", (_url: string, init: { body: string }) => {
+    const sent = JSON.parse(init.body) as { slide_decisions: { case?: string }[] };
+    const placed = sent.slide_decisions.some((decision) => decision.case === "S1");
+    const slides = placed ? [{ ...first, duplicate_of: "slide-1" }, second] : [loose, second];
+    return Promise.resolve(Response.json({ ...agreeing, slides }));
+  });
+  const found = await checkSorting(input);
+  assert.deepEqual(found.duplicates, [{ path: "B/S1/A1.svs", of: "slide-1" }]);
+  assert.deepEqual(found.differences, [
+    { path: "B/S1/A1.svs", browser: "Case S1", server: "Loose, no case" },
+  ]);
 });
