@@ -389,7 +389,7 @@ function CosignFlow({
           steps={[]}
           current={0}
           status={
-            <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
+            <p className="m-0 flex items-center gap-2 text-body-sm text-fg">
               <Icon name="lock" className="text-fg-dim" />
               <span>
                 <Trans>Locked as version 1. A change is an amendment with a reason.</Trans>
@@ -499,7 +499,7 @@ function CosignFlow({
         steps={[]}
         current={0}
         status={
-          <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
+          <p className="m-0 flex items-center gap-2 text-body-sm text-fg">
             <Icon name={returned ? "back" : "users"} className="text-fg-dim" />
             <span>
               {returned

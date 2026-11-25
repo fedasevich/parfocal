@@ -688,7 +688,7 @@ function ReportFlow({
   });
 
   const status = done ? (
-    <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
+    <p className="m-0 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="lock" className="text-fg-dim" />
       <span>
         <Trans>
@@ -697,7 +697,7 @@ function ReportFlow({
       </span>
     </p>
   ) : sent ? (
-    <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
+    <p className="m-0 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="clock" className="text-fg-dim" />
       <span>
         {report.sent?.at
