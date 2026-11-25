@@ -5788,7 +5788,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-013.
   Size: S.
 
-- [ ] EVAL-017 · A large COCO patch export is never empty
+- [x] EVAL-017 · A large COCO patch export is never empty
   TEST-060 (the main paths the performance measurement still lacks) found that a COCO patch export of a signed-off slide with 10,000 annotations finishes as done with a zip of about 1 KB, no image and no COCO annotation, and a manifest that lists the slide as skipped for `unreadable`. The patch cut runs in the ingest's isolated parse process and sends its facts, the COCO annotations among them, back to the worker in one message of about 3 MB, over the 1 MiB the worker allows, and the failure is reported as an unreadable slide. Send the cut's results so that their size does not matter, for example written to a file or streamed in parts, and make an export that loses a slide for any reason other than a truly unreadable file fail visibly instead of finishing as done.
   Done when a test exports a slide with 10,000 annotations as COCO patches and finds every annotation in the zip, an export whose cut fails is marked failed with its reason, and `bash scripts/main-path-exports.sh` records the COCO budget at 10,000 annotations within its 30,000 ms in the TEST-060 result file.
   Depends on EVAL-015, TEST-060. Size: S.
