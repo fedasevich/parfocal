@@ -4,6 +4,7 @@
 - Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: STACK-027 (GPU inference serving). Confirms the AI serving row of [ADR 0003](0003-pilot-platform-architecture.md) (pilot platform architecture) and matches the L4 that [ADR 0147](0147-cloud-provider-regions-and-pilot-cost.md) (cloud provider, regions and pilot cost) prices GPU work on. Touches AISEG-008 (server embedding service), AIP-007 (priority gate) and every task that adds a model
+- Amended by: [ADR XXXX](XXXX-gpu-pools-take-any-card-big-enough.md) (GPU pools take any card big enough for their model), by the owner's answer to decision 181 (whether whole slide runs fall back to a bigger GPU) on 2026-11-25. Models still fit the T4 or L4, and larger cards up to the H100 are fallbacks a pool takes when no cheaper card is free
 
 ## Context
 

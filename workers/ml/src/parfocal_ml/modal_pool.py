@@ -1,7 +1,10 @@
+import json
 import os
 import socket
+import subprocess
 import time
 from collections.abc import Callable, Mapping
+from functools import cache
 
 import modal
 
@@ -10,6 +13,7 @@ from parfocal_ml.gpu_pool import (
     POOLS,
     Family,
     PoolLimits,
+    card_label,
     concurrency_options,
     function_options,
     validate_pools,
@@ -32,6 +36,28 @@ LOCK_PATH = "workers/deploy/locks/ml.txt"
 UV_VERSION = "0.13.8"
 LOCKED_INSTALL_OPTIONS = "--require-hashes --no-deps"
 MAX_PROBE_SECONDS = 30.0
+CARD_QUERY = ("nvidia-smi", "--query-gpu=name", "--format=csv,noheader")
+CARD_QUERY_SECONDS = 10
+
+
+@cache
+def installed_card() -> str | None:
+    try:
+        found = subprocess.run(
+            CARD_QUERY, capture_output=True, text=True, timeout=CARD_QUERY_SECONDS, check=True
+        ).stdout
+    except OSError, subprocess.SubprocessError:
+        return None
+    names = found.strip().splitlines()
+    return card_label(names[0]) if names else None
+
+
+def running_card(
+    pool: PoolLimits, installed: Callable[[], str | None] = installed_card
+) -> str | None:
+    if pool.gpu is None:
+        return None
+    return installed() or pool.gpu.value
 
 
 def probe(seconds: float) -> dict[str, object]:
@@ -41,6 +67,18 @@ def probe(seconds: float) -> dict[str, object]:
         "region": os.environ.get("MODAL_REGION"),
         "cloud": os.environ.get("MODAL_CLOUD_PROVIDER"),
     }
+
+
+def placement_line(pool: PoolLimits, kind: str) -> str:
+    return json.dumps(
+        {
+            "message": "gpu pool run",
+            "family": pool.family.value,
+            "kind": kind,
+            "gpu": running_card(pool),
+            **probe(0.0),
+        }
+    )
 
 
 def pool_image() -> modal.Image:
@@ -62,23 +100,19 @@ NUCLEI_FAMILY = Family.DETECTOR_BEST
 
 
 def tumor_map_runner(pool: PoolLimits) -> Runner:
-    gpu = pool.gpu.value if pool.gpu is not None else None
-
     def run(call: Mapping[str, object]) -> Mapping[str, object]:
         from parfocal_ml.tumor_map_worker import run_tumor_maps
 
-        return run_tumor_maps(call, gpu)
+        return run_tumor_maps(call, running_card(pool))
 
     return run
 
 
 def nuclei_runner(pool: PoolLimits) -> Runner:
-    gpu = pool.gpu.value if pool.gpu is not None else None
-
     def run(call: Mapping[str, object]) -> Mapping[str, object]:
         from parfocal_ml.nuclei_run_worker import run_nuclei_runs
 
-        return run_nuclei_runs(call, gpu)
+        return run_nuclei_runs(call, running_card(pool))
 
     return run
 
@@ -145,14 +179,15 @@ def pool_entry(
         kind = str(call.get("kind"))
         check_lane(pool, kind)
         if kind == Kind.WARM:
-            return {"family": family, "warm": True, **probe(0.0)}
+            return {"family": family, "warm": True, "gpu": running_card(pool), **probe(0.0)}
         if kind in chosen:
+            print(placement_line(pool, kind), flush=True)
             return {"family": family, "kind": kind, **chosen[kind](call)}
         if kind != Kind.PROBE:
             raise ValueError(f"{family} has no runner for {kind!r} yet")
         seconds = call.get("seconds", 0.0)
         reply = probe(float(seconds) if isinstance(seconds, int | float) else 0.0)
-        return {"family": family, **reply}
+        return {"family": family, "gpu": running_card(pool), **reply}
 
     return run
 

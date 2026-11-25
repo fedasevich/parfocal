@@ -72,7 +72,7 @@ Rules that every task inherits:
 
 | Trigger | Action |
 |---|---|
-| First tenant with real PHI | Sign DPAs with every processor, plus BAAs for any US tenant (Modal, Neon and Cloudflare offer these only on enterprise or business plans). Pin regions (Modal Team plan with `region`, an R2 jurisdiction bucket with objects copied over, Durable Object jurisdiction, Neon in the pinned region). Move the master key to a KMS. Build SEC-005 |
+| First tenant with real PHI | Sign DPAs with every processor, plus BAAs for any US tenant (Modal, Neon and Cloudflare offer these only on enterprise or business plans). Pin regions (Modal Team plan with `region`, an R2 jurisdiction bucket with objects copied over, Durable Object jurisdiction, Neon in the pinned region). Deploy the GPU pools with `PARFOCAL_GPU_REGION=eu`, check which cards of each pool's list the EU regions hold and trim the lists to those, as [ADR XXXX](XXXX-gpu-pools-take-any-card-big-enough.md) (GPU pools take any card big enough for their model) says. Move the master key to a KMS. Build SEC-005 |
 | Modal spend above budget, or API to database latency above budget | Move FastAPI to a fixed container host next to Neon. The budgets are TODO and get set by the STACK-019 and STACK-020 spikes |
 | More than 100 daily active users | Zitadel Pro ($100 a month) |
 | Tile latency above the TILES-002 budget | Add the Cache API layer keyed per object and byte range |

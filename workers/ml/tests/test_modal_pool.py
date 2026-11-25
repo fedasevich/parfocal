@@ -1,3 +1,4 @@
+import json
 import uuid
 from collections.abc import Mapping
 from dataclasses import replace
@@ -25,6 +26,7 @@ from parfocal_ml.modal_pool import (
     default_runners,
     pool_entry,
     pool_functions,
+    running_card,
     secret_names,
 )
 from parfocal_ml.priority_gate import Kind, accepts
@@ -46,6 +48,29 @@ def test_a_probe_reports_its_family_and_container() -> None:
     reply = pool_entry(POOLS[0])({"kind": "probe", "seconds": 0})
     assert reply["family"] == "detector-best"
     assert isinstance(reply["container"], str)
+    assert reply["gpu"] in {gpu.value for gpu in POOLS[0].gpus}
+
+
+def test_a_run_records_the_card_the_container_got_not_the_first_choice() -> None:
+    best = next(pool for pool in POOLS if pool.family is Family.DETECTOR_BEST)
+    lab = next(pool for pool in POOLS if pool.family is Family.LAB_MODEL)
+    assert running_card(best, lambda: "L40S") == "L40S"
+    assert running_card(best, lambda: None) == "L4"
+    assert running_card(lab, lambda: "L4") is None
+
+
+def test_a_run_prints_its_card_and_region_to_the_modal_log(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("MODAL_REGION", "us-east-1")
+    best = next(pool for pool in POOLS if pool.family is Family.DETECTOR_BEST)
+    reply = pool_entry(best, {Kind.DETECT: lambda _: {"finished": 1}})({"kind": Kind.DETECT})
+    assert reply["finished"] == 1
+    line = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert line["message"] == "gpu pool run"
+    assert line["family"] == "detector-best"
+    assert line["gpu"] in {gpu.value for gpu in best.gpus}
+    assert line["region"] == "us-east-1"
 
 
 def test_a_family_without_a_runner_refuses_other_calls() -> None:

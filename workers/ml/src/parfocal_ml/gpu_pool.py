@@ -27,20 +27,60 @@ GPU_POOL_REGION = gpu_region()
 class Gpu(StrEnum):
     T4 = "T4"
     L4 = "L4"
-    A10G = "A10G"
+    A10 = "A10"
+    L40S = "L40S"
+    A100_40GB = "A100-40GB"
+    A100_80GB = "A100-80GB"
+    H100 = "H100"
 
 
 GPU_MEMORY_MIB: dict[Gpu, int] = {
     Gpu.T4: 16 * MIB_PER_GIB,
     Gpu.L4: 24 * MIB_PER_GIB,
-    Gpu.A10G: 24 * MIB_PER_GIB,
+    Gpu.A10: 24 * MIB_PER_GIB,
+    Gpu.L40S: 48 * MIB_PER_GIB,
+    Gpu.A100_40GB: 40 * MIB_PER_GIB,
+    Gpu.A100_80GB: 80 * MIB_PER_GIB,
+    Gpu.H100: 80 * MIB_PER_GIB,
 }
 
 GPU_HOURLY_USD: dict[Gpu, float] = {
     Gpu.T4: 0.59,
     Gpu.L4: 0.80,
-    Gpu.A10G: 1.10,
+    Gpu.A10: 1.10,
+    Gpu.L40S: 1.95,
+    Gpu.A100_40GB: 2.10,
+    Gpu.A100_80GB: 2.50,
+    Gpu.H100: 3.95,
 }
+
+CARD_NAME_MARKS: tuple[tuple[str, Gpu], ...] = (
+    ("A100", Gpu.A100_40GB),
+    ("A10", Gpu.A10),
+    ("L40S", Gpu.L40S),
+    ("L4", Gpu.L4),
+    ("T4", Gpu.T4),
+    ("H100", Gpu.H100),
+)
+
+
+def card_label(name: str) -> str:
+    found = name.strip().upper()
+    for mark, gpu in CARD_NAME_MARKS:
+        if mark in found:
+            return Gpu.A100_80GB.value if gpu is Gpu.A100_40GB and "80GB" in found else gpu.value
+    return name.strip()
+
+
+def affordable(gpu: Gpu, max_containers: int) -> bool:
+    return GPU_HOURLY_USD[gpu] * max_containers < MAX_HOURLY_SPEND_USD
+
+
+def cards_big_enough(budget_mib: int, max_containers: int) -> tuple[Gpu, ...]:
+    fitting = [
+        gpu for gpu in Gpu if budget_mib <= GPU_MEMORY_MIB[gpu] and affordable(gpu, max_containers)
+    ]
+    return tuple(sorted(fitting, key=GPU_HOURLY_USD.__getitem__))
 
 
 class Family(StrEnum):
@@ -84,6 +124,8 @@ class PoolLimits:
         return max(GPU_HOURLY_USD[gpu] for gpu in self.gpus) * self.max_containers
 
 
+ANY_CARD_AFTER_THE_T4 = (Gpu.L4, Gpu.A10, Gpu.L40S, Gpu.A100_40GB, Gpu.A100_80GB, Gpu.H100)
+
 POOLS: tuple[PoolLimits, ...] = (
     PoolLimits(
         family=Family.DETECTOR_BEST,
@@ -96,6 +138,7 @@ POOLS: tuple[PoolLimits, ...] = (
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
         region=GPU_POOL_REGION,
+        fallback_gpus=(Gpu.A10, Gpu.L40S, Gpu.A100_40GB),
     ),
     PoolLimits(
         family=Family.DETECTOR_GOOD,
@@ -108,6 +151,7 @@ POOLS: tuple[PoolLimits, ...] = (
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
         region=GPU_POOL_REGION,
+        fallback_gpus=(Gpu.L4, Gpu.A10, Gpu.L40S, Gpu.A100_40GB),
     ),
     PoolLimits(
         family=Family.TYPER_BEST,
@@ -120,6 +164,7 @@ POOLS: tuple[PoolLimits, ...] = (
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
         region=GPU_POOL_REGION,
+        fallback_gpus=(Gpu.A10, Gpu.L40S, Gpu.A100_40GB, Gpu.A100_80GB, Gpu.H100),
     ),
     PoolLimits(
         family=Family.TYPER_GOOD,
@@ -132,6 +177,7 @@ POOLS: tuple[PoolLimits, ...] = (
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
         region=GPU_POOL_REGION,
+        fallback_gpus=ANY_CARD_AFTER_THE_T4,
     ),
     PoolLimits(
         family=Family.EMBEDDER,
@@ -144,7 +190,7 @@ POOLS: tuple[PoolLimits, ...] = (
         timeout_seconds=60,
         scaledown_window_seconds=INTERACTIVE_SCALEDOWN_SECONDS,
         region=GPU_POOL_REGION,
-        fallback_gpus=(Gpu.L4,),
+        fallback_gpus=ANY_CARD_AFTER_THE_T4,
         startup_timeout_seconds=INTERACTIVE_STARTUP_SECONDS,
     ),
     PoolLimits(
@@ -190,6 +236,11 @@ def pool_problems(pool: PoolLimits) -> list[str]:
         problems.append("model GPU memory budget exceeds the card")
     if pool.gpu is not None and pool.gpu in pool.fallback_gpus:
         problems.append("a fallback GPU repeats the first choice")
+    prices = [GPU_HOURLY_USD[gpu] for gpu in pool.gpus]
+    if len(set(pool.gpus)) != len(pool.gpus) or prices != sorted(prices):
+        problems.append("the GPU list must name each card once, cheapest first")
+    if pool.hourly_usd_at_max >= MAX_HOURLY_SPEND_USD:
+        problems.append("the pool at its container cap reaches the hourly spend cap")
     if not 0 < pool.memory_request_mib <= pool.memory_limit_mib:
         problems.append("memory request must be positive and at most the limit")
     if pool.max_inputs < 1:
@@ -218,8 +269,6 @@ def validate_pools(pools: tuple[PoolLimits, ...]) -> None:
         problems = pool_problems(pool)
         if problems:
             raise PoolLimitError(f"{pool.family}: {'; '.join(problems)}")
-    if worst_case_hourly_usd(pools) > MAX_HOURLY_SPEND_USD:
-        raise PoolLimitError("all pools at their container cap exceed the hourly spend cap")
 
 
 def worst_case_hourly_usd(pools: tuple[PoolLimits, ...]) -> float:
