@@ -1,5 +1,6 @@
 import io
 import json
+import math
 import shutil
 import uuid
 import zipfile
@@ -14,9 +15,16 @@ from fixture_support import fixture_path
 from test_patch_export import CLASSES, FEATURES, LEVEL, SLIDE, TASK, TILE
 
 from parfocal_common.ingest import original_key
-from parfocal_common.jobs import StepRun
+from parfocal_common.jobs import StepFailedError, StepRun
 from parfocal_common.object_store import ObjectStore, StorageLocation
-from parfocal_ingest.patch_export import PatchWriter, isolated_slide, source_of
+from parfocal_ingest.isolation import MAX_MESSAGE_BYTES
+from parfocal_ingest.patch_export import (
+    COCO,
+    CUT_FAILED,
+    PatchWriter,
+    isolated_slide,
+    source_of,
+)
 from parfocal_ingest.workflow import Resources
 
 TENANT = uuid.UUID(int=3)
@@ -35,8 +43,12 @@ def refuse_to_read(*_arguments: Any, **_keywords: Any) -> None:
     raise AssertionError("a slide reader ran inside the worker")
 
 
-def step_of(job: uuid.UUID) -> StepRun:
-    found = SimpleNamespace(job_id=job, tenant_id=TENANT, input={"level": LEVEL, "tile_size": TILE})
+def step_of(job: uuid.UUID, export: str = "masks") -> StepRun:
+    found = SimpleNamespace(
+        job_id=job,
+        tenant_id=TENANT,
+        input={"level": LEVEL, "tile_size": TILE, "format": export},
+    )
     return cast("StepRun", found)
 
 
@@ -120,7 +132,62 @@ async def test_a_parse_process_cannot_slip_other_files_or_rows_into_the_export(
     ]
     for found, archive in attempts:
         writer = PatchWriter(io.BytesIO(), LEVEL, TILE)
-        writer.merge(SLIDE_ID, GEOJSON, found, archive)
-        assert [item.reason for item in writer.skipped] == ["unreadable"]
+        with pytest.raises(StepFailedError) as failure:
+            writer.merge(SLIDE_ID, GEOJSON, found, archive)
+        assert failure.value.code == CUT_FAILED
+        assert writer.skipped == []
         assert writer.rows == []
         assert writer.archive.namelist() == []
+        writer.archive.close()
+
+
+def square_grid(count: int, width: int, height: int) -> list[dict[str, Any]]:
+    columns = 100
+    step_x, step_y = width / columns, height / math.ceil(count / columns)
+    features: list[dict[str, Any]] = []
+    for index in range(count):
+        x = (index % columns) * step_x + 0.2 * step_x
+        y = (index // columns) * step_y + 0.2 * step_y
+        side = 0.6 * min(step_x, step_y)
+        ring = [[x, y], [x + side, y], [x + side, y + side], [x, y + side], [x, y]]
+        features.append(
+            {
+                "type": "Feature",
+                "geometry": {"type": "Polygon", "coordinates": [ring]},
+                "properties": {"parfocal": {"kind": "region", "class_key": 1, "id": f"a-{index}"}},
+            }
+        )
+    return features
+
+
+async def test_a_coco_cut_of_ten_thousand_annotations_keeps_every_one(tmp_path: Path) -> None:
+    count = 10_000
+    geojson = json.dumps(
+        {"type": "FeatureCollection", "features": square_grid(count, 1024, 768)}
+    ).encode()
+    store = cast("ObjectStore", Store())
+    step = step_of(uuid.uuid4(), "coco")
+    facts, part = await isolated_slide(step, resources_in(tmp_path), store, SLIDE_ID, KEY, geojson)
+    assert len(json.dumps(facts)) > MAX_MESSAGE_BYTES
+    merged = io.BytesIO()
+    writer = PatchWriter(merged, LEVEL, TILE, coco=True)
+    writer.merge(SLIDE_ID, geojson, facts, part)
+    writer.finish(TASK, CLASSES)
+    with zipfile.ZipFile(merged) as archive:
+        coco = json.loads(archive.read(COCO))
+        manifest = json.loads(archive.read("manifest.json"))
+    assert manifest["skipped"] == []
+    assert {item["parfocal_id"] for item in coco["annotations"]} == {
+        f"a-{index}" for index in range(count)
+    }
+    assert len(coco["images"]) == manifest["tiles"] > 0
+    assert leftovers(tmp_path) == []
+
+
+async def test_a_cut_that_breaks_fails_instead_of_skipping_the_slide(tmp_path: Path) -> None:
+    store = cast("ObjectStore", Store())
+    step = step_of(uuid.uuid4(), "coco")
+    with pytest.raises(StepFailedError) as failure:
+        await isolated_slide(step, resources_in(tmp_path), store, SLIDE_ID, KEY, b"not json")
+    assert failure.value.code == CUT_FAILED
+    assert leftovers(tmp_path) == []

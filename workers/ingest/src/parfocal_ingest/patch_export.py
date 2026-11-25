@@ -70,6 +70,8 @@ MANIFEST = "manifest.json"
 INDEX = "index.csv"
 COCO = "annotations.json"
 PART = "patches.zip"
+FACTS = "facts.json"
+CUT_FAILED = "patch-cut-failed"
 MEMBER_LIMIT_BYTES = 64 * 1024 * 1024
 BACKGROUND = 0
 DRAWN_KINDS = ("region", "cell")
@@ -518,13 +520,20 @@ def patch_slide(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[st
     if level >= len(source.pyramid.levels):
         return {"skipped": "level-missing"}
     coco = bool(arguments.get("coco"))
-    with zipfile.ZipFile(Path(arguments["out"]) / PART, "w", zipfile.ZIP_DEFLATED) as archive:
-        rows, slide, cut = drawn(source, level, int(arguments["tile_size"]), archive, coco)
-    return {
+    out = Path(arguments["out"])
+    try:
+        with zipfile.ZipFile(out / PART, "w", zipfile.ZIP_DEFLATED) as archive:
+            rows, slide, cut = drawn(source, level, int(arguments["tile_size"]), archive, coco)
+    except READER_ERRORS:
+        (out / PART).unlink(missing_ok=True)
+        return {"skipped": "unreadable"}
+    facts = {
         "rows": rows,
         "slide": slide.model_dump(mode="json"),
         "coco": cut.model_dump(mode="json"),
     }
+    (out / FACTS).write_text(json.dumps(facts))
+    return {"facts": FACTS}
 
 
 def checked_row(row: object, slide: PatchSlide) -> Row:
@@ -608,8 +617,7 @@ class PatchWriter:
                 ):
                     raise ValueError("coco")
         except ValidationError, ValueError, TypeError, zipfile.BadZipFile:
-            self.skip(slide_id, "unreadable")
-            return
+            raise StepFailedError(CUT_FAILED) from None
         for name, data in members:
             self.archive.writestr(name, data)
         self.archive.writestr(slide.geojson, geojson)
@@ -713,6 +721,10 @@ def merged_members(part: bytes, names: set[str]) -> list[tuple[str, bytes]]:
     return members
 
 
+def cut_failure(code: str) -> str:
+    return CUT_FAILED if code == Refusal.UNREADABLE else code
+
+
 async def isolated_slide(
     step: StepRun,
     resources: Resources,
@@ -750,12 +762,23 @@ async def isolated_slide(
             resources.parse_tokens,
             inputs=(source,),
         )
+        if "skipped" in facts:
+            return facts, b""
+        written = await asyncio.to_thread(read_output, out, FACTS)
         part = await asyncio.to_thread(read_output, out, PART) or b""
-    except StepFailedError:
-        return {"skipped": "unreadable"}, b""
+    except StepFailedError as failure:
+        raise StepFailedError(cut_failure(failure.code)) from None
     finally:
         await asyncio.to_thread(shutil.rmtree, folder, True)
-    return facts, part
+    if written is None or facts.get("facts") != FACTS:
+        raise StepFailedError(CUT_FAILED)
+    try:
+        found: object = json.loads(written)
+    except ValueError:
+        raise StepFailedError(CUT_FAILED) from None
+    if not isinstance(found, dict):
+        raise StepFailedError(CUT_FAILED)
+    return cast("dict[str, Any]", found), part
 
 
 async def source_dataset(
