@@ -5,6 +5,7 @@ export interface ContextBarModel {
   readonly label: string;
   readonly hints: readonly string[];
   readonly classStrip: boolean;
+  readonly hintsBelow: boolean;
 }
 
 export interface ContextBarState {
@@ -23,6 +24,8 @@ const classTools: ReadonlySet<string> = new Set([
   "marker",
   "brush",
 ]);
+
+const modelTools: ReadonlySet<string> = new Set(["smart", "auto"]);
 
 const railLabels: ReadonlyMap<string, string> = new Map(
   annotateRail.flat().map((item) => [item.tool, item.label]),
@@ -47,6 +50,7 @@ export function contextBarOf(stageTool: string, state: ContextBarState): Context
     label: railLabels.get(rail) ?? stageTool,
     hints,
     classStrip: classTools.has(rail),
+    hintsBelow: modelTools.has(rail),
   };
 }
 
