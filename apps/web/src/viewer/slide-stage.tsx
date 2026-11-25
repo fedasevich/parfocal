@@ -30,10 +30,10 @@ import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
 import type { ShapeId } from "../annotations/shapes.ts";
 import { SmartLayer, type SmartQueueControl } from "../annotations/smart-layer.tsx";
+import { CellTyping, useCellTyping } from "../annotations/smart-typing.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
 import { useAiBridge } from "../annotations/use-ai-bridge.ts";
 import { useLiveGuardFeed } from "../annotations/use-live-guard.ts";
-import { useProposals } from "../annotations/use-proposals.ts";
 import {
   idleGuard,
   type LiveGuard,
@@ -412,7 +412,6 @@ function OpenedSlide({
     [annotations.shapes, selectedIds],
   );
   const focus = useObjectFocus(focusObject, session?.engine ?? null, saved, areas, setTool);
-  const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
   const { undo: undoEdit, redo: redoEdit } = saved;
   const { bridge: aiBridge, onMarquee: onAiMarquee, aiIsNewer } = useAiBridge(annotations);
@@ -445,6 +444,7 @@ function OpenedSlide({
   useEffect(() => {
     setActiveClass((current) => current ?? classes[0]?.id ?? null);
   }, [classes]);
+  const cellTyping = useCellTyping(saved, slideId, classes, activeClass);
   const { stripClass, selectionTakesClass, pickClassKey } = useSelectionClass({
     saved,
     tool,
@@ -477,7 +477,7 @@ function OpenedSlide({
     pending: pendingProposals,
     accept: acceptProposals,
     discard: discardProposals,
-  } = proposals;
+  } = cellTyping.proposals;
   const proposalCount = pendingProposals.length;
   const proposalNow = useRef({ proposalCount, acceptProposals, discardProposals });
   proposalNow.current = { proposalCount, acceptProposals, discardProposals };
@@ -770,7 +770,7 @@ function OpenedSlide({
                         proposalCount > 0
                           ? {
                               count: proposalCount,
-                              activeName: activeInfo?.name ?? null,
+                              activeName: cellTyping.acceptName,
                               micronsPerPixel: mpp,
                               onAccept: acceptProposals,
                               onDiscard: discardProposals,
@@ -822,6 +822,7 @@ function OpenedSlide({
                         document={annotations}
                         onClose={closeShape}
                         draftControl={draftControl}
+                        classColour={cellTyping.classColour}
                       />
                       <FreehandLayer
                         engine={session.engine}
@@ -934,7 +935,14 @@ function OpenedSlide({
                       <ProposalLayer
                         engine={session.engine}
                         stage={hostNode}
-                        proposals={proposals.pending}
+                        proposals={cellTyping.proposals.pending}
+                      />
+                      <CellTyping
+                        engine={session.engine}
+                        stage={hostNode}
+                        selected={selectedIds}
+                        smart={tool === "smart"}
+                        typing={cellTyping}
                       />
                       <HeatmapLayers
                         engine={session.engine}

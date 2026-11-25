@@ -13,6 +13,7 @@ import {
   setFakeSharedAiDelay,
   setFakeSuspendedWorkspace,
   setFakeTeamScene,
+  setFakeTyperScene,
   setFakeView,
   setFakeViewerIssue,
   setFakeViewerScene,
@@ -59,6 +60,7 @@ export async function startFakeApi(
   setFakeViewerIssue(search["issue"]);
   setFakeRefusal(search["refuse"]);
   setFakeBestScene(search["best"]);
+  setFakeTyperScene(search["typer"]);
   setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);
   setFakeSearchDelay(Number(search["searchDelay"] ?? 0) || 0);
   setFakeSharedAiDelay(Number(search["aiDelay"] ?? 0) || 0);

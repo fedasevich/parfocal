@@ -92960,7 +92960,7 @@
       "Values": {
         "additionalProperties": true,
         "type": "object",
-        "maxProperties": 57
+        "maxProperties": 58
       },
       "VersionCheck": {
         "properties": {
@@ -93550,7 +93550,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 57,
+            "maxItems": 58,
             "title": "Locked",
             "default": []
           }

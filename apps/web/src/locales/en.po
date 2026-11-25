@@ -21814,3 +21814,41 @@ msgstr "µm and mm"
 #: src/screens/settings/settings-screen.tsx
 msgid "µm per pixel"
 msgstr "µm per pixel"
+
+#. placeholder {0}: outcome.count
+#: src/annotations/use-proposals.ts
+msgid "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
+msgstr "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
+
+#: src/annotations/smart-typing.tsx
+msgid "Type each cell as soon as it is accepted"
+msgstr "Type each cell as soon as it is accepted"
+
+#. placeholder {0}: typed.percent
+#: src/annotations/smart-typing.tsx
+msgid "typer {0}%"
+msgstr "typer {0}%"
+
+#. placeholder {0}: typed.type
+#. placeholder {1}: typed.percent
+#: src/annotations/smart-typing.tsx
+msgid "typer said {0} {1}%"
+msgstr "typer said {0} {1}%"
+
+#. placeholder {0}: typing.count
+#: src/annotations/smart-typing.tsx
+msgid "Typing {0} cells"
+msgstr "Typing {0} cells"
+
+#. placeholder {0}: typing.count
+#: src/annotations/smart-typing.tsx
+msgid "Typing failed, {0} untyped"
+msgstr "Typing failed, {0} untyped"
+
+#: src/annotations/smart-typing.tsx
+msgid "Typing off"
+msgstr "Typing off"
+
+#: src/annotations/smart-typing.tsx
+msgid "Typing on"
+msgstr "Typing on"

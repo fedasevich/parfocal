@@ -4,6 +4,7 @@ import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { isTyping } from "../keys/registry.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { type ClassColour, shapeColour, typeConfidence, typingOfShape } from "./cell-type.ts";
 import { type AnnotationDocument, isShapeHidden } from "./document.ts";
 import {
   clickDraft,
@@ -34,6 +35,7 @@ type PolygonLayerProps = {
   document: AnnotationDocument;
   onClose: (points: Float32Array) => void;
   draftControl?: RefObject<DraftControl | null>;
+  classColour?: ClassColour;
 };
 
 export type DraftControl = { readonly depth: () => number; readonly pop: () => void };
@@ -54,6 +56,8 @@ function verticesOf(points: Float32Array): Point[] {
   }));
 }
 
+const noClassColour: ClassColour = () => null;
+
 export function PolygonLayer({
   engine,
   stage,
@@ -61,6 +65,7 @@ export function PolygonLayer({
   document: doc,
   onClose,
   draftControl,
+  classColour = noClassColour,
 }: PolygonLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
@@ -240,19 +245,28 @@ export function PolygonLayer({
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 size-full overflow-visible"
     >
-      {saved.map((shape) => (
-        <path
-          key={shape.id}
-          data-testid="polygon-shape"
-          data-points={shape.points.length >> 1}
-          data-class={shape.classKey ?? ""}
-          data-vertices={Array.from(shape.points, (value) => Math.round(value)).join(" ")}
-          d={pathOf(verticesOf(shape.points).map(project), true)}
-          className="fill-accent/15 stroke-accent"
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-      ))}
+      {saved.map((shape) => {
+        const colour = shapeColour(shape, classColour);
+        const typing = typingOfShape(shape);
+        return (
+          <path
+            key={shape.id}
+            data-testid="polygon-shape"
+            data-points={shape.points.length >> 1}
+            data-class={shape.classKey ?? ""}
+            data-colour={colour}
+            data-type={typing?.type ?? ""}
+            data-confidence={typing === undefined ? undefined : typeConfidence(typing).toFixed(2)}
+            data-vertices={Array.from(shape.points, (value) => Math.round(value)).join(" ")}
+            d={pathOf(verticesOf(shape.points).map(project), true)}
+            style={
+              colour === null ? undefined : { stroke: colour, fill: colour, fillOpacity: 0.15 }
+            }
+            strokeWidth={2}
+            strokeLinejoin="round"
+          />
+        );
+      })}
       {rubber ? (
         <path
           data-testid="polygon-rubber"

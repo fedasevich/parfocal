@@ -250,8 +250,11 @@ export {
   setFakeViewerScene,
 } from "./viewer-scene.ts";
 export {
+  type FakeTyperScene,
   fakeTypedOutline,
   fakeTyper,
+  fakeTyperSlowMs,
+  setFakeTyperScene,
   toAnnotationLayers,
   toModelTiers,
   toOutlineTypes,

@@ -3,7 +3,9 @@ import { describe, it } from "node:test";
 import { toOutlineTypes } from "@parfocal/api-client/fake";
 import {
   type OutlineTyper,
+  splitForTyping,
   typeAccepted,
+  typerBatch,
   typerSized,
   typingTargets,
   withTypings,
@@ -12,9 +14,16 @@ import { withSmartRun } from "../src/aiseg/smart-run.ts";
 import { emptyPrompts } from "../src/aiseg/smart-select.ts";
 import type { SmartSnapshot } from "../src/aiseg/smart-session.ts";
 import { addRun, createDocument, getShape, updateShape } from "../src/annotations/document.ts";
-import { acceptProposals } from "../src/annotations/proposals.ts";
+import { acceptProposals, pendingProposals } from "../src/annotations/proposals.ts";
 import { runFromProposals } from "../src/annotations/runs.ts";
 import type { Shape } from "../src/annotations/shapes.ts";
+
+type Outcome = Awaited<ReturnType<typeof typeAccepted>>;
+
+function applied(outcome: Outcome, doc: Parameters<typeof withTypings>[0]) {
+  assert.equal(outcome.kind, "typed");
+  return outcome.kind === "typed" ? outcome.apply(doc) : doc;
+}
 
 const square = (x: number, y: number) =>
   new Float32Array([x - 8, y - 8, x + 8, y - 8, x + 8, y + 8, x - 8, y + 8]);
@@ -57,8 +66,7 @@ describe("typing one-click accepts with the server typer", () => {
   it("stores HoVer-NeXt types and the doubt flag on seeded smart select accepts", async () => {
     const accepted = acceptedSmartRun();
     const typed = await typeAccepted("slide-1", accepted.document, accepted.shapes, fakeServer);
-    assert.ok(typed !== null);
-    const doc = typed(accepted.document);
+    const doc = applied(typed, accepted.document);
     const typings = accepted.shapes.map((shape) => typingOf(getShape(doc, shape.id)));
 
     assert.deepEqual(
@@ -80,30 +88,60 @@ describe("typing one-click accepts with the server typer", () => {
     assert.deepEqual(calls.at(-1), { slideId: "slide-1", count: 4 });
   });
 
-  it("keeps the class the expert chose and fills a missing one only for a known class", async () => {
+  it("keeps the class the expert chose and fills a missing one with the matching class id", async () => {
     const chosen = acceptedSmartRun("area2-tumor");
     const typed = await typeAccepted("slide-1", chosen.document, chosen.shapes, fakeServer);
-    const doc = typed?.(chosen.document);
-    assert.ok(doc !== undefined);
+    const doc = applied(typed, chosen.document);
     for (const shape of chosen.shapes)
       assert.equal(getShape(doc, shape.id)?.classKey, "area2-tumor");
 
     const blank = acceptedSmartRun();
-    const known = (key: string) => key === "tumor";
-    const filled = await typeAccepted("slide-1", blank.document, blank.shapes, fakeServer, known);
-    const next = filled?.(blank.document);
-    assert.ok(next !== undefined);
+    const ids: Record<string, string> = { tumor: "class-tumor", stroma: "class-stroma" };
+    const classOfType = (type: string) => ids[type] ?? null;
+    const filled = await typeAccepted(
+      "slide-1",
+      blank.document,
+      blank.shapes,
+      fakeServer,
+      classOfType,
+    );
+    const next = applied(filled, blank.document);
     assert.deepEqual(
       blank.shapes.map((shape) => getShape(next, shape.id)?.classKey),
-      ["tumor", null, null, null],
+      ["class-tumor", "class-stroma", null, null],
     );
+  });
+
+  it("keeps a class the reviewer picked by key before the typer answered", async () => {
+    const blank = acceptedSmartRun();
+    const [first] = blank.shapes;
+    assert.ok(first !== undefined);
+    const typed = await typeAccepted("slide-1", blank.document, blank.shapes, fakeServer, (type) =>
+      type === "tumor" ? "class-tumor" : null,
+    );
+    const picked = updateShape(blank.document, first.id, { classKey: "class-immune" }).document;
+    const next = applied(typed, picked);
+    assert.equal(getShape(next, first.id)?.classKey, "class-immune");
+    assert.equal(typingOf(getShape(next, first.id))?.type, "tumor");
+  });
+
+  it("reports an uncalibrated or mismatched answer as a failure", async () => {
+    const accepted = acceptedSmartRun();
+    const uncalibrated: OutlineTyper = (slideId, outlines) =>
+      Promise.resolve({ ...toOutlineTypes(slideId, outlines), calibrated: false });
+    const short: OutlineTyper = (slideId, outlines) =>
+      Promise.resolve(toOutlineTypes(slideId, outlines.slice(1)));
+    for (const typer of [uncalibrated, short]) {
+      const outcome = await typeAccepted("slide-1", accepted.document, accepted.shapes, typer);
+      assert.deepEqual(outcome, { kind: "failed", count: 4 });
+    }
   });
 
   it("accepts untyped when the typer is offline", async () => {
     const accepted = acceptedSmartRun("area2-tumor");
     assert.equal(accepted.shapes.length, 4);
     const typed = await typeAccepted("slide-1", accepted.document, accepted.shapes, offline);
-    assert.equal(typed, null);
+    assert.deepEqual(typed, { kind: "failed", count: 4 });
     for (const shape of accepted.shapes) {
       const kept = getShape(accepted.document, shape.id);
       assert.equal(kept?.classKey, "area2-tumor");
@@ -136,9 +174,9 @@ describe("typing one-click accepts with the server typer", () => {
     );
     const accepted = acceptProposals(other);
     assert.deepEqual(typingTargets(accepted.document, accepted.shapes), []);
-    assert.equal(
+    assert.deepEqual(
       await typeAccepted("slide-1", accepted.document, accepted.shapes, fakeServer),
-      null,
+      { kind: "nothing" },
     );
 
     const smart = acceptedSmartRun();
@@ -161,5 +199,65 @@ describe("typing one-click accepts with the server typer", () => {
     });
     const accepted = acceptProposals(doc);
     assert.equal(typingTargets(accepted.document, accepted.shapes).length, 1);
+  });
+
+  it("sends only typer sized smart pieces and keeps the rest with their class", () => {
+    const wide = new Float32Array([0, 0, 600, 0, 600, 20, 0, 20]);
+    const smart = withSmartRun(createDocument(), 1, "class-tumor", {
+      ...seeded,
+      kept: [
+        { prompts: emptyPrompts, ring: square(16, 16), confidence: 0.9 },
+        { prompts: emptyPrompts, ring: wide, confidence: 0.9 },
+      ],
+    });
+    const doc = addRun(
+      smart,
+      runFromProposals({ id: 2, model: "pathosam", source: "auto-nuclei" }, [
+        { points: square(80, 80), confidence: 0.9 },
+      ]),
+    );
+    const pending = pendingProposals(doc);
+    const on = splitForTyping(pending, true);
+    assert.deepEqual(
+      on.typed.map((piece) => [piece.runId, piece.piece]),
+      [[1, 0]],
+    );
+    assert.deepEqual(
+      on.kept.map((piece) => [piece.runId, piece.piece]),
+      [
+        [1, 1],
+        [2, 0],
+      ],
+    );
+    const off = splitForTyping(pending, false);
+    assert.equal(off.typed.length, 0);
+    assert.deepEqual(
+      off.untyped.map((piece) => [piece.runId, piece.piece]),
+      [
+        [1, 0],
+        [1, 1],
+      ],
+    );
+    assert.deepEqual(
+      off.kept.map((piece) => [piece.runId, piece.piece]),
+      [[2, 0]],
+    );
+
+    const first = acceptProposals(doc, on.typed, { classKey: null });
+    const second = acceptProposals(first.document, on.kept);
+    assert.deepEqual(
+      second.shapes.map((shape) => shape.classKey),
+      ["class-tumor", null],
+    );
+  });
+
+  it("sends at most one typer batch and keeps the rest", () => {
+    const many = Array.from({ length: typerBatch + 2 }, () => ({
+      run: { source: "smart-select" },
+      ring: square(16, 16),
+    }));
+    const split = splitForTyping(many, true);
+    assert.equal(split.typed.length, typerBatch);
+    assert.equal(split.kept.length, 2);
   });
 });

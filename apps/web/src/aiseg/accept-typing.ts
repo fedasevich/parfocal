@@ -47,7 +47,38 @@ export function typerSized(points: Float32Array): boolean {
   );
 }
 
-export type KnownClass = (classKey: string) => boolean;
+export type ClassOfType = (type: string) => string | null;
+
+export type TypingOutcome =
+  | { readonly kind: "nothing" }
+  | {
+      readonly kind: "typed";
+      readonly count: number;
+      readonly apply: (latest: AnnotationDocument) => AnnotationDocument;
+    }
+  | { readonly kind: "failed"; readonly count: number };
+
+type TypablePiece = {
+  readonly run: { readonly source: string | null };
+  readonly ring: Float32Array;
+};
+
+export function splitForTyping<T extends TypablePiece>(
+  pieces: readonly T[],
+  autoType: boolean,
+): { readonly typed: T[]; readonly untyped: T[]; readonly kept: T[] } {
+  const typed: T[] = [];
+  const untyped: T[] = [];
+  const kept: T[] = [];
+  for (const piece of pieces) {
+    const found = piece.run.source !== null && typedSources.has(piece.run.source);
+    if (!found) kept.push(piece);
+    else if (!autoType) untyped.push(piece);
+    else if (typed.length < typerBatch && typerSized(piece.ring)) typed.push(piece);
+    else kept.push(piece);
+  }
+  return { typed, untyped, kept };
+}
 
 export function typingTargets(doc: AnnotationDocument, shapes: readonly Shape[]): Shape[] {
   return shapes.filter((shape) => {
@@ -70,13 +101,17 @@ function typingOf(answer: OutlineTypes, typed: TypedOutline, confidence: number 
   } satisfies OutlineTyping;
 }
 
+function answerFits(answer: OutlineTypes, targets: readonly Shape[]): boolean {
+  return answer.calibrated && answer.outlines.length === targets.length;
+}
+
 export function withTypings(
   doc: AnnotationDocument,
   targets: readonly Shape[],
   answer: OutlineTypes,
-  knownClass: KnownClass = () => false,
+  classOfType: ClassOfType = () => null,
 ): AnnotationDocument {
-  if (!answer.calibrated || answer.outlines.length !== targets.length) return doc;
+  if (!answerFits(answer, targets)) return doc;
   let next = doc;
   targets.forEach((target, index) => {
     const typed = answer.outlines[index];
@@ -84,8 +119,7 @@ export function withTypings(
     if (typed === undefined || current === undefined) return;
     if (current.provenance.kind !== "model" || current.provenance.edited) return;
     if (current.points !== target.points) return;
-    const classKey =
-      current.classKey === null && knownClass(typed.type) ? typed.type : current.classKey;
+    const classKey = current.classKey ?? classOfType(typed.type);
     const typing = typingOf(answer, typed, current.provenance.confidence);
     next = typeShape(next, current.id, typing, classKey).document;
   });
@@ -97,17 +131,23 @@ export async function typeAccepted(
   doc: AnnotationDocument,
   shapes: readonly Shape[],
   typer: OutlineTyper,
-  knownClass?: KnownClass,
-): Promise<((latest: AnnotationDocument) => AnnotationDocument) | null> {
+  classOfType?: ClassOfType,
+): Promise<TypingOutcome> {
   const targets = typingTargets(doc, shapes).slice(0, typerBatch);
-  if (targets.length === 0) return null;
+  if (targets.length === 0) return { kind: "nothing" };
+  const count = targets.length;
   try {
     const answer = await typer(
       slideId,
       targets.map((shape) => ({ points: Array.from(shape.points) })),
     );
-    return (latest) => withTypings(latest, targets, answer, knownClass);
+    if (!answerFits(answer, targets)) return { kind: "failed", count };
+    return {
+      kind: "typed",
+      count,
+      apply: (latest) => withTypings(latest, targets, answer, classOfType),
+    };
   } catch {
-    return null;
+    return { kind: "failed", count };
   }
 }
