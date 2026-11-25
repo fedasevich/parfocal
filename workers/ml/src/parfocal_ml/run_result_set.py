@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import uuid
 from collections import Counter
 from collections.abc import Mapping, Sequence
@@ -33,6 +34,8 @@ from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import MissingObjectError, ResultStore
 from parfocal_ml.cell_numbers import cell_distance, latest_per_number, pair_centres
 
+logger = logging.getLogger("parfocal.run_result_sets")
+
 NO_RESULT_SET = "run-result-set-missing"
 TILE_MISSING = "run-tile-missing"
 TILE_UNREADABLE = "run-tile-unreadable"
@@ -62,8 +65,10 @@ CELL_SETS = text(
 )
 NEXT_NUMBERS = text(
     "INSERT INTO slide_counters (tenant_id, slide_id, letter, last) "
-    "VALUES (:tenant_id, :slide_id, :letter, :count) "
-    "ON CONFLICT (slide_id, letter) DO UPDATE SET last = slide_counters.last + EXCLUDED.last "
+    "VALUES (:tenant_id, :slide_id, :letter, CAST(:above AS integer) + CAST(:count AS integer)) "
+    "ON CONFLICT (slide_id, letter) "
+    "DO UPDATE SET last = GREATEST(slide_counters.last, CAST(:above AS integer)) "
+    "+ CAST(:count AS integer) "
     "RETURNING last"
 )
 ADD_CHUNK = text(
@@ -166,13 +171,27 @@ async def known_cells(
 
 
 async def reserve(
-    connection: AsyncConnection, tenant_id: uuid.UUID, slide_id: uuid.UUID, count: int
+    connection: AsyncConnection,
+    tenant_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    count: int,
+    above: int,
 ) -> int:
     last = await connection.scalar(
         NEXT_NUMBERS,
-        {"tenant_id": tenant_id, "slide_id": slide_id, "letter": Letter.CELL.value, "count": count},
+        {
+            "tenant_id": tenant_id,
+            "slide_id": slide_id,
+            "letter": Letter.CELL.value,
+            "count": count,
+            "above": above,
+        },
     )
     return int(last) - count + 1
+
+
+def highest(numbers: NDArray[np.int64]) -> int:
+    return int(numbers.max()) if len(numbers) else 0
 
 
 async def unit_result(connection: AsyncConnection, step: StepRun) -> Mapping[str, Any] | None:
@@ -230,7 +249,13 @@ def ids_giving(store: ResultStore) -> StepFunction:
         async with step.transaction() as connection:
             await connection.execute(LOCK_SET, {"set_id": found.id})
             first = (
-                await reserve(connection, step.tenant_id, found.slide_id, len(matching.new))
+                await reserve(
+                    connection,
+                    step.tenant_id,
+                    found.slide_id,
+                    len(matching.new),
+                    highest(known_numbers),
+                )
                 if len(matching.new)
                 else 0
             )
@@ -239,6 +264,11 @@ def ids_giving(store: ResultStore) -> StepFunction:
                     built, step.tenant_id, found, cells, matching.numbers(first)
                 )
             except ChunkError as error:
+                logger.warning(
+                    "run cells unstorable: %s",
+                    error,
+                    extra={"job_id": str(step.job_id), "result_set_id": str(found.id)},
+                )
                 raise StepFailedError(CELLS_UNSTORABLE) from error
             if cells:
                 await write_cells(store, files)

@@ -530,9 +530,10 @@ async def write_imported_cells(
         incoming.outlines.centres,
         cell_distance(slide.mpp_x),
     )
+    above = int(known_numbers.max()) if len(known_numbers) else 0
     del known_numbers, known_centres
     first = (
-        await reserve(connection, tenant_id, slide.id, Letter.CELL, len(matching.new))
+        await reserve(connection, tenant_id, slide.id, Letter.CELL, len(matching.new), above)
         if len(matching.new)
         else 0
     )

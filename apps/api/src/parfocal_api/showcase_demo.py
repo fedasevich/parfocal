@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from fastapi import BackgroundTasks
@@ -6,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import actor_of
+from parfocal_api.numbering import cover
 from parfocal_api.opinions import OpinionChange, save_opinion
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.realtime import NoRealtime
@@ -39,7 +41,8 @@ from parfocal_api.tables import (
     slides,
     study_templates,
 )
-from parfocal_common.chunk_store import build_cells, write_cells
+from parfocal_common.chunk_store import Cell, build_cells, write_cells
+from parfocal_common.object_ids import Letter
 from parfocal_common.result_store import ResultStore
 
 DEMO_OPINION = {"acceptable": 4}
@@ -109,13 +112,33 @@ async def add_demo_sets(
             actor_of(principal),
             principal.user_id,
         )
-        built = build_cells(
-            principal.tenant_id, slide_id, cells_id, real_cells.cells, len(real_cells.classes)
+        await store_seeded_cells(
+            connection,
+            results,
+            principal.tenant_id,
+            slide_id,
+            cells_id,
+            real_cells.cells,
+            len(real_cells.classes),
         )
-        entries = await write_cells(results, built)
-        await add_chunks(connection, cells_id, [ChunkRow.of(entry) for entry in entries])
-        await finish(connection, cells_id, cells_per_class(entries))
         demo.cells[slide_id] = cells_id
+
+
+async def store_seeded_cells(
+    connection: AsyncConnection,
+    results: ResultStore,
+    tenant_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    set_id: uuid.UUID,
+    cells: Sequence[Cell],
+    classes: int,
+) -> None:
+    built = build_cells(tenant_id, slide_id, set_id, cells, classes)
+    entries = await write_cells(results, built)
+    await add_chunks(connection, set_id, [ChunkRow.of(entry) for entry in entries])
+    last = max((cell.number for cell in cells), default=0)
+    await cover(connection, tenant_id, slide_id, Letter.CELL, last)
+    await finish(connection, set_id, cells_per_class(entries))
 
 
 async def order_now(

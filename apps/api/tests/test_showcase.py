@@ -673,6 +673,22 @@ async def test_every_demo_slide_has_the_results_its_model_runs_made(seeded: str)
     assert len(WITH_CELLS) >= len(FORMAT_GALLERY) - 1
 
 
+async def test_every_slide_with_seeded_cells_counts_its_highest_cell_number(seeded: str) -> None:
+    await run_seed(seeded)
+    rows = await run_sql(
+        seeded,
+        "SELECT s.label, c.last FROM slides s "
+        "JOIN result_sets r ON r.slide_id = s.id AND r.status = 'ready' AND r.cell_count > 0 "
+        "LEFT JOIN slide_counters c ON c.slide_id = s.id AND c.letter = 'C'",
+    )
+    assert rows
+    for label, last in rows:
+        found = model_cells(str(label))
+        assert found is not None
+        assert last is not None, label
+        assert int(str(last)) >= max(cell.number for cell in found.cells), label
+
+
 async def test_the_result_sets_of_one_slide_can_be_told_apart_by_name(seeded: str) -> None:
     await run_seed(seeded)
     rows = await run_sql(
