@@ -7327,8 +7327,8 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec compares skeleton and loaded layout boxes on the report page and the forms the sweep fixed, and the log lists every skeleton the sweep checked.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-170 · The top of a page takes less height
-  The owner found on 2026-11-25 that the top bar takes too much of the screen. On the Clinical report page the global top bar plus the page header (breadcrumb, title, subtitle and the locked line) fill about 280 of 1011 screen pixels before the content starts. Make the global top bar and the page headers more compact, for example by joining the breadcrumb and title and folding the locked line into the subtitle, across every page that uses the shared header, while keeping the shell's hit targets and the mock's look.
+- [ ] PROTO-170 · The page header takes less height
+  The owner found on 2026-11-25 that the page header takes too much of the screen, and confirmed it is the page header and not the global top bar. On the Clinical report page the header block (breadcrumb, title, subtitle and the locked line) fills about 220 of 1011 screen pixels below the global top bar before the content starts. Make the shared page header compact, for example by joining the breadcrumb and title and folding the locked line into the subtitle, on every page that uses it, and leave the global top bar as it is.
   Done when a browser spec measures the content start on the report page and two other pages below a target recorded in the log, and Storybook shows the header in its new height.
   Depends on nothing. Size: M.
 
