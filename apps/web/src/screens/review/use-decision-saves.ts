@@ -24,13 +24,22 @@ export function withoutAnswers(answers: Answers, objectIds: string[]): Answers {
   return next;
 }
 
-export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
+export function useDecisionSaves(
+  session: ReviewSession,
+  style: ReviewStyle,
+  onFailed?: (objectId: string) => void,
+) {
   const queryClient = useQueryClient();
   const members = useMentionable();
   const { taskId, slideId, classes, objects } = session;
   const refresh = () =>
     void queryClient.invalidateQueries({ queryKey: getListDecisionsQueryKey(taskId, slideId) });
-  const saver = useSaveDecision({ mutation: { onSuccess: refresh } });
+  const saver = useSaveDecision({
+    mutation: {
+      onSuccess: refresh,
+      onError: (_error, variables) => onFailed?.(variables.objectId),
+    },
+  });
   const clearer = useClearDecision({ mutation: { onSuccess: refresh } });
   const save = (
     objectId: string,
