@@ -7474,7 +7474,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API sets opacity to 10% and reads the outline, fill and dot alpha of drawn objects at 10% with the current object still marked, a golden image of a cell at 10% and 100% changes as expected, and the deployed review shows the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-195 · Find why a whole slide run on the test account returned nothing
+- [x] PROTO-195 · Find why a whole slide run on the test account returned nothing
   The owner found on 2026-11-25 that a whole slide run of PathoSAM + HoVer-NeXt v1.2 ("Run here on the lab server") on Slide 1 (H&E) of the project test (P02) in the workspace test, started by the account Test and added on 25 Nov, finished as a result set with 0 regions and no cells. Find the cause from the job's record, its timestamps, the run's units and the Modal logs of that call: the run may have covered no tissue, the detector may have answered empty, the result may have been stored as cells while the row counts regions, or the slide's scale may be missing. Fix the cause, make the row count what the model makes (cells, not regions, for a nuclei model), and make an empty run say why it is empty instead of finishing silently.
   Done when the cause is named in the log with evidence, a test reproduces it, a deployed rerun on that slide or a small real tissue slide returns cells, recorded with its time and cost, and an empty run shows its reason on the row.
   Depends on nothing. Size: M.
