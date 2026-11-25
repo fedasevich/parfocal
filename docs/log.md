@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- PROTO-180: the Smart select and Auto region bars use the compact model dropdown from model-picker.tsx with each model's description, speed and cost, send long messages to a toast with a one word state in the bar, show tile progress and the found count side by side, and stay one row at 1280x720 with the first run hints in a line under the bar. A saved Best still starts on Good by the owner's earlier rule.
 - Production touch: release v0.54.0 (PROTO-195, PROTO-193, EXP-020 with additive migration 0161 study_links) deployed by run 45706656632, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - EXP-020: the console's Make a join link seeds the participant a seat of their own and gives a one use link that lasts a day, held as a hash and carried in the URL fragment, that opens /study with no sign in, and Remote participants shows each one's progress. Additive migration 0161 adds study_links with tenant isolation. The participant is still a researcher in the study workspace and could create a project there, so a narrower study role is a TODO in the ADR.
 - Production touch: release v0.53.0 (EXP-021, PROTO-184, PROTO-192) deployed by run 45699870458, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
