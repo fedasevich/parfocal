@@ -199,6 +199,7 @@ CATALOGUE: tuple[Setting, ...] = (
     ),
     choice("outline_mode", "fade", ("fade", "mark-unsure", "bands"), PERSONAL),
     choice("tier_outline", "best", ("best", "good", "fast"), PERSONAL),
+    switch("smart_auto_type", True, PERSONAL),
     switch("inspector_track_record", True, PERSONAL),
     switch("inspector_calibration", True, PERSONAL),
     whole("decision_cutoff", 50, 0, 100, LAB),

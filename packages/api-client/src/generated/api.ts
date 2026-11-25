@@ -8794,7 +8794,7 @@ export interface WorkspaceDraft {
 
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 57 */
+  /** @maxItems 58 */
   locked?: string[];
 }
 

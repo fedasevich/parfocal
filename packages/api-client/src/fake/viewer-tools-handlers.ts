@@ -1,4 +1,4 @@
-import { HttpResponse, http, type RequestHandler } from "msw";
+import { delay, HttpResponse, http, type RequestHandler } from "msw";
 import { getListAnnotationLayersMockHandler } from "../generated/api.msw.ts";
 import {
   type AnnotationLayers,
@@ -72,6 +72,18 @@ export const toOutlineTypes = (
 
 const maxOutlines = 500;
 
+const typerScenes = ["answers", "slow", "down"] as const;
+
+export type FakeTyperScene = (typeof typerScenes)[number];
+
+let typerScene: FakeTyperScene = "answers";
+
+export const fakeTyperSlowMs = 1500;
+
+export function setFakeTyperScene(next: unknown): void {
+  typerScene = typerScenes.find((each) => each === next) ?? "answers";
+}
+
 const sendable = (body: Partial<OutlinesToType> | null): body is OutlinesToType =>
   Array.isArray(body?.outlines) &&
   body.outlines.length >= 1 &&
@@ -89,6 +101,13 @@ export const fakeTypeOutlinesHandler = (overrideResponse?: OutlineTypes) =>
           { status: 422 },
         );
       }
+      if (typerScene === "down") {
+        return HttpResponse.json(
+          { type: "about:blank", title: "The typer is not answering", status: 503 },
+          { status: 503 },
+        );
+      }
+      if (typerScene === "slow") await delay(fakeTyperSlowMs);
       return HttpResponse.json(overrideResponse ?? toOutlineTypes(params.slideId, body.outlines));
     },
   );

@@ -27,6 +27,7 @@ export type SettingValues = {
   confidence_wording: "words" | "numbers" | "frequency" | "colour" | "hidden";
   outline_mode: "fade" | "mark-unsure" | "bands";
   tier_outline: "best" | "good" | "fast";
+  smart_auto_type: boolean;
   inspector_track_record: boolean;
   inspector_calibration: boolean;
   decision_cutoff: number;
@@ -278,6 +279,13 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
       "best",
       "good",
       "fast"
+    ]
+  },
+  "smart_auto_type": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
     ]
   },
   "inspector_track_record": {
