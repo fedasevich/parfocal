@@ -5300,7 +5300,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-013, VIZ-001.
   Size: M.
 
-- [ ] RSET-015 · Masks import as result sets
+- [x] RSET-015 · Masks import as result sets
   An instance mask or a class mask as PNG or TIFF, dropped on the upload page beside its slide or onto a slide already there, imports through the same pairing, isolated parse and import checks as GeoJSON and becomes a result set of regions or cells with its classes mapped, using the RSET-003 (readers for GeoJSON, CSV and masks) readers that today only unit tests call. The import check tells a mask from a heatmap, asks for the level or scale when the size does not match a slide level, and refuses an empty or all-background mask with a plain reason. Found by the thesis evaluation of FR2 (import of model outputs) on 2026-11-25.
   Done when API tests import a fixture instance mask and a class mask into result sets with the expected object counts, classes and level-0 outlines, a mask whose size matches no level is refused or asks for a scale, and a real-stack Playwright test uploads a slide with a mask and sees its objects drawn.
   Depends on RSET-003, RSET-014.
