@@ -360,6 +360,31 @@ export const ModelPickerClosed: Story = { render: () => <Picker startOpen={false
 
 export const ModelPickerOpen: Story = { render: () => <Picker startOpen /> };
 
+function CompactPicker({ startOpen }: { startOpen: boolean }) {
+  const [value, setValue] = useState<string | null>("sam");
+  const [open, setOpen] = useState(startOpen);
+  return (
+    <div className="flex min-h-72 items-start gap-3">
+      <span className="text-caption text-fg-faint">Smart select</span>
+      <ModelPicker
+        compact
+        label="Model for outlining nuclei"
+        groups={groups}
+        value={value}
+        onValueChange={setValue}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </div>
+  );
+}
+
+export const ModelPickerCompactClosed: Story = {
+  render: () => <CompactPicker startOpen={false} />,
+};
+
+export const ModelPickerCompactOpen: Story = { render: () => <CompactPicker startOpen /> };
+
 export const JobWindowPaused: Story = {
   render: () => (
     <JobWindow

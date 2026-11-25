@@ -312,12 +312,19 @@ def sweep_remote_caches() -> None:
     asyncio.run(run_once(load_settings(ApiSettings)))
 
 
+def back_up_study() -> None:
+    from parfocal_api.study_backup import run_scheduled_backup
+
+    run_scheduled_backup()
+
+
 def run_events(linger_minutes: int = 0) -> None:
     from parfocal_api.event_delivery import main
 
     main(["--linger-minutes", str(linger_minutes)])
     if linger_minutes == 0:
         sweep_remote_caches()
+        back_up_study()
 
 
 class EventSpawner:

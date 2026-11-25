@@ -149,6 +149,80 @@ export function moveVertices(
   return geometryOf(points);
 }
 
+export type RingPoint = readonly [number, number];
+export type PointRing = readonly RingPoint[];
+
+export const minRingPoints = 3;
+
+export interface RingMidpoint {
+  readonly from: number;
+  readonly at: Point;
+}
+
+export function ringMidpoints(ring: PointRing): RingMidpoint[] {
+  return ring.map(([ax, ay], from) => {
+    const [bx, by] = ring[(from + 1) % ring.length] ?? [ax, ay];
+    return { from, at: { x: (ax + bx) / 2, y: (ay + by) / 2 } };
+  });
+}
+
+export function moveRingPoint(ring: PointRing, index: number, to: Point): PointRing {
+  return ring.map((point, position) => (position === index ? ([to.x, to.y] as const) : point));
+}
+
+export function insertRingPoint(ring: PointRing, from: number, point: Point): PointRing {
+  return [...ring.slice(0, from + 1), [point.x, point.y] as const, ...ring.slice(from + 1)];
+}
+
+export function removeRingPoints(ring: PointRing, ids: readonly number[]): PointRing | null {
+  const doomed = new Set(ids.filter((id) => id >= 0 && id < ring.length));
+  if (doomed.size === 0 || ring.length - doomed.size < minRingPoints) return null;
+  return ring.filter((_, id) => !doomed.has(id));
+}
+
+const turn = (a: RingPoint, b: RingPoint, c: RingPoint) =>
+  Math.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
+
+const within = (a: RingPoint, b: RingPoint, c: RingPoint) =>
+  Math.min(a[0], b[0]) <= c[0] &&
+  c[0] <= Math.max(a[0], b[0]) &&
+  Math.min(a[1], b[1]) <= c[1] &&
+  c[1] <= Math.max(a[1], b[1]);
+
+export function segmentsMeet(a: RingPoint, b: RingPoint, c: RingPoint, d: RingPoint): boolean {
+  const abc = turn(a, b, c);
+  const abd = turn(a, b, d);
+  const cda = turn(c, d, a);
+  const cdb = turn(c, d, b);
+  if (abc * abd < 0 && cda * cdb < 0) return true;
+  return (
+    (abc === 0 && within(a, b, c)) ||
+    (abd === 0 && within(a, b, d)) ||
+    (cda === 0 && within(c, d, a)) ||
+    (cdb === 0 && within(c, d, b))
+  );
+}
+
+export function crossingEdges(ring: PointRing): number[] {
+  const count = ring.length;
+  const crossing = new Set<number>();
+  if (count < 4) return [];
+  for (let left = 0; left < count; left += 1) {
+    const a = ring[left] ?? [0, 0];
+    const b = ring[(left + 1) % count] ?? [0, 0];
+    for (let right = left + 2; right < count; right += 1) {
+      if (left === 0 && right === count - 1) continue;
+      const c = ring[right] ?? [0, 0];
+      const d = ring[(right + 1) % count] ?? [0, 0];
+      if (segmentsMeet(a, b, c, d)) {
+        crossing.add(left);
+        crossing.add(right);
+      }
+    }
+  }
+  return [...crossing].sort((x, y) => x - y);
+}
+
 export function canRemoveVertices(shape: Shape, ids: readonly number[]): boolean {
   const doomed = new Set(ids.filter((id) => id >= 0 && id < vertexCount(shape)));
   if (doomed.size === 0 || !vertexKinds.has(shape.kind) || !isReshapable(shape)) return false;

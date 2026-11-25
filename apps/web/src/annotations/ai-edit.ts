@@ -261,24 +261,28 @@ const triangle = (
   c: readonly [number, number],
 ) => Math.abs((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])) / 2;
 
-export function simplifyRing(ring: Ring, limit = maxHandles): Ring {
-  const points = [...ring];
-  while (points.length > Math.max(3, limit)) {
+export function handleIndices(ring: Ring, limit = maxHandles): number[] {
+  const kept = ring.map((_, index) => index);
+  const pointAt = (position: number) => ring[kept[position] ?? 0] ?? ([0, 0] as const);
+  while (kept.length > Math.max(3, limit)) {
     let weakest = 0;
     let smallest = Number.POSITIVE_INFINITY;
-    for (let index = 0; index < points.length; index += 1) {
-      const before = points[(index + points.length - 1) % points.length] ?? [0, 0];
-      const here = points[index] ?? [0, 0];
-      const after = points[(index + 1) % points.length] ?? [0, 0];
-      const area = triangle(before, here, after);
+    for (let position = 0; position < kept.length; position += 1) {
+      const before = pointAt((position + kept.length - 1) % kept.length);
+      const after = pointAt((position + 1) % kept.length);
+      const area = triangle(before, pointAt(position), after);
       if (area < smallest) {
         smallest = area;
-        weakest = index;
+        weakest = position;
       }
     }
-    points.splice(weakest, 1);
+    kept.splice(weakest, 1);
   }
-  return points;
+  return kept;
+}
+
+export function simplifyRing(ring: Ring, limit = maxHandles): Ring {
+  return handleIndices(ring, limit).map((index) => ring[index] ?? ([0, 0] as const));
 }
 
 export const movedRing = (ring: Ring, dx: number, dy: number): Ring =>

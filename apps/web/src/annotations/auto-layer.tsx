@@ -25,6 +25,7 @@ import { ContextExtra, contextChip } from "./context-extras.tsx";
 import { type AnnotationDocument, addRun, removeRun } from "./document.ts";
 import { ModelTierChoice } from "./model-tier-choice.tsx";
 import { runFromProposals } from "./runs.ts";
+import { stateWordOf } from "./smart-status.ts";
 import {
   buttonReleased,
   capturePointer,
@@ -35,6 +36,7 @@ import {
   stagePoint,
 } from "./stage-pointer.ts";
 import { useStageRect } from "./stage-size.ts";
+import { useToastOnce } from "./use-toast-once.ts";
 
 export const autoModel = "pathosam-ais";
 export const autoSource = "auto-region";
@@ -64,10 +66,13 @@ type Press = {
 
 type Status = {
   progress: RegionProgress | null;
-  message: string | null;
+  word: string | null;
+  text: string | null;
 };
 
-const idle: Status = { progress: null, message: null };
+const idle: Status = { progress: null, word: null, text: null };
+
+const noteOf = (word: string, text: string): Status => ({ progress: null, word, text });
 
 function runOf(id: number, classKey: string | null, nuclei: readonly RegionNucleus[]) {
   return runFromProposals(
@@ -153,7 +158,7 @@ export function AutoLayer({
     controller.current = abort;
     found.current = [];
     runId.current = nextRunId(latest.current.doc);
-    setStatus({ progress: null, message: null });
+    setStatus(idle);
     try {
       const slide = latest.current.engine.getSlide();
       const context: SmartServicesContext = {
@@ -177,7 +182,7 @@ export function AutoLayer({
               plan,
             );
       if (tiles.length > maxAutoTiles) {
-        setStatus({ progress: null, message: "That area is too large, drag a smaller one" });
+        setStatus(noteOf("Too large", "That area is too large, drag a smaller one"));
         return;
       }
       outliner.current ??= createAisOutliner();
@@ -190,23 +195,19 @@ export function AutoLayer({
         outline: outliner.current.outline,
         pixels: outliner.current.pixels,
         fallback: autoFallback(loaded.sam, latest.current.tier),
-        onProgress: (progress) => setStatus({ progress, message: null }),
+        onProgress: (progress) => setStatus({ progress, word: null, text: null }),
         onTile: (nuclei) => {
           found.current = [...found.current, ...nuclei];
           writeRunNow.current(latest.current.activeClass);
         },
       });
-      setStatus({
-        progress: null,
-        message: found.current.length === 0 ? "No nuclei found here" : null,
-      });
+      setStatus(found.current.length === 0 ? noteOf("None found", "No nuclei found here") : idle);
     } catch (error) {
       if (error instanceof RegionPassAbortedError) setStatus(idle);
-      else
-        setStatus({
-          progress: null,
-          message: plainFailure(error, "Auto region could not run"),
-        });
+      else {
+        const text = plainFailure(error, "Auto region could not run");
+        setStatus(noteOf(stateWordOf(text), text));
+      }
     } finally {
       controller.current = null;
       runId.current = null;
@@ -322,6 +323,7 @@ export function AutoLayer({
         })()
       : null;
   const progress = status.progress;
+  useToastOnce(active ? status.text : null);
 
   return (
     <>
@@ -344,10 +346,11 @@ export function AutoLayer({
         )}
       </svg>
       {active && onTierChange ? <ModelTierChoice tier={tier} onTierChange={onTierChange} /> : null}
-      {active && (progress !== null || status.message !== null) ? (
+      {active && (progress !== null || status.word !== null) ? (
         <ContextExtra>
           <span
             data-testid="auto-status"
+            data-bar-state=""
             role="status"
             data-done={progress?.done}
             data-total={progress?.total}
@@ -355,8 +358,8 @@ export function AutoLayer({
             className={contextChip}
           >
             {progress !== null
-              ? t`Tile ${Math.min(progress.done + 1, progress.total)} of ${progress.total} · ${progress.found} found`
-              : status.message}
+              ? t`Tile ${Math.min(progress.done + 1, progress.total)} of ${progress.total}`
+              : status.word}
           </span>
         </ContextExtra>
       ) : null}

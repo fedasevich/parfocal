@@ -2,8 +2,6 @@ import { useLingui } from "@lingui/react/macro";
 import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
 import { TopStack, TopStackProvider } from "@parfocal/ui/components/top-stack";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { startingTier } from "../aiseg/one-click-tiers.ts";
-import type { OutlineTier } from "../aiseg/prompt-fallback.ts";
 import { useSharedSmartServices } from "../aiseg/shared-smart-services.ts";
 import {
   loadSmartServices,
@@ -68,6 +66,7 @@ import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
 import { useMagnificationLabel } from "../shell/magnification-label-setting.ts";
 import { useSavedOutlineMode } from "../shell/outline-mode-setting.ts";
+import { useSavedOutlineTier } from "../shell/outline-tier-setting.ts";
 import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import { useToolsLayout } from "../shell/tools-layout.ts";
 import { appFrameReporter } from "../telemetry/frame-monitor.ts";
@@ -305,8 +304,7 @@ function OpenedSlide({
   const doubleClick = useRef<"zoom" | "toggle">("zoom");
   const settings = useResolvedSettings();
   doubleClick.current = settings?.double_click ?? "zoom";
-  const [pickedTier, setPickedTier] = useState<OutlineTier | null>(null);
-  const outlineTier = pickedTier ?? startingTier(settings?.tier_outline);
+  const [outlineTier, setPickedTier] = useSavedOutlineTier();
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const [topStackNode, setTopStackNode] = useState<HTMLDivElement | null>(null);
   const pinRegistry = useMemo(createPinRegistry, []);

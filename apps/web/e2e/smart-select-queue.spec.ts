@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
+import { pickOutlineModel } from "./outline-model.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 
@@ -14,9 +15,7 @@ async function openBestSlow(page: Page) {
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   await page.keyboard.press("s");
   await expect(stage).toHaveAttribute("data-tool", "smart");
-  const choice = page.getByRole("group", { name: "Model for outlining nuclei" });
-  await choice.getByRole("button", { name: "Best" }).click();
-  await expect(choice).toHaveAttribute("data-tier", "best");
+  await pickOutlineModel(page, "Best");
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }

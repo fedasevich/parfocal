@@ -34,7 +34,13 @@ import { ContextExtra, contextChip } from "./context-extras.tsx";
 import type { AnnotationDocument } from "./document.ts";
 import { useElapsedSeconds } from "./elapsed-seconds.ts";
 import { ModelTierChoice } from "./model-tier-choice.tsx";
-import { type SmartStep, smartStatusOf, smartStepOf } from "./smart-status.ts";
+import {
+  fallbackWords,
+  type SmartStep,
+  smartStatusOf,
+  smartStepOf,
+  stateWordOf,
+} from "./smart-status.ts";
 import {
   bindSpacePan,
   buttonReleased,
@@ -46,6 +52,7 @@ import {
   stagePoint,
 } from "./stage-pointer.ts";
 import { useStageRect } from "./stage-size.ts";
+import { useToastOnce } from "./use-toast-once.ts";
 
 type SmartLayerProps = {
   engine: ViewerEngine;
@@ -589,11 +596,9 @@ export function SmartLayer({
       ? seconds > 0
         ? t`${stepText[step]}, ${seconds} s`
         : stepText[step]
-      : status === "found"
-        ? t`Outline found`
-        : status === "message"
-          ? snapshot.message
-          : null;
+      : status === "message"
+        ? stateWordOf(snapshot.message ?? "")
+        : null;
   const statusText = [statusWords, queuedCount > 0 ? t`${queuedCount} queued` : null]
     .filter((part) => part !== null)
     .join(", ");
@@ -604,6 +609,10 @@ export function SmartLayer({
     "gave-up": t`No GPU answered Best in 90 seconds, Good outlined this view. Click again to ask Best again`,
     cancelled: t`You stopped waiting for Best, Good outlined this view. Click again to ask Best again`,
   };
+
+  const shownFallback = tier === "best" ? fallback : null;
+  const spoken = snapshot.message ?? (shownFallback === null ? null : fallbackText[shownFallback]);
+  useToastOnce(active ? spoken : null);
 
   return (
     <>
@@ -663,25 +672,28 @@ export function SmartLayer({
             type="button"
             data-testid="smart-hover-toggle"
             aria-pressed={hoverOn}
+            title={t`Hover preview`}
             onClick={() => setHoverOn(!hoverOn)}
             className={`${contextChip} cursor-pointer aria-pressed:border-accent`}
           >
-            {hoverOn ? t`Hover preview on` : t`Hover preview off`}
+            {hoverOn ? t`Hover on` : t`Hover off`}
           </button>
-          {tier === "best" && fallback !== null ? (
+          {shownFallback !== null ? (
             <span
               data-testid="smart-encoder-fallback"
-              data-reason={fallback}
+              data-bar-state=""
+              data-reason={shownFallback}
               role="status"
               className={contextChip}
             >
-              {fallbackText[fallback]}
+              {fallbackWords[shownFallback]}
             </span>
           ) : null}
-          {status !== null || queuedCount > 0 ? (
+          {(status !== null && status !== "found") || queuedCount > 0 ? (
             <span
               data-testid="smart-status"
-              data-status={status ?? "queued"}
+              data-bar-state=""
+              data-status={status === null || status === "found" ? "queued" : status}
               data-step={status === "outlining" ? step : undefined}
               data-queued={queuedCount}
               role="status"

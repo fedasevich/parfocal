@@ -206,6 +206,8 @@ export const toTaskDisplay = (taskId: string): TaskDisplay => {
 
 const postedKey = "parfocal.fake.posted-threads";
 
+export const rejectOutlinesKey = "parfocal.fake.reject-outlines";
+
 type PostedStore = { threads: Thread[]; comments: ThreadComment[] };
 
 const postedSession = (): Storage | null =>
@@ -895,6 +897,21 @@ export function reviewHandlers(): RequestHandler[] {
         String(params["slideId"]),
         String(params["objectId"]),
         null,
+      );
+    }),
+    http.put("*/api/review-tasks/:taskId/slides/:slideId/edits/:objectId", async ({ request }) => {
+      if (postedSession()?.getItem(rejectOutlinesKey) !== "1") return undefined;
+      const draft = (await request.clone().json()) as EditDraft;
+      if (!draft.geometry) return undefined;
+      return HttpResponse.json(
+        {
+          type: "about:blank",
+          title: "A shape is not valid",
+          status: 400,
+          code: "invalid-shape",
+          detail: "The shape is not valid: Self-intersection",
+        },
+        { status: 400, headers: { "content-type": "application/problem+json" } },
       );
     }),
     getSaveReviewEditMockHandler(async ({ request, params }) => {

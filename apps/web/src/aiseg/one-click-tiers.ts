@@ -63,3 +63,33 @@ export function oneClickTiers(gpu: boolean): Tier[] {
     },
   ];
 }
+
+export type TierChoice = {
+  tier: OutlineTier;
+  title: string;
+  description: string;
+  makes: string[];
+  cost: string;
+};
+
+export function tierChoices(gpu: boolean): TierChoice[] {
+  const download = megabytes(browserDownloadBytes(gpu));
+  const where = gpu ? "Graphics card" : "Processor";
+  return [
+    {
+      tier: "best",
+      title: tierNames.best,
+      description:
+        "The most accurate outlines. The Parfocal server reads the slide, your clicks are answered here. If its GPU cannot answer, Good outlines the click and says why.",
+      makes: ["PathoSAM ViT-L", "Server GPU"],
+      cost: `Slower · ${download}`,
+    },
+    {
+      tier: "good",
+      title: tierNames.good,
+      description: "Runs on this computer, also offline.",
+      makes: ["PathoSAM ViT-B", where],
+      cost: `Quicker · ${download}`,
+    },
+  ];
+}

@@ -53,7 +53,7 @@ The participant page at `/study` opens on a consent screen. Its cards say, word 
 - "This tab is recorded. Screen, mouse movements, clicks and key presses. No camera, no microphone."
 - "You stay anonymous. Your code is P-XXXX."
 
-The participant presses "I agree and start" to give consent. The app makes the code from `P-` and four characters (capital letters without I and O, and the digits 2 to 9) and stores only that code. Session files use P-01, P-02 and so on in session order, with the app code in the header, as nur does. The pairing of a code and a real person is never written down. TODO: agree how long recordings are kept after the thesis is submitted.
+The participant presses "I agree and start" to give consent. The app makes the code from `P-` and four characters (capital letters without I and O, and the digits 2 to 9) and stores only that code. Session files use P-01, P-02 and so on in session order, with the app code in the header, as nur does. The pairing of a code and a real person is never written down. Recordings are kept until the defence and backed up to R2 meanwhile, as [Retention](#retention) describes.
 
 ## Setup per participant
 
@@ -80,6 +80,13 @@ After each participant:
 1. On `/study/console`, press "Download results". Rename the file `study-round-1.json` to `YYYY-MM-DD-P-XXXX.json` and keep it outside the repository. The console's round number is its own counter and starts at 1, so the file name says nothing about study round 5.
 2. Remove the project, because the shared seat sees every live study project (ADR 0435, per-participant study projects): `uv run --package parfocal-deploy python -m parfocal_deploy.study remove P-7KQ2`. It is a soft delete, so the rows stay until a full reset.
 3. Copy the replay times into the session log while the session is fresh.
+4. Back up the session to R2. The hourly events run on Modal does it by itself, and `uv run --package parfocal-api python -m parfocal_api.study_backup backup` does it at once, with `APP_ENV`, `DATABASE_URL` and the four `STUDY_BACKUP_*` settings of [Retention](#retention) in the environment. It prints how many objects it wrote and the size of the whole backup.
+
+## Retention
+
+`parfocal_api.study_backup` copies every study session and trace part to `study/<workspace id>/<session key>/` in the bucket `STUDY_BACKUP_BUCKET` (`parfocal-prod` on the deployed app), with `session.json.gz` holding the code, round, dry run mark and answers and `trace/<seq>.json.gz` holding each trace part as it was uploaded. It adds no user ids, emails or names from the database, and writes only what is new or changed. The trace frames do hold the page text the participant saw, masked only inside text fields, so a study must run on the shared seat account and its seeded fake cases for the backup to hold no names. The settings are `STUDY_BACKUP_BUCKET`, `STUDY_BACKUP_ENDPOINT`, `STUDY_BACKUP_ACCESS_KEY_ID` and `STUDY_BACKUP_SECRET_ACCESS_KEY`, and without a bucket the backup does nothing. `python -m parfocal_api.study_backup size` prints the number of objects and bytes under `study/`.
+
+`python -m parfocal_api.study_backup delete` removes every trace part from the database and every `trace/` object from the bucket, and keeps the sessions with their answers and notes, which are what the analysis tables are made from. It refuses to run until `STUDY_DEFENCE_DATE` is set and that day has passed, and from then on the backup stops. TODO: the owner sets the defence date.
 
 ## Tasks
 

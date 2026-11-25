@@ -57,7 +57,11 @@ type ModelPickerProps = {
   footer?: React.ReactNode;
   note?: React.ReactNode;
   invalid?: boolean;
+  compact?: boolean;
+  label?: string;
   className?: string;
+  triggerProps?: Omit<React.ComponentProps<"button">, "children" | "className" | "id"> &
+    Partial<Record<`data-${string}`, string>>;
 };
 
 function ModelPicker({
@@ -70,7 +74,10 @@ function ModelPicker({
   footer,
   note,
   invalid = false,
+  compact = false,
+  label,
   className,
+  triggerProps,
 }: ModelPickerProps) {
   const { t } = useLingui();
 
@@ -82,13 +89,20 @@ function ModelPicker({
         data-slot="model-picker"
         aria-haspopup="listbox"
         aria-invalid={invalid || undefined}
+        aria-label={label && chosen ? `${label}, ${chosen.title}` : label}
+        title={compact ? chosen?.description : undefined}
+        {...triggerProps}
         className={cn(
-          "grid min-h-13 w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-ctl border border-line bg-surf-field px-3 py-2 text-left font-[inherit] text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent data-popup-open:border-accent",
+          compact
+            ? "inline-flex min-h-6.5 cursor-pointer items-center gap-1.5 rounded-ctl border border-line bg-surf-field px-2.5 py-0 text-caption font-semibold whitespace-nowrap text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent data-popup-open:border-accent"
+            : "grid min-h-13 w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-ctl border border-line bg-surf-field px-3 py-2 text-left font-[inherit] text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent data-popup-open:border-accent",
           invalid && "border-bad",
           className,
         )}
       >
-        {chosen ? (
+        {compact ? (
+          <span>{chosen ? chosen.title : t`Pick a model`}</span>
+        ) : chosen ? (
           <>
             <ModelTitle option={chosen} />
             <ModelChips makes={chosen.makes} />
@@ -101,14 +115,17 @@ function ModelPicker({
             <span />
           </>
         )}
-        <Icon name="down" />
+        <Icon name="down" size={compact ? "xs" : "sm"} />
       </PopoverPrimitive.Trigger>
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Positioner
           side="bottom"
           align="start"
           sideOffset={4}
-          className="isolate z-60 w-(--anchor-width)"
+          className={cn(
+            "isolate z-60",
+            compact ? "w-[min(36rem,calc(100vw-2rem))]" : "w-(--anchor-width)",
+          )}
         >
           <PopoverPrimitive.Popup className="grid gap-px rounded-zone border border-line-strong bg-popover p-1.5 text-body-sm text-fg shadow-[0_18px_48px_rgba(0,0,0,.45)] outline-hidden">
             <div role="listbox" aria-label={t`Models`} className="grid gap-px">

@@ -19,12 +19,12 @@ async function openOn(page: Page, object: string) {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   });
   await page.keyboard.press("Enter");
-  await expect(page.getByTestId("ai-layer")).toHaveAttribute("data-editing", object);
+  await expect(page.getByTestId("outline-editor")).toHaveAttribute("data-editing", object);
   return panel;
 }
 
 async function handlesNow(page: Page): Promise<Point[]> {
-  const found = page.getByTestId("ai-handle");
+  const found = page.getByTestId("outline-point");
   await expect(found.first()).toBeVisible();
   const points: Point[] = [];
   for (const handle of await found.all()) {
@@ -113,10 +113,10 @@ test("a reviewer merges two touching regions and undoing the merge brings both b
   const origin = { x: corner.x - 120 * scale, y: corner.y - 80 * scale };
   const reshaped = posted(page, "PUT", "/edits/T4");
   await drag(page, corner, toScreen(480, 500, origin));
-  await reshaped;
 
   const bar = panel.getByTestId("shape-edit-bar");
   await bar.getByRole("button", { name: "Merge", exact: true }).click();
+  await reshaped;
   await expect(bar).toHaveAttribute("data-tool", "merge");
   const other = page.locator('[data-testid="ai-object"][data-object="T3"]');
   const view = page.viewportSize() ?? { width: 1440, height: 900 };

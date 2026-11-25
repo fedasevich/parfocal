@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
+import { outlineModel, pickOutlineModel } from "./outline-model.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 
@@ -138,7 +139,7 @@ test("smart select starts on Good, asks the server for nothing, and Enter accept
   await expect(stage).toHaveAttribute("data-tool", "select");
   await page.locator('button[data-tool="smart"]').click();
   await expect(stage).toHaveAttribute("data-tool", "smart");
-  await expect(page.getByRole("button", { name: "Good" })).toHaveAttribute("aria-pressed", "true");
+  await expect(outlineModel(page)).toHaveAttribute("data-tier", "good");
   await page.mouse.click(centre.x, centre.y);
   await settled(page);
   await expect(proposals(page)).toHaveAttribute("data-proposals", "1");
@@ -163,18 +164,20 @@ test("Escape discards the proposal and keeps the tool", async ({ page }) => {
 test("picking a model, clicking a nucleus and accepting saves the outline", async ({ page }) => {
   test.slow();
   const { stage, centre } = await openSmart(page);
-  const choice = page.getByRole("group", { name: "Model for outlining nuclei" });
+  const choice = outlineModel(page);
   await expect(choice).toHaveAttribute("data-tier", "good");
-  const good = choice.getByRole("button", { name: "Good" });
-  const best = choice.getByRole("button", { name: "Best" });
-  await expect(good).toHaveAttribute("aria-pressed", "true");
-  await expect(best).toHaveAttribute("aria-pressed", "false");
-  await expect(good).toHaveAccessibleDescription(/PathoSAM ViT-B · on this computer/);
-  await best.click();
-  await expect(best).toHaveAttribute("aria-pressed", "true");
-  await expect(choice).toHaveAttribute("data-tier", "best");
-  await good.click();
-  await expect(choice).toHaveAttribute("data-tier", "good");
+  await choice.click();
+  const good = page.getByRole("option", { name: /^Good/ });
+  await expect(good).toHaveAttribute("aria-selected", "true");
+  await expect(good).toContainText("Runs on this computer, also offline.");
+  await expect(good).toContainText("PathoSAM ViT-B");
+  await expect(page.getByRole("option", { name: /^Best/ })).toHaveAttribute(
+    "aria-selected",
+    "false",
+  );
+  await page.keyboard.press("Escape");
+  await pickOutlineModel(page, "Best");
+  await pickOutlineModel(page, "Good");
   await page.mouse.click(centre.x, centre.y);
   await settled(page);
   await expect(proposals(page)).toHaveAttribute("data-proposals", "1");

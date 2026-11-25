@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
+import { pickOutlineModel } from "./outline-model.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 
@@ -14,9 +15,7 @@ async function clickBest(page: Page, scene: string) {
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   await page.keyboard.press("s");
   await expect(stage).toHaveAttribute("data-tool", "smart");
-  const choice = page.getByRole("group", { name: "Model for outlining nuclei" });
-  await choice.getByRole("button", { name: "Best" }).click();
-  await expect(choice).toHaveAttribute("data-tier", "best");
+  await pickOutlineModel(page, "Best");
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
   const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   await page.mouse.click(centre.x, centre.y);
@@ -49,7 +48,10 @@ test("a refused Best says so and Good outlines the click", async ({ page }) => {
   await clickBest(page, "refuse");
   await expect(layer(page)).toHaveAttribute("data-phase", "ready");
   await expect(fallback(page)).toHaveAttribute("data-reason", "refused");
-  await expect(fallback(page)).toHaveText("The server refused Best here, Good outlined this view");
+  await expect(fallback(page)).toHaveText("Good used");
+  await expect(
+    page.getByText("The server refused Best here, Good outlined this view"),
+  ).toBeVisible();
   await expect(page.getByTestId("proposal-layer")).toHaveAttribute("data-proposals", "1");
   await expect(wait(page)).toHaveCount(0);
 });
@@ -64,7 +66,8 @@ test("an offline Best GPU says so and the next click asks Best again", async ({ 
   const centre = await clickBest(page, "offline");
   await expect(layer(page)).toHaveAttribute("data-phase", "ready");
   await expect(fallback(page)).toHaveAttribute("data-reason", "offline");
-  await expect(fallback(page)).toContainText("Click again to ask Best again");
+  await expect(fallback(page)).toHaveText("Good used");
+  await expect(page.getByText(/Click again to ask Best again/)).toBeVisible();
   const before = asked.length;
   await page.keyboard.press("Escape");
   await page.mouse.click(centre.x, centre.y);
@@ -96,9 +99,7 @@ test("one Best click a second after picking Best asks the GPU for the view once"
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   await page.keyboard.press("s");
-  const choice = page.getByRole("group", { name: "Model for outlining nuclei" });
-  await choice.getByRole("button", { name: "Best" }).click();
-  await expect(choice).toHaveAttribute("data-tier", "best");
+  await pickOutlineModel(page, "Best");
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
   const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   await page.mouse.move(centre.x, centre.y);
@@ -117,6 +118,12 @@ test("cancelling the GPU wait lets Good outline and says the wait was stopped", 
   await expect(wait(page)).toBeVisible();
   await page.getByTestId("gpu-wait-cancel").click();
   await expect(fallback(page)).toHaveAttribute("data-reason", "cancelled");
+  await expect(fallback(page)).toHaveText("Good used");
+  await expect(
+    page.getByText(
+      "You stopped waiting for Best, Good outlined this view. Click again to ask Best again",
+    ),
+  ).toBeVisible();
   await expect(layer(page)).toHaveAttribute("data-phase", "ready");
   await expect(wait(page)).toHaveCount(0);
 });
