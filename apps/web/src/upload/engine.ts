@@ -8,6 +8,8 @@ import {
   sameFile,
   startedEntry,
   type UploadEntry,
+  type UploadMeta,
+  uploadMetaOf,
   withDone,
   withError,
   withManualRetry,
@@ -20,18 +22,14 @@ import { partSizeFor } from "./part-size.ts";
 
 const PARALLEL_FILES = 3;
 
-export type UploadMeta = {
-  project_id: string;
-  case_id?: string;
-  size: number;
-  last_modified: number;
-  kind?: "result";
-  slide_id?: string;
-};
-
 export type CreatedListener = (uploadId: string) => void;
 
-export type UploadTarget = { projectId: string; caseId: string | null; slideId?: string };
+export type UploadTarget = {
+  projectId: string;
+  caseId: string | null;
+  slideId?: string;
+  result?: true;
+};
 
 export type UploadEngine = {
   subscribe: (listener: () => void) => () => void;
@@ -51,18 +49,6 @@ export type UploadEngineOptions = {
 };
 
 type OpenUpload = { key: string; uploadId: string };
-
-function metaOf(identity: FileIdentity): UploadMeta {
-  return {
-    project_id: identity.projectId,
-    ...(identity.caseId === null ? {} : { case_id: identity.caseId }),
-    ...(identity.slideId === undefined
-      ? {}
-      : { kind: "result" as const, slide_id: identity.slideId }),
-    size: identity.size,
-    last_modified: identity.lastModified,
-  };
-}
 
 export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
   const { endpoint } = options;
@@ -188,7 +174,7 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
       name: file.name,
       type: file.type || "application/octet-stream",
       data: file,
-      meta: metaOf(identity),
+      meta: uploadMetaOf(identity),
     });
     if (open !== null) uppy.setFileState(id, { s3Multipart: open });
     publish([

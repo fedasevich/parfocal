@@ -267,18 +267,22 @@ export async function placeAndUpload(
     }
     return found;
   };
-  const add = (item: DroppedItem) => {
+  const add = (item: DroppedItem, result = false) => {
     wait(item.file);
     return engine.addFiles(
       [item.file],
-      { projectId: input.projectId, caseId: caseIds.get(item.path) ?? null },
+      {
+        projectId: input.projectId,
+        caseId: caseIds.get(item.path) ?? null,
+        ...(result ? { result: true as const } : {}),
+      },
       (uploadId) => wait(item.file).settle(uploadId),
     );
   };
   for (const item of slideItems) await add(item);
   const links: Promise<void>[] = [];
   for (const result of resultItems) {
-    await add(result.item);
+    await add(result.item, true);
     links.push(link(wait(result.item.file).promise, wait(result.slide.file).promise));
   }
   await Promise.all(links);

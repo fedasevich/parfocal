@@ -57,6 +57,8 @@ class ImportFailure(StrEnum):
     OUTSIDE_SLIDE = "result-outside-slide"
     HEATMAP_UNREADABLE = "result-heatmap-unreadable"
     HEATMAP_UNPLACED = "result-heatmap-unplaced"
+    MASK_EMPTY = "result-mask-empty"
+    MASK_UNPLACED = "result-mask-unplaced"
 
 
 IMPORT_FAILURES: Mapping[str, str] = {
@@ -80,6 +82,11 @@ IMPORT_FAILURES: Mapping[str, str] = {
     ),
     ImportFailure.HEATMAP_UNPLACED: (
         "Parfocal could not place this heatmap on its slide, because its shape matches no level "
+        "of the slide."
+    ),
+    ImportFailure.MASK_EMPTY: ("This mask holds only background, so it has no objects to import."),
+    ImportFailure.MASK_UNPLACED: (
+        "Parfocal could not place this mask on its slide, because its shape matches no level "
         "of the slide."
     ),
 }
@@ -109,6 +116,7 @@ class CheckProblem(StrEnum):
     SCORES_MISSING = "scores-missing"
     PARTLY_OUTSIDE = "objects-outside-slide"
     HEATMAP_SCALE = "heatmap-scale"
+    MASK_SCALE = "mask-scale"
 
 
 CHECK_PROBLEMS: Mapping[str, str] = {
@@ -118,6 +126,9 @@ CHECK_PROBLEMS: Mapping[str, str] = {
     CheckProblem.SCORES_MISSING: "These objects have no score. Count them as no score or as 1.0.",
     CheckProblem.PARTLY_OUTSIDE: "These objects lie outside the slide.",
     CheckProblem.HEATMAP_SCALE: "Parfocal guessed the slide level and scale of this heatmap.",
+    CheckProblem.MASK_SCALE: (
+        "The size of this mask matches no slide level. Pick the level it was drawn at."
+    ),
 }
 
 

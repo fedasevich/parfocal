@@ -53,11 +53,15 @@ const noChoices: Choices = {
 const known = {
   unreadable: "objects-unreadable",
   noClass: "objects-without-class",
-  unknownClasses: "unknown-classes",
+  unknownClasses: "classes-unknown",
   noScore: "scores-missing",
-  outside: "partly-outside",
+  outside: "objects-outside-slide",
   scale: "heatmap-scale",
+  maskScale: "mask-scale",
 } as const;
+
+const asksForScale = (problem: ImportProblem) =>
+  problem.code === known.scale || problem.code === known.maskScale;
 
 function ClassSelect({
   classes,
@@ -99,7 +103,7 @@ const fixedText = (problem: ImportProblem, choices: Choices, classes: readonly P
   if (problem.code === known.noScore)
     return choices.score === ScoreDefault.one ? t`Counted as 1.0` : t`Kept with no score`;
   if (problem.code === known.outside) return t`Left out of the import`;
-  if (problem.code === known.scale) return t`Placed at the guessed level`;
+  if (asksForScale(problem)) return t`Placed at the guessed level`;
   return t`Left out of the import`;
 };
 
@@ -115,6 +119,7 @@ const fixLabel: Record<string, string> = lazyText(() => ({
   [known.noScore]: t`Use this choice`,
   [known.outside]: t`Leave them out`,
   [known.scale]: t`Use this guess`,
+  [known.maskScale]: t`Use this level`,
 }));
 
 function GuessPicker({
@@ -129,7 +134,12 @@ function GuessPicker({
   const { t } = useLingui();
   const keyOf = (level: number | null) => (level === null ? "fitted" : String(level));
   const picked = choices.heatmapLevel ?? problem.guess?.level ?? null;
+  const mask = problem.code === known.maskScale;
   const label = (guess: HeatmapGuess) => {
+    if (mask)
+      return guess.level === null
+        ? t`Scaled by ${guess.downsample}`
+        : t`Level ${guess.level}, scaled by ${guess.downsample}`;
     const share =
       guess.tissue_share === null
         ? t`no tissue mask`
@@ -141,7 +151,7 @@ function GuessPicker({
   return (
     <div className="grid gap-1" data-testid="heatmap-guesses">
       <SegmentedControl
-        aria-label={t`Heatmap scale guess`}
+        aria-label={mask ? t`Mask level` : t`Heatmap scale guess`}
         value={keyOf(picked)}
         onValueChange={(value) =>
           change({ heatmapLevel: value === "fitted" ? null : Number(value) })
@@ -245,9 +255,9 @@ function ProblemFix({
           { value: ScoreDefault.one, label: t`Count as 1.0` },
         ]}
       />
-    ) : problem.code === known.scale && problem.guesses.length > 1 ? (
+    ) : asksForScale(problem) && problem.guesses.length > 1 ? (
       <GuessPicker problem={problem} choices={choices} change={change} />
-    ) : problem.code === known.scale && guess !== null ? (
+    ) : asksForScale(problem) && guess !== null ? (
       <span className="text-body-sm text-fg-dim">
         <Trans>
           Guess: level {guess.level ?? t`unknown`}, scaled by {guess.downsample}

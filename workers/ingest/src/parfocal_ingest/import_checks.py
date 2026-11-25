@@ -318,10 +318,15 @@ def heatmap_problems(
     ]
 
 
-def accepted_guess(stored: Any, level: int | None = None) -> Guess:
+def accepted_guess(
+    stored: Any,
+    level: int | None = None,
+    code: CheckProblem = CheckProblem.HEATMAP_SCALE,
+    unplaced: ImportFailure = ImportFailure.HEATMAP_UNPLACED,
+) -> Guess:
     found = cast("dict[str, Any]", stored or {}).get("problems") or []
     for item in cast("list[dict[str, Any]]", found):
-        if item.get("code") != CheckProblem.HEATMAP_SCALE.value:
+        if item.get("code") != code.value:
             continue
         offered = cast("list[dict[str, Any]]", item.get("guesses") or [])
         picked = (
@@ -336,7 +341,7 @@ def accepted_guess(stored: Any, level: int | None = None) -> Guess:
                 picked.get("mpp"),
                 picked.get("tissue_share"),
             )
-    raise StepFailedError(ImportFailure.HEATMAP_UNPLACED)
+    raise StepFailedError(unplaced)
 
 
 def stored_values(values: NDArray[Any]) -> NDArray[np.uint8]:

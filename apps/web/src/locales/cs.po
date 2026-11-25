@@ -10005,6 +10005,12 @@ msgstr ""
 #. placeholder {0}: guess.level
 #. placeholder {1}: guess.downsample
 #: src/screens/upload/result-problems.tsx
+msgid "Level {0}, scaled by {1}"
+msgstr ""
+
+#. placeholder {0}: guess.level
+#. placeholder {1}: guess.downsample
+#: src/screens/upload/result-problems.tsx
 msgid "Level {0}, scaled by {1}, {share}"
 msgstr ""
 
@@ -10525,6 +10531,10 @@ msgstr ""
 
 #: src/annotations/count-panel.tsx
 msgid "Marker"
+msgstr ""
+
+#: src/screens/upload/result-problems.tsx
+msgid "Mask level"
 msgstr ""
 
 #: src/screens/dataset/dataset-screen.tsx
@@ -15553,6 +15563,11 @@ msgstr ""
 
 #. placeholder {0}: guess.downsample
 #: src/screens/upload/result-problems.tsx
+msgid "Scaled by {0}"
+msgstr ""
+
+#. placeholder {0}: guess.downsample
+#: src/screens/upload/result-problems.tsx
 msgid "Scaled by {0}, {share}"
 msgstr ""
 
@@ -20192,6 +20207,10 @@ msgstr ""
 
 #: src/screens/upload/result-problems.tsx
 msgid "Use this guess"
+msgstr ""
+
+#: src/screens/upload/result-problems.tsx
+msgid "Use this level"
 msgstr ""
 
 #: src/screens/disagreements/outline-settle.tsx

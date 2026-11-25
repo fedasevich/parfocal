@@ -10010,6 +10010,12 @@ msgstr "Level"
 #. placeholder {0}: guess.level
 #. placeholder {1}: guess.downsample
 #: src/screens/upload/result-problems.tsx
+msgid "Level {0}, scaled by {1}"
+msgstr "Level {0}, scaled by {1}"
+
+#. placeholder {0}: guess.level
+#. placeholder {1}: guess.downsample
+#: src/screens/upload/result-problems.tsx
 msgid "Level {0}, scaled by {1}, {share}"
 msgstr "Level {0}, scaled by {1}, {share}"
 
@@ -10531,6 +10537,10 @@ msgstr "Marked not tumor by you"
 #: src/annotations/count-panel.tsx
 msgid "Marker"
 msgstr "Marker"
+
+#: src/screens/upload/result-problems.tsx
+msgid "Mask level"
+msgstr "Mask level"
 
 #: src/screens/dataset/dataset-screen.tsx
 #: src/viewer/patch-export-dialog.tsx
@@ -15562,6 +15572,11 @@ msgstr "Scale"
 
 #. placeholder {0}: guess.downsample
 #: src/screens/upload/result-problems.tsx
+msgid "Scaled by {0}"
+msgstr "Scaled by {0}"
+
+#. placeholder {0}: guess.downsample
+#: src/screens/upload/result-problems.tsx
 msgid "Scaled by {0}, {share}"
 msgstr "Scaled by {0}, {share}"
 
@@ -20202,6 +20217,10 @@ msgstr "Use this choice"
 #: src/screens/upload/result-problems.tsx
 msgid "Use this guess"
 msgstr "Use this guess"
+
+#: src/screens/upload/result-problems.tsx
+msgid "Use this level"
+msgstr "Use this level"
 
 #: src/screens/disagreements/outline-settle.tsx
 msgid "Use this outline"

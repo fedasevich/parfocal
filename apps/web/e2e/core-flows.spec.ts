@@ -2,7 +2,7 @@ import { copyFile, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import {
   area,
   ok,
@@ -20,6 +20,13 @@ const fakeStorage = "http://127.0.0.1:9161/e2e";
 const slideFixture = fileURLToPath(
   new URL("../../../packages/test-fixtures/synthetic/synthetic-jpeg.tiff", import.meta.url),
 );
+const maskFixture = fileURLToPath(
+  new URL(
+    "../../../workers/ingest/tests/fixtures/results/objects-check_instances.png",
+    import.meta.url,
+  ),
+);
+const maskCells = 6;
 const corners = [
   [520, 250],
   [700, 270],
@@ -47,6 +54,39 @@ interface Decision {
 
 interface Me {
   user_id: string;
+}
+
+interface ResultSetRow {
+  id: string;
+  slide_id: string;
+  source_file: string | null;
+  status: string;
+  cell_count: number;
+}
+
+async function uploadableProject(page: Page): Promise<string> {
+  await ok(page, "POST", "/api/projects/sample");
+  const open = (await ok<ProjectRow[]>(page, "GET", "/api/projects")).filter(
+    (row) => row.archived_at === null && row.privacy_mode !== "clinical",
+  );
+  const project =
+    (
+      open.find((row) => row.sample && row.my_role === "owner") ??
+      open.find((row) => row.my_role === "owner") ??
+      open[0]
+    )?.id ?? "";
+  expect(project, "the user owns a project to upload into").not.toBe("");
+  return project;
+}
+
+async function uploadFolder(page: Page, project: string, folder: string): Promise<void> {
+  await page.goto(`/projects/${project}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(folder);
+  await page.getByTestId("upload-next").click();
+  await expect(page.getByTestId("start-upload")).toBeEnabled();
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", /progress|done/);
+  await expect(page.getByTestId("close-upload")).toHaveText("Done", { timeout: 60_000 });
 }
 
 test(
@@ -80,32 +120,49 @@ test(
 test("a slide uploaded into a project finishes", realTags(area.upload), async ({ page }) => {
   await signIn(page, "/my-work");
   if (!onRealApi) await storageStandIn(page, fakeStorage);
-  await ok(page, "POST", "/api/projects/sample");
-  const open = (await ok<ProjectRow[]>(page, "GET", "/api/projects")).filter(
-    (row) => row.archived_at === null && row.privacy_mode !== "clinical",
-  );
-  const project =
-    (
-      open.find((row) => row.sample && row.my_role === "owner") ??
-      open.find((row) => row.my_role === "owner") ??
-      open[0]
-    )?.id ?? "";
-  expect(project, "the user owns a project to upload into").not.toBe("");
+  const project = await uploadableProject(page);
   const folder = await mkdtemp(join(tmpdir(), "parfocal-real-upload-"));
   try {
     await mkdir(join(folder, "batch"));
     await copyFile(slideFixture, join(folder, "batch", "real-check.tiff"));
-    await page.goto(`/projects/${project}/upload`);
-    await page.getByTestId("folder-input").setInputFiles(join(folder, "batch"));
-    await page.getByTestId("upload-next").click();
-    await expect(page.getByTestId("start-upload")).toBeEnabled();
-    await page.getByTestId("start-upload").click();
-    await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", /progress|done/);
-    await expect(page.getByTestId("close-upload")).toHaveText("Done", { timeout: 60_000 });
+    await uploadFolder(page, project, join(folder, "batch"));
   } finally {
     await rm(folder, { recursive: true, force: true });
   }
 });
+
+test(
+  "a slide uploaded with its instance mask shows the mask's cells",
+  realTags(area.upload),
+  async ({ page }) => {
+    test.skip(!onRealApi, "Only the real stack runs the result import job");
+    test.setTimeout(180_000);
+    await signIn(page, "/my-work");
+    const project = await uploadableProject(page);
+    const stem = `objects-${Date.now()}`;
+    const mask = `${stem}_instances.png`;
+    const folder = await mkdtemp(join(tmpdir(), "parfocal-real-mask-"));
+    try {
+      await mkdir(join(folder, "batch"));
+      await copyFile(slideFixture, join(folder, "batch", `${stem}.tiff`));
+      await copyFile(maskFixture, join(folder, "batch", mask));
+      await uploadFolder(page, project, join(folder, "batch"));
+    } finally {
+      await rm(folder, { recursive: true, force: true });
+    }
+    const imported = async () =>
+      (await ok<ResultSetRow[]>(page, "GET", `/api/projects/${project}/result-sets`)).find(
+        (row) => row.source_file === mask && row.status === "ready",
+      );
+    await expect
+      .poll(async () => (await imported())?.cell_count, { timeout: 90_000 })
+      .toBe(maskCells);
+    const set = await imported();
+    await page.goto(`/projects/${project}/slides/${set?.slide_id}`);
+    const cells = page.locator(`[data-testid="result-set-cells"][data-set="${set?.id}"]`);
+    await expect(cells).toHaveAttribute("data-cells", String(maskCells), { timeout: 30_000 });
+  },
+);
 
 test("an annotate task slide keeps a drawn region", realTags(area.annotate), async ({ page }) => {
   await signIn(page, "/my-work");

@@ -4,10 +4,33 @@ export type FileIdentity = {
   projectId: string;
   caseId: string | null;
   slideId?: string;
+  result?: true;
   name: string;
   size: number;
   lastModified: number;
 };
+
+export type UploadMeta = {
+  project_id: string;
+  case_id?: string;
+  size: number;
+  last_modified: number;
+  kind?: "result";
+  slide_id?: string;
+};
+
+export function uploadMetaOf(identity: FileIdentity): UploadMeta {
+  return {
+    project_id: identity.projectId,
+    ...(identity.caseId === null ? {} : { case_id: identity.caseId }),
+    ...(identity.slideId === undefined && identity.result === undefined
+      ? {}
+      : { kind: "result" as const }),
+    ...(identity.slideId === undefined ? {} : { slide_id: identity.slideId }),
+    size: identity.size,
+    last_modified: identity.lastModified,
+  };
+}
 
 export type UploadEntry = FileIdentity & {
   id: string;
