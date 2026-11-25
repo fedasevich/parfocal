@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- v0.55.0 browser smoke (run 45710957141): the first test's GET /api/projects was reset (ECONNRESET) on the API's cold start right after the deploy while every later test passed, and the rerun of the smoke job, approved by the lead, passed.
 - Production touch: release v0.55.0 (PROTO-180, PROTO-174, EXP-022 with its hourly study backup that stays idle while STUDY_BACKUP_BUCKET is unset) deployed by run 45710957141, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - PROTO-181: Smart select queues clicks and boxes made while a request runs, with numbered dashed markers and N queued in the state word, Undo, Backspace and Esc take back the last queued click first, and queued extensions of one object go in one model call. The undo key wiring moved to apps/web/src/viewer/use-undo-keys.ts to keep slide-stage.tsx under the file length limit.
 - PROTO-195 ticked: the cause is in the log, tests reproduce it, the deployed rerun job 9559ce01 stored 2,428 cells, and empty runs show their reason. The cells unstorable failure on a slide with seeded cells moved to PROTO-196.
