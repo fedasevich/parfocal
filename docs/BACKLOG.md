@@ -7459,6 +7459,21 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when Fable's advice is in the log, a browser spec on the fake API drops a GeoJSON and a CSV of cells onto the viewer, previews each on the slide, sees a failed check explained, saves one and cancels the other, and the deployed viewer adds a result set the same way.
   Depends on nothing. Size: M.
 
+- [ ] PROTO-192 · The cell review's floating decision bar can be hidden and keeps clear of the cell
+  The owner found on 2026-11-25 that in cell review the floating bar of K Agree, 1 Tumor, 2 Stroma, 3 Immune, 4 Other and X Disagree (apps/web/src/screens/review/type-bar.tsx) covers much of the tissue around the cell under review, which a doctor needs to see to judge it. Let the reviewer hide and show the bar with a key and a small handle, remember the choice per person, keep the keys working while it is hidden with a one line hint of them, and place the bar where it does not cover the cell and a margin around it, moving to the other side when the cell is near it.
+  Done when a browser spec on the fake API hides the bar with its key, decides a cell by key while hidden, reloads and finds it still hidden, and measures the shown bar clear of the current cell's box plus margin on cells near each screen edge, and the deployed cell review does the same.
+  Depends on nothing. Size: S.
+
+- [ ] PROTO-193 · The What is wrong reasons show the state that was saved
+  The owner found on 2026-11-25 that in cell review the "What is wrong" chips under "You disagree with the AI on C1595" (apps/web/src/screens/review/object-card.tsx) send a request on each click but do not update or show an old state, and the screenshot shows "Not a cell" and "It is an immune cell" both ticked, which contradict each other. Make a chip show its new state at once, keep it after the save returns or roll it back with a toast when the save fails, read the saved reasons when the object is shown again, and decide with the reason list whether contradicting reasons such as not a cell and a cell type may be ticked together, making them exclusive if not.
+  Done when a browser spec on the fake API ticks and unticks reasons on a cell, steps away and back and finds the saved set, sees a failed save rolled back with a toast, cannot tick Not a cell together with a cell type if they are exclusive, and the deployed cell review does the same.
+  Depends on nothing. Size: S.
+
+- [ ] PROTO-194 · Object opacity fades the outlines too
+  The owner found on 2026-11-25 that the Opacity slider under How objects draw in the Display tab (packages/ui/src/components/display-panel.tsx) does not make the outlines less visible, so at 10% the white outline of a cell still hides the tissue at its edge. Apply opacity to the outline stroke, the fill and the dots alike in every draw mode, keep the current object's highlight visible enough to find at low opacity, and keep the setting per person.
+  Done when a browser spec on the fake API sets opacity to 10% and reads the outline, fill and dot alpha of drawn objects at 10% with the current object still marked, a golden image of a cell at 10% and 100% changes as expected, and the deployed review shows the same.
+  Depends on nothing. Size: S.
+
 - [x] EXP-018 · The moderator prepares a participant project from the console for the code the page shows
   The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
   Done when an API test seeds and removes a participant project through the new route, a Playwright spec on the fake API prepares a participant and starts task 1, and a deployed dry run as one code goes from Prepare to the thank-you page, recorded in a result file.
