@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Added PROTO-175 (add what the AI missed fits the task and can be turned off) and PROTO-176 (guided review reaches the final form as soon as every object is checked, and goes back from it) for the owner's guided review findings of 2026-11-25.
+- Owner request 2026-11-25 from a guided review screenshot, to add as tasks for later: the add something the AI missed step makes little sense on tumor outlines and cannot be turned off, and moving to the final opinion form is unreliable, lags behind every object being checked and gives no way back to fix something.
 - Added PROTO-173 (J and Shift+J step through review objects reliably) and PROTO-174 (outline edits in review are a draft saved once, with points added and removed) for the owner's review findings of 2026-11-25. Fable advised a local draft sent once on Done over a debounce, crossings allowed while editing and blocked at Done, no automatic repair and no API change, and PROTO-174 follows that advice.
 - Owner request 2026-11-25 from a review screenshot, to add as tasks for later: J and Shift+J do not work properly in the review, shape edits need a debounce, the self-intersection check fires while points are moved one by one, points must be addable and removable, and either a save button that sends the edit and reports a broken shape or another design, with Fable asked for the best one.
 - ADMIN-014 (Admin tables show an empty state): the owner found on 2026-11-25 that the Your lab's models table is empty with no message too, now named in the task.
