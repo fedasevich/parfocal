@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- OPS-042: GPU pools list every card big enough, cheapest first from T4 to H100, with no region pin. The $5 an hour cap now holds per pool, so all pools at once could reach $20.25 an hour under the $30 a month Modal limit, and each run logs its card and region as gpu pool run.
 - PROTO-173: J and Shift+J were dead after a disagreement, a fix toast, redraw, the type picker and the brush because the key was gated on busy. They now share the Next and Previous step, J wraps to the next open object and Shift+J stops at the first, spec review-object-keys.spec.ts.
 - Owner request 2026-11-25: a parallel run builds every task filed from the 2026-11-25 walkthrough (the review, smart select, comments, layers, viewer chrome, disagreement queue, pages and reports, Admin, study and GPU ops tasks), deploys each batch to app.parfocal.eu without waiting for CI, walks the deployed app, and fixes CI last.
 - Added PROTO-192 (the cell review's floating decision bar can be hidden and keeps clear of the cell), PROTO-193 (the What is wrong reasons show the state that was saved) and PROTO-194 (object opacity fades the outlines too) for the owner's cell review findings of 2026-11-25.
