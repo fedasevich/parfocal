@@ -15,6 +15,7 @@ import { useFormat } from "../../format.ts";
 import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts";
 import { ConfidenceByColour } from "../review/confidence-chip.tsx";
 import type { CardText, ReviewStyle } from "../review/decision-style.ts";
+import { disagreeOptions } from "../review/disagree-reasons.ts";
 import { noteAction } from "../review/note-key.ts";
 import { toggleReason } from "../review/note-model.ts";
 import { answerLabel, NoteEditor, noteReasonsFor, SavedNote } from "../review/object-card.tsx";
@@ -171,7 +172,12 @@ export function NoteBlock({
         chosen={note.reasons}
         text={note.text}
         offReason={saveOffReason}
-        onReason={(reason) => onNote({ ...note, ...toggleReason(note, reason) })}
+        onReason={(reason) =>
+          onNote({
+            ...note,
+            ...toggleReason(note, reason, disagreeOptions(object.kind, object.class_name, classes)),
+          })
+        }
         onText={(value) => onNote({ ...note, text: value })}
         onSave={onSaveNote}
         onCancel={() => onNote({ ...note, open: false })}

@@ -7,6 +7,7 @@ import {
   rawOfDecision,
   reasonText,
 } from "./decision-style.ts";
+import { disagreeOptions, savedReasonLabels } from "./disagree-reasons.ts";
 import type { SlideCounts } from "./review-top.tsx";
 
 export type Answer = {
@@ -18,6 +19,23 @@ export type Answer = {
 
 export type Answers = Map<string, Answer | null>;
 
+export function reasonLabelsOf(
+  decision: ReviewDecision,
+  object: ReviewObject | undefined,
+  classes: ProjectClass[],
+): string[] {
+  const options =
+    decision.value === "disagree" && object !== undefined
+      ? disagreeOptions(object.kind, object.class_name, classes)
+      : [];
+  return savedReasonLabels(
+    decision.reasons,
+    decision.reason_class_id,
+    options,
+    (code) => reasonText[code] ?? code,
+  );
+}
+
 export function answerFromDecision(
   decision: ReviewDecision,
   style: ReviewStyle,
@@ -27,7 +45,7 @@ export function answerFromDecision(
   return {
     value: decision.value,
     raw: rawOfDecision(style, decision, classes, object),
-    reasons: decision.reasons.map((code) => reasonText[code] ?? code),
+    reasons: reasonLabelsOf(decision, object, classes),
     note: decision.note,
   };
 }
