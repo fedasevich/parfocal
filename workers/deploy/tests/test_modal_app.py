@@ -450,9 +450,27 @@ def test_the_hourly_event_run_also_sweeps_the_remote_tile_caches(
         parfocal_api.event_delivery, "main", lambda argv: calls.append(f"events {argv[-1]}")
     )
     monkeypatch.setattr(modal_app, "sweep_remote_caches", lambda: calls.append("caches"))
+    monkeypatch.setattr(modal_app, "back_up_study", lambda: calls.append("study"))
     modal_app.run_events()
     modal_app.run_events(EVENTS_LINGER_MINUTES)
-    assert calls == ["events 0", "caches", f"events {EVENTS_LINGER_MINUTES}"]
+    assert calls == ["events 0", "caches", "study", f"events {EVENTS_LINGER_MINUTES}"]
+
+
+def test_the_study_backup_runs_once_with_its_own_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import parfocal_api.study_backup
+
+    runs: list[str] = []
+
+    async def run(settings: object, action: str, today: object) -> dict[str, int]:
+        runs.append(action)
+        return {}
+
+    monkeypatch.setattr(parfocal_api.study_backup, "load_settings", lambda kind: object())
+    monkeypatch.setattr(parfocal_api.study_backup, "run", run)
+    modal_app.back_up_study()
+    assert runs == ["backup"]
 
 
 def test_the_cache_sweep_runs_one_pass_with_the_api_settings(
