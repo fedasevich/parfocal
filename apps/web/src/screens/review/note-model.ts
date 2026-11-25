@@ -1,7 +1,12 @@
 import type { DecisionReason, ReviewObject } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import { reasonText } from "./decision-style.ts";
-import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
+import {
+  disagreeOptions,
+  type ReasonOption,
+  reasonDraft,
+  toggleReasonLabel,
+} from "./disagree-reasons.ts";
 import type { Answer } from "./review-state.ts";
 
 export type NoteDraft = { reasons: string[]; text: string };
@@ -15,12 +20,37 @@ export const draftFrom = (kept: Answer | undefined): NoteDraft => ({
   text: kept?.note ?? "",
 });
 
-export const toggleReason = (draft: NoteDraft, reason: string): NoteDraft => ({
+export const toggleReason = (
+  draft: NoteDraft,
+  reason: string,
+  options: ReasonOption[] = [],
+): NoteDraft => ({
   ...draft,
-  reasons: draft.reasons.includes(reason)
-    ? draft.reasons.filter((item) => item !== reason)
-    : [...draft.reasons, reason],
+  reasons: toggleReasonLabel(draft.reasons, reason, options),
 });
+
+export const reasonOptionsOf = (object: ReviewObject, classes: ProjectClass[]) =>
+  disagreeOptions(object.kind, object.class_name, classes);
+
+export function toggledAnswer(
+  kept: Answer,
+  reason: string,
+  object: ReviewObject,
+  classes: ProjectClass[],
+): { next: Answer; body: ReasonBody | null } {
+  const options = reasonOptionsOf(object, classes);
+  const next = { ...kept, reasons: toggleReasonLabel(kept.reasons, reason, options) };
+  return { next, body: kept.value === "disagree" ? reasonDraft(next.reasons, options) : null };
+}
+
+export const revertedReasons =
+  (object: string, attempted: string[], before: string[]) =>
+  (answers: Map<string, Answer | null>): Map<string, Answer | null> => {
+    const shown = answers.get(object);
+    return shown && shown.reasons.join("|") === attempted.join("|")
+      ? new Map(answers).set(object, { ...shown, reasons: before })
+      : answers;
+  };
 
 export const withNote = (kept: Answer, draft: NoteDraft): Answer => ({
   ...kept,

@@ -121,6 +121,13 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         "new",
         { direction: true, note: "on the slide, next to the type bar" },
       ],
+      [
+        "dtypebar",
+        "Show or hide the type bar",
+        ["⇧B"],
+        "new",
+        { note: "on a cell on the slide. The type keys keep working while it is hidden" },
+      ],
       ["dadd", "Add something the AI missed", [], "new"],
       ["dsubmit", "Submit the slide", ["↵"], "new", { note: "on the Slide done card" }],
     ],

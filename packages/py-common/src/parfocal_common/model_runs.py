@@ -26,6 +26,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL
 from parfocal_common.db import DatabaseScope, metadata, scoped_transaction, tenant_foreign_key
 from parfocal_common.jobs import (
+    RUN_MODEL_STAGE,
     SEALED_COUNTS,
     Claimed,
     Step,
@@ -51,7 +52,7 @@ STAGES = (
     "ids-given",
     "result-set-added",
 )
-MODEL_STAGE = "model-running"
+MODEL_STAGE = RUN_MODEL_STAGE
 LAB_MODEL_INPUT = "lab_model"
 LAB_POOL_FUNCTION = "lab_model"
 LAB_POOL_KIND = "lab-model"

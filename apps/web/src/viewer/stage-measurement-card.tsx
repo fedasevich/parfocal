@@ -14,7 +14,9 @@ export function StageMeasurementCard({
   classes,
   onRemove,
   onApply,
+  rulersOnly = false,
 }: {
+  rulersOnly?: boolean;
   document: AnnotationDocument;
   micronsPerPixel: number | null;
   classes: readonly ProjectClass[];
@@ -31,6 +33,7 @@ export function StageMeasurementCard({
         document={doc}
         micronsPerPixel={micronsPerPixel}
         classNames={classNames}
+        rulersOnly={rulersOnly}
         {...(onRemove === undefined ? {} : { onRemove })}
       />
       {count > 0 ? (

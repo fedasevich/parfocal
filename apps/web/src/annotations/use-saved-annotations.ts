@@ -82,6 +82,8 @@ export type SkippedTarget = { readonly name: string; readonly reason: "hidden" |
 
 const groupRetryMs = 4000;
 
+export const groupSaveDelayMs = 400;
+
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
   readonly codes: SavedCodes;
@@ -100,6 +102,7 @@ export type SavedAnnotations = {
   readonly target: GroupId | null;
   readonly setTarget: (id: GroupId | null) => void;
   readonly skipped: SkippedTarget | null;
+  readonly layersKey: string;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly loaded: boolean;
@@ -399,7 +402,8 @@ export function useSavedAnnotations(
     if (!enabled || !loaded || status.waiting > 0) return;
     const body = layerGroupsOf(document, remotes.current);
     const text = JSON.stringify(body);
-    if (savedGroups.current === null && body.groups?.length === 0) return;
+    const empty = body.groups?.length === 0 && body.items?.length === 0;
+    if (savedGroups.current === null && empty) return;
     if (text === savedGroups.current) return;
     let stale = false;
     let timer: number | undefined;
@@ -415,7 +419,7 @@ export function useSavedAnnotations(
         },
       );
     };
-    push();
+    timer = window.setTimeout(push, groupSaveDelayMs);
     return () => {
       stale = true;
       window.clearTimeout(timer);
@@ -572,6 +576,7 @@ export function useSavedAnnotations(
     fold: foldInto,
     target,
     setTarget,
+    layersKey: `parfocal.layers.open:${sharedTaskId ?? "slide"}:${slideId}`,
     skipped,
     canUndo: canUndo(history),
     canRedo: canRedo(history),

@@ -3,7 +3,6 @@ import type { ReviewDecision } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useState } from "react";
 import { usePeople } from "../screens/people.ts";
-import { reasonText } from "../screens/review/decision-style.ts";
 import { disagreeOptions } from "../screens/review/disagree-reasons.ts";
 import { fromMentionTokens } from "../screens/review/mention-picking.ts";
 import {
@@ -22,7 +21,7 @@ import {
 import { ObjectComments } from "../screens/review/object-comments.tsx";
 import { answerOfNote, useOthersNotes } from "../screens/review/others-notes.ts";
 import { useReviewSession } from "../screens/review/review-data.ts";
-import type { Answer } from "../screens/review/review-state.ts";
+import { type Answer, reasonLabelsOf } from "../screens/review/review-state.ts";
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 
 export const answerOfDecision = (decision: ReviewDecision): Answer => ({
@@ -59,17 +58,7 @@ export function StageObjectNotes({
   const shown = kept
     ? {
         ...kept,
-        reasons: kept.reasons.map((code) => {
-          const option =
-            kept.value === "disagree" && item !== undefined
-              ? disagreeOptions(item.kind, item.class_name, session.classes).find(
-                  (entry) =>
-                    entry.code === code &&
-                    (entry.classId === null || entry.classId === decision?.reason_class_id),
-                )
-              : undefined;
-          return option?.label ?? reasonText[code] ?? code;
-        }),
+        reasons: decision ? reasonLabelsOf(decision, item, session.classes) : kept.reasons,
         note: kept.note === null ? null : fromMentionTokens(kept.note, nameOf),
       }
     : undefined;
@@ -105,7 +94,15 @@ export function StageObjectNotes({
         text={draft.text}
         offReason={undefined}
         meId={session.meId}
-        onReason={(reason) => setDraft(toggleReason(draft, reason))}
+        onReason={(reason) =>
+          setDraft(
+            toggleReason(
+              draft,
+              reason,
+              disagreeOptions(item.kind, item.class_name, session.classes),
+            ),
+          )
+        }
         onText={(text) => setDraft({ ...draft, text })}
         onSave={saveNote}
         onCancel={() => setDraft(null)}

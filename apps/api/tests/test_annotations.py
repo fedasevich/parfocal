@@ -396,7 +396,7 @@ def test_layer_groups_are_saved_with_the_slide_and_checked(api: ApiAs, database:
     s = studio(database)
     client = api(s.people["owner"])
     path = f"/api/slides/{s.slide}/layer-groups"
-    assert client.get(path).json() == {"groups": [], "members": []}
+    assert client.get(path).json() == {"groups": [], "members": [], "items": []}
     shape = client.post(s.path, json={"kind": "roi", "geometry": square(0, 0)}).json()["id"]
     saved = {
         "groups": [
@@ -407,6 +407,7 @@ def test_layer_groups_are_saved_with_the_slide_and_checked(api: ApiAs, database:
                 "color": [10, 20, 30],
                 "hidden": False,
                 "locked": True,
+                "rank": 2.5,
             },
             {
                 "id": 2,
@@ -415,9 +416,13 @@ def test_layer_groups_are_saved_with_the_slide_and_checked(api: ApiAs, database:
                 "color": None,
                 "hidden": True,
                 "locked": False,
+                "rank": None,
             },
         ],
         "members": [{"annotation_id": shape, "group_id": 2}],
+        "items": [
+            {"annotation_id": shape, "name": "Edge", "hidden": True, "locked": True, "rank": 0.5}
+        ],
     }
     assert client.put(path, json=saved).json() == saved
     assert client.get(path).json() == saved
@@ -425,6 +430,10 @@ def test_layer_groups_are_saved_with_the_slide_and_checked(api: ApiAs, database:
     assert client.put(path, json=orphan).status_code == 422
     loop = {"groups": [{"id": 1, "name": "A", "parent_id": 7}], "members": []}
     assert client.put(path, json=loop).status_code == 422
+    twice = {"items": [{"annotation_id": shape}, {"annotation_id": shape}]}
+    assert client.put(path, json=twice).status_code == 422
+    blank = {"items": [{"annotation_id": shape, "name": "  "}]}
+    assert client.put(path, json=blank).status_code == 422
     assert client.get(path).json() == saved
     assert api(s.people["viewer"]).get(path).json() == saved
     assert api(s.people["viewer"]).put(path, json=saved).status_code == 403

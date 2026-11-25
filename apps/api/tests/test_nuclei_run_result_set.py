@@ -14,7 +14,15 @@ from test_model_runs import Lab, control, expire_lease, make_lab, ok, run_async,
 from workspace_support import owner
 
 from parfocal_common.chunk_store import read_summary
-from parfocal_common.jobs import Step, StepFunction, StepRun, Workflow
+from parfocal_common.jobs import (
+    RUN_FOUND_NO_TISSUE,
+    RUN_FOUND_NOTHING,
+    RUN_OBJECTS_LOST,
+    Step,
+    StepFunction,
+    StepRun,
+    Workflow,
+)
 from parfocal_common.model_runs import STAGES
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.outline_types import TYPER_CLASSES
@@ -22,8 +30,9 @@ from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest import cell_import, matching
 from parfocal_ml import cell_numbers
+from parfocal_ml.lab_model_worker import passed
 from parfocal_ml.nuclei_run_worker import drain_nuclei_runs, nuclei_run_workflow
-from parfocal_ml.tumor_map_job import SlideImage
+from parfocal_ml.tumor_map_job import SlideImage, SlideOpener
 from parfocal_ml.tumor_map_worker import Drain
 from parfocal_ml.typer import CLASS_CHANNELS
 
@@ -77,18 +86,25 @@ def lab(api: ApiAs, database: str) -> Lab:
     return made
 
 
-def drained(database: str, lab: Lab, last: StepFunction | None = None) -> int:
+def drained(
+    database: str,
+    lab: Lab,
+    last: StepFunction | None = None,
+    *,
+    opener: SlideOpener = open_slide,
+    swapped: Mapping[str, StepFunction] | None = None,
+) -> int:
     async def no_sleep(seconds: float) -> None:
         return None
+
+    replaced = {**(swapped or {}), **({STAGES[-1]: last} if last is not None else {})}
 
     async def go(engine: Any) -> int:
         async with httpx2.AsyncClient(timeout=30) as http:
             store = ObjectResultStore(ObjectStore(TEST_STORAGE, http))
-            plan = nuclei_run_workflow(
-                open_slide, StainMaps(RADIUS), store, "L4", dark_is_neoplastic
-            )
-            if last is not None:
-                steps = [Step(s.name, last) if s.name == STAGES[-1] else s for s in plan.steps]
+            plan = nuclei_run_workflow(opener, StainMaps(RADIUS), store, "L4", dark_is_neoplastic)
+            if replaced:
+                steps = [Step(s.name, replaced.get(s.name, s.run)) for s in plan.steps]
                 plan = Workflow(plan.kind, steps, plan.lease_seconds)
             drain = Drain(idle_exit_seconds=1.0, poll_seconds=1.0, tenant_id=lab.tenant)
             return await drain_nuclei_runs(engine, plan, "nuclei-worker", drain, no_sleep)
@@ -239,6 +255,47 @@ def test_a_run_that_fails_records_the_reason_on_its_result_set(
     reopened = set_of(database, run)
     assert reopened[0] != failed[0]
     assert reopened[1:] == ("importing", 0, None)
+
+
+def test_a_run_whose_cells_never_reach_its_set_fails_instead_of_finishing_empty(
+    api: ApiAs, lab: Lab, database: str
+) -> None:
+    [run] = started(api, lab, [lab.slides[1]], parameters=NUCLEI)
+    stages_of_v0_51: dict[str, StepFunction] = dict.fromkeys(
+        ("objects-placed", "ids-given", "result-set-added"), passed
+    )
+    assert drained(database, lab, swapped=stages_of_v0_51) == 1
+    assert set_of(database, run)[1:] == ("failed", 0, RUN_OBJECTS_LOST)
+
+    [again] = started(api, lab, [lab.slides[1]], parameters=NUCLEI)
+    assert drained(database, lab, swapped={"ids-given": passed}) == 1
+    assert job_of(database, again) == ("failed", RUN_OBJECTS_LOST)
+    assert set_of(database, again)[1:] == ("failed", 0, RUN_OBJECTS_LOST)
+
+
+def plain_slide(colour: tuple[int, int, int]) -> SlideOpener:
+    async def opened(tenant_id: uuid.UUID, slide_id: uuid.UUID, folder: str | None) -> SlideImage:
+        rgb = np.empty((HEIGHT, WIDTH, 3), np.uint8)
+        rgb[:] = colour
+        return SlideImage(PixelReader(rgb), rgb[::16, ::16].copy(), 16.0, WIDTH, HEIGHT, MPP)
+
+    return opened
+
+
+@pytest.mark.parametrize(
+    ("colour", "reason"),
+    [((255, 255, 255), RUN_FOUND_NO_TISSUE), (TISSUE, RUN_FOUND_NOTHING)],
+)
+def test_an_empty_run_finishes_with_the_reason_it_is_empty(
+    api: ApiAs, lab: Lab, database: str, colour: tuple[int, int, int], reason: str
+) -> None:
+    [run] = started(api, lab, [lab.slides[1]], parameters=NUCLEI)
+    assert drained(database, lab, opener=plain_slide(colour)) == 1
+    assert job_of(database, run) == ("done", None)
+    set_id, status, cells, error = set_of(database, run)
+    assert (status, cells, error) == ("ready", 0, reason)
+    shown = ok(api(lab.people["owner"]).get(f"/api/result-sets/{set_id}"))
+    assert (shown["status"], shown["error_code"]) == ("ready", reason)
 
 
 def test_runs_number_cells_by_centre_exactly_as_an_import_does() -> None:

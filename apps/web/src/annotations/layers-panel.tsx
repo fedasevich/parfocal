@@ -11,44 +11,37 @@ import {
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import { LayerList, type LayerRow as ListRow } from "@parfocal/ui/components/viewer-tools";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { SlideAreaEntry } from "../viewer/slide-areas.ts";
-import { type AnnotationDocument, removeGroup, updateGroup } from "./document.ts";
+import { type AnnotationDocument, groupPath } from "./document.ts";
 import {
   addLayer,
   bucketsOf,
-  deleteGroupWithShapes,
+  colourToCss,
   groupBy,
   type LayerContext,
   type LayerLens,
   layerLenses,
-  layerRows,
   moveToGroup,
   overlaysHidden,
-  renameGroup,
-  rgbOfHex,
   setOverlaysHidden,
-  toggleHidden,
-  toggleLocked,
-  ungroupedKey,
   usableTarget,
 } from "./layers.ts";
-import type { GroupId, ShapeId } from "./shapes.ts";
-import type { SkippedTarget } from "./use-saved-annotations.ts";
+import { LayersTree } from "./layers-tree.tsx";
+import type { Extent, ShapeId } from "./shapes.ts";
+import type { SavedAnnotations } from "./use-saved-annotations.ts";
 
 type LayersPanelProps = {
   document: AnnotationDocument;
   onApply: (next: AnnotationDocument, label: string) => void;
   classes: readonly ProjectClass[];
   areas: readonly SlideAreaEntry[];
-  target: GroupId | null;
-  onTarget: (id: GroupId | null) => void;
+  saved: Pick<SavedAnnotations, "target" | "setTarget" | "skipped" | "layersKey">;
   selected?: readonly ShapeId[];
-  skipped?: SkippedTarget | null;
   resultSets?: ReactNode;
+  onPick?: (ids: readonly ShapeId[], bounds: Extent | null) => void;
 };
 
 const lensWords: Record<LayerLens, string> = {
@@ -58,21 +51,17 @@ const lensWords: Record<LayerLens, string> = {
   source: "source",
 };
 
-const groupIdOf = (key: string): GroupId | null => {
-  const id = Number(key);
-  return Number.isInteger(id) ? id : null;
-};
+const ignorePick = () => undefined;
 
 export function LayersPanel({
   document: doc,
   onApply,
   classes,
   areas,
-  target,
-  onTarget,
+  saved: { target, setTarget: onTarget, skipped, layersKey },
   selected = [],
-  skipped = null,
   resultSets,
+  onPick = ignorePick,
 }: LayersPanelProps) {
   const { t } = useLingui();
   const [lens, setLens] = useState<LayerLens | null>(null);
@@ -91,7 +80,13 @@ export function LayersPanel({
     }),
     [classes, areas],
   );
-  const rows = useMemo(() => layerRows(doc, context), [doc, context]);
+  const destinations = useMemo(
+    () =>
+      [...doc.groups.values()]
+        .map((group) => ({ id: group.id, name: groupPath(doc, group.id) }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [doc],
+  );
   const effective = usableTarget(doc, target);
   const goesTo = effective === null ? null : doc.groups.get(effective);
   const off = overlaysHidden(doc);
@@ -114,26 +109,6 @@ export function LayersPanel({
       [toggleOverlays],
     ),
   );
-
-  const listRows: ListRow[] = rows.map((row) => ({
-    key: row.key,
-    name: row.name,
-    colour: row.colour,
-    hex: row.hex,
-    count: row.count,
-    depth: row.depth,
-    locked: row.locked,
-    hasChildren: row.hasChildren,
-    inheritedOff: row.hiddenAbove,
-    plain: row.groupId === null,
-    target: row.groupId !== null && row.groupId === effective,
-  }));
-  const hiddenKeys = rows.filter((row) => row.hidden).map((row) => row.key);
-
-  const change = (key: string, edit: (id: GroupId) => AnnotationDocument, label: string) => {
-    const id = groupIdOf(key);
-    if (id !== null && key !== ungroupedKey) onApply(edit(id), label);
-  };
 
   return (
     <section
@@ -177,21 +152,19 @@ export function LayersPanel({
               }
             />
             <DropdownMenuContent align="end" className="w-48">
-              {rows.map((row) => (
+              {destinations.map((group) => (
                 <DropdownMenuItem
-                  key={row.key}
-                  onClick={() => onApply(moveToGroup(doc, selected, row.groupId), "Move to layer")}
+                  key={group.id}
+                  onClick={() => onApply(moveToGroup(doc, selected, group.id), "Move to layer")}
                 >
-                  {row.name}
+                  {group.name}
                 </DropdownMenuItem>
               ))}
-              {rows.some((row) => row.groupId === null) ? null : (
-                <DropdownMenuItem
-                  onClick={() => onApply(moveToGroup(doc, selected, null), "Move to layer")}
-                >
-                  <Trans>Ungrouped</Trans>
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                onClick={() => onApply(moveToGroup(doc, selected, null), "Move to layer")}
+              >
+                <Trans>Out of every group</Trans>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
@@ -211,36 +184,20 @@ export function LayersPanel({
       {skipped ? (
         <p role="status" data-testid="layers-skipped" className="m-0 text-body-sm text-warn">
           {skipped.reason === "locked"
-            ? t`${skipped.name} is locked, so the new shape went to Ungrouped.`
-            : t`${skipped.name} is hidden, so the new shape went to Ungrouped.`}
+            ? t`${skipped.name} is locked, so the new shape went to its class group.`
+            : t`${skipped.name} is hidden, so the new shape went to its class group.`}
         </p>
       ) : null}
-      {rows.length === 0 ? (
-        <p className="m-0 text-body-sm text-fg-dim">
-          <Trans>Nothing drawn yet. Select shapes and press ⌘G to group them.</Trans>
-        </p>
-      ) : (
-        <LayerList
-          rows={listRows}
-          hidden={hiddenKeys}
-          onToggle={(key) => change(key, (id) => toggleHidden(doc, id), "Show or hide layer")}
-          onLock={(key) => change(key, (id) => toggleLocked(doc, id), "Lock or unlock layer")}
-          onColour={(key, hex) => {
-            const color = rgbOfHex(hex);
-            if (color)
-              change(key, (id) => updateGroup(doc, id, { color }).document, "Layer colour");
-          }}
-          onRename={(key, name) => change(key, (id) => renameGroup(doc, id, name), "Rename layer")}
-          onUngroup={(key) => change(key, (id) => removeGroup(doc, id), "Ungroup layer")}
-          onDelete={(key) =>
-            change(key, (id) => deleteGroupWithShapes(doc, id), "Delete layer and its shapes")
-          }
-          onPick={(key) => {
-            const id = groupIdOf(key);
-            if (id !== null) onTarget(id === effective ? null : id);
-          }}
-        />
-      )}
+      <LayersTree
+        document={doc}
+        context={context}
+        onApply={onApply}
+        selected={selected}
+        onPick={onPick}
+        storageKey={layersKey}
+        target={effective}
+        onTarget={onTarget}
+      />
       <div className="grid gap-1">
         <span className="text-caption font-semibold text-fg-dim uppercase">
           <Trans>Group by</Trans>
@@ -283,11 +240,10 @@ export function LayersPanel({
               aria-hidden="true"
               className="size-2.5 rounded-[3px]"
               style={{
-                background:
-                  rows.find((row) => row.groupId === effective)?.colour ?? "var(--fg-faint)",
+                background: (goesTo ? colourToCss(goesTo.color) : null) ?? "var(--fg-faint)",
               }}
             />
-            {goesTo?.name ?? t`Ungrouped`}
+            {goesTo?.name ?? t`Its class group`}
           </span>
           {target !== null && effective === null ? (
             <span className="text-fg-dim">{t`that layer is hidden or locked`}</span>

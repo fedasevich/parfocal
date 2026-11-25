@@ -52,3 +52,41 @@ export function reasonDraft(
   const withClass = picked.find((option) => option.classId !== null);
   return { reasons, reason_class_id: withClass?.classId ?? null };
 }
+
+const isType = (option: ReasonOption) => option.code === "wrong_class";
+
+const deniesType = (option: ReasonOption) =>
+  option.code === "not_a_cell" || option.code === "artefact";
+
+const contradicts = (first: ReasonOption, second: ReasonOption) =>
+  first !== second &&
+  ((isType(first) && (isType(second) || deniesType(second))) ||
+    (isType(second) && deniesType(first)));
+
+export function toggleReasonLabel(
+  labels: string[],
+  label: string,
+  options: ReasonOption[],
+): string[] {
+  if (labels.includes(label)) return labels.filter((item) => item !== label);
+  const picked = options.find((option) => option.label === label);
+  if (picked === undefined) return [...labels, label];
+  const clashing = new Set(
+    options.filter((option) => contradicts(picked, option)).map((option) => option.label),
+  );
+  return [...labels.filter((item) => !clashing.has(item)), label];
+}
+
+export function savedReasonLabels(
+  codes: DecisionReason[],
+  classId: string | null,
+  options: ReasonOption[],
+  fallback: (code: DecisionReason) => string,
+): string[] {
+  return codes.map((code) => {
+    const matching = options.filter((option) => option.code === code);
+    const exact = matching.find((option) => option.classId === classId);
+    const plain = matching.find((option) => option.classId === null);
+    return (exact ?? plain)?.label ?? fallback(code);
+  });
+}

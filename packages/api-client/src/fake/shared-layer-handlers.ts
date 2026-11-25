@@ -415,7 +415,11 @@ const layerHandlers = (): RequestHandler[] => [
   }),
   http.get<Params>(`${base}/shared-layer/groups`, ({ params }) =>
     HttpResponse.json(
-      readStore().groups[keyOf(params.taskId, params.slideId)] ?? { groups: [], members: [] },
+      readStore().groups[keyOf(params.taskId, params.slideId)] ?? {
+        groups: [],
+        members: [],
+        items: [],
+      },
     ),
   ),
   http.put<Params>(`${base}/shared-layer/groups`, async ({ params, request }) => {

@@ -73125,6 +73125,17 @@
             "type": "boolean",
             "title": "Locked",
             "default": false
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
           }
         },
         "type": "object",
@@ -73152,6 +73163,15 @@
             "type": "array",
             "maxItems": 20000,
             "title": "Members",
+            "default": []
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LayerItem"
+            },
+            "type": "array",
+            "maxItems": 20000,
+            "title": "Items",
             "default": []
           }
         },
@@ -73223,6 +73243,51 @@
           "unknown_classes"
         ],
         "title": "LayerImportResult"
+      },
+      "LayerItem": {
+        "properties": {
+          "annotation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Annotation Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden",
+            "default": false
+          },
+          "locked": {
+            "type": "boolean",
+            "title": "Locked",
+            "default": false
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "annotation_id"
+        ],
+        "title": "LayerItem"
       },
       "LayerMember": {
         "properties": {

@@ -162,11 +162,12 @@ export const annotationHandlers = (): RequestHandler[] => [
     });
   }),
   http.get<{ slideId: string }>("*/api/slides/:slideId/layer-groups", ({ params }) => {
-    const saved = readGroups()[params.slideId] ?? { groups: [], members: [] };
+    const saved = readGroups()[params.slideId] ?? { groups: [], members: [], items: [] };
     const hidden = hiddenAddedIds(params.slideId);
     return HttpResponse.json({
       groups: saved.groups ?? [],
       members: (saved.members ?? []).filter((member) => !hidden.has(member.annotation_id)),
+      items: (saved.items ?? []).filter((item) => !hidden.has(item.annotation_id)),
     });
   }),
   http.put<{ slideId: string }>(
@@ -179,11 +180,19 @@ export const annotationHandlers = (): RequestHandler[] => [
         (member) => hidden.has(member.annotation_id) && kept.has(member.group_id),
       );
       const mine = (body.members ?? []).filter((member) => !hidden.has(member.annotation_id));
+      const theirItems = (readGroups()[params.slideId]?.items ?? []).filter((item) =>
+        hidden.has(item.annotation_id),
+      );
+      const myItems = (body.items ?? []).filter((item) => !hidden.has(item.annotation_id));
       writeGroups({
         ...readGroups(),
-        [params.slideId]: { groups: body.groups ?? [], members: [...mine, ...theirs] },
+        [params.slideId]: {
+          groups: body.groups ?? [],
+          members: [...mine, ...theirs],
+          items: [...myItems, ...theirItems],
+        },
       });
-      return HttpResponse.json({ groups: body.groups ?? [], members: mine });
+      return HttpResponse.json({ groups: body.groups ?? [], members: mine, items: myItems });
     },
   ),
   http.get<{ slideId: string }>("*/api/slides/:slideId/annotations", ({ params, request }) => {

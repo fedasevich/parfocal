@@ -48,7 +48,14 @@ async function twoGrouped(page: Page) {
 }
 
 const rowOf = (page: Page, name: string) =>
-  page.getByTestId("layers-panel").locator("li", { hasText: name });
+  page.getByTestId("layers-panel").locator('li[data-kind="group"]', { hasText: name });
+
+const loose = (page: Page) => page.getByTestId("layers-tree").locator('[data-key^="c:"]');
+
+async function sendNewShapesTo(page: Page, name: string) {
+  await page.getByRole("button", { name: `More actions for ${name}` }).click();
+  await page.getByRole("menuitem", { name: "New shapes go here" }).click();
+}
 
 test("Cmd+G groups the selection into a row with its count and Cmd+Shift+G ungroups it", async ({
   page,
@@ -57,11 +64,11 @@ test("Cmd+G groups the selection into a row with its count and Cmd+Shift+G ungro
   const row = rowOf(page, "Group 1");
   await expect(row).toHaveCount(1);
   await expect(row).toContainText("2");
-  await expect(rowOf(page, "Ungrouped")).toHaveCount(0);
+  await expect(loose(page)).toHaveCount(0);
 
   await page.keyboard.press("Control+Shift+g");
   await expect(rowOf(page, "Group 1")).toHaveCount(0);
-  await expect(rowOf(page, "Ungrouped")).toContainText("2");
+  await expect(loose(page)).toContainText("2");
 });
 
 test("the eye hides a group and its shapes leave the slide and come back", async ({ page }) => {
@@ -108,9 +115,9 @@ test("A shows and hides every overlay", async ({ page }) => {
 test("Group by class turns loose shapes into class groups", async ({ page }) => {
   const { box } = await openSlide(page);
   await drawRectangle(page, box, [200, 200], [400, 260]);
-  await expect(rowOf(page, "Ungrouped")).toContainText("1");
+  await expect(loose(page)).toContainText("1");
   await page.getByRole("radio", { name: "class" }).click();
-  await expect(rowOf(page, "Ungrouped")).toHaveCount(0);
+  await expect(loose(page)).toHaveCount(0);
   await expect(page.getByTestId("layers-panel").locator("li")).toHaveCount(1);
 });
 
@@ -121,12 +128,12 @@ test("new shapes go to the layer you pick and the target is refused once it is l
   const panel = page.getByTestId("layers-panel");
   await page.getByRole("button", { name: "Add a layer" }).click();
   await expect(rowOf(page, "Layer 1")).toHaveCount(1);
-  await page.getByRole("button", { name: "New shapes go to Layer 1" }).click();
+  await sendNewShapesTo(page, "Layer 1");
   await expect(panel).toHaveAttribute("data-target", "1");
 
   await drawRectangle(page, box, [200, 200], [400, 260]);
   await expect(rowOf(page, "Layer 1")).toContainText("1");
-  await expect(rowOf(page, "Ungrouped")).toHaveCount(0);
+  await expect(loose(page)).toHaveCount(0);
 
   await page.getByRole("button", { name: "Lock Layer 1" }).click();
   await expect(panel).toHaveAttribute("data-target", "");

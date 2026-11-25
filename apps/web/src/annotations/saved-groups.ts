@@ -5,7 +5,7 @@ import {
   setLayerGroups,
   setSharedLayerGroups,
 } from "@parfocal/api-client";
-import type { AnnotationDocument, Group } from "./document.ts";
+import type { AnnotationDocument, Group, LayerItem } from "./document.ts";
 import type { GroupId, ShapeId } from "./shapes.ts";
 
 export type SavedRemotes = ReadonlyMap<ShapeId, { readonly id: string | null }>;
@@ -33,6 +33,7 @@ export function layerGroupsOf(doc: AnnotationDocument, remotes: SavedRemotes): L
       color: colourOf(group.color),
       hidden: group.hidden,
       locked: group.locked,
+      rank: group.rank ?? null,
     }));
   const members: LayerGroups["members"] = [];
   for (const shape of doc.shapes.values()) {
@@ -42,7 +43,44 @@ export function layerGroupsOf(doc: AnnotationDocument, remotes: SavedRemotes): L
     }
   }
   members.sort((a, b) => a.annotation_id.localeCompare(b.annotation_id));
-  return { groups, members };
+  const items: NonNullable<LayerGroups["items"]> = [];
+  for (const [shapeId, item] of doc.items ?? []) {
+    const remote = remotes.get(shapeId)?.id;
+    if (!remote || !doc.shapes.has(shapeId) || isPlain(item)) continue;
+    items.push({
+      annotation_id: remote,
+      name: item.name,
+      hidden: item.hidden,
+      locked: item.locked,
+      rank: item.rank,
+    });
+  }
+  items.sort((a, b) => a.annotation_id.localeCompare(b.annotation_id));
+  return { groups, members, items };
+}
+
+const isPlain = (item: LayerItem): boolean =>
+  item.name === null && !item.hidden && !item.locked && item.rank === null;
+
+function savedItems(
+  saved: LayerGroups,
+  remotes: SavedRemotes,
+): ReadonlyMap<number, LayerItem> | undefined {
+  const entries = saved.items ?? [];
+  if (entries.length === 0) return undefined;
+  const byRemote = new Map(entries.map((item) => [item.annotation_id, item]));
+  const items = new Map<number, LayerItem>();
+  for (const [shapeId, remote] of remotes) {
+    const found = remote.id === null ? undefined : byRemote.get(remote.id);
+    if (found === undefined) continue;
+    items.set(shapeId, {
+      name: found.name ?? null,
+      hidden: found.hidden ?? false,
+      locked: found.locked ?? false,
+      rank: found.rank ?? null,
+    });
+  }
+  return items.size === 0 ? undefined : items;
 }
 
 export function withSavedGroups(
@@ -51,7 +89,9 @@ export function withSavedGroups(
   remotes: SavedRemotes,
 ): AnnotationDocument {
   const entries = saved.groups ?? [];
-  if (entries.length === 0) return doc;
+  const items = savedItems(saved, remotes);
+  const withItems = items === undefined ? doc : { ...doc, items };
+  if (entries.length === 0) return withItems;
   const known = new Set(entries.map((group) => group.id));
   const groups = new Map<GroupId, Group>();
   for (const group of entries) {
@@ -65,6 +105,7 @@ export function withSavedGroups(
       color: triple(group.color),
       hidden: group.hidden ?? false,
       locked: group.locked ?? false,
+      ...(group.rank === null || group.rank === undefined ? {} : { rank: group.rank }),
     });
   }
   const home = new Map<string, GroupId>();
@@ -78,5 +119,5 @@ export function withSavedGroups(
     }
   }
   const nextGroupId = Math.max(doc.nextGroupId, ...entries.map((group) => group.id + 1));
-  return { ...doc, groups, shapes, nextGroupId };
+  return { ...withItems, groups, shapes, nextGroupId };
 }

@@ -14,11 +14,6 @@ msgstr ""
 msgid "{0} GB needed, {1} GB left in {projectCode}"
 msgstr "{0} GB needed, {1} GB left in {projectCode}"
 
-#. placeholder {0}: format.integer(set.cell_count)
-#: src/screens/project/slides-tab.tsx
-msgid " · {0} cells"
-msgstr " · {0} cells"
-
 #. placeholder {0}: plural(toDecide, "object")
 #: src/screens/my-work/my-work-screen.tsx
 msgid " · {0} to decide"
@@ -691,6 +686,11 @@ msgstr "{0} cell"
 #: src/screens/viewer/use-viewer-scene.tsx
 msgid "{0} cell{1} in the sample {2} still open"
 msgstr "{0} cell{1} in the sample {2} still open"
+
+#. placeholder {0}: format.integer(summary.cells)
+#: src/screens/project/slides-tab.tsx
+msgid "{0} cells"
+msgstr "{0} cells"
 
 #. placeholder {0}: test.missing_geometry
 #: src/screens/admin/connect-model.tsx
@@ -1390,7 +1390,7 @@ msgstr "{0} positive of {examined} examined"
 msgid "{0} recorded"
 msgstr "{0} recorded"
 
-#. placeholder {0}: set.region_count
+#. placeholder {0}: format.integer(summary.regions)
 #: src/screens/project/slides-tab.tsx
 msgid "{0} regions"
 msgstr "{0} regions"
@@ -1658,6 +1658,11 @@ msgstr "{0} without results"
 #: src/screens/settings/shortcuts-section.tsx
 msgid "{0} would take keys from {1}. Change those first, or keep the arrows."
 msgstr "{0} would take keys from {1}. Change those first, or keep the arrows."
+
+#. placeholder {0}: format.integer(summary.zones)
+#: src/screens/project/slides-tab.tsx
+msgid "{0} zones"
+msgstr "{0} zones"
 
 #. placeholder {0}: data.case.label
 #: src/screens/clinical-report/report-screen.tsx
@@ -7457,6 +7462,14 @@ msgstr "Emergency, with reason"
 msgid "Empty file"
 msgstr "Empty file"
 
+#: src/screens/project/slides-tab.tsx
+msgid "Empty, the model found nothing"
+msgstr "Empty, the model found nothing"
+
+#: src/screens/project/slides-tab.tsx
+msgid "Empty, the run found no tissue on the slide"
+msgstr "Empty, the run found no tissue on the slide"
+
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/home/announcements.tsx
 msgid "End"
@@ -7939,6 +7952,11 @@ msgstr "Fade"
 #: src/screens/dataset/dataset-screen.tsx
 msgid "Failed"
 msgstr "Failed"
+
+#. placeholder {0}: runFailureText(summary.code)
+#: src/screens/project/slides-tab.tsx
+msgid "Failed, {0}"
+msgstr "Failed, {0}"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "False negatives"
@@ -8883,6 +8901,10 @@ msgstr "Hide the sidebar"
 #: ../../packages/ui/src/components/job-steps.tsx
 msgid "Hide the steps"
 msgstr "Hide the steps"
+
+#: src/screens/review/type-bar.tsx
+msgid "Hide the type bar"
+msgstr "Hide the type bar"
 
 #: src/screens/admin/connect-model.tsx
 #: src/screens/onboarding/auth-inputs.tsx
@@ -11545,6 +11567,10 @@ msgstr "No object has a decision yet."
 #: src/screens/dataset/dataset-screen.tsx
 msgid "No object matches these filters."
 msgstr "No object matches these filters."
+
+#: src/screens/project/slides-tab.tsx
+msgid "No objects counted"
+msgstr "No objects counted"
 
 #: ../../packages/ui/src/components/token-field.tsx
 msgid "No one called that. Type an email to invite them."
@@ -16390,6 +16416,10 @@ msgstr "Show the steps"
 msgid "Show the title"
 msgstr "Show the title"
 
+#: src/screens/review/type-bar.tsx
+msgid "Show the type bar"
+msgstr "Show the type bar"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/comments-tab.tsx
 msgid "Show threads"
@@ -17432,6 +17462,10 @@ msgstr "Stick"
 #: src/screens/settings/feel-preview.tsx
 msgid "Stick preview"
 msgstr "Stick preview"
+
+#: src/screens/project/slides-tab.tsx
+msgid "Still adding results"
+msgstr "Still adding results"
 
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "Still not sure"
@@ -19945,6 +19979,10 @@ msgstr "Type at least two letters to search."
 #: src/screens/review/type-bar.tsx
 msgid "Type for {object}"
 msgstr "Type for {object}"
+
+#: src/screens/review/type-bar.tsx
+msgid "Type keys for {object}"
+msgstr "Type keys for {object}"
 
 #: src/study/prepare-participant.tsx
 msgid "Type or accept the code the participant page shows. Preparing seeds a fresh project for that code, with you as its seat, and replaces an earlier one. If you are new to the study workspace, you join it as an admin, so you can remove the project from there."

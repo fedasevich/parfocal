@@ -95,7 +95,7 @@ test("groups made in a shared annotate task are saved on the task and come back"
   await groupSaved;
   await expect(rowOf(page, "Group 1")).toContainText("2");
 
-  await page.getByRole("button", { name: "New shapes go to Group 1" }).dblclick();
+  await rowOf(page, "Group 1").getByTestId("layers-row-name").dblclick();
   await page.getByLabel("Name of Group 1").fill("Margins");
   const renamed = page.waitForRequest(
     (request) =>
@@ -111,5 +111,5 @@ test("groups made in a shared annotate task are saved on the task and come back"
     timeout: 30_000,
   });
   await expect(rowOf(page, "Margins")).toContainText("2");
-  await expect(rowOf(page, "Ungrouped")).toHaveCount(0);
+  await expect(page.getByTestId("layers-tree").locator('[data-key^="c:"]')).toHaveCount(0);
 });

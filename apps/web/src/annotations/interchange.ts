@@ -4,6 +4,7 @@ import {
   addGroup,
   addRestoredShape,
   type Group,
+  type LayerItem,
   listShapes,
   placePin,
 } from "./document.ts";
@@ -35,6 +36,7 @@ export interface FileGroup {
   readonly color: readonly [number, number, number] | null;
   readonly hidden: boolean;
   readonly locked: boolean;
+  readonly rank: number | null;
 }
 
 export interface FileShape {
@@ -48,6 +50,7 @@ export interface FileShape {
   readonly reviewState: ReviewState;
   readonly threadIds: readonly string[];
   readonly provenance: Provenance;
+  readonly layer: LayerItem | null;
 }
 
 export interface FilePin {
@@ -160,8 +163,18 @@ export function geometryOf(shape: Shape): Json {
   }
 }
 
-function ownDetails(shape: Shape, names: ClassNames, objectId: string | undefined): Json {
+function layerOf(item: LayerItem | undefined): Json {
+  return item === undefined ? {} : { layer: { ...item } };
+}
+
+function ownDetails(
+  shape: Shape,
+  names: ClassNames,
+  objectId: string | undefined,
+  item?: LayerItem,
+): Json {
   return {
+    ...layerOf(item),
     id: shape.id,
     ...(objectId === undefined ? {} : { object_id: objectId }),
     shape: shape.kind,
@@ -184,6 +197,7 @@ function groupsOf(doc: AnnotationDocument): Json[] {
     color: group.color,
     hidden: group.hidden,
     locked: group.locked,
+    rank: group.rank ?? null,
   }));
 }
 
@@ -206,7 +220,7 @@ export function toOwnJson(doc: AnnotationDocument, names: ClassNames = sameClass
     objects: listShapes(doc).map((shape) => {
       const kind = layerKinds[shape.kind];
       return {
-        ...ownDetails(shape, names, ids.get(shape.id)?.ascii),
+        ...ownDetails(shape, names, ids.get(shape.id)?.ascii, doc.items?.get(shape.id)),
         ...(kind === undefined ? {} : { kind }),
         geometry: geometryOf(shape),
       };
@@ -235,7 +249,7 @@ export function toGeoJson(doc: AnnotationDocument, names: ClassNames = sameClass
           ? {}
           : { classification: { name: names.nameOf(shape.classKey) } }),
         ...(shape.text === null ? {} : { name: shape.text }),
-        parfocal: ownDetails(shape, names, ids.get(shape.id)?.ascii),
+        parfocal: ownDetails(shape, names, ids.get(shape.id)?.ascii, doc.items?.get(shape.id)),
       },
     })),
   };
@@ -338,6 +352,16 @@ function provenanceOf(value: unknown): Provenance {
   };
 }
 
+function fileLayer(value: unknown): LayerItem | null {
+  if (!isJson(value)) return null;
+  return {
+    name: textOf(value["name"])?.trim().slice(0, 80) ?? null,
+    hidden: value["hidden"] === true,
+    locked: value["locked"] === true,
+    rank: numberOf(value["rank"]),
+  };
+}
+
 function ownShape(details: Json, className: string | null): FileShape | null {
   const points = details["points"];
   const starts = details["ring_starts"];
@@ -358,6 +382,7 @@ function ownShape(details: Json, className: string | null): FileShape | null {
       ? threads.filter((t): t is string => typeof t === "string")
       : [],
     provenance: provenanceOf(details["provenance"]),
+    layer: fileLayer(details["layer"]),
   };
 }
 
@@ -372,6 +397,7 @@ function plainFileShapes(plain: Plain[], className: string | null): FileShape[] 
     reviewState: "unreviewed",
     threadIds: [],
     provenance: { kind: "human" },
+    layer: null,
   }));
 }
 
@@ -434,6 +460,7 @@ function fileGroups(value: unknown): FileGroup[] {
         color: rgb,
         hidden: item["hidden"] === true,
         locked: item["locked"] === true,
+        rank: numberOf(item["rank"]),
       },
     ];
   });
@@ -520,6 +547,12 @@ function groupOrder(groups: readonly FileGroup[]): FileGroup[] {
   return ordered;
 }
 
+function withItem(doc: AnnotationDocument, id: ShapeId, item: LayerItem): AnnotationDocument {
+  const items = new Map(doc.items);
+  items.set(id, item);
+  return { ...doc, items };
+}
+
 export function mergeFile(
   doc: AnnotationDocument,
   file: ReadFile,
@@ -540,6 +573,7 @@ export function mergeFile(
       color: group.color,
       hidden: group.hidden,
       locked: group.locked,
+      ...(group.rank === null ? {} : { rank: group.rank }),
     });
     next = made.document;
     groupIds.set(group.key, made.group.id);
@@ -564,7 +598,8 @@ export function mergeFile(
         shape.provenance,
         shape.threadIds,
       );
-      next = made.document;
+      next =
+        shape.layer === null ? made.document : withItem(made.document, made.shape.id, shape.layer);
       added.push(made.shape.id);
       if (shape.key !== null) shapeIds.set(shape.key, made.shape.id);
     } catch (error) {
