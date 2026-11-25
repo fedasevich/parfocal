@@ -2,6 +2,36 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.56.0 (2026-11-25)
+
+### Features
+
+- PROTO-181: Queue Smart select clicks made while the model works
+- PROTO-185: Keep the picked region outlined and animated while it is processed
+- PROTO-175: Make add what the AI missed a task setting that draws a real object
+- PROTO-175: Keep add what the AI missed across display changes and test the cell path
+
+### Fixes
+
+- PROTO-196: Number new run cells above stored cells and seed the slide cell counter
+- PROTO-196: Number new imported regions above stored regions and count seeded regions
+
+### Docs
+
+- PROTO-181: Log and tick after merge
+- EXP-022: Log the v0.55.0 deploy
+- EXP-022: Log the v0.55.0 smoke rerun
+- PROTO-185: Log and tick after merge
+- PROTO-196: Log and tick after merge
+- PROTO-175: Log and tick after merge
+
+### Other
+
+- PROTO-181: Merge main
+- PROTO-185: Claim PROTO-185 for the parallel run
+- PROTO-182: Claim PROTO-182 for the parallel run
+- PROTO-170: Claim PROTO-170 for the parallel run
+
 ## v0.55.0 (2026-11-25)
 
 ### Features
