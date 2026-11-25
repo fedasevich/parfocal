@@ -39,18 +39,32 @@ export function StageCellTypeBar({
   const blocked = useStageBlocks(frame, barBlocks);
   const spot = outlineCentre(cell.outline);
   const ready = spot !== null && size.width > 0;
+  const centre = spot === null ? null : slideToScreen(spot, camera, size);
+  const radius = spot === null ? 0 : spot.radius * 2 ** camera.zoom;
   return (
-    <div ref={frame} className="pointer-events-none absolute inset-0">
-      {ready ? (
+    <div
+      ref={frame}
+      data-testid="cell-type-frame"
+      data-cell-box={
+        centre === null
+          ? undefined
+          : [centre.x - radius, centre.y - radius, centre.x + radius, centre.y + radius]
+              .map(Math.round)
+              .join(",")
+      }
+      className="pointer-events-none absolute inset-0"
+    >
+      {ready && centre !== null ? (
         <TypeBar
           object={cell.object}
-          centre={slideToScreen(spot, camera, size)}
+          centre={centre}
           scale={1}
-          radius={spot.radius * 2 ** camera.zoom}
+          radius={radius}
           size={size}
           chosen={chosen}
           onChoose={onChoose}
           blocked={blocked}
+          hideable
         />
       ) : null}
     </div>

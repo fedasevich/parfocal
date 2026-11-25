@@ -1,9 +1,11 @@
 import { useLingui } from "@lingui/react/macro";
+import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { actionOf } from "../../keys/actions.ts";
 import { useBindings } from "../../keys/personal-keys.ts";
 import type { Fired } from "../../keys/registry.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
+import { useTypeBarHidden } from "../../viewer/type-bar-hidden.ts";
 import { inLayer } from "./answer-keys.ts";
 import {
   type BlockRect,
@@ -19,6 +21,10 @@ import { type TypeId, type TypeOption, typeOptions } from "./type-bar.ts";
 const ringRadius = 24;
 const barHeight = 48;
 const buttonWidth = 116;
+const handleWidth = 64;
+const hintHeight = 32;
+const hintWidth = 720;
+export const cellMargin = 24;
 
 type TypeBarProps = {
   object: string;
@@ -30,6 +36,7 @@ type TypeBarProps = {
   onChoose: (option: TypeOption) => void;
   disabledReason?: string | undefined;
   blocked?: readonly BlockRect[] | undefined;
+  hideable?: boolean | undefined;
 };
 
 export function TypeBar({
@@ -42,18 +49,59 @@ export function TypeBar({
   onChoose,
   disabledReason,
   blocked,
+  hideable = false,
 }: TypeBarProps) {
   const { t } = useLingui();
-  const width = Math.min(size.width - 24, typeOptions.length * buttonWidth + 16);
+  const [stored, setHidden] = useTypeBarHidden();
+  const hidden = hideable && stored;
+  const toggleBindings = useBindings(["review"], ["dtypebar"], hideable);
+  useHotkeys(toggleBindings, (fired: Fired) => {
+    if (fired.phase === "press" && !inLayer()) setHidden(!hidden);
+  });
+  const onToggle = () => setHidden(!hidden);
+  const width = hidden
+    ? Math.min(size.width - 24, hintWidth)
+    : Math.min(
+        size.width - 24,
+        typeOptions.length * buttonWidth + 16 + (hideable ? handleWidth : 0),
+      );
   const box = placeBar(
     centre,
     radius ?? ringRadius * scale,
-    { width, height: barHeight },
+    { width, height: hidden ? hintHeight : barHeight },
     size,
-    undefined,
+    hideable ? cellMargin : undefined,
     undefined,
     blocked,
   );
+  if (hidden)
+    return (
+      <section
+        aria-label={t`Type keys for ${object}`}
+        data-testid="cell-type-hint"
+        className="pointer-events-auto absolute z-4 flex items-center gap-2 rounded-zone border border-line bg-chrome px-1 py-1 text-caption text-fg-dim shadow-pop"
+        style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
+      >
+        <button
+          type="button"
+          title={t`Show the type bar`}
+          onClick={onToggle}
+          className="flex h-full shrink-0 cursor-pointer items-center gap-1.5 rounded-ctl border-0 bg-transparent px-2 text-body-sm font-medium whitespace-nowrap text-fg hover:bg-chrome-2"
+        >
+          <Icon name="eye" />
+          <span className="sr-only">{t`Show the type bar`}</span>
+          <Keycap action="dtypebar" keys="⇧B" size="sm" />
+        </button>
+        <p className="m-0 flex min-w-0 items-center gap-2.5 overflow-hidden whitespace-nowrap">
+          {typeOptions.map((option) => (
+            <span key={option.id} className="flex items-center gap-1">
+              <Keycap action={option.action} keys={option.key} size="sm" />
+              {option.label}
+            </span>
+          ))}
+        </p>
+      </section>
+    );
   return (
     <div
       role="toolbar"
@@ -78,6 +126,18 @@ export function TypeBar({
           {option.label}
         </button>
       ))}
+      {hideable ? (
+        <button
+          type="button"
+          title={t`Hide the type bar`}
+          onClick={onToggle}
+          className="flex h-full w-14 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-ctl border-0 border-l border-line bg-transparent px-2 text-fg-dim hover:bg-chrome-2"
+        >
+          <Icon name="eye-off" />
+          <span className="sr-only">{t`Hide the type bar`}</span>
+          <Keycap action="dtypebar" keys="⇧B" size="sm" />
+        </button>
+      ) : null}
     </div>
   );
 }

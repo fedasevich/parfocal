@@ -1732,8 +1732,8 @@ msgstr ""
 msgid "{0}, {done} of {of} slides"
 msgstr ""
 
+#. placeholder {0}: plural(going.results, "file")
 #. placeholder {0}: plural(model.resultCount - left, "file")
-#. placeholder {0}: plural(model.uploadResults.length, "file")
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "{0}, {left} left out"
@@ -2339,7 +2339,7 @@ msgstr ""
 msgid "{slides} slides and {results} result files."
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 msgid "{slideShort} could not be read at 20x and 40x."
 msgstr ""
 
@@ -4280,7 +4280,7 @@ msgstr ""
 msgid "Ask the person who shared it for a new link."
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/viewer-notices.tsx
 #: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
@@ -4445,12 +4445,20 @@ msgstr ""
 msgid "Back to {backLabel}. Every answer is saved"
 msgstr ""
 
+#: src/screens/review/guided-form-back.tsx
+msgid "Back to {current}"
+msgstr ""
+
 #: src/screens/review/guided-parts.tsx
 msgid "Back to {currentId}"
 msgstr ""
 
 #: src/viewer/stage-guided-view.tsx
 msgid "Back to {object}"
+msgstr ""
+
+#: src/viewer/stage-opinion-back.tsx
+msgid "Back to {target}"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -8850,6 +8858,10 @@ msgstr ""
 msgid "Hide the steps"
 msgstr ""
 
+#: src/screens/review/type-bar.tsx
+msgid "Hide the type bar"
+msgstr ""
+
 #: src/screens/admin/connect-model.tsx
 #: src/screens/onboarding/auth-inputs.tsx
 msgid "Hide what you typed"
@@ -11330,7 +11342,7 @@ msgstr ""
 msgid "No {setName} result on {slideLabel} yet."
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 msgid "No {setName} result on {slideShort} yet."
 msgstr ""
 
@@ -14788,7 +14800,7 @@ msgstr ""
 msgid "Retired"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/screens/upload/case-upload-drawer.tsx
 #: src/screens/viewer/viewer-notices.tsx
 #: src/viewer/stage-issue-cards.tsx
@@ -14904,7 +14916,7 @@ msgstr ""
 msgid "Review the first slide <0/>"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Review the slide without AI, or ask the researcher to run the model."
@@ -16316,6 +16328,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Show the title"
+msgstr ""
+
+#: src/screens/review/type-bar.tsx
+msgid "Show the type bar"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -19441,7 +19457,7 @@ msgstr ""
 msgid "Tiles"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/viewer-notices.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Tiles are missing on the server. Lower magnifications still show, and your other slides work."
@@ -19861,6 +19877,10 @@ msgstr ""
 msgid "Type for {object}"
 msgstr ""
 
+#: src/screens/review/type-bar.tsx
+msgid "Type keys for {object}"
+msgstr ""
+
 #: src/study/prepare-participant.tsx
 msgid "Type or accept the code the participant page shows. Preparing seeds a fresh project for that code, with you as its seat, and replaces an earlier one."
 msgstr ""
@@ -20023,8 +20043,8 @@ msgstr ""
 msgid "Upload {0}"
 msgstr ""
 
-#. placeholder {0}: plural(model.uploadSlides.length, "slide")
-#. placeholder {1}: plural(model.uploadResults.length, "result")
+#. placeholder {0}: plural(going.slides, "slide")
+#. placeholder {1}: plural(going.results, "result")
 #: src/screens/upload/live-wizard.tsx
 msgid "Upload {0} and {1}"
 msgstr ""

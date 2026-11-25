@@ -78,6 +78,40 @@ test("the type bar leaves a blocked rect such as the cells grid and stays on the
   assert.ok(walled.top >= 12);
 });
 
+test("the bar keeps its margin from a cell box near every edge of the stage", () => {
+  const size = { width: 1000, height: 700 };
+  const bar = { width: 760, height: 48 };
+  const radius = 40;
+  const margin = 24;
+  const near = [
+    { x: 30, y: 350 },
+    { x: 970, y: 350 },
+    { x: 500, y: 30 },
+    { x: 500, y: 670 },
+    { x: 30, y: 30 },
+    { x: 970, y: 670 },
+  ];
+  for (const cell of near) {
+    const box = placeBar(cell, radius, bar, size, margin);
+    const apartVertically =
+      box.top >= cell.y + radius + margin || box.top + box.height <= cell.y - radius - margin;
+    const apartSideways =
+      box.left >= cell.x + radius + margin || box.left + box.width <= cell.x - radius - margin;
+    assert.ok(apartVertically || apartSideways, `${cell.x},${cell.y}`);
+    assert.ok(box.left >= 0 && box.left + box.width <= size.width);
+    assert.ok(box.top >= 0 && box.top + box.height <= size.height);
+  }
+});
+
+test("the bar moves beside a tall cell when neither the top nor the bottom has room", () => {
+  const size = { width: 1000, height: 300 };
+  const bar = { width: 400, height: 48 };
+  const cell = { x: 200, y: 150 };
+  const box = placeBar(cell, 110, bar, size, 24);
+  assert.ok(box.left >= cell.x + 110 + 24);
+  assert.ok(box.left + box.width <= size.width);
+});
+
 test("a jump reaches an undecided cell far away before a decided one close by", () => {
   const far: CellSpot[] = [
     { object: "A", x: 0, y: 0, decided: false },
