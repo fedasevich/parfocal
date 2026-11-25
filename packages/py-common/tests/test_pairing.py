@@ -181,6 +181,9 @@ def test_every_result_gets_a_pairing_in_order() -> None:
         ("case/A1.geojson", FileKind.RESULT),
         ("case/A1.cells.CSV", FileKind.RESULT),
         ("case/heat.png", FileKind.RESULT),
+        ("case/A1_mask.tif", FileKind.RESULT),
+        ("case/A1-instances.TIFF", FileKind.RESULT),
+        ("case/masked_A1.tiff", FileKind.SLIDE),
         ("case/notes.txt", FileKind.OTHER),
     ],
 )

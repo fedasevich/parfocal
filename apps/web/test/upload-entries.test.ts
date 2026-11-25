@@ -8,6 +8,7 @@ import {
   retryDelaysMs,
   sameFile,
   startedEntry,
+  uploadMetaOf,
   withDone,
   withError,
   withManualRetry,
@@ -72,4 +73,17 @@ test("broken hints are ignored", () => {
   assert.deepEqual(decodeHints(null), []);
   assert.deepEqual(decodeHints("{"), []);
   assert.deepEqual(decodeHints('[{"name":1}]'), []);
+});
+
+test("a result file is sent as a result with or without its slide", () => {
+  assert.equal(uploadMetaOf(identity).kind, undefined);
+  assert.deepEqual(uploadMetaOf({ ...identity, result: true }), {
+    project_id: "p1",
+    case_id: "c1",
+    kind: "result",
+    size: 1_073_741_824,
+    last_modified: 1_700_000_000_000,
+  });
+  assert.equal(uploadMetaOf({ ...identity, slideId: "s1" }).slide_id, "s1");
+  assert.equal(uploadMetaOf({ ...identity, slideId: "s1" }).kind, "result");
 });

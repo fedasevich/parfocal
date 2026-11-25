@@ -29,6 +29,8 @@ SLIDE_SUFFIXES = frozenset(
     }
 )
 RESULT_SUFFIXES = frozenset({".geojson", ".json", ".csv", ".tsv", ".png"})
+MASK_SUFFIXES = frozenset({".tif", ".tiff"})
+MASK_NAME = re.compile(r"(^|[^a-z0-9])(mask|masks|labels|instances|classes|segmentation)$")
 SLIDE_COLUMNS = ("slide_id", "slide", "slide_name", "image", "image_id", "file_name")
 SLIDE_BLOCK = re.compile(r'"slide"\s*:\s*(\{[^{}]*\})')
 TEXT_FIELD = r'"{name}"\s*:\s*"((?:[^"\\]|\\.){{1,255}})"'
@@ -128,6 +130,8 @@ def stem_of(name: str) -> str:
 
 def kind_of(path: str) -> FileKind:
     suffix = suffix_of(clean_path(path).name)
+    if suffix in MASK_SUFFIXES and MASK_NAME.search(stem_of(path)):
+        return FileKind.RESULT
     if suffix in SLIDE_SUFFIXES or suffix in DOUBLE_SUFFIXES:
         return FileKind.SLIDE
     if suffix in RESULT_SUFFIXES:

@@ -22,6 +22,14 @@ test("files are told apart by extension", () => {
   assert.equal(kindOf("noextension"), "other");
 });
 
+test("a mask is a result, even as a TIFF, and a slide named like one stays a slide", () => {
+  assert.equal(kindOf("a/A1_HE_mask.png"), "result");
+  assert.equal(kindOf("a/A1_HE_mask.tif"), "result");
+  assert.equal(kindOf("a/A1_HE-instances.TIFF"), "result");
+  assert.equal(kindOf("a/A1_HE.tiff"), "slide");
+  assert.equal(kindOf("a/masked_A1.tiff"), "slide");
+});
+
 test("a folder is a case and slides beside the case folders stay loose", () => {
   const sorted = sortDrop(folder);
   assert.equal(sorted.slides.length, 3);

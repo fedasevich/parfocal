@@ -17,6 +17,7 @@ from parfocal_ingest.chunk_builder import centres_of
 from parfocal_ingest.import_checks import Choices, SlideFrame, Tally, heatmap_values
 from parfocal_ingest.isolated_child import ScopedStorage
 from parfocal_ingest.isolation import read_output, required_output
+from parfocal_ingest.mask_import import RasterKind
 from parfocal_ingest.results import ObjectKind, ResultObject
 
 FACTS_OUTPUT = "facts.msgpack"
@@ -245,6 +246,23 @@ def parse_results(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[
     path = storage.fetch(arguments["key"])
     parsed, tally = read_checked(
         path, arguments.get("format"), frame_of(arguments), choices_of(arguments)
+    )
+    write_parse(Path(arguments["out"]), parsed, tally)
+    return {}
+
+
+def parse_mask(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[str, Any]:
+    from parfocal_ingest.result_import import read_mask
+
+    names = {int(key): str(name) for key, name in dict(arguments["names"]).items()}
+    parsed, tally = read_mask(
+        storage.fetch(arguments["key"]),
+        arguments["file_name"],
+        RasterKind(arguments["kind"]),
+        float(arguments["downsample"]),
+        names,
+        frame_of(arguments),
+        choices_of(arguments),
     )
     write_parse(Path(arguments["out"]), parsed, tally)
     return {}

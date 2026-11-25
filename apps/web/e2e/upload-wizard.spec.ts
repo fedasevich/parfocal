@@ -572,14 +572,14 @@ const problems = {
       places: ["line 4", "line 9"],
     }),
     problem("objects-without-class", "These objects have no class.", { count: 5 }),
-    problem("unknown-classes", "These classes are not in the project yet. Map them once.", {
+    problem("classes-unknown", "These classes are not in the project yet. Map them once.", {
       count: 40,
       names: ["Epithelium"],
     }),
     problem("scores-missing", "These objects have no score. Count them as no score or as 1.0.", {
       count: 12,
     }),
-    problem("partly-outside", "These objects lie outside the slide.", { count: 2 }),
+    problem("objects-outside-slide", "These objects lie outside the slide.", { count: 2 }),
     problem("heatmap-scale", "Parfocal guessed the slide level and scale of this heatmap.", {
       guess: { level: 2, downsample: 4, mpp: null, tissue_share: 0.31 },
       guesses: [

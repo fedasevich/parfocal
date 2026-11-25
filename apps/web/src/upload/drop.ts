@@ -57,8 +57,14 @@ export const dirOf = (path: string) => {
   return cut < 0 ? "" : path.slice(0, cut);
 };
 
+const rasterResultExtensions = new Set(["tif", "tiff"]);
+
+const maskName = /(^|[^a-z0-9])(mask|masks|labels|instances|classes|segmentation)$/;
+
 export function kindOf(path: string): DropKind {
   const extension = extensionOf(path);
+  if (rasterResultExtensions.has(extension) && maskName.test(stemOf(path).toLowerCase()))
+    return "result";
   if (slideExtensions.has(extension)) return "slide";
   if (resultExtensions.has(extension)) return "result";
   return "other";

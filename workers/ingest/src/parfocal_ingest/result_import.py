@@ -50,6 +50,7 @@ from parfocal_common.result_imports import (
     KIND,
     LEASE_SECONDS,
     STEP_NAMES,
+    CheckProblem,
     ImportFailure,
     ImportNotice,
     ResultFormat,
@@ -81,11 +82,20 @@ from parfocal_ingest.import_checks import (
     TissueCells,
     accepted_guess,
     heatmap_problems,
+    heatmap_values,
     problems_of,
     stored_values,
 )
 from parfocal_ingest.isolation import JobScope, output_folder, parse_isolated
 from parfocal_ingest.json_stream import JsonArray
+from parfocal_ingest.mask_import import (
+    MASK_NAMES,
+    RasterKind,
+    mask_downsample,
+    mask_objects,
+    mask_scale_problem,
+    raster_kind,
+)
 from parfocal_ingest.matching import Known, Matching, cell_distance, match_regions, pair_centres
 from parfocal_ingest.results import (
     ColumnMapping,
@@ -224,6 +234,25 @@ def read_checked(
     with CellCollector(path.parent) as collector:
         reading = Reading(collector, tally, choices or Choices())
         return read_format(path, chosen, reading), tally
+
+
+def read_mask(
+    path: Path,
+    file_name: str,
+    kind: RasterKind,
+    downsample: float,
+    names: Mapping[int, str],
+    frame: SlideFrame | None = None,
+    choices: Choices | None = None,
+) -> tuple[Parsed, Tally]:
+    values = heatmap_values(path, file_name)
+    tally = Tally(ResultFormat.HEATMAP, frame or SlideFrame())
+    with CellCollector(path.parent) as collector:
+        reading = Reading(collector, tally, choices or Choices())
+        reading.take([mask_objects(values, kind, downsample, names)])
+        parsed = reading.parsed(ResultFormat.HEATMAP)
+    parsed.model = Model(name=MASK_NAMES[kind])
+    return parsed, tally
 
 
 def read_format(path: Path, chosen: ResultFormat, reading: Reading) -> Parsed:
@@ -673,13 +702,19 @@ async def isolated(context: Context, parser: str, arguments: Mapping[str, Any]) 
     return out
 
 
-async def isolated_read(context: Context, setting: Setting) -> tuple[Parsed, Tally]:
+async def isolated_read(
+    context: Context,
+    setting: Setting,
+    parser: str = "parse_results",
+    extra: Mapping[str, Any] | None = None,
+) -> tuple[Parsed, Tally]:
     arguments = {
         "format": context.upload.row.result_format,
         "frame": msgspec.to_builtins(setting.frame),
         "choices": msgspec.to_builtins(setting.choices),
+        **(extra or {}),
     }
-    out = await isolated(context, "parse_results", arguments)
+    out = await isolated(context, parser, arguments)
     facts, shapes, cells = await asyncio.to_thread(result_wire.read_parse, out)
     model = Model(facts.model.name, facts.model.version, facts.model.run_at)
     parsed = Parsed(
@@ -689,10 +724,57 @@ async def isolated_read(context: Context, setting: Setting) -> tuple[Parsed, Tal
     return parsed, facts.tally
 
 
-async def check_heatmap(context: Context, setting: Setting) -> Mapping[str, Any]:
+async def check_raster(context: Context, setting: Setting) -> Mapping[str, Any]:
     upload = context.upload.row
     out = await isolated(context, "parse_heatmap", {"file_name": upload.file_name})
     values = await asyncio.to_thread(result_wire.heatmap_from, out)
+    kind = await asyncio.to_thread(raster_kind, values, upload.file_name)
+    if kind is RasterKind.HEATMAP:
+        return await check_heatmap(context, setting, values)
+    return await import_mask(context, setting, values, kind)
+
+
+async def class_keys(context: Context) -> dict[str, str]:
+    async with context.step.transaction() as connection:
+        found = await connection.execute(
+            select(project_classes.c.key, project_classes.c.name).where(
+                project_classes.c.project_id == context.upload.row.project_id
+            )
+        )
+        return {str(row.key): row.name for row in found}
+
+
+async def import_mask(
+    context: Context, setting: Setting, values: NDArray[Any], kind: RasterKind
+) -> Mapping[str, Any]:
+    upload = context.upload.row
+    if not await asyncio.to_thread(np.any, values):
+        raise StepFailedError(ImportFailure.MASK_EMPTY)
+    asked: list[dict[str, Any]] = []
+    downsample = mask_downsample(values.shape, setting.frame)
+    if downsample is None and upload.import_choices is not None:
+        level = cast("dict[str, Any]", upload.import_choices).get("heatmap_level")
+        downsample = accepted_guess(
+            upload.import_problems, level, CheckProblem.MASK_SCALE, ImportFailure.MASK_UNPLACED
+        ).downsample
+    elif downsample is None:
+        asked.append(await asyncio.to_thread(mask_scale_problem, values, setting.frame))
+        downsample = float(asked[0]["guess"]["downsample"])
+    del values
+    extra = {
+        "file_name": upload.file_name,
+        "kind": kind.value,
+        "downsample": downsample,
+        "names": await class_keys(context),
+    }
+    parsed, tally = await isolated_read(context, setting, "parse_mask", extra)
+    return await import_parsed(context, setting, parsed, tally, asked)
+
+
+async def check_heatmap(
+    context: Context, setting: Setting, values: NDArray[Any]
+) -> Mapping[str, Any]:
+    upload = context.upload.row
     if upload.import_choices is not None:
         level = cast("dict[str, Any]", upload.import_choices).get("heatmap_level")
         guess = accepted_guess(upload.import_problems, level)
@@ -710,13 +792,24 @@ async def import_step(context: Context) -> Mapping[str, Any]:
     async with context.step.transaction() as connection:
         setting = await setting_of(connection, upload)
     if upload.result_format == ResultFormat.HEATMAP:
-        return await check_heatmap(context, setting)
+        return await check_raster(context, setting)
     parsed, tally = await isolated_read(context, setting)
+    return await import_parsed(context, setting, parsed, tally)
+
+
+async def import_parsed(
+    context: Context,
+    setting: Setting,
+    parsed: Parsed,
+    tally: Tally,
+    asked: Sequence[dict[str, Any]] = (),
+) -> Mapping[str, Any]:
+    upload = context.upload.row
     objects_to_import(parsed)
     if tally.all_outside:
         raise StepFailedError(ImportFailure.OUTSIDE_SLIDE)
     if upload.import_choices is None:
-        problems = problems_of(tally, setting.known, parsed.declared_classes)
+        problems = [*asked, *problems_of(tally, setting.known, parsed.declared_classes)]
         if problems:
             await ask_for_choices(context, problems, tally.readable)
             return {"needs_choices": True, "notices": []}
