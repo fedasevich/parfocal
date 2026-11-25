@@ -6095,6 +6095,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on nothing.
   Size: S.
 
+- [ ] ADMIN-015 · The templates table shows each action once
+  The owner found on 2026-11-25 that each row of the templates table in Admin (apps/web/src/screens/admin/templates.tsx) shows Preview and Duplicate as buttons, and its three dots menu repeats them as "Preview the PDF" and "Duplicate and edit" next to "Use for new projects" and "Retire". The menu is also so narrow that every item wraps onto two lines. Keep each action in one place, the frequent ones as row buttons and the rest in the menu, and size the menu so its items fit on one line.
+  Done when a browser spec on the fake API opens a row's menu and finds no action that the row already shows as a button, and Storybook or a screenshot shows the menu items on one line each.
+  Depends on nothing.
+  Size: S.
+
 ---
 
 ## 51 VIZ · Layers and visualization
