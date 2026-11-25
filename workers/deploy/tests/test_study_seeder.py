@@ -35,6 +35,7 @@ def test_the_modal_seeder_passes_only_the_participant_and_reads_the_project_back
             study_seed.PARTICIPANT_VARIABLE: "P-AB",
             study_seed.ACTION_VARIABLE: study_seed.SEED,
             study_seed.SEAT_VARIABLE: "seat@example.test",
+            study_seed.MODERATOR_VARIABLE: "",
         }
     ]
 
@@ -47,6 +48,7 @@ def test_a_linked_seed_names_the_moderator_and_no_seat() -> None:
         {
             study_seed.PARTICIPANT_VARIABLE: "P-AB",
             study_seed.ACTION_VARIABLE: study_seed.SEED,
+            study_seed.SEAT_VARIABLE: "",
             study_seed.MODERATOR_VARIABLE: "mod@example.test",
         }
     ]

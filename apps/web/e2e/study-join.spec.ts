@@ -39,7 +39,10 @@ test("a remote participant opens one link in a fresh browser, reaches task 1 and
     })
     .toContain('"participant":"P-LINK"');
   const uploaded = await participant.evaluate((key) => localStorage.getItem(key) ?? "", runsKey);
-  await page.evaluate(([key, value]) => localStorage.setItem(key, value), [runsKey, uploaded]);
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: runsKey,
+    value: uploaded,
+  });
   await page.reload();
   const progress = page.locator('[data-testid="study-remote-progress"][data-code="P-LINK"]');
   await expect(progress).toHaveAttribute("data-kind", "working");

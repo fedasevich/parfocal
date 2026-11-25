@@ -261,8 +261,7 @@ Before the first real participant, run the whole session once with someone who w
 Decision 176 chose remote and moderated. Before the call, the moderator opens `/study/console` in the study workspace, types or leaves empty the code, presses "Make a join link" and sends the link. It works once, for one day, and signs the participant into a seat of their own on their project with no account (EXP-020, a prepared participant joins by one link). "Remote participants" on the console shows whether the link was opened and how many tasks are done. If the owner answers "remote" in decisions.md:
 
 - Each participant needs their own seat on their project, which the join link gives, because a shared seat would let one participant see another's project.
-- The consent card "The moderator watches but does not help" must change, and there is no think-aloud to hear.
-- There is no timed log or `ASK` questions. Success for the seven "I'm done" tasks is scored from the replay instead.
+- With a moderator on the call, the consent cards, the think-aloud, the timed log and the `ASK` questions stay. Only an unmoderated round would drop them and score the seven "I'm done" tasks from the replay.
 - The setup steps move before the link is sent, and the export is taken from the server results of EXP-015 (study sessions reach the server) instead of one browser's console.
 - Everything else stays: tasks, questionnaires, metrics and the analysis.
 

@@ -210,3 +210,17 @@ export async function walkRound5(page: Page, places: WalkPlaces) {
     page.getByText("I think that I would like to use this system frequently."),
   ).toBeVisible();
 }
+
+export async function answerLastQuestions(page: Page) {
+  const groups = page.getByTestId("study-sus").getByRole("radiogroup");
+  await expect(groups.first()).toBeVisible({ timeout: 15_000 });
+  for (let index = 0; index < (await groups.count()); index += 1) {
+    await groups.nth(index).getByRole("radio", { name: "3" }).click();
+  }
+  const finish = page.getByRole("button", { name: "Finish" });
+  while (!(await finish.isVisible())) {
+    await page.getByRole("button", { name: "Next" }).click();
+  }
+  await finish.click();
+  await expect(page.getByRole("heading", { name: "Thank you!" })).toBeVisible();
+}

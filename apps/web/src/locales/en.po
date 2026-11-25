@@ -18931,8 +18931,8 @@ msgid "The stored version no longer matches its checksum, so it was not sent."
 msgstr "The stored version no longer matches its checksum, so it was not sent."
 
 #: src/study/study-join.tsx
-msgid "The study could not open. Reload the page or ask the moderator."
-msgstr "The study could not open. Reload the page or ask the moderator."
+msgid "The study could not open. Open the link again or ask the moderator."
+msgstr "The study could not open. Open the link again or ask the moderator."
 
 #: src/screens/project/task-settings-drawer.tsx
 msgid "The style cannot change once a decision exists."

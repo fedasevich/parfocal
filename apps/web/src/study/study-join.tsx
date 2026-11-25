@@ -20,8 +20,8 @@ export function StudyJoin() {
     if (started.current) return;
     started.current = true;
     const token = joinToken(window.location.hash);
-    window.history.replaceState(null, "", window.location.pathname);
     const openStudy = () => {
+      window.history.replaceState(null, "", window.location.pathname);
       queryClient.clear();
       void navigate({ to: "/study" });
     };
@@ -46,7 +46,10 @@ export function StudyJoin() {
         onError: (error) => {
           const refused = error instanceof ApiError && error.status === 410;
           if (refused && readRun() !== undefined) openStudy();
-          else setState(refused ? "gone" : "failed");
+          else {
+            if (refused) window.history.replaceState(null, "", window.location.pathname);
+            setState(refused ? "gone" : "failed");
+          }
         },
       },
     );
@@ -69,7 +72,7 @@ export function StudyJoin() {
               This link was used already or has expired. Ask the moderator for a new one.
             </Trans>
           ) : (
-            <Trans>The study could not open. Reload the page or ask the moderator.</Trans>
+            <Trans>The study could not open. Open the link again or ask the moderator.</Trans>
           )}
         </p>
       </section>

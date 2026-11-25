@@ -740,9 +740,10 @@ UNAIMED_WRITES: dict[str, str] = {
     "endOtherSessions": "ends the caller's own other sessions",
     "returnFromTourRole": "restores the caller's own session to the account it started from",
     **dict.fromkeys(
-        ("prepareStudyParticipant", "removeStudyParticipant"),
+        ("prepareStudyParticipant", "removeStudyParticipant", "prepareStudyLink"),
         "seeds or removes a project by its plain code in the one shared study workspace",
     ),
+    "redeemStudyLink": "takes a secret one-use token, which is the study link itself",
     "sendFeedback": "files feedback under the caller's workspace",
     "acceptInvitation": "takes a secret token, which is the invitation itself",
     "updateMe": "changes the caller's own profile",

@@ -18922,7 +18922,7 @@ msgid "The stored version no longer matches its checksum, so it was not sent."
 msgstr ""
 
 #: src/study/study-join.tsx
-msgid "The study could not open. Reload the page or ask the moderator."
+msgid "The study could not open. Open the link again or ask the moderator."
 msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx

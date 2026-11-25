@@ -73,11 +73,12 @@ class ModalStudySeeder:
     async def seed(
         self, code: str, seat_email: str | None, moderator_email: str | None = None
     ) -> SeededParticipant:
-        settings = {PARTICIPANT_VARIABLE: code, ACTION_VARIABLE: SEED}
-        if seat_email:
-            settings[SEAT_VARIABLE] = seat_email
-        if moderator_email:
-            settings[MODERATOR_VARIABLE] = moderator_email
+        settings = {
+            PARTICIPANT_VARIABLE: code,
+            ACTION_VARIABLE: SEED,
+            SEAT_VARIABLE: seat_email or "",
+            MODERATOR_VARIABLE: moderator_email or "",
+        }
         return seeded_from(await self.lines(settings), code)
 
     async def remove(self, code: str) -> int:

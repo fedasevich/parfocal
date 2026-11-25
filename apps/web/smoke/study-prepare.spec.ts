@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { walkRound5 } from "../e2e/study-round5-walk.ts";
+import { answerLastQuestions, walkRound5 } from "../e2e/study-round5-walk.ts";
 import { signIn } from "./session.ts";
 
 const wanted = process.env["PARFOCAL_STUDY_PREPARE"] === "1";
@@ -23,20 +23,6 @@ async function prepareFromConsole(page: Page): Promise<string> {
     await expect(page.getByTestId("study-prepare-switch")).toHaveCount(0, { timeout: 30_000 });
   }
   return code;
-}
-
-async function answerLastQuestions(page: Page) {
-  const groups = page.getByTestId("study-sus").getByRole("radiogroup");
-  await expect(groups.first()).toBeVisible({ timeout: 15_000 });
-  for (let index = 0; index < (await groups.count()); index += 1) {
-    await groups.nth(index).getByRole("radio", { name: "3" }).click();
-  }
-  const finish = page.getByRole("button", { name: "Finish" });
-  while (!(await finish.isVisible())) {
-    await page.getByRole("button", { name: "Next" }).click();
-  }
-  await finish.click();
-  await expect(page.getByRole("heading", { name: "Thank you!" })).toBeVisible();
 }
 
 test("one code goes from Prepare in the console to the thank you page on the deployed app", async ({

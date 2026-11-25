@@ -123,7 +123,51 @@ def render_prepared(report: dict[str, Any]) -> str:
     )
 
 
+def render_joined(report: dict[str, Any]) -> str:
+    code = participant_of(report)
+    steps = steps_of(report)
+    rows = [
+        f"| {step['title']} | {outcome_of(step)} | {round(step.get('duration', 0) / 1000)} s |"
+        for step in steps
+    ]
+    reached = sum(1 for step in steps if step.get("error") is None)
+    today = datetime.now(UTC).date().isoformat()
+    return "\n".join(
+        [
+            f"# Result: a deployed dry run from one join link to the thank you page reached "
+            f"{reached} of {len(steps)} steps",
+            "",
+            f"- Date: {today}",
+            "- Backlog: EXP-020 (a prepared participant joins a remote moderated session by one "
+            "link)",
+            "- Kind: deployed dry run",
+            "- Environment: app.parfocal.eu, the deployed development app",
+            f"- Data: one participant project, code {code}, fictional names only, no PHI",
+            "",
+            "## Method",
+            "",
+            "`scripts/study-join-dry-run.sh` ran `apps/web/smoke/study-join.spec.ts`, which "
+            "signed in as the smoke account, pressed Make a join link in the study console, "
+            "opened the link in a fresh browser context with no sign in, walked `/study` "
+            "through every round 5 task, answered the last questions and reached the thank you "
+            "page. The console then showed the participant as finished, the session was ticked "
+            "Dry run, and the project was removed from the console.",
+            "",
+            "## Results",
+            "",
+            "| Step | Outcome | Time |",
+            "| --- | --- | --- |",
+            *rows,
+            "",
+        ]
+    )
+
+
 def main() -> None:
+    if sys.argv[1] == "--joined":
+        report = json.loads(Path(sys.argv[2]).read_text())
+        sys.stdout.write(render_joined(report))
+        return
     if sys.argv[1] == "--prepared":
         report = json.loads(Path(sys.argv[2]).read_text())
         sys.stdout.write(render_prepared(report))

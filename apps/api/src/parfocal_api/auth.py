@@ -229,6 +229,8 @@ async def load_session(
 async def refresh_session(
     connection: AsyncConnection, state: AuthState, session_id: str, tokens: dict[str, Any]
 ) -> bool:
+    if "refresh_token" not in tokens:
+        return True
     try:
         renewed = await state.identity.refresh(str(tokens["refresh_token"]))
         claims = await state.identity.verify_id_token(renewed.id_token, None)

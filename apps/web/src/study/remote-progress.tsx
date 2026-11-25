@@ -6,6 +6,12 @@ import { fromServer } from "./study-results.ts";
 
 const pollMs = 5_000;
 
+const polling = {
+  retry: false,
+  refetchInterval: (query: { state: { status: string } }) =>
+    query.state.status === "error" ? false : pollMs,
+};
+
 const timeOf = (iso: string) =>
   new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -30,10 +36,8 @@ function ProgressText({ row }: { row: RemoteProgress }) {
 
 export function RemoteProgressPanel({ total }: { total: number }) {
   const { t } = useLingui();
-  const links = okData(useListStudyLinks({ query: { refetchInterval: pollMs } }).data)?.links;
-  const sessions = okData(
-    useListStudySessions({ query: { refetchInterval: pollMs } }).data,
-  )?.sessions;
+  const links = okData(useListStudyLinks({ query: polling }).data)?.links;
+  const sessions = okData(useListStudySessions({ query: polling }).data)?.sessions;
   if (links === undefined || links.length === 0) return null;
   const rows = remoteProgress(
     links,

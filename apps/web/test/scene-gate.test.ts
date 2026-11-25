@@ -62,6 +62,7 @@ const productRoutes: Record<string, readonly string[]> = {
   "sign-up.tsx": ["form", "verify"],
   "study.console.tsx": [],
   "study.index.tsx": [],
+  "study.join.tsx": [],
   "tasks.$taskId.adjudicate.tsx": [],
   "tasks.$taskId.cells.tsx": [],
   "tasks.$taskId.comments.tsx": [],

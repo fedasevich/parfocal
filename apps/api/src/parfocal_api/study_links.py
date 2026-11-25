@@ -28,6 +28,7 @@ from parfocal_api.study_participants import (
     ParticipantCode,
     SeededParticipant,
     Seeder,
+    StudySeatWithoutEmailError,
     StudySeedFailedError,
     retire_participant,
     seat_email_of,
@@ -126,6 +127,8 @@ async def prepare_study_link(
 ) -> StudyLink:
     member = member_of(principal)
     moderator = await seat_email_of(connection, member.user_id)
+    if not moderator:
+        raise StudySeatWithoutEmailError
     checked = checked_code(code)
     try:
         made = await seeder.seed(checked, None, moderator)
