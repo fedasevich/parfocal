@@ -106,6 +106,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
   const toast = useScreenToast();
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
   const [send, setSend] = useState<SendDraft | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -193,10 +194,16 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     });
     const next = nextOpen(rows, target);
     if (next) select(next.key);
+    setExpanded(false);
   };
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && expanded && !typing(event.target) && !send && !nudging) {
+        if (drawing.drawingKey !== null) return;
+        setExpanded(false);
+        return;
+      }
       if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
       if (send || nudging || locked || !row || checked.length > 0) return;
       if (drawing.drawingKey !== null) return;
@@ -213,6 +220,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  const bigView = expanded && !locked && row !== undefined;
   const counts = filterCounts(rows);
   const shown = filterRows(rows, filter);
   const resolved = rows.filter((item) =>
@@ -306,8 +314,16 @@ export function QueueScreen({ taskId }: { taskId: string }) {
           )}
         </div>
       </header>
-      <div className="grid min-h-0 grid-cols-[320px_minmax(0,1fr)_minmax(300px,300px)] items-start gap-5">
-        <section aria-label={t`Queued objects`} className="grid gap-1">
+      <div
+        data-testid="queue-body"
+        data-expanded={bigView || undefined}
+        className={
+          bigView
+            ? "fixed inset-0 z-40 grid min-h-0 grid-cols-[minmax(0,1fr)_320px] items-stretch gap-5 overflow-hidden bg-surf-page p-5"
+            : "grid min-h-0 grid-cols-[320px_minmax(0,1fr)_minmax(300px,300px)] items-start gap-5"
+        }
+      >
+        <section aria-label={t`Queued objects`} className={bigView ? "hidden" : "grid gap-1"}>
           <SegmentedControl
             aria-label={t`Show`}
             className="mb-2"
@@ -388,9 +404,26 @@ export function QueueScreen({ taskId }: { taskId: string }) {
           <>
             <section
               aria-label={t`Evidence for ${rowLabel(row)}`}
-              className="grid grid-cols-[minmax(0,1fr)] gap-3"
+              className={
+                bigView
+                  ? "grid min-h-0 grid-cols-[minmax(0,1fr)] content-start gap-3 overflow-auto"
+                  : "grid grid-cols-[minmax(0,1fr)] gap-3"
+              }
             >
-              <div className="relative flex h-[360px] overflow-hidden rounded-zone bg-canvas">
+              <div
+                className={`relative flex overflow-hidden rounded-zone bg-canvas ${bigView ? "h-[max(420px,70vh)] shrink-0" : "h-[360px]"}`}
+              >
+                <Button
+                  size="sm"
+                  data-testid="queue-expand"
+                  aria-pressed={bigView}
+                  title={bigView ? t`Back to the queue` : t`Open the slide bigger`}
+                  className="absolute top-3 right-3 z-30"
+                  onClick={() => setExpanded(!bigView)}
+                >
+                  <Icon name={bigView ? "back" : "expand"} />
+                  {bigView ? <Trans>Back to the queue</Trans> : <Trans>Expand</Trans>}
+                </Button>
                 <DisagreementStage
                   taskId={taskId}
                   slideId={row.slide_id}
@@ -537,7 +570,10 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                 </EvidenceRow>
               </EvidenceList>
             </section>
-            <aside aria-label={t`Decide`} className="min-w-0 rounded-zone bg-surf-panel p-4">
+            <aside
+              aria-label={t`Decide`}
+              className={`min-w-0 rounded-zone bg-surf-panel p-4 ${bigView ? "min-h-0 overflow-auto" : ""}`}
+            >
               {checkedRows.length > 0 ? (
                 <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
                   <div className="flex items-center justify-between">
@@ -594,6 +630,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                     });
                     const next = nextOpen(rows, row);
                     if (next) select(next.key);
+                    setExpanded(false);
                   }}
                   drawing={drawing.drawingKey === row.key}
                   onLeaveOpen={() => {

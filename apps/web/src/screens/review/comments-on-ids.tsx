@@ -219,14 +219,15 @@ function CommentsBody({
             </span>
           </span>
         </div>
-        <MagnificationBar
-          className="absolute bottom-4 left-1/2 -translate-x-1/2"
-          magnification={10}
-          scaleLabel="100 µm"
-          scalePx={92}
-          micronsPerPixel={1.13}
-          open
-        />
+        <div className="pointer-events-none absolute inset-x-4 bottom-4">
+          <MagnificationBar
+            magnification={10}
+            scaleLabel="100 µm"
+            scalePx={92}
+            micronsPerPixel={1.13}
+            open
+          />
+        </div>
       </div>
     </ViewerFrame>
   );

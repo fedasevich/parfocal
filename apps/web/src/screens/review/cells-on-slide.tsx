@@ -392,14 +392,15 @@ function CellsBody({
               <Icon name="expand" />
               <Trans>Whole slide</Trans>
             </Button>
-            <MagnificationBar
-              className="absolute bottom-4 left-1/2 -translate-x-1/2"
-              magnification={40}
-              scaleLabel="10 µm"
-              scalePx={92}
-              micronsPerPixel={0.11}
-              open={folded}
-            />
+            <div className="pointer-events-none absolute inset-x-4 bottom-4">
+              <MagnificationBar
+                magnification={40}
+                scaleLabel="10 µm"
+                scalePx={92}
+                micronsPerPixel={0.11}
+                open={folded}
+              />
+            </div>
           </>
         )}
       />

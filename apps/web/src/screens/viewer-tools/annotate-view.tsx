@@ -355,7 +355,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
                   </SmartMinimap>
                 )}
               </HeldCorner>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+              <div className="pointer-events-none absolute inset-x-4 bottom-4">
                 <MagnificationBar
                   magnification={55}
                   scaleLabel="20 µm"

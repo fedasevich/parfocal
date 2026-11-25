@@ -444,7 +444,7 @@ function ViewerBody(props: BodyProps) {
                         <Trans>Whole slide</Trans>
                       </Button>
                     )}
-                    <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
+                    <div className="pointer-events-none absolute inset-x-4 bottom-4 grid justify-items-center gap-2">
                       {tileHint}
                       <MagnificationBar
                         magnification={

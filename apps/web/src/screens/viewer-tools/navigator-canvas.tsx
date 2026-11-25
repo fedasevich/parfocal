@@ -198,7 +198,7 @@ export function NavigatorCanvas({
                 </SmartMinimap>
               )}
             </HeldCorner>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+            <div className="pointer-events-none absolute inset-x-4 bottom-4">
               <MagnificationBar
                 magnification={setup.magnification}
                 scaleLabel={reading ? "100 µm" : "10 µm"}
@@ -231,7 +231,7 @@ export function OverviewCanvas({ areas, checked }: { areas: AreaMark[]; checked:
       }))}
       underlay={() => <MapTrail rects={seenTrail} opacity={0.25} />}
       overlay={() => (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+        <div className="pointer-events-none absolute inset-x-4 bottom-4">
           <MagnificationBar
             magnification={1.25}
             scaleLabel="5 mm"
