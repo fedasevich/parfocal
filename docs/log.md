@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25 from a screenshot: the Open and Resolved switch in the Comments tab overflows the side panel, added as PROTO-187 (the Comments tab header fits the side panel).
 - Owner request 2026-11-25 from a screenshot: the Whole slide map stretches the small minimap thumbnail and looks blurry, added as PROTO-186 (the whole slide map is sharp at its size).
 - Owner request 2026-11-25: the region picked for Auto region vanishes while it is processed, added as PROTO-185 (the region picked for Auto region stays on screen, animated, while it is processed).
 - Owner request 2026-11-25: drawn cells show as a flat list that cannot be clicked and the arrow does not act like layers, so PROTO-184 (drawn objects live in a Figma style layers tree) asks for one tree with click, drag, groups and Cmd+G, designed with Fable first.
