@@ -2,6 +2,35 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.55.0 (2026-11-25)
+
+### Features
+
+- PROTO-180: Keep the Smart select and Auto region bars on one row with the model picker
+- PROTO-180: Show the Smart select and Auto region hints in a line under the bar
+- PROTO-174: Edit review outlines as a draft saved once on Done, with points added and removed
+- EXP-022: Back up study sessions to R2 hourly and delete traces after the defence
+
+### Docs
+
+- EXP-020: Log the v0.54.0 deploy
+- PROTO-180: Log and tick after merge
+- PROTO-174: Log and tick after merge
+- EXP-022: Say that study trace frames hold the page text the seat saw
+- EXP-022: Log and tick after merge
+- PROTO-196: Add the cells unstorable run task and the study backup key step
+- OPS-042: Record the deployed GPU pool and empty run checks
+- OPS-042: Log and tick after merge
+- PROTO-195: Tick after the deployed rerun
+
+### Other
+
+- EXP-022: Claim EXP-022 for the parallel run
+- PROTO-181: Claim PROTO-181 for the parallel run
+- PROTO-174: Rebaseline the all code budget after the walkthrough fixes
+- PROTO-175: Claim PROTO-175 for the parallel run
+- PROTO-196: Claim PROTO-196 for the parallel run
+
 ## v0.54.0 (2026-11-25)
 
 ### Features
