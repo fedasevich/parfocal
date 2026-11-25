@@ -68,8 +68,9 @@ import {
 } from "./guided-blockers.ts";
 import { coachShown, useGuidedCoach } from "./guided-coach.ts";
 import { orderObjects, zoomedCamera } from "./guided-drive.ts";
+import { GuidedFormBack } from "./guided-form-back.tsx";
 import { GuidedGate } from "./guided-gate.tsx";
-import { CameraBar, CanvasNotice, CoachTip, IssueCard } from "./guided-parts.tsx";
+import { CameraBar, CanvasIssue, CoachTip, IssueCard } from "./guided-parts.tsx";
 import { nextOpenIndex } from "./guided-progress.ts";
 import {
   finishingAnswers,
@@ -352,6 +353,14 @@ function GuidedBody({
     }
     goTo(objects.findIndex((item) => item.object === target));
   };
+  const openForm = () => {
+    setDisagreeOpen(false);
+    setNoteFor(null);
+    setShowDone(true);
+    setWhole(true);
+  };
+  const everyAnswered = (decided: Answers) =>
+    objects.length > 0 && objects.every((item) => Boolean(answerOf(base, decided, item.object)));
   const advance = (from: number, decided: Answers) => {
     const target = nextOpenIndex(
       objects.map((item) => item.object),
@@ -359,12 +368,21 @@ function GuidedBody({
       (object) => Boolean(answerOf(base, decided, object)),
     );
     if (target === null) {
-      setShowDone(true);
-      setWhole(true);
+      openForm();
       return;
     }
     goTo(target);
   };
+  const moveOn = (from: number, decided: Answers, auto: boolean) => {
+    if (auto) advance(from, decided);
+    else if (everyAnswered(decided)) openForm();
+  };
+  const stepForward = () => {
+    if (showDone) return goTo(index);
+    if (index >= objects.length - 1 && everyAnswered(overrides)) return openForm();
+    goTo(index + 1);
+  };
+  const stepBack = () => goTo(showDone ? index : index - 1);
   const put = (object: string, value: Answer | null) => {
     const next = new Map(overrides);
     next.set(object, value);
@@ -406,7 +424,7 @@ function GuidedBody({
       setDisagreeOpen(true);
       return;
     }
-    if (settings.auto) advance(index, next);
+    moveOn(index, next, settings.auto);
   };
   const regionAreas = regions.map((region) => ({
     id: region.object,
@@ -437,7 +455,7 @@ function GuidedBody({
         decisions.restore(currentId, kept);
       },
     });
-    if (settings.auto && call !== "unsure") advance(index, next);
+    moveOn(index, next, settings.auto && call !== "unsure");
   };
   const notNucleus = (object: string) => {
     const target = objects.find((item) => item.object === object);
@@ -598,11 +616,7 @@ function GuidedBody({
     !showDone && !noResults,
   );
 
-  useObjectKeys(
-    () => goTo(index + 1),
-    () => goTo(index - 1),
-    !showDone && !noResults,
-  );
+  useObjectKeys(stepForward, stepBack, !noResults);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -772,20 +786,32 @@ function GuidedBody({
   const reviewBody = issueCard ? (
     issueCard
   ) : showDone ? (
-    <SlideDoneCard
-      className="min-h-full"
-      slideNumber={session.neighbours?.position ?? 1}
-      counts={{ ...counts, added: session.added.length }}
-      questions={questions}
-      blockers={doneBlockers}
-      unsure={unsureAreas}
-      submitLabel={nextLabel}
-      {...(lockedReason ? { lockedReason } : {})}
-      failed={failed}
-      warning={threadsWarning}
-      onSubmit={submit}
-      onAnswerChange={changeOpinion}
-    />
+    <div className="flex min-h-full flex-col gap-5">
+      {current ? (
+        <GuidedFormBack
+          regions={regions}
+          cells={cells}
+          current={currentId}
+          answer={answer}
+          onBack={() => goTo(index)}
+          onJump={jump}
+        />
+      ) : null}
+      <SlideDoneCard
+        className="min-h-full"
+        slideNumber={session.neighbours?.position ?? 1}
+        counts={{ ...counts, added: session.added.length }}
+        questions={questions}
+        blockers={doneBlockers}
+        unsure={unsureAreas}
+        submitLabel={nextLabel}
+        {...(lockedReason ? { lockedReason } : {})}
+        failed={failed}
+        warning={threadsWarning}
+        onSubmit={submit}
+        onAnswerChange={changeOpinion}
+      />
+    </div>
   ) : current ? (
     <div className="flex min-h-full flex-col gap-5">
       <ObjectCard
@@ -847,13 +873,13 @@ function GuidedBody({
           variant="ghost"
           disabled={index === 0}
           title={index === 0 ? t`This is the first object` : undefined}
-          onClick={() => goTo(index - 1)}
+          onClick={stepBack}
         >
           <Icon name="back" />
           <Trans>Previous</Trans>
           <Keycap action={previousObjectAction} size="sm" />
         </Button>
-        <Button variant="ghost" onClick={() => goTo(index + 1)}>
+        <Button variant="ghost" onClick={stepForward}>
           {kept ? t`Next` : t`Skip for now`}
           <Keycap action={nextObjectAction} size="sm" />
           <Icon name="next" />
@@ -932,39 +958,14 @@ function GuidedBody({
     </Banner>
   ) : null;
 
-  const canvasIssue = tileFail ? (
-    <CanvasNotice
-      icon="warn"
-      title={t`${slideShort} could not be read at 20x and 40x.`}
-      actions={
-        <>
-          <Button variant="primary">
-            <Trans>Retry</Trans>
-          </Button>
-          <Button>
-            <Trans>Ask the researcher</Trans>
-          </Button>
-        </>
-      }
-    >
-      <Trans>
-        Tiles are missing on the server. Lower magnifications still show, and your other slides
-        work.
-      </Trans>
-    </CanvasNotice>
-  ) : noResults ? (
-    <CanvasNotice
-      icon="smart"
-      title={t`No ${setName} result on ${slideShort} yet.`}
-      actions={
-        <Button>
-          <Trans>Ask the researcher</Trans>
-        </Button>
-      }
-    >
-      <Trans>Review the slide without AI, or ask the researcher to run the model.</Trans>
-    </CanvasNotice>
-  ) : null;
+  const canvasIssue = (
+    <CanvasIssue
+      tileFail={tileFail}
+      noResults={noResults}
+      slideShort={slideShort}
+      setName={setName}
+    />
+  );
 
   return (
     <main

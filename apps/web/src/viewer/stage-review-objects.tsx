@@ -12,7 +12,7 @@ import { slideAt } from "../annotations/stage-pointer.ts";
 import { isTyping } from "../keys/registry.ts";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
-import { answerCount, answersOf } from "../screens/review/decision-style.ts";
+import { answerCount, answersOf, type Count } from "../screens/review/decision-style.ts";
 import { disagreeOptions, reasonDraft } from "../screens/review/disagree-reasons.ts";
 import { drawChoicesOf, myDisplaySettings } from "../screens/review/display-tab.tsx";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
@@ -31,6 +31,7 @@ import {
   typesCells,
 } from "../screens/review/type-bar.ts";
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
+import { useOpinionDraft } from "../screens/review/use-opinion-draft.ts";
 import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
 import { showUndoToast } from "../shell/undo-toasts.tsx";
@@ -63,7 +64,8 @@ import { type GuidedFix, StageGuidedCard } from "./stage-guided-card.tsx";
 import { StageGuidedView } from "./stage-guided-view.tsx";
 import { useStageRulers } from "./stage-measurements.tsx";
 import { StageObjectsPanel } from "./stage-objects-panel.tsx";
-import { ReviewOpinion } from "./stage-opinion.tsx";
+import { OpinionForm } from "./stage-opinion.tsx";
+import { StageOpinionBack } from "./stage-opinion-back.tsx";
 import { StageRedrawLayer } from "./stage-redraw-layer.tsx";
 import {
   type ReviewFate,
@@ -307,7 +309,26 @@ export function StageReviewObjects({
     () => myDisplaySettings(session.myDisplay, labCutoff, personalPanelValues(defaults)),
     [session.myDisplay, labCutoff, defaults],
   );
-  const saves = useDecisionSaves(session, session.style);
+  const [pending, setPending] = useState<ReadonlyMap<string, Count>>(new Map());
+  const saves = useDecisionSaves(session, session.style, (object) =>
+    setPending((before) => {
+      if (!before.has(object)) return before;
+      const next = new Map(before);
+      next.delete(object);
+      return next;
+    }),
+  );
+  const opinionDraft = useOpinionDraft(session);
+  const hold = (object: string, value: Count) =>
+    setPending((before) => new Map(before).set(object, value));
+  const savedKey = [...session.decisions.keys()].join();
+  useEffect(() => {
+    const saved = savedKey.split(",");
+    setPending((before) => {
+      const kept = [...before].filter(([object]) => !saved.includes(object));
+      return kept.length === before.size ? before : new Map(kept);
+    });
+  }, [savedKey]);
   const fixes = useReviewFixes(taskId, slideId, session.ready);
   const [fixing, setFixing] = useState<{
     readonly object: string;
@@ -321,7 +342,7 @@ export function StageReviewObjects({
   const [merging, setMerging] = useState<readonly string[]>([]);
   const objects = session.objects;
   const order = objects.map((item) => item.object);
-  const decided = new Set(session.decisions.keys());
+  const decided = new Set([...session.decisions.keys(), ...pending.keys()]);
   const allDecided = order.length > 0 && order.every((id) => decided.has(id));
   const wanted = reviewObjectOf(object, objects);
   const [chosen, setCurrent] = useState<string | null>(wanted ?? null);
@@ -443,7 +464,10 @@ export function StageReviewObjects({
     const again =
       stored !== undefined &&
       answerFromDecision(stored, session.style, item, session.classes).raw === raw;
-    if (!again) saves.save(item.object, raw, value);
+    if (!again) {
+      saves.save(item.object, raw, value);
+      hold(item.object, value);
+    }
     if (canFix && session.style.kind !== "blind" && value === "disagree") {
       setCurrent(item.object);
       setShaping(null);
@@ -564,10 +588,14 @@ export function StageReviewObjects({
     if (answersOff !== undefined) return;
     const option = typeOptions.find((item) => item.id === id);
     if (option === undefined) {
-      if (id === "unsure") saves.save(cell.object, rawFor(session.style, "unsure", cell), "unsure");
+      if (id === "unsure") {
+        saves.save(cell.object, rawFor(session.style, "unsure", cell), "unsure");
+        hold(cell.object, "unsure");
+      }
     } else {
       const choice = typeChoice(session.style, option, cell, session.classes);
       saves.save(cell.object, choice.raw, choice.value, choice.draft);
+      hold(cell.object, choice.value);
     }
     if (guided) advance(cell.object);
   };
@@ -604,8 +632,8 @@ export function StageReviewObjects({
     void engine.flyToFit();
   };
   const index = current === null ? -1 : order.indexOf(current);
-  const stepKeysLive = guided && ready && !done && focus === null;
-  const stepping = stepKeysLive && !busy;
+  const stepKeysLive = guided && ready && focus === null;
+  const stepping = stepKeysLive && !done && !busy;
   const leaveFor = (target: string | null | undefined) => {
     if (target === null || target === undefined) return;
     setDraft([]);
@@ -614,8 +642,23 @@ export function StageReviewObjects({
     setFixing(null);
     pick(target);
   };
-  const stepNext = () => leaveFor(order[index + 1] ?? nextOpenObject(order, decided, current));
-  const stepPrevious = () => leaveFor(index > 0 ? order[index - 1] : null);
+  const backToObjects = () => leaveFor(current ?? order[0]);
+  const everyObjectDecided = order.length > 0 && order.every((id) => decided.has(id));
+  const stepNext = () => {
+    if (done) return backToObjects();
+    const target = order[index + 1] ?? nextOpenObject(order, decided, current);
+    if (target === null && everyObjectDecided && answersOff === undefined) {
+      setDraft([]);
+      setMerging([]);
+      setShaping(null);
+      setFixing(null);
+      setDone(true);
+      return;
+    }
+    leaveFor(target);
+  };
+  const stepPrevious = () =>
+    done ? backToObjects() : leaveFor(index > 0 ? order[index - 1] : null);
   useAnswerKeys(
     answersOf(session.style, session.classes, currentItem),
     (raw) => {
@@ -834,15 +877,28 @@ export function StageReviewObjects({
           className={guided ? "flex flex-col gap-4" : "flex flex-col gap-2"}
         >
           {guided && done ? (
-            <ReviewOpinion
-              taskId={taskId}
-              slideId={slideId}
-              readOnly={opinionLocked}
-              onObjects={(id) => {
-                if (id === "cells") setGridOpen(true);
-                if (id !== undefined) jump(id);
-              }}
-            />
+            <>
+              <StageOpinionBack
+                session={session}
+                pending={pending}
+                current={current}
+                onBack={backToObjects}
+                onJump={(id) => {
+                  if (id === "cells") setGridOpen(true);
+                  jump(id);
+                }}
+              />
+              <OpinionForm
+                session={session}
+                draft={opinionDraft}
+                pending={pending}
+                readOnly={opinionLocked}
+                onObjects={(id) => {
+                  if (id === "cells") setGridOpen(true);
+                  if (id !== undefined) jump(id);
+                }}
+              />
+            </>
           ) : guided && currentItem !== undefined ? (
             <StageGuidedCard
               session={session}

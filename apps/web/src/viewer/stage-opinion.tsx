@@ -4,16 +4,22 @@ import { InlineState } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { SlideDoneCard, type SlideDoneCounts } from "@parfocal/ui/components/slide-done-card";
 import { useNavigate } from "@tanstack/react-router";
+import type { Count } from "../screens/review/decision-style.ts";
 import { opinionQuestions, questionBlockers } from "../screens/review/guided-blockers.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
 import { pendingOrder } from "../screens/review/review-order-state.ts";
 import { ReviewOrderOpinionNotice } from "../screens/review/review-order-state.tsx";
 import { useOpinionDraft } from "../screens/review/use-opinion-draft.ts";
 
-export function slideDoneCounts(session: ReviewSession): SlideDoneCounts {
+export type PendingDecisions = ReadonlyMap<string, Count>;
+
+export function slideDoneCounts(
+  session: ReviewSession,
+  pending: PendingDecisions = new Map(),
+): SlideDoneCounts {
   const counts = { total: session.objects.length, agree: 0, disagree: 0, unsure: 0, open: 0 };
   for (const object of session.objects) {
-    const value = session.decisions.get(object.object)?.value;
+    const value = session.decisions.get(object.object)?.value ?? pending.get(object.object);
     if (value === "agree" || value === "disagree" || value === "unsure") counts[value] += 1;
     else counts.open += 1;
   }
@@ -25,6 +31,7 @@ type OpinionProps = {
   slideId: string;
   readOnly?: string | undefined;
   onObjects: (object?: string) => void;
+  pending?: PendingDecisions;
 };
 
 export type SlideSubmit = { submit: () => void; sending: boolean; failed: boolean };
@@ -49,13 +56,39 @@ export function useSlideSubmit(taskId: string | null, slideId: string): SlideSub
   return { submit, sending: submitReview.isPending, failed: submitReview.isError };
 }
 
-export function ReviewOpinion({ taskId, slideId, readOnly, onObjects }: OpinionProps) {
-  const { t } = useLingui();
+export function ReviewOpinion({ taskId, slideId, readOnly, onObjects, pending }: OpinionProps) {
   const session = useReviewSession(taskId, slideId);
-  const { answers, change } = useOpinionDraft(session);
+  const draft = useOpinionDraft(session);
+  return (
+    <OpinionForm
+      session={session}
+      draft={draft}
+      readOnly={readOnly}
+      onObjects={onObjects}
+      {...(pending ? { pending } : {})}
+    />
+  );
+}
+
+export function OpinionForm({
+  session,
+  draft: { answers, change },
+  readOnly,
+  onObjects,
+  pending = new Map(),
+}: {
+  session: ReviewSession;
+  draft: Pick<ReturnType<typeof useOpinionDraft>, "answers" | "change">;
+  readOnly?: string | undefined;
+  onObjects: (object?: string) => void;
+  pending?: PendingDecisions;
+}) {
+  const { t } = useLingui();
   const questions = opinionQuestions(session, answers, []);
-  const counts = slideDoneCounts(session);
-  const undecided = session.objects.filter((object) => !session.decisions.has(object.object));
+  const counts = slideDoneCounts(session, pending);
+  const undecided = session.objects.filter(
+    (object) => !session.decisions.has(object.object) && !pending.has(object.object),
+  );
   const openRegions = undecided.filter((object) => object.kind !== "cell");
   const openCells = undecided.filter((object) => object.kind === "cell");
   const open: Blocker[] = [
