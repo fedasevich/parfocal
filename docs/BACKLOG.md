@@ -3960,6 +3960,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-000.
   Size: M.
 
+- [ ] AINUC-016 · A whole-slide nucleus run types every cell
+  Found while reviewing thesis section 3.2 (annotation workflows). The catalogue model `pathosam-hovernext` v1.2 is named "PathoSAM + HoVer-NeXt" and described as every cell with a type, but `parfocal_ml.nuclei_run_worker` runs only the PathoSAM detector, so the cells of a whole-slide or area run carry no type. The HoVer-NeXt typer runs today only on accepted outlines in the viewer (AINUC-014, typing one-click accepts with the server typer). The run job types every cell after detection with the same ONNX typer, calibration and class map, stores the class probabilities in the result set as an import does, and counts the step in its progress. Until it is built, the catalogue description must not promise types.
+  Done when a worker test runs the job on a fixture slide with a stand-in detector and the real typer graph on the processor and every stored cell has a type and probabilities, the run panel shows the typing step, and the cost of one slide on an L4 is estimated from the measured typer speed in a result file. No GPU run in the cloud until the owner has budget again.
+  Depends on AINUC-014.
+  Size: M.
+
 ## 24 AITUM · Tumor and region maps
 
 - [x] AITUM-000 · Research check
