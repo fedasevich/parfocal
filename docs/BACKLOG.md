@@ -3972,6 +3972,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-014.
   Size: M.
 
+- [ ] AINUC-017 · A nucleus run's cells become its result set
+  Found by the lead on 2026-11-25 while merging AINUC-016 (a whole-slide nucleus run types every cell). In `parfocal_ml.nuclei_run_worker` only `model-running` does work, and `objects-placed`, `ids-given` and `result-set-added` are the no-op `passed`, so the cells of a run stay in per-tile working chunks and the run's result set never gets cells or finishes. ADR 0240 (one working chunk per tile) says these stages read every tile chunk back and build the result set with `build_cells`. Wire them: place the cells of all tile chunks into the result set's cell files with their types and probabilities, give identifiers that keep the numbers of cells found again in earlier result sets of the slide as an import does, and finish the result set, or fail it with a reason. Check the tumour map and lab model workers for the same gap.
+  Done when a worker test runs a whole job with a stand-in detector on a fixture slide and the result set is finished with every cell, its type and a stable identifier, a rerun keeps the identifiers, and a database or real-stack test creates a review task on that result set and lists its objects.
+  Depends on AINUC-016.
+  Size: L.
+
 ## 24 AITUM · Tumor and region maps
 
 - [x] AITUM-000 · Research check
