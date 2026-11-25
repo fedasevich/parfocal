@@ -23,13 +23,26 @@ async function openTool(page: Page, key: "s" | "u", best?: string) {
   await page.keyboard.press(key);
   await expect(stage).toHaveAttribute("data-tool", key === "s" ? "smart" : "auto");
   await expect(page.getByTestId("context-bar")).toBeVisible();
-  if ((await page.getByTestId("hint-close").count()) > 0) {
-    await page.getByTestId("hint-close").click();
-    await expect(page.getByTestId("context-hints")).toHaveCount(0);
-  }
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
   return { centre: { x: box.x + box.width / 2, y: box.y + box.height / 2 } };
 }
+
+test("the Smart select bar is one row with the first run hints showing under it", async ({
+  page,
+}) => {
+  await openTool(page, "s");
+  const hints = page.getByTestId("context-hints");
+  await expect(hints).toBeVisible();
+  await expect(page.getByTestId("hint-close")).toBeVisible();
+  expect(await barRows(page)).toBe(1);
+  const bar = (await page.getByTestId("context-bar").boundingBox()) ?? { y: 0, height: 0 };
+  const line = (await hints.boundingBox()) ?? { y: 0, height: 0 };
+  expect(line.y).toBeGreaterThanOrEqual(bar.y + bar.height);
+  expect(bar.height).toBeLessThanOrEqual(50);
+  await page.getByTestId("hint-close").click();
+  await expect(hints).toHaveCount(0);
+  expect(await barRows(page)).toBe(1);
+});
 
 test("a stopped Best request keeps the Smart select bar on one row and says the rest in a toast", async ({
   page,

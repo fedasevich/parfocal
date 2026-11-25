@@ -22,7 +22,7 @@ const installBarCounter = () => {
   globals.countBarRows = (bar) => {
     const items = Array.from(
       bar.querySelectorAll(
-        ":scope > *:not([data-slot=context-extras]), [data-slot=context-extras] > *",
+        ":scope > *:not([data-slot=context-extras]):not([data-slot=context-hints-line]), [data-slot=context-extras] > *",
       ),
     );
     const centres = items

@@ -150,35 +150,61 @@ export function ContextBarView({
       </ContextBar>
     );
   }
+  const pills = model.hints.map((hint) => (
+    <ContextPill key={hint} className="whitespace-nowrap">
+      {hint}
+    </ContextPill>
+  ));
+  const closeHints =
+    model.hints.length > 0 && onCloseHints ? (
+      <button
+        type="button"
+        data-testid="hint-close"
+        title={t`Close the hint`}
+        onClick={onCloseHints}
+        className="inline-flex cursor-pointer items-center gap-1.5 rounded-ctl border border-line px-1.5 py-0.5 text-fg-dim hover:text-fg"
+      >
+        <Trans>Close</Trans>
+        <Keycap size="sm" keys="⇧I" />
+      </button>
+    ) : null;
+  if (model.hintsBelow) {
+    return (
+      <ContextBar
+        label={model.label}
+        data-testid="context-bar"
+        data-mode="tool"
+        className={stacked ? "relative flex-nowrap" : oneRow}
+      >
+        {strip}
+        <ContextExtrasSlot />
+        {model.hints.length > 0 ? (
+          <span
+            data-slot="context-hints-line"
+            data-testid="context-hints"
+            className="absolute top-full left-0 mt-1.5 flex max-w-full flex-wrap items-center gap-1.5 rounded-[10px] border border-line bg-chrome px-2 py-1.5 shadow-pop [[data-slot=context-bar]:has([data-bar-state])_&]:hidden"
+          >
+            {pills}
+            {closeHints}
+          </span>
+        ) : null}
+      </ContextBar>
+    );
+  }
   return (
     <ContextBar label={model.label} data-testid="context-bar" data-mode="tool" className={placed}>
       {model.hints.length > 0 ? (
         <span
           data-testid="context-hints"
-          className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2.5 gap-y-1.5 [[data-slot=context-bar]:has([data-bar-state])_&]:hidden"
+          className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2.5 gap-y-1.5"
         >
-          {model.hints.map((hint) => (
-            <ContextPill key={hint} className="whitespace-nowrap">
-              {hint}
-            </ContextPill>
-          ))}
+          {pills}
         </span>
       ) : null}
       {strip ? <ContextDivider /> : null}
       {strip}
       <ContextExtrasSlot />
-      {model.hints.length > 0 && onCloseHints ? (
-        <button
-          type="button"
-          data-testid="hint-close"
-          title={t`Close the hint`}
-          onClick={onCloseHints}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-ctl border border-line px-1.5 py-0.5 text-fg-dim hover:text-fg"
-        >
-          <Trans>Close</Trans>
-          <Keycap size="sm" keys="⇧I" />
-        </button>
-      ) : null}
+      {closeHints}
     </ContextBar>
   );
 }
