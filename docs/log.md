@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- ONB-012 (the sample review is short, includes cells and setup states its real size): the owner asked on 2026-11-25 for one sample slide with a cell review, not only tumor regions, now part of the task, which grows to size M.
 - Owner question 2026-11-25: the sample review from workspace setup is 12 slides with 56 regions, while setup promises 4 CAMELYON16 slides and 2 result sets. Added ONB-012 (the sample review is short and setup states its real size).
 - Owner request 2026-11-25 from a screenshot: the magnification bar in the disagreement queue overlaps and clips, and the adjudicator should be able to open the slide bigger, added as PROTO-178 (the adjudication slide view opens bigger and its magnification bar fits).
 - Owner request 2026-11-25 from a screenshot: the Decide panel in the disagreement queue overflows its column, added as PROTO-177 (the disagreement queue's Decide panel fits its column).
