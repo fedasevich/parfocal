@@ -304,12 +304,14 @@ type ObjectCardProps = {
   onReason: (reason: string) => void;
   onBackToAnswers: () => void;
   onFix: (what: string) => void;
+  fixes?: readonly ("outline" | "type")[];
   typePicker?: ReactNode;
   fixRow?: ReactNode;
   redrawPoints: number | null;
   onFinishRedraw: () => void;
   onCancelRedraw: () => void;
-  onAddMissed: () => void;
+  drawingMissed?: boolean;
+  onAddMissed?: (() => void) | undefined;
 };
 
 export function ObjectCard({
@@ -335,11 +337,13 @@ export function ObjectCard({
   onReason,
   onBackToAnswers,
   onFix,
+  fixes = ["outline", "type"],
   typePicker,
   fixRow,
   redrawPoints,
   onFinishRedraw,
   onCancelRedraw,
+  drawingMissed = false,
   onAddMissed,
 }: ObjectCardProps) {
   const { t } = useLingui();
@@ -355,18 +359,29 @@ export function ObjectCard({
   );
   if (redrawPoints !== null) {
     return (
-      <div className="grid gap-5" data-testid="redraw-panel">
+      <div className="grid gap-5" data-testid={drawingMissed ? "missed-panel" : "redraw-panel"}>
         {head}
         {dots}
         <div className="grid gap-1.5">
           <h2 className="m-0 text-title font-semibold leading-snug text-fg">
-            <Trans>Draw the new outline of {object.object}</Trans>
+            {drawingMissed ? (
+              <MissedHeading object={object} />
+            ) : (
+              <Trans>Draw the new outline of {object.object}</Trans>
+            )}
           </h2>
           <p className="m-0 text-body text-fg-dim">
-            <Trans>
-              Click around it. Click the first point or press Finish to close it. The AI result
-              stays as it was.
-            </Trans>
+            {drawingMissed ? (
+              <Trans>
+                Click around it. Click the first point or press Finish to close it. It is saved as
+                your own object, marked with a plus.
+              </Trans>
+            ) : (
+              <Trans>
+                Click around it. Click the first point or press Finish to close it. The AI result
+                stays as it was.
+              </Trans>
+            )}
           </p>
           <small className="text-body-sm text-fg-dim" aria-live="polite">
             {plural(redrawPoints, { one: "# point", other: "# points" })}
@@ -425,10 +440,12 @@ export function ObjectCard({
                   <Icon name="pen" />
                   <Trans>Redraw the outline</Trans>
                 </Button>
-                <Button onClick={() => onFix("type")}>
-                  <Icon name="pen" />
-                  <Trans>Change the type</Trans>
-                </Button>
+                {fixes.includes("type") ? (
+                  <Button onClick={() => onFix("type")}>
+                    <Icon name="pen" />
+                    <Trans>Change the type</Trans>
+                  </Button>
+                ) : null}
               </div>
             ))}
         <Button variant="ghost" className="w-fit px-0" onClick={onBackToAnswers}>
@@ -500,17 +517,43 @@ export function ObjectCard({
       {fixRow}
       {coach}
       {history}
-      {readOnly ? null : (
+      {readOnly || onAddMissed === undefined ? null : (
         <Button className="w-fit" disabled={disabled} onClick={onAddMissed}>
           <Icon name="poly" />
-          {object.drawn ? (
-            <Trans>Add something the outlines missed</Trans>
-          ) : (
-            <Trans>Add something the AI missed</Trans>
-          )}
+          <AddMissedLabel object={object} />
         </Button>
       )}
     </div>
+  );
+}
+
+function AddMissedLabel({ object }: { object: ReviewObject }) {
+  if (object.kind === "cell") {
+    return object.drawn ? (
+      <Trans>Add a cell the outlines missed</Trans>
+    ) : (
+      <Trans>Add a cell the AI missed</Trans>
+    );
+  }
+  return object.drawn ? (
+    <Trans>Add a region the outlines missed</Trans>
+  ) : (
+    <Trans>Add a region the AI missed</Trans>
+  );
+}
+
+function MissedHeading({ object }: { object: ReviewObject }) {
+  if (object.kind === "cell") {
+    return object.drawn ? (
+      <Trans>Draw the cell the outlines missed</Trans>
+    ) : (
+      <Trans>Draw the cell the AI missed</Trans>
+    );
+  }
+  return object.drawn ? (
+    <Trans>Draw the region the outlines missed</Trans>
+  ) : (
+    <Trans>Draw the region the AI missed</Trans>
   );
 }
 

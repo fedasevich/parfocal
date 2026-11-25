@@ -107,6 +107,7 @@ class TaskDisplaySettings(BaseModel):
 
     defaults: DisplaySettings = DisplaySettings()
     locks: dict[Lockable, LockReason] = {}
+    add_missed: StrictBool = True
 
 
 class DisplaySettingLockedError(ConflictError):

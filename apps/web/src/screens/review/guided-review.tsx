@@ -30,7 +30,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
-import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
+import { closeDraft, type PolygonDraft } from "../../annotations/polygon-draft.ts";
 import { useConnection } from "../../shell/connection.ts";
 import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
@@ -78,6 +78,7 @@ import {
   type GuidedTab,
   guidedSetup,
 } from "./guided-scenes.ts";
+import { AddedList, MissedOutlines, useOutlineDrafts } from "./missed-draw.tsx";
 import { noteAction, useNoteKey } from "./note-key.ts";
 import {
   draftFrom,
@@ -231,7 +232,8 @@ function GuidedBody({
   const [disagreeOpen, setDisagreeOpen] = useState(setup.disagreeOpen);
   const [noteFor, setNoteFor] = useState<string | null>(setup.noteDraft ? "current" : null);
   const [noteDraft, setNoteDraft] = useState(setup.noteDraft ?? { reasons: [], text: "" });
-  const [redraw, setRedraw] = useState<PolygonDraft | null>(null);
+  const drafts = useOutlineDrafts(session);
+  const { redraw, setRedraw, missed, drafting } = drafts;
   const [redrawnNow, setRedrawn] = useState<Record<string, PolygonDraft>>({});
   const layer = okData(useGetReviewedLayer(session.taskId, session.slideId, undefined).data);
   const redrawn = useMemo(() => {
@@ -497,15 +499,11 @@ function GuidedBody({
     });
   };
   const startRedraw = () => {
-    setRedraw([]);
+    drafts.startRedraw();
     setCamera(null);
   };
-  const pickPoint = (point: Point) => {
-    if (redraw === null) return;
-    const last = redraw.at(-1);
-    if (last?.x === point.x && last.y === point.y) return;
-    setRedraw([...redraw, point]);
-  };
+  const finishMissed = () => missed.finish(current?.kind === "cell" ? "cell" : "region");
+  const missedOpen = missed.draft !== null;
   const finishRedraw = () => {
     if (redraw === null) return;
     const image = imageOfKind(current?.kind ?? "region");
@@ -700,7 +698,7 @@ function GuidedBody({
     !showDone &&
     !noResults &&
     !disagreeOpen &&
-    redraw === null &&
+    drafting === null &&
     !areaMode &&
     !setup.issue;
   const note: ReactNode =
@@ -857,20 +855,15 @@ function GuidedBody({
         onAnswer={answerWith}
         onReason={toggleReason}
         onBackToAnswers={() => setDisagreeOpen(false)}
-        redrawPoints={redraw === null ? null : redraw.length}
-        onFinishRedraw={finishRedraw}
-        onCancelRedraw={() => setRedraw(null)}
-        onFix={(what) =>
-          what === "outline"
-            ? startRedraw()
-            : showUndoToast({ message: "Pick the right class with 1 to 4 (prototype)" })
-        }
-        onAddMissed={() =>
-          showUndoToast({
-            message: `Draw around what the AI missed. It becomes T${regions.length + 2}⁺ (prototype)`,
-          })
-        }
+        redrawPoints={drafting === null ? null : drafting.length}
+        drawingMissed={missedOpen}
+        onFinishRedraw={missedOpen ? finishMissed : finishRedraw}
+        onCancelRedraw={drafts.cancel}
+        fixes={["outline"]}
+        onFix={startRedraw}
+        onAddMissed={missed.on ? drafts.startMissed : undefined}
       />
+      <AddedList added={session.added.map((item) => item.object)} />
       <div className="mt-auto flex items-center justify-between pt-2">
         <Button
           variant="ghost"
@@ -1023,16 +1016,17 @@ function GuidedBody({
             minimap={!noResults && !minimapOff}
             hint={!showDone && !noResults}
             slideName={session.slideName}
-            onPointPick={redraw === null ? undefined : pickPoint}
+            onPointPick={drafting === null ? undefined : drafts.pickPoint}
             overlay={({ camera: shown, size, moved }) => (
               <>
                 <RedrawLayer
                   camera={shown}
                   size={size}
-                  draft={redraw}
+                  draft={drafting}
                   saved={redrawn[currentId] ?? null}
-                  onClose={finishRedraw}
+                  onClose={missedOpen ? finishMissed : finishRedraw}
                 />
+                <MissedOutlines camera={shown} size={size} saved={missed.saved} />
                 {canvasIssue}
                 {coachOn ? (
                   <>

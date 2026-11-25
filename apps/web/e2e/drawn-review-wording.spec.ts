@@ -251,7 +251,7 @@ test("the live viewer of an AI review still reads as AI", async ({ page }) => {
 test("the guided card of a drawn outline names it as drawn", async ({ page }) => {
   await page.goto(`${rt14}/guided?slide=${a1}&scene=region&source=drawn`);
   await expect(
-    page.getByRole("button", { name: "Add something the outlines missed" }),
+    page.getByRole("button", { name: "Add a region the outlines missed" }),
   ).toBeVisible();
-  await expect(page.getByText("Add something the AI missed")).toHaveCount(0);
+  await expect(page.getByText("Add a region the AI missed")).toHaveCount(0);
 });

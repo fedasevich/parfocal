@@ -8139,6 +8139,7 @@ export const getCreateReviewTaskResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   check: faker.helpers.arrayElement([
     {
@@ -8287,6 +8288,7 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
       locks: {
         [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
       },
+      add_missed: faker.datatype.boolean(),
     },
     check: faker.helpers.arrayElement([
       {
@@ -8419,6 +8421,7 @@ export const getGetReviewTaskResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   check: faker.helpers.arrayElement([
     {
@@ -8567,6 +8570,7 @@ export const getChangeReviewTaskResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   check: faker.helpers.arrayElement([
     {
@@ -8745,6 +8749,7 @@ export const getAddTaskReviewerResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   check: faker.helpers.arrayElement([
     {
@@ -8893,6 +8898,7 @@ export const getWithdrawReviewTaskResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   check: faker.helpers.arrayElement([
     {
@@ -11517,6 +11523,7 @@ export const getGetMyDisplayResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   preset_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   preset: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -11602,6 +11609,7 @@ export const getChooseMyDisplayResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   preset_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   preset: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -14326,6 +14334,7 @@ export const getGetTaskEvaluationResponseMock = (
     locks: {
       [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
     },
+    add_missed: faker.datatype.boolean(),
   },
   presets: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({

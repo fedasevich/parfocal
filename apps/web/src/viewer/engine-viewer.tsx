@@ -436,7 +436,7 @@ function GuardedViewer({
               cellsGrid={cells}
               jumpRequest={jumpRequest}
               focus={focus ? { onShowUi: showUi } : null}
-              onAddMissed={() => session.armTool("smart")}
+              onAddMissed={(kind) => session.armTool(kind === "cell" ? "marker" : "poly")}
               onCurrent={(id) => {
                 setCurrentObject(id);
                 if (guided && id !== null) {

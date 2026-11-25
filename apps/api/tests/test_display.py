@@ -116,6 +116,38 @@ def test_each_template_presets_its_own_display_defaults(api: ApiAs, database: st
     assert json.loads(str(created[0][0]))["display_locks"] == ["order"]
 
 
+def test_add_what_the_ai_missed_is_on_unless_the_task_turns_it_off(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    templates = templates_of(api, s)
+    researcher = api(s.people["owner"])
+    plain = researcher.post(s.tasks, json=task_draft(s))
+    assert plain.status_code == 201, plain.text
+    assert plain.json()["display"]["add_missed"] is True
+    off = researcher.post(
+        s.tasks,
+        json=task_draft(s, study_template_id=templates["cell-typing"]["id"], add_missed=False),
+    )
+    assert off.status_code == 201, off.text
+    assert off.json()["display"]["add_missed"] is False
+    assert off.json()["display"]["defaults"]["draw_as"] == "dots"
+    task = off.json()["id"]
+    assert researcher.get(f"/api/review-tasks/{task}").json()["display"]["add_missed"] is False
+    locked = researcher.patch(
+        f"/api/review-tasks/{task}",
+        json={"display": {"defaults": {"width": 3}, "locks": {"order": REASON}}},
+    )
+    assert locked.status_code == 200, locked.text
+    assert locked.json()["display"]["add_missed"] is False
+    back_on = researcher.patch(
+        f"/api/review-tasks/{task}",
+        json={"display": {**off.json()["display"], "add_missed": True}},
+    )
+    assert back_on.status_code == 200, back_on.text
+    assert researcher.get(f"/api/review-tasks/{task}").json()["display"]["add_missed"] is True
+
+
 @pytest.mark.parametrize("key", list(LOCKED_CHANGE))
 def test_each_lockable_setting_locks_with_a_reason_and_refuses_without(
     api: ApiAs, database: str, key: str

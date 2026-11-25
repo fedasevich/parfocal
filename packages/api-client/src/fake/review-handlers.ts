@@ -44,6 +44,7 @@ import {
 } from "../generated/api.msw.ts";
 import type {
   AddedDraft,
+  Annotation,
   DecisionBatch,
   DecisionClearBatch,
   EditDraft,
@@ -183,11 +184,23 @@ export const toReviewObjects = (taskId: string, slideId: string, drawn = false):
   })),
   added:
     taskId === rt17.id
-      ? addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null }))
+      ? addedOn(taskId, slideId).map(listedAdded)
       : [
           ...(reviewsA1(taskId, slideId) ? addedByLenka : []),
-          ...addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null })),
+          ...addedOn(taskId, slideId).map(listedAdded),
         ],
+});
+
+const outlineOfAdded = (geometry: Annotation["geometry"]): number[] | null => {
+  if (geometry["type"] !== "Polygon") return null;
+  const [ring = []] = geometry["coordinates"] as number[][][];
+  return ring.slice(0, -1).flatMap((point) => [point[0] ?? 0, point[1] ?? 0]);
+};
+
+const listedAdded = (item: Annotation) => ({
+  object: item.code,
+  note: null,
+  outline: outlineOfAdded(item.geometry),
 });
 
 export const toTaskDisplay = (taskId: string): TaskDisplay => {

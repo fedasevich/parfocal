@@ -20,7 +20,28 @@ const locks: Record<string, TaskDisplaySettings["locks"]> = {
   "RT-14": { order: "Everyone sees the objects in the same order, so agreement is fair" },
 };
 
+const addMissedKey = "parfocal.fake.add-missed-off";
+
+let addMissedOffMemory: string[] = [];
+
+const addMissedStore = (): Storage | null =>
+  typeof sessionStorage === "undefined" ? null : sessionStorage;
+
+const addMissedOff = (): string[] => {
+  const stored = addMissedStore()?.getItem(addMissedKey);
+  return stored === null || stored === undefined
+    ? addMissedOffMemory
+    : (JSON.parse(stored) as string[]);
+};
+
+export const setAddMissed = (code: string, on: boolean) => {
+  const off = addMissedOff().filter((item) => item !== code);
+  addMissedOffMemory = on ? off : [...off, code];
+  addMissedStore()?.setItem(addMissedKey, JSON.stringify(addMissedOffMemory));
+};
+
 export const taskDisplayFor = (code: string): TaskDisplaySettings => ({
   defaults: { ...defaults, other_sets: { reviewed_layer: true, result_set_ids: [] } },
   locks: locks[code] ?? {},
+  add_missed: !addMissedOff().includes(code),
 });

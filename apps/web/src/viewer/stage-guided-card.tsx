@@ -66,7 +66,7 @@ export function StageGuidedCard({
   onPrevious: () => void;
   onSkip: () => void;
   onNote: () => void;
-  onAddMissed: () => void;
+  onAddMissed?: (() => void) | undefined;
   answersOff?: string | undefined;
   readOnly?: boolean;
   fix?: GuidedFix;

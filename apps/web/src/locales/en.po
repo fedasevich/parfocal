@@ -1972,6 +1972,10 @@ msgstr "{code} {name} is back in every list."
 msgid "{code} is out"
 msgstr "{code} is out"
 
+#: src/screens/review/missed-draw.tsx
+msgid "{code} saved as your own object."
+msgstr "{code} saved as your own object."
+
 #: ../../packages/ui/src/components/new-forms.tsx
 msgid "{code} when created"
 msgstr "{code} when created"
@@ -3346,6 +3350,14 @@ msgstr "Add {0} to {1}?"
 msgid "Add {count} slide{0}"
 msgstr "Add {count} slide{0}"
 
+#: src/screens/review/object-card.tsx
+msgid "Add a cell the AI missed"
+msgstr "Add a cell the AI missed"
+
+#: src/screens/review/object-card.tsx
+msgid "Add a cell the outlines missed"
+msgstr "Add a cell the outlines missed"
+
 #: src/screens/project/add-class-modal.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Add a class"
@@ -3374,6 +3386,14 @@ msgstr "Add a note, type @ to mention someone"
 #: src/screens/settings/settings-screen.tsx
 msgid "Add a passkey"
 msgstr "Add a passkey"
+
+#: src/screens/review/object-card.tsx
+msgid "Add a region the AI missed"
+msgstr "Add a region the AI missed"
+
+#: src/screens/review/object-card.tsx
+msgid "Add a region the outlines missed"
+msgstr "Add a region the outlines missed"
 
 #. placeholder {0}: stemOf(slide.path)
 #: src/screens/upload/live-wizard.tsx
@@ -3504,14 +3524,6 @@ msgstr "Add slides to this project"
 msgid "Add slides, result files or both to go on."
 msgstr "Add slides, result files or both to go on."
 
-#: src/screens/review/object-card.tsx
-msgid "Add something the AI missed"
-msgstr "Add something the AI missed"
-
-#: src/screens/review/object-card.tsx
-msgid "Add something the outlines missed"
-msgstr "Add something the outlines missed"
-
 #: src/screens/clinical-report/modals.tsx
 msgid "Add the deposit"
 msgstr "Add the deposit"
@@ -3532,6 +3544,11 @@ msgstr "Add the run {0}"
 #: src/screens/developer/developer-screen.tsx
 msgid "Add them to the viewer address, for example <0>?lab&renderer=viv&nuclei=100k</0>"
 msgstr "Add them to the viewer address, for example <0>?lab&renderer=viv&nuclei=100k</0>"
+
+#: src/screens/new-task/how-step.tsx
+#: src/screens/new-task/send-step.tsx
+msgid "Add what was missed"
+msgstr "Add what was missed"
 
 #: src/screens/viewer/object-table.tsx
 msgid "Added"
@@ -5707,6 +5724,10 @@ msgid "Click a place to go there ·"
 msgstr "Click a place to go there ·"
 
 #: src/screens/review/object-card.tsx
+msgid "Click around it. Click the first point or press Finish to close it. It is saved as your own object, marked with a plus."
+msgstr "Click around it. Click the first point or press Finish to close it. It is saved as your own object, marked with a plus."
+
+#: src/screens/review/object-card.tsx
 msgid "Click around it. Click the first point or press Finish to close it. The AI result stays as it was."
 msgstr "Click around it. Click the first point or press Finish to close it. The AI result stays as it was."
 
@@ -7186,10 +7207,26 @@ msgstr "Draw an outline or place a cell on the slide, pick its class, and edit a
 msgid "Draw as"
 msgstr "Draw as"
 
+#: src/screens/review/object-card.tsx
+msgid "Draw the cell the AI missed"
+msgstr "Draw the cell the AI missed"
+
+#: src/screens/review/object-card.tsx
+msgid "Draw the cell the outlines missed"
+msgstr "Draw the cell the outlines missed"
+
 #. placeholder {0}: object.object
 #: src/screens/review/object-card.tsx
 msgid "Draw the new outline of {0}"
 msgstr "Draw the new outline of {0}"
+
+#: src/screens/review/object-card.tsx
+msgid "Draw the region the AI missed"
+msgstr "Draw the region the AI missed"
+
+#: src/screens/review/object-card.tsx
+msgid "Draw the region the outlines missed"
+msgstr "Draw the region the outlines missed"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
@@ -15162,6 +15199,30 @@ msgstr "Reviewers"
 msgid "Reviewers are told once signed."
 msgstr "Reviewers are told once signed."
 
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers can add a cell the AI missed"
+msgstr "Reviewers can add a cell the AI missed"
+
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers can add a cell the outlines missed"
+msgstr "Reviewers can add a cell the outlines missed"
+
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers can add a region or cell the AI missed"
+msgstr "Reviewers can add a region or cell the AI missed"
+
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers can add a region or cell the outlines missed"
+msgstr "Reviewers can add a region or cell the outlines missed"
+
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers can add a region the AI missed"
+msgstr "Reviewers can add a region the AI missed"
+
+#: src/screens/new-task/how-step.tsx
+msgid "Reviewers can add a region the outlines missed"
+msgstr "Reviewers can add a region the outlines missed"
+
 #: src/screens/new-task/steps.tsx
 msgid "Reviewers decide whether each AI result is right, and can redraw an outline that is wrong."
 msgstr "Reviewers decide whether each AI result is right, and can redraw an outline that is wrong."
@@ -18593,6 +18654,10 @@ msgstr "The notifications page lists them all, newest first. Press one to open i
 msgid "The object in focus"
 msgstr "The object in focus"
 
+#: src/screens/review/missed-draw.tsx
+msgid "The object was not saved. Draw it again."
+msgstr "The object was not saved. Draw it again."
+
 #: src/screens/review/review-order-state.tsx
 msgid "The objects are being put in review order. This usually takes under a minute, and this page checks again every few seconds."
 msgstr "The objects are being put in review order. This usually takes under a minute, and this page checks again every few seconds."
@@ -19277,6 +19342,10 @@ msgstr "They asked for access. They join as a reviewer and see this project from
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "They do not block signing and stay out of the training data"
 msgstr "They do not block signing and stay out of the training data"
+
+#: src/screens/new-task/how-step.tsx
+msgid "They draw it on the slide and it is saved as their own object, marked with a plus. Turn it off when only the shown objects count."
+msgstr "They draw it on the slide and it is saved as their own object, marked with a plus. Turn it off when only the shown objects count."
 
 #: ../../packages/ui/src/components/token-field.tsx
 msgid "They get a one-step sign-up, then the task"
@@ -21285,6 +21354,10 @@ msgstr "yes or no"
 #: src/screens/admin/decision-preset.tsx
 msgid "Yes or no"
 msgstr "Yes or no"
+
+#: src/screens/review/missed-draw.tsx
+msgid "You added {codes}"
+msgstr "You added {codes}"
 
 #. placeholder {0}: name.trim()
 #: src/screens/viewer/save-preset-modal.tsx

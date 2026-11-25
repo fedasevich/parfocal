@@ -3020,6 +3020,7 @@ export type LockReason = string;
 export interface TaskDisplaySettings {
   defaults?: DisplaySettings;
   locks?: Partial<Record<Lockable, LockReason>>;
+  add_missed?: boolean;
 }
 
 export interface PresetUse {
@@ -8199,6 +8200,7 @@ export interface TaskDraft {
   study_template_version?: number | null;
   decision?: DecisionSettings | null;
   display?: TaskDisplaySettings | null;
+  add_missed?: boolean | null;
   preset?: CheckPreset | null;
   check?: CheckChange | null;
   blind_first?: boolean;

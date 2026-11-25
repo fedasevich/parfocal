@@ -60,7 +60,7 @@ test("guided review of another reviewer's task shows the object without answers"
   await expect(card).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("read-only-note")).toHaveText(readOnlyLine);
   await expect(card.getByRole("group", { name: /^Your answer on/ })).toHaveCount(0);
-  await expect(card.getByRole("button", { name: "Add something the AI missed" })).toHaveCount(0);
+  await expect(card.getByRole("button", { name: /the AI missed/ })).toHaveCount(0);
   await expect(page.getByTestId("read-only-notice")).toBeVisible();
 });
 
