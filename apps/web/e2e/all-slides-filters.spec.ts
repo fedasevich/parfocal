@@ -75,6 +75,7 @@ test("a filter changed with the keyboard reaches the URL and drops the open prev
   await page.goto("/my-work?tab=all&sel=tumor_090");
   await chip(page, "Status").focus();
   await page.keyboard.press("Enter");
+  await expect(page.getByRole("textbox", { name: "Find a status" })).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
