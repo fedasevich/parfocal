@@ -32,7 +32,7 @@ Estimated on 2026-11-18 for OPS-020 (pin storage, database and Modal functions p
 | `ingest` and `events` | `eu` | 1.15 | 15 percent of a few minutes of CPU a day, under $0.05 a month |
 | Three backfills | `eu` | 1.15 | Run by hand, about $0.01 a run |
 | Parse sandbox | `eu` | 1.15 | 15 percent of a 2 GiB sandbox for seconds per slide, under $0.01 a slide |
-| GPU pools, all six | none since ADR 0407 (GPU pools run in any region until real patient data arrives), `eu` again when `PARFOCAL_GPU_REGION=eu` | 1 unpinned, 1.15 pinned | [ADR XXXX](../adr/XXXX-gpu-pools-take-any-card-big-enough.md) (GPU pools take any card big enough for their model) gives each pool every card big enough, cheapest first, from T4 $0.59 to H100 $3.95 an hour. Each pool stays under $5 an hour at its container cap, and all six on their dearest card at once would be $20.25 an hour at base prices, which only the $30 a month Modal limit bounds |
+| GPU pools, all six | none since ADR 0407 (GPU pools run in any region until real patient data arrives), `eu` again when `PARFOCAL_GPU_REGION=eu` | 1 unpinned, 1.15 pinned | [ADR 0440](../adr/0440-gpu-pools-take-any-card-big-enough.md) (GPU pools take any card big enough for their model) gives each pool every card big enough, cheapest first, from T4 $0.59 to H100 $3.95 an hour. Each pool stays under $5 an hour at its container cap, and all six on their dearest card at once would be $20.25 an hour at base prices, which only the $30 a month Modal limit bounds |
 | Neon `still-field-25034761` | Frankfurt | none | $0, free plan |
 | R2 `parfocal-dev-eu` | EU jurisdiction | none | $0, same $0.015 per GB |
 

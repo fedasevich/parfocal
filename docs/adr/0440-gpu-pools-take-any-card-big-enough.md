@@ -1,4 +1,4 @@
-# XXXX. GPU pools take any card big enough for their model, cheapest first, in any region
+# 0440. GPU pools take any card big enough for their model, cheapest first, in any region
 
 - Date: 2026-11-25
 - Status: Accepted

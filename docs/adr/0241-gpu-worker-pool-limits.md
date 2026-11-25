@@ -4,7 +4,7 @@
 - Status: Accepted
 - Deciders: agent doing AIP-006 (GPU worker pool), for the owner to confirm
 - Backlog: AIP-006 (GPU worker pool). Builds on [ADR 0003](0003-pilot-platform-architecture.md) (pilot platform architecture), [ADR 0150](0150-gpu-serving-on-t4-and-l4-class-cards.md) (GPU serving on T4 and L4 class cards) and [ADR 0202](0202-v1-model-line-up-per-tier.md) (v1 model line-up per tier). Feeds AINUC-001 (detector runner) and SEC-026 (isolated parsing of uploaded files)
-- Amended by: [ADR XXXX](XXXX-gpu-pools-take-any-card-big-enough.md) (GPU pools take any card big enough for their model), which caps each pool under $5 an hour instead of all pools together
+- Amended by: [ADR 0440](0440-gpu-pools-take-any-card-big-enough.md) (GPU pools take any card big enough for their model), which caps each pool under $5 an hour instead of all pools together
 
 ## Context
 
