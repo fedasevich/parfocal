@@ -148,7 +148,7 @@ export function MeasureCanvas({
                 onLine={onLine}
               />
             ))}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+            <div className="pointer-events-none absolute inset-x-4 bottom-4">
               <MagnificationBar
                 magnification={scale}
                 scaleLabel="1 mm"

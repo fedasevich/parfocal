@@ -1,6 +1,14 @@
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import type { MagnificationLabel } from "@parfocal/ui/lib/magnification-bar";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  type CSSProperties,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { loadViewerEngine } from "./load-engine.ts";
@@ -111,20 +119,37 @@ export function MagnificationControl({
 
 const sideButtons = '[data-testid="whole-slide-button"]';
 
+const chipMinPx = 260;
+
+function useWidth(frame: RefObject<HTMLElement | null>): number {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const node = frame.current;
+    if (node === null) return;
+    const measure = () => setWidth(node.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [frame]);
+  return width;
+}
+
 export function StageMagnification(props: MagnificationControlProps) {
   const frame = useRef<HTMLDivElement>(null);
   const beside = useStageBlocks(frame, sideButtons);
+  const width = useWidth(frame);
   const room = Math.max(0, ...beside.map(([x, , width]) => x + width + 8));
+  const squeezed = room > 0 && width > 0 && width - 2 * room < chipMinPx;
   return (
     <div
       ref={frame}
       data-slot="stage-magnification"
-      className="pointer-events-none absolute inset-x-4 bottom-3 flex justify-center"
-      style={room > 0 ? { paddingLeft: room, paddingRight: room } : undefined}
+      data-squeezed={squeezed || undefined}
+      className={`pointer-events-none absolute inset-x-4 px-(--bar-room) ${squeezed ? "bottom-16" : "bottom-3"}`}
+      style={room > 0 && !squeezed ? ({ "--bar-room": `${room}px` } as CSSProperties) : undefined}
     >
-      <div className="pointer-events-auto flex max-w-full">
-        <MagnificationControl {...props} />
-      </div>
+      <MagnificationControl {...props} />
     </div>
   );
 }

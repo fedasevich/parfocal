@@ -4572,6 +4572,10 @@ msgstr ""
 msgid "Back to the project"
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Back to the queue"
+msgstr ""
+
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Back to the report"
 msgstr ""
@@ -12936,6 +12940,10 @@ msgstr ""
 
 #: src/viewer/task-slide-check.tsx
 msgid "Open the slide alone"
+msgstr ""
+
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Open the slide bigger"
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx

@@ -33,8 +33,17 @@ type MagnificationBarProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 
 const nearestPreset = nearestMagnificationPreset;
 
+const presetDropClasses = [
+  "@max-[470px]:hidden",
+  "@max-[410px]:hidden",
+  "@max-[370px]:hidden",
+  "@max-[260px]:hidden",
+  "@max-[230px]:hidden",
+  "@max-[200px]:hidden",
+];
+
 const slide =
-  "flex items-center gap-2.5 overflow-hidden whitespace-nowrap motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow) motion-safe:ease-out";
+  "flex shrink-0 items-center gap-2.5 overflow-hidden whitespace-nowrap motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow) motion-safe:ease-out";
 
 function useBarSignals(
   {
@@ -120,100 +129,117 @@ function MagnificationBar({
   const showBrightness = shown || brightnessChanged;
   return (
     <div
-      data-slot="magnification-bar"
-      data-open={shown || undefined}
-      role="toolbar"
-      tabIndex={tabIndex}
-      aria-label={t`Magnification ${current}, scale ${scaleLabel}. Hover or ⌥1 to ⌥6 for the presets`}
-      className={cn(
-        "inline-flex min-h-9 max-w-full items-center rounded-[10px] border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
-        shown ? "pl-1.5" : "pl-2.5",
-        className,
-      )}
-      onPointerEnter={(event) => {
-        patch({ hover: true });
-        onPointerEnter?.(event);
-      }}
-      onPointerLeave={(event) => {
-        patch({ hover: false });
-        onPointerLeave?.(event);
-      }}
-      onFocus={(event) => {
-        patch({ focus: true });
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) patch({ focus: false });
-        onBlur?.(event);
-      }}
-      {...props}
+      data-slot="magnification-bar-host"
+      className="pointer-events-none @container flex w-full justify-center"
     >
-      <span
-        data-part="presets"
-        inert={!shown}
-        className={cn(slide, shown ? "max-w-[340px] opacity-100" : "max-w-0 opacity-0")}
-      >
-        <span className="flex items-center gap-0.5">
-          {magnificationPresets.map((preset, index) => (
-            <button
-              key={preset}
-              type="button"
-              title={t`⌥${index + 1}`}
-              aria-pressed={preset === near}
-              onClick={() => onPreset?.(preset)}
-              className="cursor-pointer rounded-md border-0 bg-transparent px-1.5 py-1 font-mono text-caption text-fg-dim hover:text-fg aria-pressed:bg-accent-soft aria-pressed:text-fg"
-            >
-              {formatMagnification(preset, labelAs)}
-            </button>
-          ))}
-        </span>
-        <span aria-hidden="true" className="mr-2.5 h-6 w-px shrink-0 bg-line" />
-      </span>
-      <span
-        data-part="current"
+      <div
+        data-slot="magnification-bar"
+        data-open={shown || undefined}
+        role="toolbar"
+        tabIndex={tabIndex}
+        aria-label={t`Magnification ${current}, scale ${scaleLabel}. Hover or ⌥1 to ⌥6 for the presets`}
         className={cn(
-          "overflow-hidden font-mono text-caption font-semibold motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow)",
-          shown ? "mr-0 max-w-0 opacity-0" : "mr-2.5 max-w-[90px] opacity-100",
+          "pointer-events-auto inline-flex min-h-9 max-w-full items-center rounded-[10px] border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
+          shown ? "pl-1.5" : "pl-2.5",
+          className,
         )}
+        onPointerEnter={(event) => {
+          patch({ hover: true });
+          onPointerEnter?.(event);
+        }}
+        onPointerLeave={(event) => {
+          patch({ hover: false });
+          onPointerLeave?.(event);
+        }}
+        onFocus={(event) => {
+          patch({ focus: true });
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) patch({ focus: false });
+          onBlur?.(event);
+        }}
+        {...props}
       >
-        {current}
-      </span>
-      <span data-part="scale" className="inline-flex flex-col items-start gap-0.5">
-        <i
-          aria-hidden="true"
-          className="block h-1.25 border-x-2 border-b-2 border-fg"
-          style={{ width: scalePx }}
-        />
-        <span className="font-mono text-label leading-none text-fg-dim">{scaleLabel}</span>
-      </span>
-      <span
-        data-part="readout"
-        inert={!shown}
-        className={cn(slide, shown ? "max-w-[200px] opacity-100" : "max-w-0 opacity-0")}
-      >
-        <span aria-hidden="true" className="ml-2.5 h-6 w-px shrink-0 bg-line" />
-        <span className="font-mono text-label text-fg-faint">
-          {formatReadout(magnification, digital, micronsPerPixel)}
-        </span>
-      </span>
-      {onBrightnessChange ? (
         <span
-          data-part="brightness"
-          inert={!showBrightness}
+          data-part="presets"
+          inert={!shown}
           className={cn(
             slide,
-            "[&>button]:h-7",
-            showBrightness ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0",
+            "@max-[200px]:hidden",
+            shown ? "max-w-[340px] opacity-100" : "max-w-0 opacity-0",
+          )}
+        >
+          <span className="flex items-center gap-0.5">
+            {magnificationPresets.map((preset, index) => (
+              <button
+                key={preset}
+                type="button"
+                title={t`⌥${index + 1}`}
+                aria-pressed={preset === near}
+                onClick={() => onPreset?.(preset)}
+                className={cn(
+                  "cursor-pointer rounded-md border-0 bg-transparent px-1.5 py-1 font-mono text-caption text-fg-dim hover:text-fg aria-pressed:bg-accent-soft aria-pressed:text-fg",
+                  presetDropClasses[index],
+                )}
+              >
+                {formatMagnification(preset, labelAs)}
+              </button>
+            ))}
+          </span>
+          <span aria-hidden="true" className="mr-2.5 h-6 w-px shrink-0 bg-line" />
+        </span>
+        <span
+          data-part="current"
+          className={cn(
+            "overflow-hidden font-mono text-caption font-semibold motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow)",
+            shown ? "mr-0 max-w-0 opacity-0" : "mr-2.5 max-w-[90px] opacity-100",
+          )}
+        >
+          {current}
+        </span>
+        <span data-part="scale" className="inline-flex flex-col items-start gap-0.5">
+          <i
+            aria-hidden="true"
+            className="block h-1.25 border-x-2 border-b-2 border-fg"
+            style={{ width: scalePx }}
+          />
+          <span className="font-mono text-label leading-none text-fg-dim">{scaleLabel}</span>
+        </span>
+        <span
+          data-part="readout"
+          inert={!shown}
+          className={cn(
+            slide,
+            "@max-[640px]:hidden",
+            shown ? "max-w-[200px] opacity-100" : "max-w-0 opacity-0",
           )}
         >
           <span aria-hidden="true" className="ml-2.5 h-6 w-px shrink-0 bg-line" />
-          <BrightnessPopover
-            value={brightness}
-            onValueChange={onBrightnessChange}
-            onOpenChange={(popoverOpen) => patch({ brightnessOpen: popoverOpen })}
-          />
+          <span className="font-mono text-label text-fg-faint">
+            {formatReadout(magnification, digital, micronsPerPixel)}
+          </span>
         </span>
-      ) : null}
+        {onBrightnessChange ? (
+          <span
+            data-part="brightness"
+            inert={!showBrightness}
+            className={cn(
+              slide,
+              "[&>button]:h-7",
+              brightnessChanged ? undefined : "@max-[340px]:hidden",
+              showBrightness ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0",
+            )}
+          >
+            <span aria-hidden="true" className="ml-2.5 h-6 w-px shrink-0 bg-line" />
+            <BrightnessPopover
+              value={brightness}
+              onValueChange={onBrightnessChange}
+              onOpenChange={(popoverOpen) => patch({ brightnessOpen: popoverOpen })}
+            />
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
