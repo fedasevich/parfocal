@@ -139,3 +139,31 @@ test("the guided still draws the missed region and lists it after a reload", asy
   await page.reload();
   await expect(page.getByTestId("added-objects")).toContainText(code, { timeout: 25_000 });
 });
+
+test("on a cell the guided still saves the missed object as a cell", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=grid`);
+  const add = page.getByRole("button", { name: "Add a cell the AI missed" });
+  await expect(add).toBeVisible({ timeout: 25_000 });
+  await add.click();
+  const draw = page.getByTestId("missed-panel");
+  await expect(draw.getByRole("heading", { name: "Draw the cell the AI missed" })).toBeVisible();
+  const box = (await page.locator("[data-slot=slide-still]").boundingBox()) ?? {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  };
+  for (const [x, y] of [
+    [0.3, 0.2],
+    [0.36, 0.22],
+    [0.33, 0.28],
+  ] as const) {
+    await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+  }
+  const saved = page.waitForRequest(
+    (request) => request.method() === "POST" && request.url().endsWith("/added"),
+  );
+  await draw.getByRole("button", { name: "Finish outline" }).click();
+  expect((await saved).postDataJSON()).toMatchObject({ kind: "cell" });
+});

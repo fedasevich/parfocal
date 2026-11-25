@@ -1078,10 +1078,15 @@ async def change_review_task(
     display_change = None
     if change.display is not None:
         before = display_of(row.display)
-        if change.display != before:
-            await check_sets(connection, row.project_id, change.display.defaults)
-            values["display"] = stored_display(change.display)
-            display_change = lock_details(before, change.display)
+        after = (
+            change.display
+            if "add_missed" in change.display.model_fields_set
+            else change.display.model_copy(update={"add_missed": before.add_missed})
+        )
+        if after != before:
+            await check_sets(connection, row.project_id, after.defaults)
+            values["display"] = stored_display(after)
+            display_change = lock_details(before, after)
     if "reminder_days" in change.model_fields_set:
         values["reminder_days"] = sorted(set(change.reminder_days or []), reverse=True)
     first = change.scope or scope_of(row)

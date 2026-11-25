@@ -341,6 +341,7 @@ export function taskHandlers(): RequestHandler[] {
     getCreateReviewTaskMockHandler(async ({ request, params }) => {
       const draft = (await request.json()) as TaskDraft;
       const created = toCreatedTask(String(params["projectId"]), draft);
+      setAddMissed(created.code, created.display.add_missed !== false);
       recordSentTask({ id: created.id, code: created.code, projectId: created.project_id }, draft);
       return created;
     }),

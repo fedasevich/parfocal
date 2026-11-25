@@ -134,6 +134,12 @@ def test_add_what_the_ai_missed_is_on_unless_the_task_turns_it_off(
     assert off.json()["display"]["defaults"]["draw_as"] == "dots"
     task = off.json()["id"]
     assert researcher.get(f"/api/review-tasks/{task}").json()["display"]["add_missed"] is False
+    locked = researcher.patch(
+        f"/api/review-tasks/{task}",
+        json={"display": {"defaults": {"width": 3}, "locks": {"order": REASON}}},
+    )
+    assert locked.status_code == 200, locked.text
+    assert locked.json()["display"]["add_missed"] is False
     back_on = researcher.patch(
         f"/api/review-tasks/{task}",
         json={"display": {**off.json()["display"], "add_missed": True}},

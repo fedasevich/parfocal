@@ -468,7 +468,7 @@ function AddMissedZone({ draft, update }: StepProps) {
       <ToggleRow
         title={titles[kind]}
         sub={t`They draw it on the slide and it is saved as their own object, marked with a plus. Turn it off when only the shown objects count.`}
-        checked={draft.addMissed}
+        checked={draft.addMissed !== false}
         onChange={(addMissed) => update((current) => ({ ...current, addMissed }))}
       />
     </Zone>

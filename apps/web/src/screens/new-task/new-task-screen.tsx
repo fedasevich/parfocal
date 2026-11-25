@@ -191,7 +191,9 @@ function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
     study_template_id: draft.templateId,
     study_template_version: template ? Number(template.version.slice(1)) : null,
     decision: decisionSettings(styleOf[draft.decision.kind], draft.decision),
-    ...(isAnnotate(draft) ? annotateFields(draft, data) : { add_missed: draft.addMissed }),
+    ...(isAnnotate(draft)
+      ? annotateFields(draft, data)
+      : { add_missed: draft.addMissed !== false }),
   };
 }
 
