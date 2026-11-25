@@ -2,13 +2,39 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.54.0 (2026-11-25)
+
+### Features
+
+- EXP-020: Let a prepared participant join a remote study session by one link
+- EXP-020: Add the join link dry run and harden refresh, sign out and console polling
+
+### Fixes
+
+- PROTO-195: Fail a run whose cells are lost and say why an empty run is empty
+- PROTO-193: Show saved What is wrong reasons at once and keep contradicting ones apart
+
+### Docs
+
+- PROTO-195: Log and tick after merge
+- PROTO-193: Log and tick after merge
+- PROTO-184: Log the v0.53.0 deploy
+- EXP-020: Number the ADR from the merge
+- EXP-020: Log and tick after merge
+
+### Other
+
+- PROTO-180: Claim PROTO-180 for the parallel run
+- PROTO-174: Claim PROTO-174 for the parallel run
+- EXP-020: Merge main
+
 ## v0.53.0 (2026-11-25)
 
 ### Features
 
+- EXP-021: A moderator new to the study workspace joins it as an admin and removes there
 - PROTO-184: Drawn objects live in a Figma style layers tree
 - PROTO-184: Show a drawn region's area and perimeter on its layers tree row
-- EXP-021: A moderator new to the study workspace joins it as an admin and removes there
 - PROTO-192: Hide the cell type bar with a key and keep it clear of the cell
 
 ### Docs
