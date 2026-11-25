@@ -83,3 +83,56 @@ The row shows the failure as "Failed, run cells unstorable", because `failureTex
 5. TODO: read the 22:00 UTC hour L4 line for `parfocal-gpu-pool` to finish run 3's cost.
 
 What the check left in the dev app: the ready result set 0cb7b691 (8 cells) on synthetic-zlib.ome.tiff, the failed set 7e2b20c6 on CMU-1-Small-Region.svs, the ready set a0d59fd1 (2,428 cells) on Case ready in P01, and the three jobs. The next reseed removes them.
+
+## PROTO-196 rerun on release v0.56.0
+
+- Date: 2026-11-25 (23:02 UTC, 00:02 in Prague on 2026-11-26)
+- Release: `/api/status` named `cbcf339`, the commit of v0.56.0 (PROTO-181, PROTO-185, PROTO-196 and PROTO-175)
+- Environment, account and method as above, with one change: the sign in went to its own session file, `GET /api/me` showed the active workspace cvut-biomedical before the run, and the run started with the body of the Run a model dialog (`slide_ids` one slide, `scope` `slide`, `detector` `pathosam-hovernext` `v1.2`). One GPU job, started once, not retried.
+- Slide: CMU-1-Small-Region.svs (2220 by 2967) in P03, the slide where job f4471924 failed. Before the run it held the seeded set "Cell typer v1" (1,418 cells in 2 chunks), the empty ready set 3437e588 from 2026-11-24 and the failed set 7e2b20c6 from the first check, and `slide_counters` had no row for it.
+
+### What was measured
+
+| | Rerun |
+|---|---|
+| Job | 0fa3d105 (run result set 99ac20c4) |
+| Promise from the models route | `start_minutes` 10, `minutes_per_slide` 1 (measured), 0 runs ahead, `queue_minutes` 0 |
+| Job created, POST answered | 23:02:21.4 UTC, answer 1.2 s after the request was sent |
+| `wait` while queued | `waiting-for-gpu` ("Waiting for a GPU" in `jobs/model.ts`) on the first poll at 1.7 s, then null. `gpu-busy` never appeared |
+| First poll not queued | 18.7 s after the request was sent (polls every 5 s) |
+| First stage started | 23:02:35.2, 13.7 s after the job was created |
+| Container | ta-01M8AF48FHK4FMY9EH2653DJQR, gone from `modal container list` by 23:05:38 |
+| `gpu pool run` line (`detector_best`, env main) | `family` `detector-best`, `kind` `detect`, `gpu` `A10`, `region` `eu-west`, `cloud` `CLOUD_PROVIDER_OCI`, logged 23:02:26 UTC |
+| `gpu_usage` | `A10`, `worker` `modal:2`, 46.87 s |
+| Model seconds | 46.9 s for 11 of 11 tiles (the `model-running` step and the run's `gpu_seconds`) |
+| Objects found | 2,428, all typed |
+| `ids-given` | `cells` 2,428, `inherited` 1,365, `new` 1,063, `chunks` 2 |
+| Finished | done 23:03:28.8, 67.4 s after the job was created |
+| Result set 99ac20c4 | `status` ready, `error_code` null, `cell_count` 2,428, 2 chunks holding 2,428 cells (Neon) |
+| Slide row list (`GET /api/slides/{id}/result-sets`) | ready, `cell_count` 2,428, `error_code` null |
+| `slide_counters` for the slide | a `C` row with `last` 2,481 (there was none before the run) |
+| Seeded set 181b7477 afterwards | unchanged, ready, 1,418 cells in 2 chunks |
+
+### Cell numbers against the seeded ones
+
+The cell numbers live in the chunk objects in storage, which a Neon SELECT does not reach, so no single number was read (TODO: read the 2 chunks of 99ac20c4 and of 181b7477 for the lowest and highest number of each). What the database shows: the counter ended at 2,481, and 1,418 seeded cells plus 1,063 new cells is 2,481. So the new cells were numbered above the highest seeded number, 1,419 to 2,481 by that arithmetic, and the 1,365 inherited cells kept their seeded numbers. The remaining 53 seeded cells matched no cell of the run and stay only in the seeded set.
+
+### Cost
+
+- The run's own GPU time was 46.9 s on an A10 and the container lived about 2 min 15 s in all, counting the cold start and the scale-down wait. That is an estimate from the container list and the logs, not a measurement, and it is well below $1.
+- Modal's hourly report for `main` had not yet listed the 23:00 UTC hour when read at 23:12 UTC (the latest hour in it was 22:00). TODO: the A10 line of `parfocal-gpu-pool` for 23:00 UTC, which is this run's GPU cost. The other session's embedder ran on T4 and AWS containers in that hour, so the A10 line belongs to this run alone.
+- Finishing the earlier check: the 22:00 UTC hour of `parfocal-gpu-pool` reads L4 $0.0369, T4 $0.1475 (the other session's embedder), CPU $0.0037, memory $0.0110 and egress $0.0014. The L4 line is run 3's rest, so run 3 cost $0.0067 plus $0.0369, $0.0436 of L4 in all, and the measured GPU cost of the first check is $0.2077 with the A100-40GB $0.1641.
+
+## Interpretation of the rerun
+
+### PROTO-196: met on the named slide
+
+The same slide, with the same seeded 1,418 cells and no counter row, now stores its run: the job closed done, the set closed ready with 2,428 cells, and the slide row list shows it as ready with 2,428 cells, where job f4471924 failed as `run-cells-unstorable`. `ids-given` paired 1,365 run cells with seeded ones and gave 1,063 cells new numbers, and the `C` counter was written at 2,481 as the fix intends. The seeded set was not touched.
+
+The wait reason read "Waiting for a GPU" and never `gpu-busy` during this cold start, so that part of the task shows too. A10 on OCI in `eu-west` took the work this time, a third card after A100-40GB and L4, which again agrees with ADR 0440 (GPU pools take any card big enough). The promise read 10 min against a real 13.7 s start, so the dialog still overstates.
+
+### Not read
+
+The row sentence in the browser (the text the slide list draws from `cell_count` 2,428) was not opened, only the fields it is built from. TODO as above for the cell numbers and the 23:00 UTC A10 cost.
+
+What the rerun left in the dev app: the ready result set 99ac20c4 (2,428 cells) on CMU-1-Small-Region.svs in P03 and job 0fa3d105. The next reseed removes them.
