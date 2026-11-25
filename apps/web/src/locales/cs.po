@@ -14,11 +14,6 @@ msgstr ""
 msgid "{0} GB needed, {1} GB left in {projectCode}"
 msgstr ""
 
-#. placeholder {0}: format.integer(set.cell_count)
-#: src/screens/project/slides-tab.tsx
-msgid " · {0} cells"
-msgstr ""
-
 #. placeholder {0}: plural(toDecide, "object")
 #: src/screens/my-work/my-work-screen.tsx
 msgid " · {0} to decide"
@@ -688,6 +683,11 @@ msgstr ""
 #. placeholder {2}: openCells.length === 1 ? "is" : "are"
 #: src/screens/viewer/use-viewer-scene.tsx
 msgid "{0} cell{1} in the sample {2} still open"
+msgstr ""
+
+#. placeholder {0}: format.integer(summary.cells)
+#: src/screens/project/slides-tab.tsx
+msgid "{0} cells"
 msgstr ""
 
 #. placeholder {0}: test.missing_geometry
@@ -1381,7 +1381,7 @@ msgstr ""
 msgid "{0} recorded"
 msgstr ""
 
-#. placeholder {0}: set.region_count
+#. placeholder {0}: format.integer(summary.regions)
 #: src/screens/project/slides-tab.tsx
 msgid "{0} regions"
 msgstr ""
@@ -1648,6 +1648,11 @@ msgstr ""
 #. placeholder {1}: clash.names.join(" and ")
 #: src/screens/settings/shortcuts-section.tsx
 msgid "{0} would take keys from {1}. Change those first, or keep the arrows."
+msgstr ""
+
+#. placeholder {0}: format.integer(summary.zones)
+#: src/screens/project/slides-tab.tsx
+msgid "{0} zones"
 msgstr ""
 
 #. placeholder {0}: data.case.label
@@ -7440,6 +7445,14 @@ msgstr ""
 msgid "Empty file"
 msgstr ""
 
+#: src/screens/project/slides-tab.tsx
+msgid "Empty, the model found nothing"
+msgstr ""
+
+#: src/screens/project/slides-tab.tsx
+msgid "Empty, the run found no tissue on the slide"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/home/announcements.tsx
 msgid "End"
@@ -7921,6 +7934,11 @@ msgstr ""
 
 #: src/screens/dataset/dataset-screen.tsx
 msgid "Failed"
+msgstr ""
+
+#. placeholder {0}: runFailureText(summary.code)
+#: src/screens/project/slides-tab.tsx
+msgid "Failed, {0}"
 msgstr ""
 
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -11500,6 +11518,10 @@ msgstr ""
 
 #: src/screens/dataset/dataset-screen.tsx
 msgid "No object matches these filters."
+msgstr ""
+
+#: src/screens/project/slides-tab.tsx
+msgid "No objects counted"
 msgstr ""
 
 #: ../../packages/ui/src/components/token-field.tsx
@@ -17375,6 +17397,10 @@ msgstr ""
 
 #: src/screens/settings/feel-preview.tsx
 msgid "Stick preview"
+msgstr ""
+
+#: src/screens/project/slides-tab.tsx
+msgid "Still adding results"
 msgstr ""
 
 #: ../../packages/ui/src/components/slide-done-card.tsx

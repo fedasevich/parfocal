@@ -39,12 +39,14 @@ import { useFormat } from "../../format.ts";
 import { SlideViewers, useProjectViewers } from "../../presence/viewing-now.tsx";
 import { slideLink } from "../../shell/slide-link.ts";
 import { dotJoin } from "../format.ts";
+import { failureText as runFailureText } from "../jobs/model.ts";
 import { okData } from "../placeholder.tsx";
 import { SlideThumb } from "../slide-thumb.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { failureText } from "./new-forms-model.ts";
 import { usePeople } from "./people.ts";
 import { ResultSetDeleteDialog } from "./result-set-delete-dialog.tsx";
+import { summaryOf } from "./result-set-summary.ts";
 import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
 import { type SlideToast, useSlideMove } from "./slide-move-action.ts";
 import { SlideMoveDialog } from "./slide-move-dialog.tsx";
@@ -643,6 +645,38 @@ function SlideRow({
   );
 }
 
+function ResultSetCounts({ set }: { set: ResultSet }) {
+  const { t } = useLingui();
+  const format = useFormat();
+  const summary = summaryOf(set);
+  const text = (() => {
+    switch (summary.kind) {
+      case "importing":
+        return t`Still adding results`;
+      case "failed":
+        return t`Failed, ${runFailureText(summary.code)}`;
+      case "empty":
+        if (summary.reason === "no-tissue") return t`Empty, the run found no tissue on the slide`;
+        if (summary.reason === "nothing-found") return t`Empty, the model found nothing`;
+        return t`No objects counted`;
+      case "objects":
+        return dotJoin([
+          summary.cells ? t`${format.integer(summary.cells)} cells` : null,
+          summary.regions ? t`${format.integer(summary.regions)} regions` : null,
+          summary.zones ? t`${format.integer(summary.zones)} zones` : null,
+        ]);
+    }
+  })();
+  return (
+    <span
+      className={cn("text-body-sm", summary.kind === "failed" ? "text-danger" : "text-fg-dim")}
+      data-testid="result-set-counts"
+    >
+      {text}
+    </span>
+  );
+}
+
 function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectSlide }) {
   const { t } = useLingui();
 
@@ -672,10 +706,7 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
                     : t`Run here on the lab server`}
                 </small>
               </span>
-              <span className="text-body-sm text-fg-dim">
-                <Trans>{set.region_count} regions</Trans>
-                {set.cell_count ? t` · ${format.integer(set.cell_count)} cells` : ""}
-              </span>
+              <ResultSetCounts set={set} />
               <Person
                 person={people.byId(set.created_by_user_id)}
                 size={20}

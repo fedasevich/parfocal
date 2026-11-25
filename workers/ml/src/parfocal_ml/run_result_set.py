@@ -20,7 +20,13 @@ from parfocal_common.chunk_store import (
     read_summary,
     write_cells,
 )
-from parfocal_common.jobs import SEALED_COUNTS, StepFailedError, StepFunction, StepRun
+from parfocal_common.jobs import (
+    SEALED_COUNTS,
+    SEALED_STATE,
+    StepFailedError,
+    StepFunction,
+    StepRun,
+)
 from parfocal_common.model_runs import MODEL_STAGE, STAGES, run_prefix, tile_key
 from parfocal_common.object_ids import Letter
 from parfocal_common.result_imports import result_set_prefix
@@ -77,9 +83,9 @@ CLASS_OBJECTS = text(
 )
 READY = text(
     f"""
-    UPDATE result_sets SET status = 'ready', error_code = NULL, {SEALED_COUNTS}
+    UPDATE result_sets SET {SEALED_STATE}, {SEALED_COUNTS}
     WHERE id = :set_id AND status = 'importing'
-    RETURNING cell_count
+    RETURNING status, error_code, cell_count
     """
 )
 
@@ -302,8 +308,17 @@ def result_set_adding(store: ResultStore) -> StepFunction:
                     CLASS_OBJECTS,
                     {"set_id": found.id, "position": position, "objects": objects[position]},
                 )
-            cells = await connection.scalar(READY, {"set_id": found.id})
-        return {"result_set_id": str(found.id), "status": "ready", "cells": int(cells or 0)}
+            sealed = (await connection.execute(READY, {"set_id": found.id})).one_or_none()
+            if sealed is None:
+                raise StepFailedError(SET_CLOSED)
+            if sealed.status == "failed":
+                raise StepFailedError(str(sealed.error_code))
+        return {
+            "result_set_id": str(found.id),
+            "status": "ready",
+            "cells": int(sealed.cell_count),
+            **({"empty": sealed.error_code} if sealed.error_code else {}),
+        }
 
     return run
 

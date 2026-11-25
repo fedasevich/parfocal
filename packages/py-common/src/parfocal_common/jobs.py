@@ -100,13 +100,40 @@ SEALED_COUNTS = """
     WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'zone'
   )
 """
+RUN_MODEL_STAGE = "model-running"
+RUN_OBJECTS_LOST = "run-objects-lost"
+RUN_FOUND_NOTHING = "run-found-nothing"
+RUN_FOUND_NO_TISSUE = "run-found-no-tissue"
+MODEL_UNITS = f"""
+  FROM job_units JOIN job_steps
+    ON job_steps.job_id = job_units.job_id AND job_steps.ordinal = job_units.ordinal
+  WHERE job_units.job_id = result_sets.job_id AND job_steps.name = '{RUN_MODEL_STAGE}'
+"""
+MODEL_FOUND = f"(SELECT coalesce(sum((job_units.result->>'objects')::bigint), 0) {MODEL_UNITS})"
+STORED_NOTHING = f"""
+  NOT EXISTS (SELECT 1 FROM result_chunks WHERE result_chunks.result_set_id = result_sets.id)
+  AND NOT EXISTS (SELECT 1 FROM result_objects WHERE result_objects.result_set_id = result_sets.id)
+  AND EXISTS (
+    SELECT 1 FROM job_steps
+    WHERE job_steps.job_id = result_sets.job_id AND job_steps.name = '{RUN_MODEL_STAGE}'
+  )
+"""
+SEALED_STATE = f"""
+  status = CASE WHEN {STORED_NOTHING} AND {MODEL_FOUND} > 0 THEN 'failed' ELSE 'ready' END,
+  error_code = CASE
+    WHEN NOT ({STORED_NOTHING}) THEN NULL
+    WHEN {MODEL_FOUND} > 0 THEN '{RUN_OBJECTS_LOST}'
+    WHEN EXISTS (SELECT 1 {MODEL_UNITS}) THEN '{RUN_FOUND_NOTHING}'
+    ELSE '{RUN_FOUND_NO_TISSUE}'
+  END
+"""
 OPEN_RUN_SETS = """
   result_sets.job_id = jobs.id AND result_sets.source = 'run'
   AND result_sets.status = 'importing' AND result_sets.deleted_at IS NULL
 """
 SEAL_DONE_RUN_SETS = text(
     f"""
-    UPDATE result_sets SET status = 'ready', error_code = NULL, {SEALED_COUNTS}
+    UPDATE result_sets SET {SEALED_STATE}, {SEALED_COUNTS}
     FROM jobs
     WHERE jobs.id = :job_id AND jobs.status = 'done' AND {OPEN_RUN_SETS}
     """
