@@ -2288,6 +2288,10 @@ msgstr "{redrawPoints, plural, one {# point} other {# points}}"
 msgid "{resultName} · {count} objects"
 msgstr "{resultName} · {count} objects"
 
+#: src/annotations/smart-layer.tsx
+msgid "{queuedCount} queued"
+msgstr "{queuedCount} queued"
+
 #. placeholder {0}: nucleiCount.toLocaleString("en-US")
 #: src/screens/developer/developer-screen.tsx
 msgid "{route} · {0} synthetic nuclei"

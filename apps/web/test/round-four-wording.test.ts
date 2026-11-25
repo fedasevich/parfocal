@@ -49,7 +49,14 @@ test("the viewer chip counts a case or project in label order and its last slide
 test("the Smart select bar says when an outline was found", () => {
   const ring = Float32Array.of(0, 0, 1, 0, 1, 1);
   const live = { prompts: emptyPrompts, ring, confidence: 0.9 };
-  const base = { kept: [], live: null, phase: "idle" as const, message: null };
+  const base = {
+    kept: [],
+    live: null,
+    phase: "idle" as const,
+    message: null,
+    queued: [],
+    requests: 0,
+  };
   assert.equal(smartStatusOf(base), null);
   assert.equal(smartStatusOf({ ...base, phase: "thinking" }), "outlining");
   assert.equal(smartStatusOf({ ...base, phase: "ready", live }), "found");

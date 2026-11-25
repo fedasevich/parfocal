@@ -336,6 +336,110 @@ describe("smart select session", () => {
     assert.ok(changes.length > 2);
   });
 
+  describe("queued clicks", () => {
+    function openHeld() {
+      const sam = createFakeSam();
+      let release: () => void = () => undefined;
+      const held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const changes: SmartSnapshot[] = [];
+      const session = createSmartSession({
+        slideId: "slide-1",
+        reader: createFakeReader(slide),
+        sam: {
+          ...sam,
+          async prompt(id, prompt) {
+            if (sam.prompts.length === 0) await held;
+            return sam.prompt(id, prompt);
+          },
+        },
+        onChange: (snapshot) => changes.push(snapshot),
+      });
+      opened.push(session);
+      return { sam, session, changes, release };
+    }
+
+    const extend = (x: number) => click(x, 1000, { extend: true });
+
+    it("keeps clicks made while the model works in order and sends them in one request", async () => {
+      const { session, sam, release } = openHeld();
+      const first = session.press(click(1000, 1000));
+      const queuedPresses = [1010, 1020, 1030, 1040, 1050].map((x) => session.press(extend(x)));
+      assert.equal(session.snapshot().queued.length, 5);
+      assert.deepEqual(
+        session.snapshot().queued.map((press) => (press.kind === "point" ? press.at.x : null)),
+        [1010, 1020, 1030, 1040, 1050],
+      );
+      assert.equal(session.snapshot().live?.prompts.points.length, 1);
+      release();
+      await Promise.all([first, ...queuedPresses]);
+      assert.equal(sam.prompts.length, 2);
+      assert.equal(sam.prompts[1]?.prompt.points.length, 6);
+      assert.equal(session.snapshot().queued.length, 0);
+      assert.equal(session.snapshot().requests, 2);
+      assert.equal(session.snapshot().phase, "ready");
+    });
+
+    it("takes the last queued click back before the sent ones", async () => {
+      const { session, sam, release } = openHeld();
+      const first = session.press(click(1000, 1000));
+      const queuedPresses = [1010, 1020, 1030].map((x) => session.press(extend(x)));
+      await session.removeLast();
+      assert.equal(session.snapshot().queued.length, 2);
+      assert.equal(session.snapshot().live?.prompts.points.length, 1);
+      release();
+      await Promise.all([first, ...queuedPresses]);
+      assert.equal(sam.prompts.length, 2);
+      assert.equal(sam.prompts[1]?.prompt.points.length, 3);
+    });
+
+    it("keeps each plain click as its own object and sends extensions with their object", async () => {
+      const { session, sam, release } = openHeld();
+      const first = session.press(click(1000, 1000));
+      const rest = [
+        session.press(click(1400, 1000)),
+        session.press(click(1410, 1000, { extend: true })),
+        session.press(click(1420, 1000, { extend: true })),
+      ];
+      release();
+      await Promise.all([first, ...rest]);
+      assert.equal(sam.prompts.length, 3);
+      assert.equal(sam.prompts[2]?.prompt.points.length, 3);
+      assert.equal(session.snapshot().kept.length, 1);
+      assert.equal(session.snapshot().requests, 3);
+    });
+
+    it("clearQueue and reset drop what waits and settle its promises", async () => {
+      const { session, sam, release } = openHeld();
+      const first = session.press(click(1000, 1000));
+      const waiting = [session.press(extend(1010)), session.press(extend(1020))];
+      session.clearQueue();
+      assert.equal(session.snapshot().queued.length, 0);
+      await Promise.all(waiting);
+      const later = session.press(extend(1030));
+      session.reset();
+      assert.equal(session.snapshot().queued.length, 0);
+      await later;
+      release();
+      await first;
+      assert.equal(sam.prompts.length, 0);
+    });
+
+    it("drops a queued refinement that has no object to refine", async () => {
+      const { session, sam, release } = openHeld();
+      const first = session.press(click(1000, 1000));
+      await session.removeLast();
+      const stray = session.press(click(1005, 1000, { positive: false, extend: true }));
+      assert.equal(session.snapshot().queued.length, 1);
+      release();
+      await Promise.all([first, stray]);
+      assert.equal(session.snapshot().queued.length, 0);
+      assert.equal(session.snapshot().live, null);
+      assert.equal(sam.prompts.length, 0);
+    });
+  });
+
   it("reset clears everything and close stops publishing", async () => {
     const { session, changes } = open();
     await session.press(click(1000, 1000));
@@ -391,7 +495,14 @@ describe("smart select proposals", () => {
   });
 
   it("drops the run when no outline is left", () => {
-    const empty = { kept: [], live: null, phase: "idle", message: null } as const;
+    const empty = {
+      kept: [],
+      live: null,
+      phase: "idle",
+      message: null,
+      queued: [],
+      requests: 0,
+    } as const;
     const document = withSmartRun(createDocument(), 1, null, empty);
     assert.equal(document.runs.size, 0);
   });
