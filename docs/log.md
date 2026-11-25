@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-26
+
+- Production touch: release v0.56.0 (PROTO-181, PROTO-185, PROTO-196, PROTO-175) deployed by run 45716931542, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
+
 ## 2026-11-25
 
 - PROTO-175: add what the AI missed is the task setting add_missed in the task's display JSON, on by default, with a wizard toggle, worded per object kind and hidden when off. On the stage it arms the polygon tool for regions and the marker for cells and saves a real object with the plus mark, the prototype toasts are gone, and there is no migration. The keymap label still reads Add something the AI missed.
