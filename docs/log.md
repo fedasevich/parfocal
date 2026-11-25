@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- ADMIN-014 (Admin tables show an empty state): the owner found on 2026-11-25 that the Your lab's models table is empty with no message too, now named in the task.
 - Owner request 2026-11-25 from a screenshot: the templates table in Admin repeats its Preview and Duplicate buttons inside the row menu, added as ADMIN-015 (the templates table shows each action once).
 - PROTO-170 (the page header takes less height): the owner confirmed on 2026-11-25 that the page header is too tall, not the global top bar, so the task now leaves the global top bar alone.
 - Owner request 2026-11-25 from a screenshot: the report PDFs in the templates are broken too, so PROTO-172 (report PDFs from the templates are laid out like a designed report) joins the backlog next to PROTO-171 (the downloaded report PDF matches the on-screen report).
