@@ -42,6 +42,7 @@ from parfocal_ml.lab_model_worker import STORAGE_TIMEOUT_SECONDS, ScaledReader, 
 from parfocal_ml.nuclei import MapModel, OnnxPathoSam, PathoSamDetector, Quality
 from parfocal_ml.outline_typer import typed_outlines
 from parfocal_ml.outline_typer_worker import fetched_typer
+from parfocal_ml.run_result_set import result_set_stages
 from parfocal_ml.sam_contract import GRAPHS
 from parfocal_ml.stored_slides import StoredSlides
 from parfocal_ml.tumor_map_job import SlideImage
@@ -194,6 +195,7 @@ def nuclei_run_workflow(
 ) -> Workflow:
     stages: dict[str, StepFunction] = dict.fromkeys(STAGES, passed)
     stages[MODEL_STAGE] = nuclei_running(slide_of, model, store, gpu, typer)
+    stages.update(result_set_stages(store))
     return workflow(stages)
 
 

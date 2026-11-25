@@ -18,7 +18,7 @@ from pydantic import (
     TypeAdapter,
     model_validator,
 )
-from sqlalchemy import ColumnElement, Integer, cast, func, select, text
+from sqlalchemy import ColumnElement, Integer, cast, func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 from starlette.concurrency import run_in_threadpool
 
@@ -54,12 +54,14 @@ from parfocal_api.result_sets import ResultSetDraft, insert_result_set
 from parfocal_api.tables import (
     PrivacyMode,
     ResultSource,
+    ResultStatus,
     gpu_usage,
     job_steps,
     job_units,
     jobs,
     model_runs,
     projects,
+    result_set_classes,
     result_sets,
     review_task_slides,
     review_tasks,
@@ -807,6 +809,47 @@ async def check_lab_still_connected(
         raise LabModelChangedError
 
 
+async def reopen_failed_set(connection: AsyncConnection, principal: Principal, row: Any) -> None:
+    failed = (
+        await connection.execute(
+            select(result_sets.c.id, result_sets.c.name, result_sets.c.model_version).where(
+                result_sets.c.job_id == row.job_id,
+                result_sets.c.status == ResultStatus.FAILED,
+                result_sets.c.deleted_at.is_(None),
+            )
+        )
+    ).one_or_none()
+    if failed is None:
+        return
+    classes = await connection.scalars(
+        select(result_set_classes.c.source_name)
+        .where(result_set_classes.c.result_set_id == failed.id)
+        .order_by(result_set_classes.c.position)
+    )
+    await connection.execute(
+        update(result_sets).where(result_sets.c.id == failed.id).values(deleted_at=func.now())
+    )
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.RESULT_SET_DELETED,
+        AuditTarget.RESULT_SET,
+        failed.id,
+        tenant_id=row.tenant_id,
+        details={"slide_id": str(row.slide_id), "run_id": str(row.job_id), "reopened": True},
+    )
+    await insert_result_set(
+        connection,
+        row.tenant_id,
+        SimpleNamespace(id=row.slide_id, project_id=row.project_id),
+        ResultSetDraft(name=failed.name, model_version=failed.model_version, classes=list(classes)),
+        ResultSource.RUN,
+        actor_of(principal),
+        started_by(principal),
+        row.job_id,
+    )
+
+
 async def control_run(
     connection: AsyncConnection,
     principal: Principal,
@@ -824,6 +867,8 @@ async def control_run(
         raise ModelRunNotFoundError
     if moved.after is None:
         raise REFUSALS[control](f"The run is {moved.before}")
+    if control is not JobControl.CANCEL:
+        await reopen_failed_set(connection, principal, row)
     await record(
         connection,
         actor_of(principal),
