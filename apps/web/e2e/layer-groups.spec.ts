@@ -30,7 +30,9 @@ async function drawRectangle(page: Page, box: Box, from: [number, number], to: [
 }
 
 const rowOf = (page: Page, name: string) =>
-  page.getByTestId("layers-panel").locator("li", { hasText: name });
+  page.getByTestId("layers-panel").locator('li[data-kind="group"]', { hasText: name });
+
+const loose = (page: Page) => page.getByTestId("layers-tree").locator('[data-key^="c:"]');
 
 const selected = (page: Page) => page.getByTestId("select-layer");
 
@@ -62,15 +64,15 @@ test("groups are saved, renamed, recoloured, filled, ungrouped, deleted and rest
   await expect(selected(page)).toHaveAttribute("data-selected", /^\d+,\d+$/);
   await page.keyboard.press("Control+g");
   await expect(rowOf(page, "Group 1")).toContainText("2");
-  await expect(rowOf(page, "Ungrouped")).toContainText("1");
+  await expect(loose(page)).toContainText("1");
 
-  await page.getByRole("button", { name: "New shapes go to Group 1" }).dblclick();
+  await rowOf(page, "Group 1").getByTestId("layers-row-name").dblclick();
   await expect(page.getByText("click a layer name to change")).toHaveCount(0);
   await page.getByLabel("Name of Group 1").pressSequentially("Margins");
   await page.keyboard.press("Enter");
   await expect(rowOf(page, "Margins")).toHaveCount(1);
 
-  await page.getByRole("button", { name: "New shapes go to Margins" }).focus();
+  await rowOf(page, "Margins").getByTestId("layers-row-name").focus();
   await page.keyboard.press("F2");
   await page.getByLabel("Name of Margins").pressSequentially("Margin cells");
   await page.keyboard.press("Enter");
@@ -88,13 +90,13 @@ test("groups are saved, renamed, recoloured, filled, ungrouped, deleted and rest
   await page.getByTestId("layers-move").click();
   await page.getByRole("menuitem", { name: "Margin cells" }).click();
   await expect(rowOf(page, "Margin cells")).toContainText("3");
-  await expect(rowOf(page, "Ungrouped")).toHaveCount(0);
+  await expect(loose(page)).toHaveCount(0);
 
   await expect.poll(() => savedGroups(page)).toContain("Margin cells");
   await expect.poll(() => savedGroups(page)).toContain("[0,255,0]");
   await reloaded(page);
   await expect(rowOf(page, "Margin cells")).toContainText("3");
-  await expect(rowOf(page, "Ungrouped")).toHaveCount(0);
+  await expect(loose(page)).toHaveCount(0);
   await expect(rowOf(page, "Margin cells").locator("i").first()).toHaveCSS(
     "background-color",
     "rgb(0, 255, 0)",
@@ -103,7 +105,7 @@ test("groups are saved, renamed, recoloured, filled, ungrouped, deleted and rest
   await page.getByRole("button", { name: "More actions for Margin cells" }).click();
   await page.getByRole("menuitem", { name: "Ungroup" }).click();
   await expect(rowOf(page, "Margin cells")).toHaveCount(0);
-  await expect(rowOf(page, "Ungrouped")).toContainText("3");
+  await expect(loose(page)).toContainText("3");
   await expect(page.getByTestId("polygon-shape")).toHaveCount(3);
   await page.keyboard.press("Control+z");
   await expect(rowOf(page, "Margin cells")).toContainText("3");
@@ -128,12 +130,13 @@ test("an empty layer is removed and a locked target says where the shape went", 
   const { box } = await openSlide(page);
   await page.getByRole("button", { name: "Add a layer" }).click();
   await expect(rowOf(page, "Layer 1")).toHaveCount(1);
-  await page.getByRole("button", { name: "New shapes go to Layer 1" }).click();
+  await page.getByRole("button", { name: "More actions for Layer 1" }).click();
+  await page.getByRole("menuitem", { name: "New shapes go here" }).click();
   await page.getByRole("button", { name: "Lock Layer 1" }).click();
   await drawRectangle(page, box, [200, 200], [400, 260]);
   await expect(page.getByTestId("layers-skipped")).toContainText("Layer 1 is locked");
-  await expect(page.getByTestId("layers-skipped")).toContainText("Ungrouped");
-  await expect(rowOf(page, "Ungrouped")).toContainText("1");
+  await expect(page.getByTestId("layers-skipped")).toContainText("its class group");
+  await expect(loose(page)).toContainText("1");
 
   await page.getByRole("button", { name: "More actions for Layer 1" }).click();
   await page.getByRole("menuitem", { name: "Delete group" }).click();

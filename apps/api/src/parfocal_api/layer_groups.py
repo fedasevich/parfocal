@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
@@ -16,6 +17,7 @@ from parfocal_api.tables import annotations, review_task_slides, slides
 
 MAX_GROUPS = 500
 MAX_MEMBERS = 20_000
+MAX_ITEMS = 20_000
 
 type GroupName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)
@@ -30,6 +32,7 @@ class LayerGroup(BaseModel):
     color: Annotated[list[Channel], Field(min_length=3, max_length=3)] | None = None
     hidden: bool = False
     locked: bool = False
+    rank: float | None = None
 
 
 class LayerMember(BaseModel):
@@ -37,9 +40,18 @@ class LayerMember(BaseModel):
     group_id: Annotated[int, Field(ge=1)]
 
 
+class LayerItem(BaseModel):
+    annotation_id: uuid.UUID
+    name: GroupName | None = None
+    hidden: bool = False
+    locked: bool = False
+    rank: float | None = None
+
+
 class LayerGroups(BaseModel):
     groups: Annotated[list[LayerGroup], Field(max_length=MAX_GROUPS)] = []
     members: Annotated[list[LayerMember], Field(max_length=MAX_MEMBERS)] = []
+    items: Annotated[list[LayerItem], Field(max_length=MAX_ITEMS)] = []
 
     @model_validator(mode="after")
     def is_consistent(self) -> LayerGroups:
@@ -53,6 +65,9 @@ class LayerGroups(BaseModel):
             raise ValueError("A group sits inside a group that exists")
         if any(member.group_id not in known for member in self.members):
             raise ValueError("A shape sits in a group that exists")
+        named = [item.annotation_id for item in self.items]
+        if len(set(named)) != len(named):
+            raise ValueError("Each shape has one layer entry")
         return self
 
 
@@ -60,7 +75,10 @@ router = APIRouter(prefix="/api/slides/{slide_id}/layer-groups", tags=["annotati
 
 
 async def hidden_from(
-    connection: AsyncConnection, principal: Principal, slide: Any, members: list[LayerMember]
+    connection: AsyncConnection,
+    principal: Principal,
+    slide: Any,
+    members: Sequence[LayerMember | LayerItem],
 ) -> set[uuid.UUID]:
     rows = await connection.execute(
         select(annotations.c.id, annotations.c.task_id, annotations.c.created_by_user_id).where(
@@ -92,10 +110,11 @@ async def get_layer_groups(
 ) -> LayerGroups:
     slide = await slide_row(connection, principal, slide_id)
     saved = await stored_groups(connection, slide_id)
-    hidden = await hidden_from(connection, principal, slide, saved.members)
+    hidden = await hidden_from(connection, principal, slide, [*saved.members, *saved.items])
     return LayerGroups(
         groups=saved.groups,
         members=[member for member in saved.members if member.annotation_id not in hidden],
+        items=[item for item in saved.items if item.annotation_id not in hidden],
     )
 
 
@@ -109,7 +128,16 @@ async def set_layer_groups(
     slide = await drawable_slide(connection, principal, slide_id)
     saved = await stored_groups(connection, slide_id)
     kept = {group.id for group in body.groups}
-    unseen = await hidden_from(connection, principal, slide, [*saved.members, *body.members])
+    unseen = await hidden_from(
+        connection,
+        principal,
+        slide,
+        [*saved.members, *body.members, *saved.items, *body.items],
+    )
+    items = [
+        *(item for item in body.items if item.annotation_id not in unseen),
+        *(item for item in saved.items if item.annotation_id in unseen),
+    ]
     members = [
         *(member for member in body.members if member.annotation_id not in unseen),
         *(
@@ -122,12 +150,15 @@ async def set_layer_groups(
         update(slides)
         .where(slides.c.id == slide_id)
         .values(
-            layer_groups=LayerGroups(groups=body.groups, members=members).model_dump(mode="json")
+            layer_groups=LayerGroups(groups=body.groups, members=members, items=items).model_dump(
+                mode="json"
+            )
         )
     )
     return LayerGroups(
         groups=body.groups,
         members=[member for member in members if member.annotation_id not in unseen],
+        items=[item for item in items if item.annotation_id not in unseen],
     )
 
 

@@ -56,16 +56,24 @@ def test_layer_groups_never_show_a_hidden_shape_and_keep_it_when_another_reviewe
     r = review(api, database)
     made = note(api, r)
     groups = f"/api/slides/{r.slide}/layer-groups"
+    item = {"annotation_id": made["id"], "name": "Mine", "hidden": True, "locked": False, "rank": 1}
     body = {
         "groups": [{"id": 1, "name": "Mine"}],
         "members": [{"annotation_id": made["id"], "group_id": 1}],
+        "items": [item],
     }
-    assert api(r.people["first"]).put(groups, json=body).json()["members"] == body["members"]
+    first = api(r.people["first"]).put(groups, json=body).json()
+    assert first["members"] == body["members"]
+    assert first["items"] == [{**item, "rank": 1.0}]
     second = api(r.people["second"])
     assert second.get(groups).json()["members"] == []
+    assert second.get(groups).json()["items"] == []
     saved = second.put(groups, json={"groups": [{"id": 1, "name": "Mine"}], "members": []})
     assert saved.json()["members"] == []
-    assert api(r.people["first"]).get(groups).json()["members"] == body["members"]
+    assert saved.json()["items"] == []
+    mine = api(r.people["first"]).get(groups).json()
+    assert mine["members"] == body["members"]
+    assert mine["items"] == [{**item, "rank": 1.0}]
 
 
 @pytest.mark.parametrize("closing", ["signed_off_at", "withdrawn_at"])

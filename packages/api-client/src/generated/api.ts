@@ -4663,6 +4663,7 @@ export interface LayerGroup {
   color?: Channel[] | null;
   hidden?: boolean;
   locked?: boolean;
+  rank?: number | null;
 }
 
 export interface LayerMember {
@@ -4671,11 +4672,21 @@ export interface LayerMember {
   group_id: number;
 }
 
+export interface LayerItem {
+  annotation_id: string;
+  name?: GroupName | null;
+  hidden?: boolean;
+  locked?: boolean;
+  rank?: number | null;
+}
+
 export interface LayerGroups {
   /** @maxItems 500 */
   groups?: LayerGroup[];
   /** @maxItems 20000 */
   members?: LayerMember[];
+  /** @maxItems 20000 */
+  items?: LayerItem[];
 }
 
 export type LayerImportContent = { [key: string]: unknown } | unknown[];

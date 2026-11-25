@@ -24,11 +24,13 @@ export function MeasurementList({
   micronsPerPixel,
   classNames,
   onRemove,
+  rulersOnly = false,
 }: {
   document: AnnotationDocument;
   micronsPerPixel: number | null;
   classNames?: MeasurementNames;
   onRemove?: (id: ShapeId) => void;
+  rulersOnly?: boolean;
 }) {
   const skipRulers = useRulersClaimed();
   const { t } = useLingui();
@@ -47,9 +49,9 @@ export function MeasurementList({
   const rows = useMemo(
     () =>
       buildMeasurementRows(doc, micronsPerPixel, drawn, classNames, units, codes).filter(
-        (row) => !skipRulers || row.kind !== "ruler",
+        (row) => (!rulersOnly || row.kind === "ruler") && (!skipRulers || row.kind !== "ruler"),
       ),
-    [doc, micronsPerPixel, drawn, classNames, units, codes, skipRulers],
+    [doc, micronsPerPixel, drawn, classNames, units, codes, skipRulers, rulersOnly],
   );
   if (skipRulers && rows.length === 0) return null;
   const shapes = holdsDrawnShapes(rows);

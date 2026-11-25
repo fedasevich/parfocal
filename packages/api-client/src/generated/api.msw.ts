@@ -6881,10 +6881,20 @@ export const getGetLayerGroupsResponseMock = (
       ]),
       hidden: faker.datatype.boolean(),
       locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     }),
   ),
   members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
     () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  items: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({
+      annotation_id: faker.string.uuid(),
+      name: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 1, max: 80 } }), null]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    }),
   ),
   ...overrideResponse,
 });
@@ -6905,10 +6915,20 @@ export const getSetLayerGroupsResponseMock = (
       ]),
       hidden: faker.datatype.boolean(),
       locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     }),
   ),
   members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
     () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  items: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({
+      annotation_id: faker.string.uuid(),
+      name: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 1, max: 80 } }), null]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    }),
   ),
   ...overrideResponse,
 });
@@ -6929,10 +6949,20 @@ export const getGetSharedLayerGroupsResponseMock = (
       ]),
       hidden: faker.datatype.boolean(),
       locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     }),
   ),
   members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
     () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  items: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({
+      annotation_id: faker.string.uuid(),
+      name: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 1, max: 80 } }), null]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    }),
   ),
   ...overrideResponse,
 });
@@ -6953,10 +6983,20 @@ export const getSetSharedLayerGroupsResponseMock = (
       ]),
       hidden: faker.datatype.boolean(),
       locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     }),
   ),
   members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
     () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  items: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({
+      annotation_id: faker.string.uuid(),
+      name: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 1, max: 80 } }), null]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+      rank: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    }),
   ),
   ...overrideResponse,
 });

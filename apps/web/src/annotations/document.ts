@@ -24,6 +24,14 @@ export interface Group {
   readonly color: readonly [number, number, number] | null;
   readonly hidden: boolean;
   readonly locked: boolean;
+  readonly rank?: number;
+}
+
+export interface LayerItem {
+  readonly name: string | null;
+  readonly hidden: boolean;
+  readonly locked: boolean;
+  readonly rank: number | null;
 }
 
 export interface AnnotationDocument {
@@ -36,6 +44,7 @@ export interface AnnotationDocument {
   readonly nextShapeId: ShapeId;
   readonly nextGroupId: GroupId;
   readonly learner?: SavedLearner;
+  readonly items?: ReadonlyMap<ShapeId, LayerItem>;
 }
 
 export function withLearner(doc: AnnotationDocument, learner: SavedLearner): AnnotationDocument {
@@ -71,6 +80,7 @@ export interface GroupPatch {
   readonly color?: readonly [number, number, number] | null;
   readonly hidden?: boolean;
   readonly locked?: boolean;
+  readonly rank?: number;
 }
 
 export interface PromotionPatch {
@@ -250,10 +260,11 @@ export function removeShape(doc: AnnotationDocument, id: ShapeId): AnnotationDoc
   const shape = requireShape(doc, id);
   const shapes = new Map(doc.shapes);
   shapes.delete(id);
-  if (shape.provenance.kind !== "model") return { ...doc, shapes };
+  const kept = withoutItem(doc, id);
+  if (shape.provenance.kind !== "model") return { ...kept, shapes };
   const promoted = new Map(doc.promoted);
   promoted.delete(pieceKey(shape.provenance.runId, shape.provenance.piece));
-  return { ...doc, shapes, promoted };
+  return { ...kept, shapes, promoted };
 }
 
 export function linkThread(doc: AnnotationDocument, id: ShapeId, threadId: string): ShapeChange {
@@ -295,6 +306,7 @@ export function addGroup(
     color: patch.color ?? null,
     hidden: patch.hidden ?? false,
     locked: patch.locked ?? false,
+    ...(patch.rank === undefined ? {} : { rank: patch.rank }),
   };
   const groups = new Map(doc.groups);
   groups.set(group.id, group);
@@ -356,11 +368,26 @@ export function groupPath(doc: AnnotationDocument, id: GroupId | null): string {
     .join(" / ");
 }
 
+function withoutItem(doc: AnnotationDocument, id: ShapeId): AnnotationDocument {
+  if (doc.items === undefined || !doc.items.has(id)) return doc;
+  const items = new Map(doc.items);
+  items.delete(id);
+  return { ...doc, items };
+}
+
+export const noItem: LayerItem = { name: null, hidden: false, locked: false, rank: null };
+
+export function itemOf(doc: AnnotationDocument, id: ShapeId): LayerItem {
+  return doc.items?.get(id) ?? noItem;
+}
+
 export function isShapeHidden(doc: AnnotationDocument, shape: Shape): boolean {
+  if (doc.items?.get(shape.id)?.hidden === true) return true;
   return groupChain(doc, shape.groupId).some((group) => group.hidden);
 }
 
 export function isShapeLocked(doc: AnnotationDocument, shape: Shape): boolean {
+  if (doc.items?.get(shape.id)?.locked === true) return true;
   return groupChain(doc, shape.groupId).some((group) => group.locked);
 }
 

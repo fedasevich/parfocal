@@ -411,7 +411,7 @@ function OpenedSlide({
       ),
     [annotations.shapes, selectedIds],
   );
-  const pickRequest = useObjectFocus(focusObject, session?.engine ?? null, saved, areas, setTool);
+  const focus = useObjectFocus(focusObject, session?.engine ?? null, saved, areas, setTool);
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
@@ -894,7 +894,7 @@ function OpenedSlide({
                         {...(readOnly ? {} : { onCommit: saved.commit })}
                         onEditText={(id) => (readOnly ? undefined : textControl.current?.edit(id))}
                         onSelectionChange={setSelectedIds}
-                        pickRequest={pickRequest}
+                        pickRequest={focus.pick}
                         onMarquee={onAiMarquee}
                         pinRegistry={pinRegistry}
                         emptyDrag={setup.dragBehaviour}
@@ -1017,10 +1017,9 @@ function OpenedSlide({
                             onApply={readOnly ? keepDocument : saved.apply}
                             classes={classes}
                             areas={areas}
-                            target={saved.target}
-                            onTarget={saved.setTarget}
+                            saved={saved}
                             selected={selectedIds}
-                            skipped={saved.skipped}
+                            onPick={focus.pickFromLayers}
                             resultSets={
                               projectId === undefined ? undefined : (
                                 <ResultSetLayers
@@ -1058,6 +1057,7 @@ function OpenedSlide({
                           classes={classes}
                           onRemove={measurements.remove}
                           onApply={saved.apply}
+                          rulersOnly={workspace === "annotate"}
                         />
                       )}
                     </>
