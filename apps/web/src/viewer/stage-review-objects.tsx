@@ -13,7 +13,11 @@ import { isTyping } from "../keys/registry.ts";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answerCount, answersOf, type Count } from "../screens/review/decision-style.ts";
-import { disagreeOptions, reasonDraft } from "../screens/review/disagree-reasons.ts";
+import {
+  disagreeOptions,
+  reasonDraft,
+  toggleReasonLabel,
+} from "../screens/review/disagree-reasons.ts";
 import { drawChoicesOf, myDisplaySettings } from "../screens/review/display-tab.tsx";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
 import { useNoteKey } from "../screens/review/note-key.ts";
@@ -685,14 +689,13 @@ export function StageReviewObjects({
     const decision = session.decisions.get(item.object);
     if (decision === undefined) return;
     const kept = answerFromDecision(decision, session.style, item, session.classes);
-    const reasons = kept.reasons.includes(reason)
-      ? kept.reasons.filter((entry) => entry !== reason)
-      : [...kept.reasons, reason];
-    saves.save(
+    const options = disagreeOptions(item.kind, item.class_name, session.classes);
+    const reasons = toggleReasonLabel(kept.reasons, reason, options);
+    void saves.saveReasons(
       item.object,
       kept.raw,
       kept.value,
-      reasonDraft(reasons, disagreeOptions(item.kind, item.class_name, session.classes)),
+      reasonDraft(reasons, options),
       kept.note,
     );
   };

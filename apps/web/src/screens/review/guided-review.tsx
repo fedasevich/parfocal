@@ -79,7 +79,15 @@ import {
   guidedSetup,
 } from "./guided-scenes.ts";
 import { noteAction, useNoteKey } from "./note-key.ts";
-import { draftFrom, reasonBody, toggleReason as toggledDraft, withNote } from "./note-model.ts";
+import {
+  draftFrom,
+  reasonBody,
+  reasonOptionsOf,
+  revertedReasons,
+  toggledAnswer,
+  toggleReason as toggledDraft,
+  withNote,
+} from "./note-model.ts";
 import {
   answerLabel,
   type LockLine,
@@ -480,20 +488,13 @@ function GuidedBody({
   };
   const toggleReason = (reason: string) => {
     const kept = answer(currentId);
-    if (!kept) return;
-    const reasons = kept.reasons.includes(reason)
-      ? kept.reasons.filter((item) => item !== reason)
-      : [...kept.reasons, reason];
-    put(currentId, { ...kept, reasons });
-    if (current !== undefined && kept.value === "disagree") {
-      decisions.save(
-        currentId,
-        kept.raw,
-        kept.value,
-        reasonDraft(reasons, disagreeOptions(current.kind, current.class_name, session.classes)),
-        kept.note,
-      );
-    }
+    if (!kept || current === undefined) return;
+    const { next, body } = toggledAnswer(kept, reason, current, session.classes);
+    put(currentId, next);
+    if (body === null) return;
+    void decisions.saveReasons(currentId, kept.raw, kept.value, body, kept.note).then((saved) => {
+      if (!saved) setOverrides(revertedReasons(currentId, next.reasons, kept.reasons));
+    });
   };
   const startRedraw = () => {
     setRedraw([]);
@@ -712,7 +713,9 @@ function GuidedBody({
         chosen={noteDraft.reasons}
         text={noteDraft.text}
         offReason={setup.connLost ? netOff : undefined}
-        onReason={(reason) => setNoteDraft(toggledDraft(noteDraft, reason))}
+        onReason={(reason) =>
+          setNoteDraft(toggledDraft(noteDraft, reason, reasonOptionsOf(current, session.classes)))
+        }
         meId={session.meId}
         onText={(text) => setNoteDraft({ ...noteDraft, text })}
         onSave={saveNote}

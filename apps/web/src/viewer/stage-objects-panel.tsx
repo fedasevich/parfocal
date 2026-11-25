@@ -6,9 +6,9 @@ import { cellCropUrl } from "../screens/cell-crop-url.ts";
 import { usePeople } from "../screens/people.ts";
 import type { ReviewConfidence } from "../screens/review/ai-wording.ts";
 import { useSetName } from "../screens/review/cells-on-slide.tsx";
-import { cardText, reasonText } from "../screens/review/decision-style.ts";
+import { cardText } from "../screens/review/decision-style.ts";
 import type { ReviewSession } from "../screens/review/review-data.ts";
-import { type Answer, countAnswers } from "../screens/review/review-state.ts";
+import { type Answer, countAnswers, reasonLabelsOf } from "../screens/review/review-state.ts";
 import {
   AiSays,
   type ListFilter,
@@ -33,8 +33,14 @@ export function sessionAnswer(session: ReviewSession) {
   return (object: string): Answer | undefined => {
     const decision = session.decisions.get(object);
     if (!decision) return undefined;
-    const kept = answerOfDecision(decision);
-    return { ...kept, reasons: kept.reasons.map((code) => reasonText[code] ?? code) };
+    return {
+      ...answerOfDecision(decision),
+      reasons: reasonLabelsOf(
+        decision,
+        session.objects.find((item) => item.object === object),
+        session.classes,
+      ),
+    };
   };
 }
 
