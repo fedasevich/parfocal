@@ -92,7 +92,7 @@ def typed_cells(
     return [typed_cell(cell, nucleus) for cell, nucleus in zip(cells, nuclei, strict=True)]
 
 
-@dataclass(frozen=True)
+@dataclass
 class TypingDetector:
     detector: Detector
     slide: SlideImage

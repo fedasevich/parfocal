@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -12,7 +12,9 @@ from fixture_support import fixture_path
 from nuclei_support import StainMaps, disks
 from tumor_map_support import MemoryStore
 
-from parfocal_common.chunk_store import UNCLASSIFIED, Cell, cells_in, chunk_of
+from parfocal_common.cell_chunks import UNCLASSIFIED
+from parfocal_common.chunk_store import Cell, cells_in, chunk_of
+from parfocal_common.jobs import StepRun
 from parfocal_common.model_artifacts import MissingArtifactError
 from parfocal_common.model_runs import RunScopeKind, RunSettings, run_prefix, tile_key
 from parfocal_common.object_store import ObjectStore
@@ -67,7 +69,7 @@ class FakeStep:
     total: int | None = None
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[None]:
+    async def transaction(self) -> AsyncGenerator[None]:
         yield None
 
     async def done_units(self) -> frozenset[int]:
@@ -115,7 +117,8 @@ def ran(slide: SlideImage, typer: Any) -> tuple[FakeStep, Mapping[str, Any], Mem
 
     store, step = MemoryStore(), FakeStep()
     running = nuclei_running(open_slide, StainMaps(RADIUS), store, None, typer)
-    found = asyncio.run(running(step))
+    found = asyncio.run(running(cast("StepRun", step)))
+    assert found is not None
     return step, found, store
 
 
@@ -139,7 +142,7 @@ def dark_is_neoplastic(rgb: np.ndarray) -> np.ndarray:
 
 
 def disk_slide() -> SlideImage:
-    centres = [(x, y) for y in range(60, 1000, 80) for x in range(60, 1500, 80)]
+    centres = [(float(x), float(y)) for y in range(60, 1000, 80) for x in range(60, 1500, 80)]
     rgb = disks(1024, 1536, centres, RADIUS)
     rgb[(rgb == 240).all(axis=2)] = TISSUE
     return slide_of(rgb, 0.25)

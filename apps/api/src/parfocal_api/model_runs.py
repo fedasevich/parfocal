@@ -639,7 +639,7 @@ def result_set_draft(parameters: RunParameters) -> ResultSetDraft:
     detector = parameters.detector
     known = BY_NAME.get(detector.name)
     title = known.title if known is not None else detector.name
-    classes = list(TYPER_CLASSES) if detector.name in NUCLEI_DETECTORS else []
+    classes: list[str] = list(TYPER_CLASSES) if detector.name in NUCLEI_DETECTORS else []
     return ResultSetDraft(
         name=f"{title} {detector.version}"[:120], model_version=detector.version, classes=classes
     )
