@@ -31,6 +31,7 @@ from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import StorageSettings, load_settings
 from parfocal_ml.lab_model_stage import LabSlide, lab_model_running
 from parfocal_ml.nuclei import Rgb
+from parfocal_ml.run_result_set import result_set_stages
 from parfocal_ml.stored_slides import StoredSlides
 from parfocal_ml.tumor_map import RegionReader as LevelZeroReader
 from parfocal_ml.tumor_map_job import SlideImage
@@ -96,6 +97,7 @@ def lab_run_workflow(
     running = lab_model_running(stored_slide_of(slides), keyring, policy, store, pause)
     stages: dict[str, StepFunction] = dict.fromkeys(STAGES, passed)
     stages[MODEL_STAGE] = running
+    stages.update(result_set_stages(store))
     return workflow(stages)
 
 

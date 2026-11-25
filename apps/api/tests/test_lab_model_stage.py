@@ -14,7 +14,7 @@ from test_model_runs import Lab, make_lab, ok, run_async, started
 from workspace_support import owner
 
 from parfocal_api.app import create_app
-from parfocal_common.chunk_store import read_chunk
+from parfocal_common.chunk_store import read_chunk, read_summary
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.jobs import Workflow
 from parfocal_common.link_fetch import policy_of
@@ -28,6 +28,8 @@ from parfocal_common.model_runs import (
     run_prefix,
     tile_key,
 )
+from parfocal_common.result_imports import result_set_prefix
+from parfocal_common.result_store import MissingObjectError
 from parfocal_ml.lab_model_worker import drain_lab_runs, lab_run_workflow
 from parfocal_ml.tumor_map_job import SlideImage
 from parfocal_ml.tumor_map_worker import Drain
@@ -71,10 +73,12 @@ class MemoryStore:
         self.objects: dict[str, bytes] = {}
 
     async def get(self, object_key: str) -> bytes:
+        if object_key not in self.objects:
+            raise MissingObjectError(object_key)
         return self.objects[object_key]
 
     async def get_packed(self, object_key: str) -> bytes:
-        return self.objects[object_key]
+        return await self.get(object_key)
 
     async def put(self, object_key: str, data: bytes) -> None:
         self.objects[object_key] = data
@@ -176,11 +180,18 @@ def test_a_queued_lab_model_stage_stores_cells_and_regions_and_never_the_token(
         (1, 0, "POLYGON((10 10,210 10,210 210,10 210,10 10))"),
         (2, 0, "POLYGON((400 300,512 300,512 400,400 400,400 300))"),
     ]
-    [(status, region_count)] = owner(
+    [(set_id, status, region_count, cell_count)] = owner(
         database,
-        f"SELECT status, region_count FROM result_sets WHERE job_id = '{run['id']}'",
+        "SELECT id, status, region_count, cell_count FROM result_sets "
+        f"WHERE job_id = '{run['id']}'",
     )
-    assert (status, region_count) == ("ready", 2)
+    assert (status, region_count, cell_count) == ("ready", 2, 3)
+    summary = run_async(
+        database,
+        lambda _: read_summary(store, result_set_prefix(lab.tenant, lab.slides[0], set_id)),
+    )
+    assert sorted(summary.arrays["class"]) == [0, 0, 2]
+    assert len(set(summary.numbers())) == 3
     [(output,)] = owner(
         database,
         "SELECT result::text FROM job_steps "

@@ -198,6 +198,7 @@ async def run_model_run(
         await seal_run_result(engine, job)
 
     async def told(job: Claimed) -> None:
+        await fail_run_result(engine, job)
         await tell_starter(engine, job)
 
     await run_job(
@@ -283,6 +284,24 @@ SEAL_RESULT = text(
 async def seal_run_result(engine: AsyncEngine, job: Claimed) -> list[uuid.UUID]:
     async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
         rows = await connection.execute(SEAL_RESULT, {"job_id": job.job_id})
+        return [row.id for row in rows]
+
+
+FAIL_RESULT = text(
+    """
+    UPDATE result_sets SET status = 'failed', error_code = left(jobs.error_code, 60)
+    FROM jobs
+    WHERE jobs.id = :job_id AND jobs.status = 'failed'
+      AND result_sets.job_id = jobs.id AND result_sets.status = 'importing'
+      AND result_sets.deleted_at IS NULL
+    RETURNING result_sets.id
+    """
+)
+
+
+async def fail_run_result(engine: AsyncEngine, job: Claimed) -> list[uuid.UUID]:
+    async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
+        rows = await connection.execute(FAIL_RESULT, {"job_id": job.job_id})
         return [row.id for row in rows]
 
 
