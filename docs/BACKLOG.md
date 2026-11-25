@@ -7367,6 +7367,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API decides the last object with auto advance on and off and sees the form at once, goes back from the form to change one object, comes back and finds the form answers kept, and the deployed guided review does the same.
   Depends on nothing. Size: S.
 
+- [ ] PROTO-177 · The disagreement queue's Decide panel fits its column
+  The owner found on 2026-11-25 that the Decide panel in the disagreement queue (apps/web/src/screens/disagreements/queue-screen.tsx) overflows its column. With "T2 on CMU-1-Small-Region.svs" in the heading, the "the reviewer vs AI" chip and the five decision buttons from Certainly not to Certainly run past the panel's right edge and are cut off. Let the heading wrap or truncate the slide name with its full name on hover, keep the buttons inside the panel at every supported width, and check the rest of the queue for the same overflow.
+  Done when a browser spec on the fake API with a long slide name finds the chip and every decision button inside the panel at the narrow and wide viewport sizes, and the deployed queue shows the same.
+  Depends on nothing. Size: S.
+
 - [x] EXP-018 · The moderator prepares a participant project from the console for the code the page shows
   The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
   Done when an API test seeds and removes a participant project through the new route, a Playwright spec on the fake API prepares a participant and starts task 1, and a deployed dry run as one code goes from Prepare to the thank-you page, recorded in a result file.
