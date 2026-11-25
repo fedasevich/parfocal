@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- INGEST-033 Added by the lead on 2026-11-25 while reviewing thesis section 3.7: uploaded MIRAX and DICOM zips still do not open, which FR1 counts as met. Building it in the next agent.
 - ci fix(ci): the app tour spec read data-route while the async route lookup of task steps was still pending, so chapter 7 lost the race on slow CI. The assertion now polls for exact or fallback for 20 s, and pending can no longer fail it while none still does. Test-only, the app and the tour data are unchanged.
 - AINUC-015 Corrected ADR 0093 (evaluation metrics and datasets) with an amendment and the nucleus line-up result of 2026-11-16: TNBC is PathoSAM training data, NuInsSeg and CryoNuSeg stay held out.
 - RSET-015 RSET-015 (masks import as result sets): the worker tells PNG and TIFF masks from heatmaps after the isolated decode, instance masks become cells and class masks regions through the usual checks and storage, a mask that fits no level asks for its level (mask-scale) and an all-background mask is refused (result-mask-empty). The upload wizard now sends results dropped beside a new slide as results, which it stored as slides before, and the web problem codes for unknown classes and objects outside the slide now match the server. Real-stack spec drew 6 of 6 mask cells. Open: a mask upload still records result_format heatmap, because a migration was avoided. verify-changed passed on the branch's own changes, its last run compared with a stale local main.

@@ -1389,6 +1389,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-010.
   Size: M.
 
+- [ ] INGEST-033 · Uploaded MIRAX and DICOM zips open in the viewer
+  Found while writing thesis section 3.7 (implementation). ADR 0408 (MIRAX and DICOM slides are served as a lossless pyramid TIFF made at ingest) converts only the seeded gallery zips, and its consequences say an uploaded zip is still published as the archive and does not open, while FR1 (slides open from the uploaded file) counts DICOM. The ingest workflow runs the same converter on an uploaded MIRAX or DICOM zip, publishes `original.tiff` with its derived files as the slide's original, keeps the format `mirax` or `dicom` with the variant `pyramid-tiff`, and refuses a zip the converter cannot read with a clear reason.
+  Done when an ingest test uploads both gallery zips through the upload workflow and gets a slide whose original is a pyramid TIFF, a browser test opens and draws an uploaded MIRAX zip, and the deployed app opens a freshly uploaded DICOM zip.
+  Depends on VIEW-081.
+  Size: M.
+
 ## 06 TILES · Tile delivery
 
 - [x] TILES-000 · Research check for tile delivery
