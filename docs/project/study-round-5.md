@@ -176,7 +176,7 @@ Say this, and nothing else about the application.
 1. Before consent: "Thank you for coming. We are testing an application, not you. If something is hard, that is exactly what we want to find. Please say aloud what you look for and what you expect to happen. I will watch and take notes, but I cannot help you during the tasks. Read the screen and start when you are ready."
 2. During tasks, only non-leading prompts: "What are you looking for now?", "What do you expect to happen?", "What would you try?" If asked "where is X?", answer "What would you try?"
 3. When the participant goes quiet for a while: "What are you thinking?"
-4. Do not end a task yourself. The participant decides when to press "I'm done" or "I can't find it". TODO: agree a moderator cut-off for a task without progress, as nur's test plan also leaves open.
+4. Do not end a task yourself. The participant decides when to press "I'm done" or "I can't find it". There is no moderator cut-off for a task without progress (decision 177, option B, 2026-11-25).
 5. After task 11, before the last questions: go through the log lines marked `ASK`, in order, and ask open questions about them ("At this moment you stopped. What were you looking for?"). Write the answers word for word.
 6. After the last questions: "Thank you, that is all." Ask nothing more.
 
@@ -318,8 +318,8 @@ Round 4 and round 1 numbers are quoted from the round 4 deck, "Viewer Usability 
 
 ## Open items
 
-- TODO: moderated or remote, in decisions.md.
-- TODO: the moderator cut-off for a task without progress.
-- TODO: how long recordings and exports are kept.
+- Remote and moderated (decision 176, 2026-11-25): the participant opens a prepared link in their own browser while the moderator watches over a call, built by EXP-020 (a prepared participant joins a remote moderated session by one link).
+- No moderator cut-off for a task without progress (decision 177, option B).
+- Raw traces and answers are kept until the thesis is defended and backed up to R2 meanwhile, then the traces are deleted and only the anonymous tables and notes stay (decision 180, option A with a backup, built by EXP-022, study recordings are backed up to R2 and deleted after the defence).
 - TODO: the session length, from the pilot.
 - The server marks dry runs. The console's Dry run tick sets `dry_run` on a session, the results page leaves those out, and the EXP-018 dry run sessions were marked so on 2026-11-24.

@@ -2,6 +2,18 @@
 
 Every decision the owner has answered, newest first. Open ones are in [decisions.md](decisions.md).
 
+## Answers of 2026-11-25
+
+You wrote these in decisions.md and said "process my decisions" in chat on 2026-11-25.
+
+- Decision 175 (whether Smart select Best warms up before the click), option A. The warm-up from PROTO-159 (round six slips) stays as it is, nothing changed.
+- Decision 176 (whether the next usability round is moderated or remote). In your words, "b, but moderated so system has to be prepared". The round runs remotely in the participant's own browser while the moderator watches over a call, so EXP-020 (a prepared participant joins a remote moderated session by one link) prepares a one use link that opens the study with no account to create. The round 5 protocol says so.
+- Decision 177 (when the moderator stops a stuck study task), option B. No cut-off, the participant keeps trying until they give up. The round 5 protocol's moderator script and open items say so.
+- Decision 178 (who may remove a prepared study participant), option B. A moderator new to the study workspace joins it as an admin, built by EXP-021 (a moderator new to the study workspace joins it as an admin).
+- Decision 179 (where round 5 starts the clock for time to first action), option A. Round 5 keeps measuring from task start as EXP-019 (round 5 measures dead clicks and time to first action as round 4 did) built it, nothing changed.
+- Decision 180 (how long study recordings are kept), option A with a backup. In your words, "a, back up them somewhere, r2 maybe". Raw traces stay until the thesis is defended and are backed up to R2 meanwhile, built by EXP-022 (study recordings are backed up to R2 and deleted after the defence). The defence date is TODO until you set it. The round 5 protocol says so.
+- Decision 181 (whether whole slide runs fall back to a bigger GPU when no L4 is free). In your words, "let's pick any region any available big enough gpu so it is just fast". OPS-042 (GPU pools take any GPU big enough in any region) drops the `eu` pin of decision 159 and gives each pool every card big enough for its model, cheapest first, under the $5 an hour cap. ADR 0003 (pilot platform architecture) already allows no region pin while the app holds only public slides and fake patients, so the pools go back to an EU region when the first real patient data arrives. PROTO-168 (a queued whole slide run starts within its promised time) waits for OPS-042.
+
 ## Answers of 2026-11-22
 
 You wrote these in decisions.md and said "Apply them and do the tasks it will create" in chat on 2026-11-22.

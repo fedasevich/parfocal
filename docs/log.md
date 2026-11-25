@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner answered decisions 175, 176, 177, 178, 179, 180 and 181 on 2026-11-25 and asked to process them. 175 (Best warm-up) and 179 (time to first action from task start) keep what is built. 176 (remote but moderated) made EXP-020 (a prepared participant joins a remote moderated session by one link), 177 (no cut-off) changed the round 5 protocol, 178 (a new moderator seat is an admin) made EXP-021, 180 (keep recordings until the defence, backed up to R2) made EXP-022, and 181 (any region, any GPU big enough) made OPS-042 (GPU pools take any GPU big enough in any region), which PROTO-168 now waits for. All moved to decisions-answered.md.
 - Owner request 2026-11-25 from screenshots: Add a result set in the viewer is a bare card with the browser's file input and takes only GeoJSON, added as PROTO-191 (adding a result set from the viewer is designed with Fable and matches the import), with Fable to be consulted first.
 - PROTO-189: the owner found on 2026-11-25 that a pin dropped on a cell shows the cell's card but saves as a point pin listed as Pin Pin, so the task now anchors such a click to the object and says what it will attach to.
 - Owner request 2026-11-25 from a screenshot: the viewer's slide switcher popover is cut off on the right, added as PROTO-190 (the viewer's slide switcher fits its popover).
