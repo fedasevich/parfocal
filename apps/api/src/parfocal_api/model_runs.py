@@ -829,6 +829,15 @@ async def reopen_failed_set(connection: AsyncConnection, principal: Principal, r
     await connection.execute(
         update(result_sets).where(result_sets.c.id == failed.id).values(deleted_at=func.now())
     )
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.RESULT_SET_DELETED,
+        AuditTarget.RESULT_SET,
+        failed.id,
+        tenant_id=row.tenant_id,
+        details={"slide_id": str(row.slide_id), "run_id": str(row.job_id), "reopened": True},
+    )
     await insert_result_set(
         connection,
         row.tenant_id,

@@ -188,7 +188,9 @@ def test_a_queued_lab_model_stage_stores_cells_and_regions_and_never_the_token(
     assert (status, region_count, cell_count) == ("ready", 2, 3)
     summary = run_async(
         database,
-        lambda _: read_summary(store, result_set_prefix(lab.tenant, lab.slides[0], set_id)),
+        lambda _: read_summary(
+            store, result_set_prefix(lab.tenant, lab.slides[0], uuid.UUID(str(set_id)))
+        ),
     )
     assert sorted(summary.arrays["class"]) == [0, 0, 2]
     assert len(set(summary.numbers())) == 3
