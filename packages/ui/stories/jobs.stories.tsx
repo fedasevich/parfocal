@@ -307,7 +307,7 @@ const groups: ModelGroup[] = [
       {
         id: "sam",
         title: "PathoSAM + HoVer-NeXt",
-        description: "Tumor regions and every cell with a type",
+        description: "Every nucleus outlined and typed",
         makes: ["Regions", "Cells"],
         perSlide: "17 min a slide",
       },

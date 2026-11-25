@@ -59,7 +59,7 @@ const model = (patch: Partial<ProjectModel>): ProjectModel => ({
   name: "pathosam-hovernext",
   version: "v1.2",
   title: "PathoSAM + HoVer-NeXt",
-  description: "Tumor regions and every cell with a type",
+  description: "Every nucleus outlined and typed",
   makes: ["regions", "cells"],
   minutes_per_slide: 17,
   measured: false,

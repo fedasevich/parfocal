@@ -33,7 +33,7 @@ def test_every_task_has_three_tiers_with_catalogue_defaults(api: ApiAs, database
         "name": "pathosam-hovernext",
         "version": "v1.2",
         "title": "PathoSAM + HoVer-NeXt",
-        "description": "Tumor regions and every cell with a type",
+        "description": "Every nucleus outlined and typed",
         "label": "PathoSAM + HoVer-NeXt · v1.2",
     }
     assert tiers[("outline", "good")]["model"] == best["model"]

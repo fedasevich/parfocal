@@ -61,7 +61,7 @@ const pathosam = tierModel(
   "pathosam-hovernext",
   "PathoSAM + HoVer-NeXt",
   "v1.2",
-  "Tumor regions and every cell with a type",
+  "Every nucleus outlined and typed",
 );
 const hovernet = tierModel("hovernet", "HoVer-Net", "v0.9", "Every cell with a type, no regions");
 

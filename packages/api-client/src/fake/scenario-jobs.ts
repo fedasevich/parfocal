@@ -54,7 +54,7 @@ export const models: ScenarioModel[] = [
     name: "pathosam-hovernext",
     version: "v1.2",
     title: "PathoSAM + HoVer-NeXt",
-    description: "Tumor regions and every cell with a type",
+    description: "Every nucleus outlined and typed",
     makes: ["regions", "cells"],
     minutesPerSlide: 17,
     host: "parfocal",

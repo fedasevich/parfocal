@@ -79,7 +79,7 @@ CATALOGUE: tuple[CatalogueModel, ...] = (
         "pathosam-hovernext",
         "v1.2",
         "PathoSAM + HoVer-NeXt",
-        "Tumor regions and every cell with a type",
+        "Every nucleus outlined and typed",
         (ModelMakes.REGIONS, ModelMakes.CELLS),
         17,
     ),
