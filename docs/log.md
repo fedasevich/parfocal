@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25 from a screenshot: the Smart select bar grows huge with a long status sentence, added as PROTO-180 (the Smart select bar stays one compact row and long messages go to a toast).
 - Owner request 2026-11-25 from a screenshot: a project with no slides shows a bare table header, added as PROTO-179 (an empty project and every other table outside Admin show an empty state).
 - ONB-012: the owner added on 2026-11-25 that the empty sample slide must be cheap but show the models work, so the task now asks for a small real tissue slide with plenty of nuclei, not a synthetic one.
 - ONB-012 (the sample is a short review with cells, a slide to run a model on, and its real size in setup): the owner asked on 2026-11-25 for one small sample slide with no data, so a new user can start a whole slide run that finds cells, now part of the task.
