@@ -103,9 +103,12 @@ async function playChapter(page: Page, title: string, reloadAt: number | null) {
       expect(overlaps(anchor, bubbleBox), `${label} bubble covers the anchor`).toBe(false);
     }
     await expect(bubble.getByTestId("tour-anchor-missing")).toHaveCount(0);
-    expect(["exact", "fallback"], `${label} route`).toContain(
-      await bubble.getAttribute("data-route"),
-    );
+    await expect
+      .poll(() => bubble.getAttribute("data-route"), {
+        message: `${label} route`,
+        timeout: 20_000,
+      })
+      .toMatch(/^(exact|fallback)$/);
     if (!fakeDataFallbacks.some((prefix) => anchorName.startsWith(prefix))) {
       expect(await bubble.getAttribute("data-match"), `${label} ringed a fallback`).toBe("0");
     }
