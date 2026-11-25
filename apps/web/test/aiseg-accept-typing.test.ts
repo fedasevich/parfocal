@@ -29,6 +29,8 @@ const seeded: SmartSnapshot = {
   live: null,
   phase: "ready",
   message: null,
+  queued: [],
+  requests: 0,
 };
 
 const calls: { slideId: string; count: number }[] = [];

@@ -43,6 +43,8 @@ export interface SmartSnapshot {
   readonly live: SmartObject | null;
   readonly phase: SmartPhase;
   readonly message: string | null;
+  readonly queued: readonly SmartPress[];
+  readonly requests: number;
 }
 
 export interface SmartSessionOptions {
@@ -70,6 +72,7 @@ export type SmartPress =
 export interface SmartSession {
   press(press: SmartPress): Promise<void>;
   removeLast(): Promise<void>;
+  clearQueue(): void;
   prewarm(at: { readonly x: number; readonly y: number }): Promise<void>;
   pausePrewarm(): void;
   hover(at: { readonly x: number; readonly y: number }, extend?: boolean): Promise<void>;
@@ -77,6 +80,11 @@ export interface SmartSession {
   snapshot(): SmartSnapshot;
   reset(): void;
   close(): void;
+}
+
+interface Waiting {
+  readonly press: SmartPress;
+  readonly done: () => void;
 }
 
 interface Draft {
@@ -135,6 +143,9 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
   let message: string | null = null;
   let version = 0;
   let queue: Promise<void> = Promise.resolve();
+  let waiting: Waiting[] = [];
+  let running = 0;
+  let requests = 0;
   let closed = false;
 
   function objectOf(source: Draft): SmartObject {
@@ -147,6 +158,8 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
       live: draft === null ? null : objectOf(draft),
       phase,
       message,
+      queued: waiting.map((item) => item.press),
+      requests,
     };
   }
 
@@ -283,6 +296,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
       const id = `${options.slideId}:${patch.key}`;
       await embed(patch, patch.rgb, frame);
       if (mine !== version) return;
+      requests += 1;
       const outcome = await options.sam.prompt(
         id,
         modelPrompt(frame, target.prompts, target.logits),
@@ -369,32 +383,103 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     return press.positive && !press.extend;
   }
 
+  function applyPress(press: SmartPress): boolean {
+    if (startsNewObject(press)) retire();
+    else if (draft === null) return false;
+    const target = draft ?? newDraft();
+    if (press.kind === "box") {
+      target.prompts = withBox(target.prompts, normalisedBox(press.from, press.to));
+    } else {
+      const point = { x: press.at.x, y: press.at.y, positive: press.positive };
+      if (target.patch !== null && !patchContains(target.patch, point)) {
+        settle("outside", "Outside the area being refined");
+        return false;
+      }
+      target.prompts = withPoint(target.prompts, point);
+    }
+    draft = target;
+    return true;
+  }
+
+  function schedule(target: Draft, mine: number): Promise<void> {
+    running += 1;
+    return enqueue(() => (mine === version ? solve(target, mine) : Promise.resolve())).finally(
+      () => {
+        running -= 1;
+        if (running === 0) flush();
+      },
+    );
+  }
+
+  function begin(presses: readonly SmartPress[]): Promise<void> | null {
+    let changed = false;
+    for (const press of presses) {
+      if (applyPress(press)) changed = true;
+    }
+    if (!changed || draft === null) return null;
+    version += 1;
+    publish();
+    return schedule(draft, version);
+  }
+
+  function takeBatch(): Waiting[] {
+    const head = waiting[0];
+    if (head === undefined) return [];
+    let count = 1;
+    if (!startsNewObject(head.press)) {
+      const next = waiting.findIndex((item, index) => index > 0 && startsNewObject(item.press));
+      count = next === -1 ? waiting.length : next;
+    }
+    const batch = waiting.slice(0, count);
+    waiting = waiting.slice(count);
+    return batch;
+  }
+
+  function flush() {
+    while (!closed && running === 0 && waiting.length > 0) {
+      const batch = takeBatch();
+      const solving = begin(batch.map((item) => item.press));
+      if (solving === null) {
+        publish();
+        for (const item of batch) item.done();
+        continue;
+      }
+      void solving.then(() => {
+        for (const item of batch) item.done();
+      });
+    }
+  }
+
+  function dropQueue() {
+    const gone = waiting;
+    waiting = [];
+    for (const item of gone) item.done();
+    return gone.length > 0;
+  }
+
   return {
     press(press) {
       if (closed) return Promise.resolve();
       dropHover();
-      if (startsNewObject(press)) retire();
-      else if (draft === null) return Promise.resolve();
-      const target = draft ?? newDraft();
-      if (press.kind === "box") {
-        target.prompts = withBox(target.prompts, normalisedBox(press.from, press.to));
-      } else {
-        const point = { x: press.at.x, y: press.at.y, positive: press.positive };
-        if (target.patch !== null && !patchContains(target.patch, point)) {
-          settle("outside", "Outside the area being refined");
-          return Promise.resolve();
-        }
-        target.prompts = withPoint(target.prompts, point);
+      if (running > 0 || waiting.length > 0) {
+        return new Promise<void>((resolve) => {
+          waiting = [...waiting, { press, done: resolve }];
+          publish();
+        });
       }
-      draft = target;
-      version += 1;
-      const mine = version;
-      publish();
-      return enqueue(() => (mine === version ? solve(target, mine) : Promise.resolve()));
+      return begin([press]) ?? Promise.resolve();
     },
 
     removeLast() {
-      if (closed || draft === null) return Promise.resolve();
+      if (closed) return Promise.resolve();
+      const last = waiting.at(-1);
+      if (last !== undefined) {
+        waiting = waiting.slice(0, -1);
+        last.done();
+        publish();
+        return Promise.resolve();
+      }
+      if (draft === null) return Promise.resolve();
       const target = draft;
       target.prompts = withoutLast(target.prompts);
       target.logits = null;
@@ -409,7 +494,12 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
       }
       target.ring = null;
       publish();
-      return enqueue(() => (mine === version ? solve(target, mine) : Promise.resolve()));
+      return schedule(target, mine);
+    },
+
+    clearQueue() {
+      if (closed) return;
+      if (dropQueue()) publish();
     },
 
     async prewarm(at) {
@@ -445,6 +535,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
 
     reset() {
       dropHover();
+      dropQueue();
       version += 1;
       kept = [];
       draft = null;
@@ -454,6 +545,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     },
 
     close() {
+      dropQueue();
       hoverTurn += 1;
       hoverLatest = null;
       version += 1;

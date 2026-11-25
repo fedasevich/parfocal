@@ -2281,6 +2281,10 @@ msgstr ""
 msgid "{resultName} · {count} objects"
 msgstr ""
 
+#: src/annotations/smart-layer.tsx
+msgid "{queuedCount} queued"
+msgstr ""
+
 #. placeholder {0}: nucleiCount.toLocaleString("en-US")
 #: src/screens/developer/developer-screen.tsx
 msgid "{route} · {0} synthetic nuclei"

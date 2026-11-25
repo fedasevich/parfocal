@@ -31,7 +31,7 @@ import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.ts
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
 import type { ShapeId } from "../annotations/shapes.ts";
-import { SmartLayer } from "../annotations/smart-layer.tsx";
+import { SmartLayer, type SmartQueueControl } from "../annotations/smart-layer.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
 import { useAiBridge } from "../annotations/use-ai-bridge.ts";
 import { useLiveGuardFeed } from "../annotations/use-live-guard.ts";
@@ -112,6 +112,7 @@ import { useSelectionClass } from "./use-selection-class.ts";
 import { useStageDevices } from "./use-stage-devices.ts";
 import { useStageWheel } from "./use-stage-wheel.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
+import { useUndoKeys } from "./use-undo-keys.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
@@ -355,6 +356,7 @@ function OpenedSlide({
   );
   const draftControl = useRef<DraftControl | null>(null);
   const textControl = useRef<TextControl | null>(null);
+  const smartQueue = useRef<SmartQueueControl | null>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [opened, setOpened] = useState<{
@@ -414,26 +416,17 @@ function OpenedSlide({
   const focus = useObjectFocus(focusObject, session?.engine ?? null, saved, areas, setTool);
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
-  const undoBindings = useBindings(["global"], ["undo", "redo"]);
   const { undo: undoEdit, redo: redoEdit } = saved;
   const { bridge: aiBridge, onMarquee: onAiMarquee, aiIsNewer } = useAiBridge(annotations);
-  const onUndoKey = useCallback(
-    ({ phase, action }: { phase: string; action: string }) => {
-      if (phase !== "press") return;
-      const aiFirst = aiIsNewer();
-      if (action === "redo") {
-        if (!aiFirst || !aiBridge.current.redo()) redoEdit();
-        return;
-      }
-      if (action !== "undo") return;
-      const draft = draftControl.current;
-      if (draft !== null && draft.depth() > 0) draft.pop();
-      else if (textControl.current?.restore() === true) return;
-      else if (!aiFirst || !aiBridge.current.undo()) undoEdit();
-    },
-    [undoEdit, redoEdit, aiBridge, aiIsNewer],
-  );
-  useHotkeys(undoBindings, onUndoKey);
+  useUndoKeys({
+    draft: draftControl,
+    text: textControl,
+    smartQueue,
+    aiBridge,
+    aiIsNewer,
+    undoEdit,
+    redoEdit,
+  });
   const [fetched, setProjectClasses] = useState<readonly ProjectClass[] | null>(null);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   useEffect(() => {
@@ -925,6 +918,7 @@ function OpenedSlide({
                         openRequest={session.open}
                         tier={outlineTier}
                         onTierChange={setPickedTier}
+                        queueControl={smartQueue}
                         onDocumentChange={setAnnotations}
                       />
                       <AutoLayer

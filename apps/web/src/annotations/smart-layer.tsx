@@ -1,6 +1,13 @@
 import { useLingui } from "@lingui/react/macro";
 import { isTwoFingerClick, secondaryButton } from "@parfocal/viewer-engine";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useHoverPreview } from "../aiseg/hover-preview-setting.ts";
 import { canStartModel, plainFailure } from "../aiseg/plain-message.ts";
 import type { OutlineTier } from "../aiseg/prompt-fallback.ts";
@@ -51,8 +58,13 @@ type SmartLayerProps = {
   openRequest: SmartServicesContext["open"];
   tier?: OutlineTier;
   onTierChange?: (tier: OutlineTier) => void;
+  queueControl?: RefObject<SmartQueueControl | null>;
   onDocumentChange: (next: AnnotationDocument) => void;
 };
+
+export type SmartQueueControl = { readonly count: () => number; readonly pop: () => void };
+
+type EarlyPress = { readonly request: SmartPress };
 
 type Press = {
   id: number;
@@ -65,7 +77,14 @@ type Press = {
   moved: number;
 };
 
-const idle: SmartSnapshot = { kept: [], live: null, phase: "idle", message: null };
+const idle: SmartSnapshot = {
+  kept: [],
+  live: null,
+  phase: "idle",
+  message: null,
+  queued: [],
+  requests: 0,
+};
 
 const positiveColour = "#1f9d55";
 const negativeColour = "#d92d20";
@@ -100,6 +119,7 @@ export function SmartLayer({
   openRequest,
   tier = "good",
   onTierChange,
+  queueControl,
   onDocumentChange,
 }: SmartLayerProps) {
   const { t } = useLingui();
@@ -119,6 +139,13 @@ export function SmartLayer({
   const services = useRef<Promise<SmartServices> | null>(null);
   const session = useRef<Promise<SmartSession> | null>(null);
   const built = useRef(false);
+  const ready = useRef(false);
+  const earlyRef = useRef<readonly EarlyPress[]>([]);
+  const [early, setEarly] = useState<readonly SmartPress[]>([]);
+  const writeEarly = useCallback((next: readonly EarlyPress[]) => {
+    earlyRef.current = next;
+    setEarly(next.map((item) => item.request));
+  }, []);
 
   const shown = useRef<SmartSnapshot>(idle);
   const syncRun = useCallback((next: SmartSnapshot, classKey: string | null) => {
@@ -161,7 +188,7 @@ export function SmartLayer({
           }),
         () => undefined,
       );
-      session.current = services.current.then((loaded) =>
+      const created = services.current.then((loaded) =>
         createSmartSession({
           slideId,
           reader: loaded.reader,
@@ -170,22 +197,33 @@ export function SmartLayer({
           onHover: setHoverRing,
         }),
       );
-      session.current.catch((error: unknown) =>
+      session.current = created;
+      ready.current = false;
+      void created.then(
+        () => {
+          if (session.current === created) ready.current = true;
+        },
+        () => undefined,
+      );
+      created.catch((error: unknown) => {
+        writeEarly([]);
         show({
           ...idle,
           phase: "failed",
           message: plainFailure(error, "Smart select could not start"),
-        }),
-      );
+        });
+      });
     }
     return session.current;
-  }, [slideId, tier, show]);
+  }, [slideId, tier, show, writeEarly]);
 
   const startModel = useCallback(() => {
     const pending = session.current;
     const loaded = services.current;
     session.current = null;
     services.current = null;
+    ready.current = false;
+    writeEarly([]);
     void pending?.then(
       (value) => value.close(),
       () => undefined,
@@ -197,7 +235,7 @@ export function SmartLayer({
     show(idle);
     const centre = screenToSlide(camera, rect, rect.width / 2, rect.height / 2);
     void sessionPromise().then((value) => value.prewarm(centre));
-  }, [camera, rect, sessionPromise, show]);
+  }, [camera, rect, sessionPromise, show, writeEarly]);
 
   useEffect(
     () => () => {
@@ -257,6 +295,20 @@ export function SmartLayer({
     let current: Press | null = null;
     const send = (action: (value: SmartSession) => Promise<void>) => {
       void sessionPromise().then(action);
+    };
+    const submit = (request: SmartPress) => {
+      const loading = sessionPromise();
+      if (ready.current) {
+        void loading.then((value) => value.press(request));
+        return;
+      }
+      const item: EarlyPress = { request };
+      writeEarly([...earlyRef.current, item]);
+      void loading.then((value) => {
+        if (!earlyRef.current.includes(item)) return;
+        writeEarly(earlyRef.current.filter((each) => each !== item));
+        return value.press(request);
+      });
     };
     const pan = bindSpacePan(stage, {
       engine: () => latest.current.engine,
@@ -338,7 +390,7 @@ export function SmartLayer({
               positive: gesture.positive,
               extend: gesture.extend,
             };
-      send((value) => value.press(request));
+      submit(request);
     };
     const leave = () => void session.current?.then((value) => value.clearHover());
     const cancel = (event: PointerEvent) => {
@@ -361,7 +413,8 @@ export function SmartLayer({
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (session.current === null) return;
       event.preventDefault();
-      send((value) => value.removeLast());
+      if (earlyRef.current.length > 0) writeEarly(earlyRef.current.slice(0, -1));
+      else send((value) => value.removeLast());
     };
     stage.addEventListener("pointerdown", down, true);
     stage.addEventListener("pointermove", move, true);
@@ -393,7 +446,29 @@ export function SmartLayer({
       pan.dispose();
       leaveRung?.();
     };
-  }, [active, stage, escRegistry, sessionPromise]);
+  }, [active, stage, escRegistry, sessionPromise, writeEarly]);
+
+  useEffect(() => {
+    if (!active) return;
+    const count = () => earlyRef.current.length + shown.current.queued.length;
+    const clear = () => {
+      writeEarly([]);
+      void session.current?.then((value) => value.clearQueue());
+    };
+    const control: SmartQueueControl = {
+      count,
+      pop: () => {
+        if (earlyRef.current.length > 0) writeEarly(earlyRef.current.slice(0, -1));
+        else void session.current?.then((value) => value.removeLast());
+      },
+    };
+    if (queueControl) queueControl.current = control;
+    const leaveRung = escRegistry?.add("draft", { open: () => count() > 0, peel: clear });
+    return () => {
+      if (queueControl?.current === control) queueControl.current = null;
+      leaveRung?.();
+    };
+  }, [active, escRegistry, queueControl, writeEarly]);
 
   const live = snapshot.live;
   const prompts = live?.prompts ?? { points: [], box: null };
@@ -413,6 +488,71 @@ export function SmartLayer({
         }
       : null;
   const negatives = prompts.points.filter((point) => !point.positive).length;
+  const queued = [...early, ...snapshot.queued];
+  const queuedCount = queued.length;
+  const queuedMarker = (press: SmartPress, index: number) => {
+    const order = index + 1;
+    const colour = press.kind === "point" && !press.positive ? negativeColour : positiveColour;
+    if (press.kind === "box") {
+      const corners = { a: where(press.from), b: where(press.to) };
+      const edge = frame(corners);
+      return (
+        <g key={index} data-testid="smart-queued" data-order={order} data-kind="box">
+          <rect
+            {...edge}
+            fill="none"
+            stroke={colour}
+            strokeWidth={2}
+            strokeDasharray="4 3"
+            opacity={0.8}
+          />
+          <circle cx={edge.x} cy={edge.y} r={8} fill="#fff" stroke={colour} strokeWidth={1.5} />
+          <text
+            x={edge.x}
+            y={edge.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={10}
+            fontWeight={600}
+            fill={colour}
+          >
+            {order}
+          </text>
+        </g>
+      );
+    }
+    const at = where(press.at);
+    return (
+      <g
+        key={index}
+        data-testid="smart-queued"
+        data-order={order}
+        data-kind={press.positive ? "positive" : "negative"}
+      >
+        <circle
+          cx={at.x}
+          cy={at.y}
+          r={9}
+          fill="#fff"
+          fillOpacity={0.85}
+          stroke={colour}
+          strokeWidth={1.5}
+          strokeDasharray="3 2"
+        />
+        <text
+          x={at.x}
+          y={at.y}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={10}
+          fontWeight={600}
+          fill={colour}
+        >
+          {order}
+        </text>
+      </g>
+    );
+  };
   const marker = (point: SmartPoint, index: number) => {
     const at = where(point);
     return (
@@ -444,6 +584,19 @@ export function SmartLayer({
     "loading-model": t`Fetching Best's outline model`,
     outlining: t`Outlining`,
   };
+  const statusWords =
+    status === "outlining"
+      ? seconds > 0
+        ? t`${stepText[step]}, ${seconds} s`
+        : stepText[step]
+      : status === "found"
+        ? t`Outline found`
+        : status === "message"
+          ? snapshot.message
+          : null;
+  const statusText = [statusWords, queuedCount > 0 ? t`${queuedCount} queued` : null]
+    .filter((part) => part !== null)
+    .join(", ");
   const fallbackText: Record<BestFallback, string> = {
     unsendable: t`Best cannot outline this view, Good outlined it`,
     refused: t`The server refused Best here, Good outlined this view`,
@@ -463,6 +616,8 @@ export function SmartLayer({
         data-box={prompts.box === null ? 0 : 1}
         data-kept={snapshot.kept.length}
         data-live={live?.ring ? 1 : 0}
+        data-queued={queuedCount}
+        data-requests={snapshot.requests}
         data-hover={hoverRing === null ? 0 : 1}
         data-encoder={encoderSource ?? undefined}
         data-confidence={live?.ring ? live.confidence.toFixed(2) : undefined}
@@ -489,6 +644,7 @@ export function SmartLayer({
           />
         )}
         {active ? prompts.points.map(marker) : null}
+        {active ? queued.map(queuedMarker) : null}
         {active && hoverOn && hoverRing !== null ? (
           <path
             data-testid="smart-hover"
@@ -522,21 +678,16 @@ export function SmartLayer({
               {fallbackText[fallback]}
             </span>
           ) : null}
-          {status !== null ? (
+          {status !== null || queuedCount > 0 ? (
             <span
               data-testid="smart-status"
-              data-status={status}
+              data-status={status ?? "queued"}
               data-step={status === "outlining" ? step : undefined}
+              data-queued={queuedCount}
               role="status"
               className={contextChip}
             >
-              {status === "outlining"
-                ? seconds > 0
-                  ? t`${stepText[step]}, ${seconds} s`
-                  : stepText[step]
-                : status === "found"
-                  ? t`Outline found`
-                  : snapshot.message}
+              {statusText}
               {canStartModel(snapshot.message) ? (
                 <button
                   type="button"
