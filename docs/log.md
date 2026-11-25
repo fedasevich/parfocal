@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25 from a screenshot: the viewer's slide switcher popover is cut off on the right, added as PROTO-190 (the viewer's slide switcher fits its popover).
 - PROTO-189 (comment on objects, selections, regions and layers, and reach what a comment mentions): the owner added on 2026-11-25 comments on layers and groups and links from anything a comment mentions, so the task grows to size L with a new layer anchor kind.
 - Owner request 2026-11-25: comment on a selected cell or object, on a selection and on a region right on the slide, which is not possible now, added as PROTO-189 (comment on a selected cell or object, a selection or a region right on the slide).
 - Owner request 2026-11-25: remove the Enter posts, Shift+Enter adds a line hint under comment boxes, added as PROTO-188 (comment boxes drop the Enter posts hint).
