@@ -18,7 +18,7 @@ from parfocal_common.db import create_engine
 from parfocal_common.gpu_usage import report_gpu_seconds
 from parfocal_common.ingest import folder_of
 from parfocal_common.jobs import StepFailedError, StepFunction, StepRun, Workflow
-from parfocal_common.model_artifacts import ArtifactError, ModelArtifacts
+from parfocal_common.model_artifacts import ModelArtifacts
 from parfocal_common.model_runs import (
     MODEL_STAGE,
     NUCLEI_DETECTORS,
@@ -230,7 +230,7 @@ async def fetched_weights(storage: ObjectStore, folder: Path) -> Path:
 async def loaded_typer(storage: ObjectStore, folder: Path) -> TyperModel | None:
     try:
         return await fetched_typer(storage, folder)
-    except (ArtifactError, OSError, RuntimeError) as error:
+    except Exception as error:
         logger.warning("The cells stay untyped, because the typer did not load: %s", error)
         return None
 

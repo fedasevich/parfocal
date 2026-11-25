@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import uuid
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
@@ -15,12 +16,13 @@ from tumor_map_support import MemoryStore
 from parfocal_common.cell_chunks import UNCLASSIFIED
 from parfocal_common.chunk_store import Cell, cells_in, chunk_of
 from parfocal_common.jobs import StepRun
-from parfocal_common.model_artifacts import MissingArtifactError
+from parfocal_common.model_artifacts import ArtifactFile, ArtifactKind, ModelArtifacts, Upload
 from parfocal_common.model_runs import RunScopeKind, RunSettings, run_prefix, tile_key
-from parfocal_common.object_store import ObjectStore
-from parfocal_common.outline_types import TYPER_CLASSES
+from parfocal_common.object_store import Downloaded, ObjectStore, StorageError
+from parfocal_common.outline_types import TYPER_CLASSES, TYPER_VERSION, TYPER_WEIGHTS
 from parfocal_ml import nuclei_run_worker
 from parfocal_ml.nuclei_run_worker import TYPER_MISSING, loaded_typer, nuclei_running
+from parfocal_ml.outline_typer_worker import WEIGHTS_NAME
 from parfocal_ml.sam_contract import onnx_dir
 from parfocal_ml.tumor_map_job import SlideImage
 from parfocal_ml.typer import CLASS_CHANNELS
@@ -173,14 +175,49 @@ def test_without_typer_weights_the_run_finishes_with_untyped_cells_and_says_why(
     assert all("typed" not in unit for unit in step.units.values())
 
 
-def test_a_typer_that_cannot_be_fetched_loads_as_none(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    async def missing(storage: object, folder: Path) -> None:
-        raise MissingArtifactError("hovernext-pannuke v1.2 has no file typer.onnx")
+class FakeStorage:
+    def __init__(self) -> None:
+        self.objects: dict[str, bytes] = {}
 
-    monkeypatch.setattr(nuclei_run_worker, "fetched_typer", missing)
-    assert asyncio.run(loaded_typer(cast("ObjectStore", object()), tmp_path)) is None
+    async def put_new_object(self, key: str, body: bytes, content_type: str) -> None:
+        self.objects[key] = body
+
+    async def head_object(self, key: str) -> int | None:
+        body = self.objects.get(key)
+        return None if body is None else len(body)
+
+    async def get_object(self, key: str) -> bytes:
+        if key not in self.objects:
+            raise StorageError(404, "NoSuchKey")
+        return self.objects[key]
+
+    async def download(self, key: str, target: Path) -> Downloaded:
+        body = await self.get_object(key)
+        await asyncio.to_thread(target.write_bytes, body)
+        return Downloaded(len(body), hashlib.sha256(body).hexdigest())
+
+
+def test_a_typer_that_is_not_published_loads_as_none(tmp_path: Path) -> None:
+    storage = cast("ObjectStore", FakeStorage())
+    assert asyncio.run(loaded_typer(storage, tmp_path)) is None
+
+
+def test_a_typer_graph_that_onnxruntime_cannot_open_loads_as_none(tmp_path: Path) -> None:
+    pytest.importorskip("onnxruntime")
+    fake = FakeStorage()
+    body = b"not an onnx graph"
+    graph = tmp_path / "published.onnx"
+    graph.write_bytes(body)
+    file = ArtifactFile(
+        WEIGHTS_NAME, ArtifactKind.ONNX, hashlib.sha256(body).hexdigest(), len(body)
+    )
+    storage = cast("ObjectStore", fake)
+    asyncio.run(
+        ModelArtifacts(storage).publish(TYPER_WEIGHTS, TYPER_VERSION, [Upload(file, graph)])
+    )
+    folder = tmp_path / "worker"
+    folder.mkdir()
+    assert asyncio.run(loaded_typer(storage, folder)) is None
 
 
 @pytest.mark.weights

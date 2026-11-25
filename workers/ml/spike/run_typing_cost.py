@@ -40,6 +40,20 @@ class DarkMaps:
         return np.stack([dark, 1 - depth, 1 - depth]).astype(np.float32)
 
 
+class TimedTyper:
+    def __init__(self, typer: OnnxTyper) -> None:
+        self.typer = typer
+        self.seconds = 0.0
+        self.calls = 0
+
+    def __call__(self, rgb: np.ndarray) -> np.ndarray:
+        started = time.perf_counter()
+        found = self.typer(rgb)
+        self.seconds += time.perf_counter() - started
+        self.calls += 1
+        return found
+
+
 async def measured(slide_path: Path, graph: Path) -> dict[str, object]:
     source = openslide.OpenSlide(str(slide_path))
     rgb = np.asarray(source.read_region((0, 0), 0, source.dimensions).convert("RGB"))
@@ -55,7 +69,7 @@ async def measured(slide_path: Path, graph: Path) -> dict[str, object]:
     detector = PathoSamDetector(
         ScaledReader(slide.reader, mpp), DarkMaps(), Quality.BEST, tissue=tissue
     )
-    typer = OnnxTyper(graph)
+    typer = TimedTyper(OnnxTyper(graph))
     temperature = TYPER_TEMPERATURES[SINGLE_VIEW]
     seconds, cells, area = 0.0, 0, 0.0
     for tile in plan.tiles:
@@ -74,7 +88,9 @@ async def measured(slide_path: Path, graph: Path) -> dict[str, object]:
         "typer_seconds": round(seconds, 2),
         "seconds_per_mm2": round(seconds / area, 2),
         "ms_per_cell": round(1000 * seconds / max(1, cells), 3),
-        "providers": typer.session.get_providers(),
+        "graph_calls": typer.calls,
+        "graph_seconds": round(typer.seconds, 2),
+        "providers": typer.typer.session.get_providers(),
     }
 
 
