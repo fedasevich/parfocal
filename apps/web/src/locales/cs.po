@@ -310,6 +310,11 @@ msgstr ""
 msgid "{0, plural, one {# example} other {# examples}}"
 msgstr ""
 
+#. placeholder {0}: tree.hiddenObjects
+#: src/annotations/layers-tree.tsx
+msgid "{0, plural, one {# object in hidden layers} other {# objects in hidden layers}}"
+msgstr ""
+
 #. placeholder {0}: counts.open
 #: src/screens/review/guided-review.tsx
 #: src/screens/review/viewer-frame.tsx
@@ -928,7 +933,7 @@ msgstr ""
 
 #. placeholder {0}: skipped.name
 #: src/annotations/layers-panel.tsx
-msgid "{0} is hidden, so the new shape went to Ungrouped."
+msgid "{0} is hidden, so the new shape went to its class group."
 msgstr ""
 
 #. placeholder {0}: rowLabel(row)
@@ -938,7 +943,7 @@ msgstr ""
 
 #. placeholder {0}: skipped.name
 #: src/annotations/layers-panel.tsx
-msgid "{0} is locked, so the new shape went to Ungrouped."
+msgid "{0} is locked, so the new shape went to its class group."
 msgstr ""
 
 #. placeholder {0}: task.code
@@ -5887,6 +5892,10 @@ msgstr ""
 msgid "Cohen's kappa {0} on regions. Shown only after both submitted."
 msgstr ""
 
+#: src/annotations/layers-tree.tsx
+msgid "Collapse {name}"
+msgstr ""
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/project/add-class-modal.tsx
@@ -5919,6 +5928,10 @@ msgstr ""
 #. placeholder {0}: row.name
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Colour of {0}"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Colour of {name}"
 msgstr ""
 
 #: src/results/view-map-layer.tsx
@@ -6748,6 +6761,7 @@ msgid "Delete anyway"
 msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/annotations/layers-tree.tsx
 msgid "Delete group"
 msgstr ""
 
@@ -6903,6 +6917,10 @@ msgstr ""
 #: src/annotations/context-bar.tsx
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "Discard"
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Discard the change"
 msgstr ""
 
 #: ../../packages/ui/src/components/small-modal.tsx
@@ -7069,7 +7087,7 @@ msgid "Draft. Not for clinical use until it is signed."
 msgstr ""
 
 #: src/viewer/stage-shape-edit.tsx
-msgid "Drag a point or the outline of {object}. Each move is saved as your edit."
+msgid "Drag a point or the outline of {object}. Drag the dot on an edge to add a point, Alt+click a point or select it and press Backspace to remove it. Done saves the outline once, Esc discards it."
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
@@ -7803,6 +7821,10 @@ msgstr ""
 msgid "Expand"
 msgstr ""
 
+#: src/annotations/layers-tree.tsx
+msgid "Expand {name}"
+msgstr ""
+
 #: src/shell/maintenance-banner.tsx
 msgid "Expected back at {until}."
 msgstr ""
@@ -8158,6 +8180,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Fix AI on selected areas"
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Fix the outline"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -8810,6 +8836,10 @@ msgstr ""
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/upload/files-step.tsx
 msgid "Hide"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Hide {name}"
 msgstr ""
 
 #: src/annotations/layers-panel.tsx
@@ -9502,6 +9532,10 @@ msgstr ""
 msgid "ITC if confirmed"
 msgstr ""
 
+#: src/annotations/layers-panel.tsx
+msgid "Its class group"
+msgstr ""
+
 #: src/viewer/run-stream-layer.tsx
 msgid "Its objects are AI objects of this task now"
 msgstr ""
@@ -9855,6 +9889,7 @@ msgstr ""
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/annotations/layers-panel.tsx
+#: src/annotations/layers-tree.tsx
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "Layers"
 msgstr ""
@@ -10248,6 +10283,10 @@ msgstr ""
 #: ../../packages/ui/src/components/lockable-row.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Lock"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Lock {name}"
 msgstr ""
 
 #: src/screens/new-task/how-step.tsx
@@ -10861,6 +10900,7 @@ msgstr ""
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/annotations/layers-tree.tsx
 #: src/screens/admin/common.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
@@ -10873,6 +10913,10 @@ msgstr ""
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/my-work/assigned-tab.tsx
 msgid "More actions for {0}"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "More actions for {name}"
 msgstr ""
 
 #. placeholder {0}: member.display_name
@@ -11056,6 +11100,10 @@ msgstr ""
 msgid "Name of {0}"
 msgstr ""
 
+#: src/annotations/layers-tree.tsx
+msgid "Name of {name}"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Name saved"
 msgstr ""
@@ -11174,6 +11222,10 @@ msgstr ""
 msgid "New outline saved for {0}. The AI result is not changed."
 msgstr ""
 
+#: src/viewer/stage-review-objects.tsx
+msgid "New outline saved for {object}. The AI result is not changed."
+msgstr ""
+
 #. placeholder {0}: rowLabel(target)
 #. placeholder {0}: target.object
 #: src/screens/disagreements/adjudicator-view.tsx
@@ -11229,6 +11281,7 @@ msgid "New review task"
 msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/annotations/layers-tree.tsx
 msgid "New shapes go here"
 msgstr ""
 
@@ -12031,7 +12084,7 @@ msgstr ""
 msgid "Nothing connected"
 msgstr ""
 
-#: src/annotations/layers-panel.tsx
+#: src/annotations/layers-tree.tsx
 msgid "Nothing drawn yet. Select shapes and press ⌘G to group them."
 msgstr ""
 
@@ -12970,6 +13023,10 @@ msgstr ""
 msgid "Others on this slide see where you point. Click to stop"
 msgstr ""
 
+#: src/annotations/layers-panel.tsx
+msgid "Out of every group"
+msgstr ""
+
 #: src/screens/new-task/modals.tsx
 msgid "Out of focus"
 msgstr ""
@@ -12977,6 +13034,10 @@ msgstr ""
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Outline"
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Outline crosses itself"
 msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
@@ -14439,6 +14500,7 @@ msgid "Removing the project of {typed}."
 msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/annotations/layers-tree.tsx
 msgid "Rename"
 msgstr ""
 
@@ -15809,9 +15871,17 @@ msgstr ""
 msgid "Select {object} on {slide}"
 msgstr ""
 
+#: src/annotations/layers-tree.tsx
+msgid "Select and show it"
+msgstr ""
+
 #. placeholder {0}: typeof title === "string" ? title : ""
 #: ../../packages/ui/src/components/evaluation-report.tsx
 msgid "Select the block {0}"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Select the group and show it"
 msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
@@ -16194,6 +16264,10 @@ msgstr ""
 #: src/screens/admin/sections.tsx
 #: src/viewer/stage-result-cells.tsx
 msgid "Show {0}"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Show {name}"
 msgstr ""
 
 #: src/screens/home/activity-card.tsx
@@ -17407,6 +17481,10 @@ msgstr ""
 msgid "Stop painting"
 msgstr ""
 
+#: src/annotations/layers-tree.tsx
+msgid "Stop sending new shapes here"
+msgstr ""
+
 #: src/help/tour-host.tsx
 msgid "Stop tour"
 msgstr ""
@@ -18446,6 +18524,18 @@ msgstr ""
 
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "the other set"
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "The outline of {object} crosses itself, so it cannot be saved. Fix it, or discard the change and go on."
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "The outline of {objectId} was not saved."
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "The outline of {objectId} was not saved. {detail}"
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -19943,11 +20033,8 @@ msgid "Undo the split"
 msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/annotations/layers-tree.tsx
 msgid "Ungroup"
-msgstr ""
-
-#: src/annotations/layers-panel.tsx
-msgid "Ungrouped"
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -19970,6 +20057,10 @@ msgstr ""
 #: ../../packages/ui/src/components/lockable-row.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Unlock"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Unlock {name}"
 msgstr ""
 
 #: ../../packages/ui/src/components/auth.tsx

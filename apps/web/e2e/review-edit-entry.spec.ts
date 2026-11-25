@@ -77,7 +77,7 @@ test("Edit shape opens the handles and the brush from the card", async ({ page }
   const object = (await panel.getAttribute("data-current")) ?? "";
   const fixRow = panel.getByTestId("object-fix-row");
   await fixRow.getByRole("button", { name: /Edit shape/ }).click();
-  await expect(page.getByTestId("ai-layer")).toHaveAttribute("data-editing", object);
+  await expect(page.getByTestId("outline-editor")).toHaveAttribute("data-editing", object);
   const bar = panel.getByTestId("shape-edit-bar");
   await expect(bar).toHaveAttribute("data-tool", "handles");
   await expect(fixRow).toHaveCount(0);

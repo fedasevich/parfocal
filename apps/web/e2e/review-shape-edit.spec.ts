@@ -43,7 +43,7 @@ const areaOf = (body: Body) => {
 };
 
 async function handleBoxes(page: Page) {
-  const handles = page.getByTestId("ai-handle");
+  const handles = page.getByTestId("outline-point");
   await expect(handles.first()).toBeVisible();
   const boxes = [];
   for (const handle of await handles.all()) {
@@ -69,7 +69,7 @@ async function historyCount(page: Page) {
   return page.getByTestId("object-edit-history").getByRole("listitem").count();
 }
 
-test("a reviewer moves a point, paints, erases and restores the AI outline, one edit each", async ({
+test("a reviewer moves a point and saves it on Done, then paints, erases and restores the AI outline", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -77,7 +77,7 @@ test("a reviewer moves a point, paints, erases and restores the AI outline, one 
   const object = (await panel.getAttribute("data-current")) ?? "";
   await blur(page);
   await page.keyboard.press("Enter");
-  await expect(page.getByTestId("ai-layer")).toHaveAttribute("data-editing", object);
+  await expect(page.getByTestId("outline-editor")).toHaveAttribute("data-editing", object);
   const bar = panel.getByTestId("shape-edit-bar");
   await expect(bar).toHaveAttribute("data-tool", "handles");
   await expect(bar.getByRole("button", { name: "Restore the AI original" })).toHaveCount(0);
@@ -86,16 +86,21 @@ test("a reviewer moves a point, paints, erases and restores the AI outline, one 
   const points = await handleBoxes(page);
   const first = points[0] ?? { x: 0, y: 0 };
   const centre = centreOf(points);
-  const moved = edit(page, "PUT", object);
   await drag(page, first, { x: first.x + (first.x - centre.x) * 0.5, y: first.y + 30 });
+  await expect(page.getByTestId("outline-original")).toBeVisible();
+  const moved = edit(page, "PUT", object);
+  await bar.getByRole("button", { name: "Done" }).click();
   const move = (await moved).postDataJSON() as Body;
   expect(move.class_id).toBeNull();
   expect(move.geometry?.type).toBe("Polygon");
   await expect(outlines).toHaveAttribute("data-reviewed", object);
-  await expect(page.getByTestId("ai-ghost")).toBeVisible();
-  await expect(page.getByTestId("ai-layer")).toHaveAttribute("data-editing", object);
-  await expect.poll(() => historyCount(page)).toBe(2);
+  await expect(page.getByTestId("outline-editor")).toHaveCount(0);
 
+  await panel.getByRole("button", { name: "Back to the answers" }).click();
+  await blur(page);
+  await page.keyboard.press("Enter");
+  await expect(bar).toHaveAttribute("data-tool", "handles");
+  await expect.poll(() => historyCount(page)).toBe(2);
   await bar.getByRole("button", { name: "Brush" }).click();
   await expect(bar).toHaveAttribute("data-tool", "brush");
   await expect(page.getByTestId("brush-map")).toBeVisible();
@@ -124,7 +129,7 @@ test("a reviewer moves a point, paints, erases and restores the AI outline, one 
 
   await bar.getByRole("button", { name: "Done" }).click();
   await expect(panel.getByTestId("shape-edit-bar")).toHaveCount(0);
-  await expect(page.getByTestId("ai-layer")).toHaveCount(0);
+  await expect(page.getByTestId("outline-editor")).toHaveCount(0);
 });
 
 test("a double click opens the handles, Esc closes them, and a move keeps the changed type", async ({
@@ -137,11 +142,11 @@ test("a double click opens the handles, Esc closes them, and a move keeps the ch
   await page.keyboard.press("Enter");
   const centre = centreOf(await handleBoxes(page));
   await page.keyboard.press("Escape");
-  await expect(page.getByTestId("ai-layer")).toHaveCount(0);
+  await expect(page.getByTestId("outline-editor")).toHaveCount(0);
   await page.mouse.dblclick(centre.x, centre.y);
-  await expect(page.getByTestId("ai-layer")).toHaveAttribute("data-editing", object);
+  await expect(page.getByTestId("outline-editor")).toHaveAttribute("data-editing", object);
   await page.keyboard.press("Escape");
-  await expect(page.getByTestId("ai-layer")).toHaveCount(0);
+  await expect(page.getByTestId("outline-editor")).toHaveCount(0);
 
   await page
     .getByRole("group", { name: `Your answer on ${object}` })
@@ -161,8 +166,9 @@ test("a double click opens the handles, Esc closes them, and a move keeps the ch
   await blur(page);
   await page.keyboard.press("Enter");
   const first = (await handleBoxes(page))[0] ?? { x: 0, y: 0 };
-  const moved = edit(page, "PUT", object);
   await drag(page, first, { x: first.x + 25, y: first.y + 25 });
+  const moved = edit(page, "PUT", object);
+  await page.keyboard.press("Enter");
   const move = (await moved).postDataJSON() as Body;
   expect(move.class_id).toBe(type.class_id);
   expect(move.geometry?.type).toBe("Polygon");
@@ -173,5 +179,5 @@ test("a read only reviewer gets no handles", async ({ page }) => {
   await blur(page);
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("shape-edit-bar")).toHaveCount(0);
-  await expect(page.getByTestId("ai-layer")).toHaveCount(0);
+  await expect(page.getByTestId("outline-editor")).toHaveCount(0);
 });

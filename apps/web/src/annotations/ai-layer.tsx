@@ -6,12 +6,11 @@ import { screenScale, slideToScreen } from "../viewer/viewer-engine.ts";
 import {
   type AiCell,
   cellsInLasso,
+  handleIndices,
   hitCell,
-  maxHandles,
   movedRing,
   type PickMode,
   type Ring,
-  simplifyRing,
   withVertex,
 } from "./ai-edit.ts";
 import type { CheckState } from "./check-state.ts";
@@ -152,8 +151,6 @@ const CellOutlines = memo(function CellOutlines({
   ));
 });
 
-const handlesFor = (ring: Ring): Ring => (ring.length > maxHandles ? simplifyRing(ring) : ring);
-
 export function AiLayer({
   engine,
   stage,
@@ -183,8 +180,8 @@ export function AiLayer({
   const sole = selection.length === 1 ? cells.find((cell) => cell.object === selection[0]) : null;
   const edited = editing === null ? null : (cells.find((cell) => cell.object === editing) ?? null);
   const editedRing = edited?.ring ?? null;
-  const editRing = useMemo(
-    () => (editedRing === null ? null : handlesFor(editedRing)),
+  const editIndices = useMemo(
+    () => (editedRing === null ? null : handleIndices(editedRing)),
     [editedRing],
   );
   const latest = useRef({
@@ -192,7 +189,8 @@ export function AiLayer({
     selection,
     locked,
     editing,
-    editRing,
+    editedRing,
+    editIndices,
     onPick,
     onReshape,
     onDelete,
@@ -203,7 +201,8 @@ export function AiLayer({
     selection,
     locked,
     editing,
-    editRing,
+    editedRing,
+    editIndices,
     onPick,
     onReshape,
     onDelete,
@@ -254,11 +253,21 @@ export function AiLayer({
         consume(event);
         capturePointer(stage, event.pointerId);
       };
-      if (now.editing !== null && now.editRing !== null && !now.locked) {
+      if (
+        now.editing !== null &&
+        now.editedRing !== null &&
+        now.editIndices !== null &&
+        !now.locked
+      ) {
+        const ring = now.editedRing;
         const reach = handleHitPx / scale();
-        const index = now.editRing.findIndex(([x, y]) => Math.hypot(x - at.x, y - at.y) <= reach);
+        const index =
+          now.editIndices.find((id) => {
+            const [x, y] = ring[id] ?? [Number.NaN, Number.NaN];
+            return Math.hypot(x - at.x, y - at.y) <= reach;
+          }) ?? -1;
         if (index >= 0) {
-          gesture = { kind: "vertex", object: now.editing, base: now.editRing, index };
+          gesture = { kind: "vertex", object: now.editing, base: ring, index };
           grab();
           return;
         }
@@ -434,7 +443,15 @@ export function AiLayer({
     return inside.length === shown.length ? shown : inside;
   }, [shown, chosen, draftObject, area]);
   const deep = near.length * deepShare <= shown.length;
-  const handles = edited === null ? null : draft?.object === edited.object ? draft.ring : editRing;
+  const handleRing =
+    edited === null ? null : draft?.object === edited.object ? draft.ring : editedRing;
+  const handles =
+    handleRing === null || editIndices === null
+      ? null
+      : editIndices.flatMap((index) => {
+          const point = handleRing[index];
+          return point === undefined ? [] : [point];
+        });
   const tagAt =
     sole && !sole.deleted && tag !== null
       ? project([sole.bounds[0], sole.bounds[1]] as const)

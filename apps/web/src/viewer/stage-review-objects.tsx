@@ -1,12 +1,13 @@
 import { useLingui } from "@lingui/react/macro";
-import type { ReviewObject } from "@parfocal/api-client";
+import { ApiError, type ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { inRing, type Ring } from "../annotations/ai-edit.ts";
+import { geometryOf, inRing, type Ring } from "../annotations/ai-edit.ts";
 import { loadClipper } from "../annotations/brush.ts";
 import { polygonToGeoJson } from "../annotations/geojson.ts";
 import { closeDraft, type PolygonDraft } from "../annotations/polygon-draft.ts";
+import { crossingEdges } from "../annotations/reshape.ts";
 import { keeperOf, mergeRings } from "../annotations/split-merge.ts";
 import { slideAt } from "../annotations/stage-pointer.ts";
 import { isTyping } from "../keys/registry.ts";
@@ -46,6 +47,15 @@ import {
 import { reviewObjectOf } from "./focus-object.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
+import {
+  type OutlineDraft,
+  outlineChanged,
+  outlineRing,
+  pushOutline,
+  redoOutline,
+  startOutline,
+  undoOutline,
+} from "./outline-draft.ts";
 import { StageAiReading } from "./stage-ai-reading.tsx";
 import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
 import { StageCellsGrid } from "./stage-cells-grid.tsx";
@@ -66,6 +76,7 @@ import { useStageRulers } from "./stage-measurements.tsx";
 import { StageObjectsPanel } from "./stage-objects-panel.tsx";
 import { OpinionForm } from "./stage-opinion.tsx";
 import { StageOpinionBack } from "./stage-opinion-back.tsx";
+import { StageOutlineEditor } from "./stage-outline-editor.tsx";
 import { StageRedrawLayer } from "./stage-redraw-layer.tsx";
 import {
   type ReviewFate,
@@ -329,7 +340,15 @@ export function StageReviewObjects({
       return kept.length === before.size ? before : new Map(kept);
     });
   }, [savedKey]);
-  const fixes = useReviewFixes(taskId, slideId, session.ready);
+  const fixes = useReviewFixes(taskId, slideId, session.ready, (objectId, error) => {
+    const detail =
+      error instanceof ApiError ? (error.problem?.detail ?? error.problem?.title) : null;
+    showUndoToast({
+      message: detail
+        ? t`The outline of ${objectId} was not saved. ${detail}`
+        : t`The outline of ${objectId} was not saved.`,
+    });
+  });
   const [fixing, setFixing] = useState<{
     readonly object: string;
     readonly step: "reasons" | "redraw" | "type";
@@ -340,6 +359,8 @@ export function StageReviewObjects({
     readonly tool: ShapeTool;
   } | null>(null);
   const [merging, setMerging] = useState<readonly string[]>([]);
+  const [outline, setOutline] = useState<OutlineDraft | null>(null);
+  const [leaving, setLeaving] = useState<{ readonly go: () => void } | null>(null);
   const objects = session.objects;
   const order = objects.map((item) => item.object);
   const decided = new Set([...session.decisions.keys(), ...pending.keys()]);
@@ -552,6 +573,71 @@ export function StageReviewObjects({
   const shapeTool =
     canShape && fixStep === null && shaping?.object === current ? shaping.tool : null;
   const busy = fixStep !== null || shapeTool !== null;
+  const outlineNow =
+    shapeTool === "handles" && current !== null
+      ? outline?.object === current
+        ? outline
+        : startOutline(current, currentRing)
+      : null;
+  const outlineShown = outlineNow === null ? null : outlineRing(outlineNow);
+  const outlineCrossing = useMemo(
+    () => (outlineShown === null ? [] : crossingEdges(outlineShown)),
+    [outlineShown],
+  );
+  const outlineDirty = outlineNow !== null && outlineChanged(outlineNow);
+  const askingToLeave = leaving !== null && shapeTool === "handles";
+  const changeOutline = (next: (draft: OutlineDraft) => OutlineDraft) => {
+    if (outlineNow === null) return;
+    setLeaving(null);
+    setOutline(next(outlineNow));
+  };
+  const keepOutline = (asFix: boolean) => {
+    if (outlineNow === null || current === null) return;
+    const object = current;
+    const geometry = geometryOf(outlineRing(outlineNow));
+    const message = t`New outline saved for ${object}. The AI result is not changed.`;
+    setOutline(null);
+    setLeaving(null);
+    if (asFix && currentItem !== undefined) {
+      saveFix(currentItem, { geometry }, message);
+      return;
+    }
+    const before = fixes.change(object, { geometry });
+    showUndoToast({ message, undo: () => fixes.restore(object, before) });
+  };
+  const settleOutline = (go: () => void) => {
+    if (!outlineDirty) {
+      setOutline(null);
+      setLeaving(null);
+      go();
+      return;
+    }
+    if (outlineCrossing.length > 0) {
+      setLeaving({ go });
+      return;
+    }
+    keepOutline(false);
+    go();
+  };
+  const finishOutline = () => {
+    if (outlineCrossing.length > 0) return;
+    if (outlineDirty) keepOutline(true);
+    else setOutline(null);
+    setShaping(null);
+  };
+  const discardOutline = () => {
+    setOutline(null);
+    setLeaving(null);
+    setShaping(null);
+  };
+  useEffect(() => {
+    if (outline === null || (shapeTool === "handles" && outline.object === current)) return;
+    setOutline(null);
+    setLeaving(null);
+    if (outlineChanged(outline) && crossingEdges(outlineRing(outline)).length === 0) {
+      fixes.change(outline.object, { geometry: geometryOf(outlineRing(outline)) });
+    }
+  }, [outline, shapeTool, current, fixes]);
   const shapeEntry = canShape && fixStep === null && shapeTool === null;
   useEffect(() => {
     if (!shapeEntry || stage === null || current === null) return;
@@ -666,7 +752,9 @@ export function StageReviewObjects({
     },
     stepping && typedCell === null && currentItem !== undefined,
   );
-  useObjectKeys(stepNext, stepPrevious, stepKeysLive);
+  const stepNextKept = () => settleOutline(stepNext);
+  const stepPreviousKept = () => settleOutline(stepPrevious);
+  useObjectKeys(stepNextKept, stepPreviousKept, stepKeysLive);
   const jump = (id: string) =>
     pick(
       id === "cells"
@@ -785,7 +873,24 @@ export function StageReviewObjects({
           onCancel={() => cancelRedraw(currentItem)}
         />
       ) : null}
-      {shapeTool !== null && stage !== null && current !== null ? (
+      {shapeTool === "handles" && stage !== null && current !== null && outlineShown !== null ? (
+        <StageOutlineEditor
+          key={`${current}:outline`}
+          engine={engine}
+          stage={stage}
+          object={current}
+          ring={outlineShown}
+          original={originalRing}
+          edited={currentFix !== undefined || outlineDirty}
+          onChange={(ring) => changeOutline((draft) => pushOutline(draft, ring))}
+          onUndo={() => changeOutline(undoOutline)}
+          onRedo={() => changeOutline(redoOutline)}
+          onCommit={finishOutline}
+          onDiscard={discardOutline}
+          onStep={(delta) => (delta === 1 ? stepNextKept() : stepPreviousKept())}
+        />
+      ) : null}
+      {shapeTool !== null && shapeTool !== "handles" && stage !== null && current !== null ? (
         <StageShapeEdit
           key={`${current}:${shapeTool}`}
           engine={engine}
@@ -793,7 +898,6 @@ export function StageReviewObjects({
           object={current}
           classId={currentFix?.classId ?? null}
           ring={currentRing}
-          original={originalRing}
           edited={currentFix !== undefined}
           tool={shapeTool}
           candidates={candidates}
@@ -911,8 +1015,8 @@ export function StageReviewObjects({
                 if (id === "cells") setGridOpen(true);
                 jump(id);
               }}
-              onPrevious={stepPrevious}
-              onSkip={stepNext}
+              onPrevious={stepPreviousKept}
+              onSkip={stepNextKept}
               onNote={() => {
                 if (current !== null) onNote?.(current);
               }}
@@ -929,13 +1033,28 @@ export function StageReviewObjects({
               edited={currentFix !== undefined}
               canSplit={canSplit}
               merging={(merging.includes(current) ? merging : [current, ...merging]).length}
-              onTool={(tool) => {
-                setMerging([]);
-                setShaping({ object: current, tool });
+              crossing={outlineCrossing.length > 0}
+              asking={askingToLeave}
+              onTool={(tool) =>
+                settleOutline(() => {
+                  setMerging([]);
+                  setShaping({ object: current, tool });
+                })
+              }
+              onRestore={() => {
+                setOutline(null);
+                setLeaving(null);
+                fixes.restore(current, undefined);
               }}
-              onRestore={() => fixes.restore(current, undefined)}
               onMerge={() => void mergeCurrent()}
-              onDone={() => setShaping(null)}
+              onDone={shapeTool === "handles" ? finishOutline : () => setShaping(null)}
+              onKeepEditing={() => setLeaving(null)}
+              onDiscard={() => {
+                const go = leaving?.go;
+                setOutline(null);
+                setLeaving(null);
+                go?.();
+              }}
             />
           ) : null}
           {canFix && current !== null && currentFate !== undefined ? (
