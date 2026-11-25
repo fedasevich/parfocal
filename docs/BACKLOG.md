@@ -7428,6 +7428,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API with a long slide name finds the whole switch inside the panel at the narrowest panel width, a Storybook story shows the tab with a long name, and the deployed Comments tab shows the same.
   Depends on nothing. Size: S.
 
+- [ ] PROTO-188 · Comment boxes drop the Enter posts hint
+  The owner asked on 2026-11-25 to remove the line "Enter posts, Shift+Enter adds a line" under the comment box. It is shown in apps/web/src/annotations/pin-layer.tsx (the box of a new pinned thread) and packages/ui/src/components/thread-popover.tsx (a reply in a thread popover). Remove the hint from both and from any other comment box that shows it, keep Enter posting and Shift+Enter adding a line, and drop the unused strings from the locale files.
+  Done when a browser spec on the fake API opens a new pin and a thread reply and finds no hint line, and still posts with Enter and adds a line with Shift+Enter.
+  Depends on nothing. Size: S.
+
 - [x] EXP-018 · The moderator prepares a participant project from the console for the code the page shows
   The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
   Done when an API test seeds and removes a participant project through the new route, a Playwright spec on the fake API prepares a participant and starts task 1, and a deployed dry run as one code goes from Prepare to the thank-you page, recorded in a result file.

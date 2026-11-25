@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25: remove the Enter posts, Shift+Enter adds a line hint under comment boxes, added as PROTO-188 (comment boxes drop the Enter posts hint).
 - Owner request 2026-11-25 from a screenshot: the Open and Resolved switch in the Comments tab overflows the side panel, added as PROTO-187 (the Comments tab header fits the side panel).
 - Owner request 2026-11-25 from a screenshot: the Whole slide map stretches the small minimap thumbnail and looks blurry, added as PROTO-186 (the whole slide map is sharp at its size).
 - Owner request 2026-11-25: the region picked for Auto region vanishes while it is processed, added as PROTO-185 (the region picked for Auto region stays on screen, animated, while it is processed).
