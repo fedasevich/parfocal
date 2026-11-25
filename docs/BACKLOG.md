@@ -6083,6 +6083,18 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-006.
   Size: S.
 
+- [ ] ADMIN-013 · The row menu in Admin People opens and acts
+  The owner found on 2026-11-25 that the three dots button at the end of each row in Admin People (apps/web/src/screens/admin/people.tsx) does nothing when clicked. Open a menu with the actions an admin can take on that person, such as change role, resend or revoke an invite, suspend and remove, each saving through the API under its permission, and leave out an action that has no route yet instead of showing a dead item.
+  Done when a browser spec on the fake API opens the menu on a row, runs one action and reads the change back after a reload, and the deployed app opens the menu.
+  Depends on nothing.
+  Size: S.
+
+- [ ] ADMIN-014 · Admin tables show an empty state
+  The owner found on 2026-11-25 that the Projects table in Admin, filtered to Archived with 0 archived projects, shows only its header row and nothing below it. Give that table and every other Admin table (people, invites, storage, audit and the rest) an empty state that says what is missing and, where it makes sense, how to get some, worded per filter, such as "No archived projects" on the Archived filter.
+  Done when a browser spec on the fake API shows the empty state for the archived projects filter and for one other empty Admin table, and a sweep in the log lists every Admin table it checked.
+  Depends on nothing.
+  Size: S.
+
 ---
 
 ## 51 VIZ · Layers and visualization
@@ -7309,6 +7321,20 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
 - [ ] PROTO-168 · A queued whole slide run starts within its promised time
   The deployed walk of v0.46.0 started a 2 tile PathoSAM + HoVer-NeXt run on synthetic-zlib.ome.tiff at 22:09:37 UTC with the dialog promising About 2 min and 0 runs ahead. /api/me/jobs read queued with 0 units until about 22:28, then the run finished both tiles in about 30 s. Modal main showed parfocal-gpu-pool with 1 task the whole time, and the v0.47.0 deploy ran from about 22:11 to 22:27, so the wait may come from the deploy replacing the dispatcher or the pool. Find the cause from the run's timestamps and the Modal logs, make a queued run start when the pool is free (including after a deploy), and make the dialog's estimate and the job's state say why it waits.
   Done when a test reproduces the cause, and a deployed run of a small slide starts within the dialog's estimate, recorded with its cost.
+  Depends on nothing. Size: M.
+- [ ] PROTO-169 · Skeletons take the shape of the page they stand for
+  The owner found on 2026-11-25 that the Clinical report page loads with a skeleton of label and field rows, like a form, while the page itself is a header, a sign-out banner and a white report sheet, and that some forms show skeletons that do not match their shape either. DS-015 (skeletons and placeholders that hold space) and SHELL-022 (skeletons that fit each page) meant to prevent this. Give the report page a skeleton of its header, banner and sheet, then sweep every page and form that shows a skeleton and fix each one whose blocks do not line up with what replaces them.
+  Done when a browser spec compares skeleton and loaded layout boxes on the report page and the forms the sweep fixed, and the log lists every skeleton the sweep checked.
+  Depends on nothing. Size: M.
+
+- [ ] PROTO-170 · The top of a page takes less height
+  The owner found on 2026-11-25 that the top bar takes too much of the screen. On the Clinical report page the global top bar plus the page header (breadcrumb, title, subtitle and the locked line) fill about 280 of 1011 screen pixels before the content starts. Make the global top bar and the page headers more compact, for example by joining the breadcrumb and title and folding the locked line into the subtitle, across every page that uses the shared header, while keeping the shell's hit targets and the mock's look.
+  Done when a browser spec measures the content start on the report page and two other pages below a target recorded in the log, and Storybook shows the header in its new height.
+  Depends on nothing. Size: M.
+
+- [ ] PROTO-171 · The downloaded report PDF matches the on-screen report
+  The owner found on 2026-11-25 that Download PDF on the signed Showcase case report gives a different document from the one on screen. The screen shows a surgical pathology report with the laboratory heading, accession and reported date, specimen, final diagnosis and the synoptic block with its ICCR, CAP and TNM standards. The PDF shows a plain "Clinical report" list of specimen, category, suggested pN, nodes examined, extranodal extension "na", final diagnosis and deposits "Not stated", with raw values and no heading or signature. Render the PDF from the same report model and layout as the preview, so it carries the same sections, labels and values, as REPORT-009 (idea: PDF rendering) describes, without taking on all of that idea.
+  Done when a test renders the PDF of a signed report and finds the preview's headings, labels and values in its text and no raw codes such as "na", and the deployed Showcase case downloads a PDF that matches its preview.
   Depends on nothing. Size: M.
 - [x] EXP-018 · The moderator prepares a participant project from the console for the code the page shows
   The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
