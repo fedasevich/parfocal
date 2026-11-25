@@ -10,6 +10,7 @@ import {
   RegionPassAbortedError,
   type RegionProgress,
   runRegionPass,
+  type SlideRect,
 } from "../aiseg/region-pass.ts";
 import { nextRunId } from "../aiseg/smart-run.ts";
 import type {
@@ -37,6 +38,7 @@ import {
 } from "./stage-pointer.ts";
 import { useStageRect } from "./stage-size.ts";
 import { useToastOnce } from "./use-toast-once.ts";
+import { pointFrame, WorkingFrame, type WorkingState } from "./working-frame.tsx";
 
 export const autoModel = "pathosam-ais";
 export const autoSource = "auto-region";
@@ -70,6 +72,15 @@ type Status = {
   text: string | null;
 };
 
+type Working = {
+  kind: "box" | "point";
+  area: SlideRect;
+  tiles: readonly SlideRect[];
+  state: WorkingState;
+};
+
+const failedShownMs = 2500;
+
 const idle: Status = { progress: null, word: null, text: null };
 
 const noteOf = (word: string, text: string): Status => ({ progress: null, word, text });
@@ -98,6 +109,7 @@ export function AutoLayer({
   const rect = useStageRect(stage);
   const [press, setPress] = useState<Press | null>(null);
   const [status, setStatus] = useState<Status>(idle);
+  const [working, setWorking] = useState<Working | null>(null);
   const escRegistry = useEscRegistry();
   const latest = useRef({ engine, doc, activeClass, onDocumentChange, loader, openRequest, tier });
   latest.current = { engine, doc, activeClass, onDocumentChange, loader, openRequest, tier };
@@ -159,6 +171,18 @@ export function AutoLayer({
     found.current = [];
     runId.current = nextRunId(latest.current.doc);
     setStatus(idle);
+    const area: SlideRect =
+      kind === "click"
+        ? { x: from.x, y: from.y, width: 0, height: 0 }
+        : {
+            x: Math.min(from.x, to.x),
+            y: Math.min(from.y, to.y),
+            width: Math.abs(to.x - from.x),
+            height: Math.abs(to.y - from.y),
+          };
+    const shown = kind === "click" ? "point" : "box";
+    setWorking({ kind: shown, area, tiles: [], state: "working" });
+    let failed = false;
     try {
       const slide = latest.current.engine.getSlide();
       const context: SmartServicesContext = {
@@ -169,22 +193,18 @@ export function AutoLayer({
       services.current ??= latest.current.loader(context);
       const loaded = await services.current;
       const plan = await loaded.plan("nuclei");
-      const tiles =
-        kind === "click"
-          ? [clickTile(from)]
-          : planRegionTiles(
-              {
-                x: Math.min(from.x, to.x),
-                y: Math.min(from.y, to.y),
-                width: Math.abs(to.x - from.x),
-                height: Math.abs(to.y - from.y),
-              },
-              plan,
-            );
+      const tiles = kind === "click" ? [clickTile(from)] : planRegionTiles(area, plan);
       if (tiles.length > maxAutoTiles) {
+        failed = true;
         setStatus(noteOf("Too large", "That area is too large, drag a smaller one"));
         return;
       }
+      setWorking({
+        kind: shown,
+        area,
+        tiles: tiles.flatMap((tile) => (tile.core === "patch" ? [] : [tile.core])),
+        state: "working",
+      });
       outliner.current ??= createAisOutliner();
       await runRegionPass({
         tiles,
@@ -205,15 +225,24 @@ export function AutoLayer({
     } catch (error) {
       if (error instanceof RegionPassAbortedError) setStatus(idle);
       else {
+        failed = true;
         const text = plainFailure(error, "Auto region could not run");
         setStatus(noteOf(stateWordOf(text), text));
       }
     } finally {
+      setWorking((now) => (failed && now !== null ? { ...now, state: "failed" } : null));
       controller.current = null;
       runId.current = null;
       found.current = [];
     }
   });
+
+  const failedShown = working?.state === "failed";
+  useEffect(() => {
+    if (!failedShown) return;
+    const timer = window.setTimeout(() => setWorking(null), failedShownMs);
+    return () => window.clearTimeout(timer);
+  }, [failedShown]);
 
   useEffect(() => {
     if (!active) {
@@ -323,6 +352,12 @@ export function AutoLayer({
         })()
       : null;
   const progress = status.progress;
+  const done = progress?.done ?? 0;
+  const screenOf = (area: SlideRect) => {
+    const a = slideToScreen(camera, rect, { x: area.x, y: area.y });
+    const b = slideToScreen(camera, rect, { x: area.x + area.width, y: area.y + area.height });
+    return { x: a.x, y: a.y, width: b.x - a.x, height: b.y - a.y };
+  };
   useToastOnce(active ? status.text : null);
 
   return (
@@ -343,6 +378,42 @@ export function AutoLayer({
             className="stroke-accent"
             strokeWidth={2}
           />
+        )}
+        {working === null || !active ? null : (
+          <g
+            data-testid="auto-working"
+            data-state={working.state}
+            data-kind={working.kind}
+            data-tiles={working.tiles.length}
+            data-tiles-done={working.state === "failed" ? 0 : Math.min(done, working.tiles.length)}
+          >
+            {working.kind === "box" && working.tiles.length > 1
+              ? working.tiles.map((tile, index) => (
+                  <rect
+                    key={`${tile.x}:${tile.y}`}
+                    data-testid="auto-tile"
+                    data-done={working.state === "working" && index < done ? "true" : "false"}
+                    {...screenOf(tile)}
+                    strokeWidth={1}
+                    className={
+                      working.state === "working" && index < done
+                        ? "fill-accent/20 stroke-accent/50"
+                        : "fill-transparent stroke-accent/30"
+                    }
+                  />
+                ))
+              : null}
+            <WorkingFrame
+              testId="auto-outline"
+              kind={working.kind}
+              state={working.state}
+              frame={
+                working.kind === "point"
+                  ? pointFrame(slideToScreen(camera, rect, working.area))
+                  : screenOf(working.area)
+              }
+            />
+          </g>
         )}
       </svg>
       {active && onTierChange ? <ModelTierChoice tier={tier} onTierChange={onTierChange} /> : null}

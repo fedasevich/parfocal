@@ -636,11 +636,19 @@ export function SmartLayer({
         {boxCorners === null ? null : (
           <rect
             data-testid="smart-box"
+            data-state={
+              snapshot.phase === "thinking"
+                ? "working"
+                : snapshot.phase === "failed"
+                  ? "failed"
+                  : "idle"
+            }
             {...frame(boxCorners)}
             fill="none"
-            stroke={positiveColour}
+            stroke={snapshot.phase === "failed" ? negativeColour : positiveColour}
             strokeWidth={2}
-            strokeDasharray="4 3"
+            strokeDasharray={snapshot.phase === "thinking" ? "6 4" : "4 3"}
+            className={snapshot.phase === "thinking" ? "pf-march" : undefined}
           />
         )}
         {dragBox === null ? null : (
