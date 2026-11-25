@@ -14,11 +14,6 @@ msgstr ""
 msgid "{0} GB needed, {1} GB left in {projectCode}"
 msgstr "{0} GB needed, {1} GB left in {projectCode}"
 
-#. placeholder {0}: format.integer(set.cell_count)
-#: src/screens/project/slides-tab.tsx
-msgid " · {0} cells"
-msgstr " · {0} cells"
-
 #. placeholder {0}: plural(toDecide, "object")
 #: src/screens/my-work/my-work-screen.tsx
 msgid " · {0} to decide"
@@ -691,6 +686,11 @@ msgstr "{0} cell"
 #: src/screens/viewer/use-viewer-scene.tsx
 msgid "{0} cell{1} in the sample {2} still open"
 msgstr "{0} cell{1} in the sample {2} still open"
+
+#. placeholder {0}: format.integer(summary.cells)
+#: src/screens/project/slides-tab.tsx
+msgid "{0} cells"
+msgstr "{0} cells"
 
 #. placeholder {0}: test.missing_geometry
 #: src/screens/admin/connect-model.tsx
@@ -1383,7 +1383,7 @@ msgstr "{0} positive of {examined} examined"
 msgid "{0} recorded"
 msgstr "{0} recorded"
 
-#. placeholder {0}: set.region_count
+#. placeholder {0}: format.integer(summary.regions)
 #: src/screens/project/slides-tab.tsx
 msgid "{0} regions"
 msgstr "{0} regions"
@@ -1652,6 +1652,11 @@ msgstr "{0} without results"
 msgid "{0} would take keys from {1}. Change those first, or keep the arrows."
 msgstr "{0} would take keys from {1}. Change those first, or keep the arrows."
 
+#. placeholder {0}: format.integer(summary.zones)
+#: src/screens/project/slides-tab.tsx
+msgid "{0} zones"
+msgstr "{0} zones"
+
 #. placeholder {0}: data.case.label
 #: src/screens/clinical-report/report-screen.tsx
 msgid "{0}_draft.pdf"
@@ -1734,8 +1739,8 @@ msgstr "{0}, {1}. You can change the size in the list."
 msgid "{0}, {done} of {of} slides"
 msgstr "{0}, {done} of {of} slides"
 
+#. placeholder {0}: plural(going.results, "file")
 #. placeholder {0}: plural(model.resultCount - left, "file")
-#. placeholder {0}: plural(model.uploadResults.length, "file")
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "{0}, {left} left out"
@@ -2341,7 +2346,7 @@ msgstr "{slides, plural, one {{counted} on # slide} other {{counted} on # slides
 msgid "{slides} slides and {results} result files."
 msgstr "{slides} slides and {results} result files."
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 msgid "{slideShort} could not be read at 20x and 40x."
 msgstr "{slideShort} could not be read at 20x and 40x."
 
@@ -4282,7 +4287,7 @@ msgstr "Ask for access"
 msgid "Ask the person who shared it for a new link."
 msgstr "Ask the person who shared it for a new link."
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/viewer-notices.tsx
 #: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
@@ -4447,6 +4452,10 @@ msgstr "Back to {backLabel}"
 msgid "Back to {backLabel}. Every answer is saved"
 msgstr "Back to {backLabel}. Every answer is saved"
 
+#: src/screens/review/guided-form-back.tsx
+msgid "Back to {current}"
+msgstr "Back to {current}"
+
 #: src/screens/review/guided-parts.tsx
 msgid "Back to {currentId}"
 msgstr "Back to {currentId}"
@@ -4454,6 +4463,10 @@ msgstr "Back to {currentId}"
 #: src/viewer/stage-guided-view.tsx
 msgid "Back to {object}"
 msgstr "Back to {object}"
+
+#: src/viewer/stage-opinion-back.tsx
+msgid "Back to {target}"
+msgstr "Back to {target}"
 
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Back to disagreements"
@@ -7437,6 +7450,14 @@ msgstr "Emergency, with reason"
 msgid "Empty file"
 msgstr "Empty file"
 
+#: src/screens/project/slides-tab.tsx
+msgid "Empty, the model found nothing"
+msgstr "Empty, the model found nothing"
+
+#: src/screens/project/slides-tab.tsx
+msgid "Empty, the run found no tissue on the slide"
+msgstr "Empty, the run found no tissue on the slide"
+
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/home/announcements.tsx
 msgid "End"
@@ -7919,6 +7940,11 @@ msgstr "Fade"
 #: src/screens/dataset/dataset-screen.tsx
 msgid "Failed"
 msgstr "Failed"
+
+#. placeholder {0}: runFailureText(summary.code)
+#: src/screens/project/slides-tab.tsx
+msgid "Failed, {0}"
+msgstr "Failed, {0}"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "False negatives"
@@ -11335,7 +11361,7 @@ msgstr "No"
 msgid "No {setName} result on {slideLabel} yet."
 msgstr "No {setName} result on {slideLabel} yet."
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 msgid "No {setName} result on {slideShort} yet."
 msgstr "No {setName} result on {slideShort} yet."
 
@@ -11494,6 +11520,10 @@ msgstr "No object has a decision yet."
 #: src/screens/dataset/dataset-screen.tsx
 msgid "No object matches these filters."
 msgstr "No object matches these filters."
+
+#: src/screens/project/slides-tab.tsx
+msgid "No objects counted"
+msgstr "No objects counted"
 
 #: ../../packages/ui/src/components/token-field.tsx
 msgid "No one called that. Type an email to invite them."
@@ -14797,7 +14827,7 @@ msgstr "Retire"
 msgid "Retired"
 msgstr "Retired"
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/screens/upload/case-upload-drawer.tsx
 #: src/screens/viewer/viewer-notices.tsx
 #: src/viewer/stage-issue-cards.tsx
@@ -14913,7 +14943,7 @@ msgstr "Review tasks lists what was handed out, with progress per reviewer. A ta
 msgid "Review the first slide <0/>"
 msgstr "Review the first slide <0/>"
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Review the slide without AI, or ask the researcher to run the model."
@@ -17370,6 +17400,10 @@ msgstr "Stick"
 msgid "Stick preview"
 msgstr "Stick preview"
 
+#: src/screens/project/slides-tab.tsx
+msgid "Still adding results"
+msgstr "Still adding results"
+
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "Still not sure"
 msgstr "Still not sure"
@@ -19450,7 +19484,7 @@ msgstr "Tile size in pixels"
 msgid "Tiles"
 msgstr "Tiles"
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/viewer-notices.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Tiles are missing on the server. Lower magnifications still show, and your other slides work."
@@ -20032,8 +20066,8 @@ msgstr "Upload"
 msgid "Upload {0}"
 msgstr "Upload {0}"
 
-#. placeholder {0}: plural(model.uploadSlides.length, "slide")
-#. placeholder {1}: plural(model.uploadResults.length, "result")
+#. placeholder {0}: plural(going.slides, "slide")
+#. placeholder {1}: plural(going.results, "result")
 #: src/screens/upload/live-wizard.tsx
 msgid "Upload {0} and {1}"
 msgstr "Upload {0} and {1}"

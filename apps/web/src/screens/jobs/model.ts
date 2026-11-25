@@ -37,6 +37,7 @@ export function trayPercent(jobs: MyJob[]): number {
 const failureTexts: Record<string, string> = {
   "model-not-served": "this model has no worker yet",
   "too-many-claims": "the worker stopped three times",
+  "run-objects-lost": "the model found objects but none were stored",
 };
 
 export const failureText = (code: string | null) =>
