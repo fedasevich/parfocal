@@ -1,6 +1,7 @@
 import { useLingui } from "@lingui/react/macro";
 import { useGetProject } from "@parfocal/api-client";
-import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
+import { FlowPageSkeleton } from "@parfocal/ui/components/flow-page";
+import { SkeletonZone } from "@parfocal/ui/components/skeleton-layouts";
 import { useEffect } from "react";
 import { dropStore } from "../../upload/drop-store.ts";
 import { okData } from "../placeholder.tsx";
@@ -24,8 +25,11 @@ export function LivePage({
   }, [projectId]);
   if (project === undefined) {
     return (
-      <main className="mx-auto w-full max-w-3xl flex-1 p-8">
-        <SkeletonPanel label={t`Loading the upload`} sections={4} />
+      <main className="flex min-h-0 flex-1 flex-col">
+        <FlowPageSkeleton className="h-full" label={t`Loading the upload`} steps={3}>
+          <SkeletonZone fields={2} />
+          <SkeletonZone fields={3} />
+        </FlowPageSkeleton>
       </main>
     );
   }

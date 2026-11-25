@@ -2,7 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { type StorageUsage, useGetStorageUsage } from "@parfocal/api-client";
 import { NameCell, SettingRow, StorageBar, type StoragePart } from "@parfocal/ui/components/admin";
 import { Icon } from "@parfocal/ui/components/icon";
-import { SkeletonCards } from "@parfocal/ui/components/skeleton";
+import { SkeletonZones } from "@parfocal/ui/components/skeleton-layouts";
 import {
   Table,
   TableBody,
@@ -56,7 +56,7 @@ export function StorageSection({ notify }: { notify: Notify }) {
   const usage = okData(useGetStorageUsage().data);
   const [rules, setRules] = useState<Record<string, boolean>>({});
   if (usage === undefined) {
-    return <SkeletonCards label={t`Loading storage`} cards={3} />;
+    return <SkeletonZones label={t`Loading storage`} count={2} />;
   }
   return (
     <>

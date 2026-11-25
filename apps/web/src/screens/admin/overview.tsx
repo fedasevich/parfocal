@@ -9,7 +9,7 @@ import {
 import { NameCell, StatStrip, StorageBar, SummaryRow } from "@parfocal/ui/components/admin";
 import { Icon } from "@parfocal/ui/components/icon";
 import { AvatarStack, Person } from "@parfocal/ui/components/person";
-import { SkeletonCards } from "@parfocal/ui/components/skeleton";
+import { SkeletonZones } from "@parfocal/ui/components/skeleton-layouts";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { now } from "../../clock.ts";
@@ -54,7 +54,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
   const events = okData(useListAuditEvents(auditParams(defaultAuditFilter, now())).data) ?? [];
   const personOf = usePeople();
   if (overview === undefined) {
-    return <SkeletonCards label={t`Loading the overview`} cards={6} />;
+    return <SkeletonZones label={t`Loading the overview`} stats count={4} />;
   }
   const inPlace = inPlaceSize(overview.in_place_tb);
   const researchersShown = members.slice(0, 6).map(toPersonInfo);

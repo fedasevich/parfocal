@@ -9,6 +9,7 @@ import {
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { Skeleton, SkeletonLine } from "@parfocal/ui/components/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@parfocal/ui/components/tooltip";
 import { cn } from "@parfocal/ui/lib/utils";
 import * as React from "react";
@@ -267,6 +268,49 @@ function useScrollState() {
   return [ref, state] as const;
 }
 
+const flowPageClass = "grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] bg-surf-page text-fg";
+const flowTitleClass = "text-page-title leading-[1.25]";
+const flowSubtitleClass = "text-body-sm leading-[1.45] text-fg-dim";
+const flowBodyClass = "min-h-0 overflow-auto";
+
+function FlowHeader({ children, ...props }: React.ComponentProps<"header">) {
+  return (
+    <header className="border-b border-line py-2.5" {...props}>
+      <div className="mx-auto w-full max-w-208 px-9">{children}</div>
+    </header>
+  );
+}
+
+function FlowColumn({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto grid w-full max-w-208 grid-cols-[minmax(0,760px)] justify-center px-9 pt-6 pb-10">
+      <div data-slot="flow-main" className="grid min-w-0 gap-(--density-flow-page-gap)">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FlowDock({
+  more,
+  children,
+  ...props
+}: { more?: boolean | undefined } & React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="flow-bar-dock"
+      data-more-below={more || undefined}
+      className={cn(
+        "sticky bottom-0 border-t border-line bg-surf-panel",
+        more && "shadow-[0_-8px_16px_-8px_rgb(0_0_0/0.35)]",
+      )}
+      {...props}
+    >
+      <div className="mx-auto w-full max-w-208 px-9">{children}</div>
+    </div>
+  );
+}
+
 type FlowPageProps = Omit<React.ComponentProps<"div">, "title"> & {
   crumbs: Crumb[];
   title: React.ReactNode;
@@ -304,73 +348,109 @@ function FlowPage({
   const [scrollRef, scroll] = useScrollState();
   const more = moreBelow ?? scroll.more;
   return (
-    <div
-      data-slot="flow-page"
-      className={cn(
-        "grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] bg-surf-page text-fg",
-        className,
-      )}
-      {...props}
-    >
-      <header className="border-b border-line py-2.5">
-        <div className="mx-auto w-full max-w-208 px-9">
-          <div data-slot="flow-heading" className="flex flex-wrap items-center gap-x-1.5">
-            {crumbs.length > 1 || crumbStart ? (
-              <Breadcrumbs
-                items={crumbs.slice(0, -1)}
-                renderLink={renderLink}
-                start={crumbStart}
-                trailingSeparator
-              />
-            ) : null}
-            <h2
-              aria-current="page"
-              className="m-0 min-w-0 text-page-title leading-[1.25] font-semibold"
-            >
-              {title}
-            </h2>
-          </div>
-          {subtitle || status ? (
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm leading-[1.45] text-fg-dim">
-              {subtitle ? <p className="m-0">{subtitle}</p> : null}
-              {status}
-            </div>
-          ) : null}
-          {status ? null : (
-            <Stepper
-              className="mt-2"
-              steps={steps}
-              current={current}
-              {...(reached === undefined ? {} : { reached })}
-              {...(onStepSelect ? { onStepSelect } : {})}
+    <div data-slot="flow-page" className={cn(flowPageClass, className)} {...props}>
+      <FlowHeader>
+        <div data-slot="flow-heading" className="flex flex-wrap items-center gap-x-1.5">
+          {crumbs.length > 1 || crumbStart ? (
+            <Breadcrumbs
+              items={crumbs.slice(0, -1)}
+              renderLink={renderLink}
+              start={crumbStart}
+              trailingSeparator
             />
-          )}
+          ) : null}
+          <h2 aria-current="page" className={cn("m-0 min-w-0 font-semibold", flowTitleClass)}>
+            {title}
+          </h2>
         </div>
-      </header>
+        {subtitle || status ? (
+          <div
+            className={cn("mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1", flowSubtitleClass)}
+          >
+            {subtitle ? <p className="m-0">{subtitle}</p> : null}
+            {status}
+          </div>
+        ) : null}
+        {status ? null : (
+          <Stepper
+            className="mt-2"
+            steps={steps}
+            current={current}
+            {...(reached === undefined ? {} : { reached })}
+            {...(onStepSelect ? { onStepSelect } : {})}
+          />
+        )}
+      </FlowHeader>
       <div
         ref={scrollRef}
         data-slot="flow-body"
         {...(scroll.overflows
           ? { tabIndex: 0, role: "region", "aria-label": t`Step content` }
           : {})}
-        className="min-h-0 overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-accent"
-      >
-        <div className="mx-auto grid w-full max-w-208 grid-cols-[minmax(0,760px)] justify-center px-9 pt-6 pb-10">
-          <div data-slot="flow-main" className="grid min-w-0 gap-(--density-flow-page-gap)">
-            {children}
-          </div>
-        </div>
-      </div>
-      <div
-        data-slot="flow-bar-dock"
-        data-more-below={more || undefined}
         className={cn(
-          "sticky bottom-0 border-t border-line bg-surf-panel",
-          more && "shadow-[0_-8px_16px_-8px_rgb(0_0_0/0.35)]",
+          flowBodyClass,
+          "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-accent",
         )}
       >
-        <div className="mx-auto w-full max-w-208 px-9">{bar}</div>
+        <FlowColumn>{children}</FlowColumn>
       </div>
+      <FlowDock more={more}>{bar}</FlowDock>
+    </div>
+  );
+}
+
+type FlowPageSkeletonProps = Omit<React.ComponentProps<"div">, "title"> & {
+  label: string;
+  steps?: number;
+};
+
+function FlowPageSkeleton({
+  label,
+  steps = 0,
+  className,
+  children,
+  ...props
+}: FlowPageSkeletonProps) {
+  return (
+    <div
+      role="status"
+      data-slot="flow-page-skeleton"
+      className={cn(flowPageClass, className)}
+      {...props}
+    >
+      <span className="sr-only">{label}</span>
+      <FlowHeader aria-hidden="true">
+        <div data-slot="flow-heading" className="flex flex-wrap items-center gap-x-1.5">
+          <SkeletonLine width="10rem" className="text-body-sm" />
+          <SkeletonLine width="12rem" className={flowTitleClass} />
+        </div>
+        <div className={cn("mt-0.5 flex items-center", flowSubtitleClass)}>
+          <SkeletonLine width="22rem" />
+        </div>
+        {steps > 0 ? (
+          <div data-slot="flow-stepper" className="mt-2 flex h-6 items-center gap-2.5">
+            {Array.from({ length: steps }, (_, step) => (
+              <span key={step} className="inline-flex items-center gap-2.5 text-body-sm">
+                {step > 0 ? <em aria-hidden="true" className="h-px w-7 bg-line-strong" /> : null}
+                <Skeleton className="size-5.5 rounded-full" />
+                <SkeletonLine width="4rem" />
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </FlowHeader>
+      <div data-slot="flow-body" aria-hidden="true" className={flowBodyClass}>
+        <FlowColumn>{children}</FlowColumn>
+      </div>
+      <FlowDock aria-hidden="true">
+        <div data-slot="flow-bar" className="flex items-center gap-3 py-3">
+          <Skeleton className="h-8 w-24" />
+          <span className="min-w-0 flex-1">
+            <SkeletonLine width="16rem" className="text-body-sm leading-[1.45]" />
+          </span>
+          <Skeleton className="h-8 w-28" />
+        </div>
+      </FlowDock>
     </div>
   );
 }
@@ -506,6 +586,8 @@ export {
   type FlowBarProps,
   FlowPage,
   type FlowPageProps,
+  FlowPageSkeleton,
+  type FlowPageSkeletonProps,
   type FlowPrimary,
   type FlowProgress,
   type FlowStep,

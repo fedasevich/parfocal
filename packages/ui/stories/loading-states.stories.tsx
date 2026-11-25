@@ -1,5 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { FlowPageSkeleton } from "../src/components/flow-page.tsx";
 import { SkeletonRows } from "../src/components/skeleton.tsx";
+import {
+  SkeletonBanner,
+  SkeletonFormZone,
+  SkeletonSheet,
+  SkeletonZone,
+  SkeletonZones,
+} from "../src/components/skeleton-layouts.tsx";
 import { TopProgress } from "../src/components/top-progress.tsx";
 
 const meta = {
@@ -55,4 +63,34 @@ export const PageLoading: Story = {
 export const RouteChangeDark: Story = {
   parameters: { layout: "fullscreen" },
   render: () => <Page theme="dark" dimmed />,
+};
+
+export const ReportPage: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <FlowPageSkeleton className="h-dvh" label="Loading the clinical report">
+      <SkeletonBanner />
+      <SkeletonSheet />
+    </FlowPageSkeleton>
+  ),
+};
+
+export const FormPage: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <FlowPageSkeleton className="h-dvh" label="Loading the new review task" steps={6}>
+      <SkeletonZone fields={1} />
+      <SkeletonZone fields={3} />
+      <SkeletonZone fields={2} />
+    </FlowPageSkeleton>
+  ),
+};
+
+export const AdminForm: Story = {
+  render: () => (
+    <div className="grid max-w-3xl gap-4">
+      <SkeletonFormZone label="Loading retention" rows={4} />
+      <SkeletonZones label="Loading the overview" stats count={2} />
+    </div>
+  ),
 };

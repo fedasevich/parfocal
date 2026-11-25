@@ -54,7 +54,7 @@ test("the screens that waited now use the Loader or a skeleton part", () => {
   for (const file of files) {
     assert.match(
       readFileSync(join(root, file), "utf8"),
-      /<Loader\b|<SkeletonRows\b|<SkeletonCards\b|<SkeletonPanel\b/,
+      /<Loader\b|<Skeleton\w*\b|<FlowPageSkeleton\b/,
       file,
     );
   }

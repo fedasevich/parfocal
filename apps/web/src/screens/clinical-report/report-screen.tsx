@@ -15,6 +15,7 @@ import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-p
 import { Icon } from "@parfocal/ui/components/icon";
 import { Loader } from "@parfocal/ui/components/loader";
 import { PreviewOverlay } from "@parfocal/ui/components/preview-overlay";
+import { SkeletonBanner, SkeletonSheet } from "@parfocal/ui/components/skeleton-layouts";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -23,8 +24,9 @@ import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { NotFoundPage } from "../../shell/issue-pages.tsx";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { FlowQueryState } from "../flow-query-state.tsx";
 import { usePeople } from "../people.ts";
-import { okData, QueryState } from "../placeholder.tsx";
+import { okData } from "../placeholder.tsx";
 import {
   amendOf,
   changeBetween,
@@ -110,10 +112,7 @@ export function ReportScreen(props: ReportScreenProps) {
   );
   const excision = okData(cases.data)?.[1]?.id;
   const caseId = props.scene === "nostaging" ? (excision ?? "") : props.caseId;
-  const { loaded, user, caseGone, missing, pending, failed } = useCaseReportData(
-    props.projectId,
-    caseId,
-  );
+  const { loaded, user, caseGone, missing, pending } = useCaseReportData(props.projectId, caseId);
   const navigate = useNavigate();
   const sentToMe =
     props.scene === undefined &&
@@ -133,11 +132,10 @@ export function ReportScreen(props: ReportScreenProps) {
   if (sentToMe) return <Loader label={t`Opening the co-sign page`} size="page" />;
   if (!loaded) {
     return (
-      <main className="p-8">
-        <QueryState label={t`the clinical report`} isPending={pending} error={failed || !pending}>
-          {null}
-        </QueryState>
-      </main>
+      <FlowQueryState label={t`the clinical report`} pending={pending}>
+        <SkeletonBanner />
+        <SkeletonSheet />
+      </FlowQueryState>
     );
   }
   return (

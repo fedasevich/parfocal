@@ -21,7 +21,7 @@ import {
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
 import { AvatarStack } from "@parfocal/ui/components/person";
-import { SkeletonLine, SkeletonRows } from "@parfocal/ui/components/skeleton";
+import { Skeleton, SkeletonLine, SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -124,13 +124,22 @@ export function ProjectPage({
 
   if (project === undefined) {
     return (
-      <main className="grid flex-1 content-start gap-4 px-8 pt-5.5 pl-7">
-        <div className="grid gap-2">
-          <SkeletonLine width="20rem" className="text-page-title" />
-          <SkeletonLine width="14rem" className="text-body-sm" />
-        </div>
-        <div className="rounded-zone border border-line bg-surf-panel">
-          <SkeletonRows label={t`Loading the project`} rows={6} columns={4} />
+      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-(--page) text-fg">
+        <div className="flex min-h-0 flex-1 flex-col pt-5.5 pr-8 pb-4.5 pl-7">
+          <header className="flex flex-none flex-wrap items-start justify-between gap-x-6 gap-y-3 pt-0.5 pb-5.5">
+            <div aria-hidden="true" className="grid min-w-64 flex-1 basis-80 gap-2">
+              <SkeletonLine width="20rem" className="text-page-title" />
+              <SkeletonLine width="14rem" className="text-body-sm" />
+            </div>
+            <div aria-hidden="true" className="flex flex-none items-center gap-2">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-28" />
+              <Skeleton className="h-8 w-40" />
+            </div>
+          </header>
+          <div className="rounded-zone border border-line bg-surf-panel">
+            <SkeletonRows label={t`Loading the project`} rows={6} columns={4} />
+          </div>
         </div>
       </main>
     );

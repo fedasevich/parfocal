@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
-import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
+import { SkeletonFormZone } from "@parfocal/ui/components/skeleton-layouts";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useQueryClient } from "@tanstack/react-query";
 import { okData } from "../placeholder.tsx";
@@ -81,7 +81,8 @@ export function RetentionZone({ notify }: { notify: Notify }) {
   const policy = okData(useGetRetentionPolicy().data);
   const queryClient = useQueryClient();
   const update = useSetRetentionPolicy();
-  if (policy === undefined) return <SkeletonPanel label={t`Loading retention`} />;
+  if (policy === undefined)
+    return <SkeletonFormZone label={t`Loading retention`} rows={rows.length} />;
   const send = (change: RetentionPolicy, message: string, undo?: () => void) =>
     update.mutate(
       { data: change },
