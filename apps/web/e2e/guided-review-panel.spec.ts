@@ -29,7 +29,7 @@ test("guided review has the mock's own panel and walks a slide to the done card"
   await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(/T5/);
   await expect(panel(page).getByText(/^Object 5 of \d+ on this slide$/)).toBeVisible();
   await expect(
-    panel(page).getByRole("button", { name: "Add something the AI missed" }),
+    panel(page).getByRole("button", { name: "Add a region the AI missed" }),
   ).toBeVisible();
   await expect(dot(page, "T5")).toHaveAttribute("title", "T5, not answered yet");
   await page.keyboard.press("k");

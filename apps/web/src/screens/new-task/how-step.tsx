@@ -24,6 +24,7 @@ import {
   isAnnotate,
   type LockKey,
   lockKeys,
+  missedKind,
   reminderChoices,
 } from "./model.ts";
 import { FieldNote, fieldId, GroupTitle, ToggleRow, Warn } from "./parts.tsx";
@@ -416,6 +417,7 @@ function ReviewHowStep(props: StepProps) {
           </Warn>
         ) : null}
       </Zone>
+      <AddMissedZone {...props} />
       <Zone title={t`Reviewers start in`}>
         <div className="grid gap-1.5">
           <SegmentedControl
@@ -443,5 +445,32 @@ function ReviewHowStep(props: StepProps) {
       <DisplayZone {...props} />
       <WhenZone {...props} />
     </>
+  );
+}
+
+function AddMissedZone({ draft, update }: StepProps) {
+  const { t } = useLingui();
+  const drawn = isDrawn(draft.resultSetId);
+  const kind = missedKind(draft);
+  const titles = drawn
+    ? {
+        region: t`Reviewers can add a region the outlines missed`,
+        cell: t`Reviewers can add a cell the outlines missed`,
+        both: t`Reviewers can add a region or cell the outlines missed`,
+      }
+    : {
+        region: t`Reviewers can add a region the AI missed`,
+        cell: t`Reviewers can add a cell the AI missed`,
+        both: t`Reviewers can add a region or cell the AI missed`,
+      };
+  return (
+    <Zone title={t`Add what was missed`}>
+      <ToggleRow
+        title={titles[kind]}
+        sub={t`They draw it on the slide and it is saved as their own object, marked with a plus. Turn it off when only the shown objects count.`}
+        checked={draft.addMissed}
+        onChange={(addMissed) => update((current) => ({ ...current, addMissed }))}
+      />
+    </Zone>
   );
 }

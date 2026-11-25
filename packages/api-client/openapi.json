@@ -89987,6 +89987,11 @@
             "type": "object",
             "title": "Locks",
             "default": {}
+          },
+          "add_missed": {
+            "type": "boolean",
+            "title": "Add Missed",
+            "default": true
           }
         },
         "additionalProperties": false,
@@ -90175,6 +90180,17 @@
                 "type": "null"
               }
             ]
+          },
+          "add_missed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Add Missed"
           },
           "preset": {
             "anyOf": [

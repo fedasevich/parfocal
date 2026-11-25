@@ -31,7 +31,7 @@ import {
   keepsAgreeAndDisagree,
   toDecisionSettings,
 } from "./decision-settings.ts";
-import { taskDisplayFor } from "./display-settings.ts";
+import { setAddMissed, taskDisplayFor } from "./display-settings.ts";
 import { toAnnotateReviewTask } from "./project-handlers.ts";
 import { type PersonKey, people, projectByCode, projects, reviewTasks } from "./scenario.ts";
 import { reportBlocksOf } from "./scenario-admin.ts";
@@ -241,7 +241,10 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
     question: draft.decision?.question ?? null,
   },
   counts_as_changes: [],
-  display: draft.display ?? taskDisplayFor(newTask.code),
+  display: {
+    ...(draft.display ?? taskDisplayFor(newTask.code)),
+    add_missed: draft.add_missed ?? draft.display?.add_missed ?? true,
+  },
   created_by_user_id: people.DH.id,
   created_at: `${newTask.sentOn}T14:30:00+02:00`,
   slide_count:
@@ -277,6 +280,7 @@ const changeTask = http.patch<{ taskId: string }>(
     if (task.status === "signed" && body.due_on != null)
       return problem(409, "task-signed-off", "This task is signed off");
     if (body.due_on != null) task.dueOn = body.due_on;
+    if (body.display?.add_missed != null) setAddMissed(task.code, body.display.add_missed);
     if (body.outline_overlap != null) {
       if (task.status === "signed")
         return problem(

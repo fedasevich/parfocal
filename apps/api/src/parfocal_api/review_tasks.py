@@ -173,6 +173,7 @@ class TaskDraft(BaseModel):
     study_template_version: Annotated[int, Field(ge=1)] | None = None
     decision: DecisionSettings | None = None
     display: TaskDisplaySettings | None = None
+    add_missed: bool | None = None
     preset: CheckPreset | None = None
     check: CheckChange | None = None
     blind_first: bool = False
@@ -844,6 +845,8 @@ async def create_review_task(
     template_version = await pinned_template(connection, template_id, draft.study_template_version)
     decision = draft.decision or await preset_decision(connection, template_id, template_version)
     display = draft.display or await preset_display(connection, template_id, template_version)
+    if draft.add_missed is not None:
+        display = display.model_copy(update={"add_missed": draft.add_missed})
     await check_sets(connection, project_id, display.defaults)
     annotating = draft.kind is TaskKind.ANNOTATE
     snapshot = (

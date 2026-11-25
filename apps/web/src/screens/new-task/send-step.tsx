@@ -179,6 +179,7 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
           `${draft.blind ? t`Blind until they submit` : t`Open`}${draft.hide ? (isDrawn(draft.resultSetId) ? t`, first read without the drawn outlines` : t`, first read without the AI`) : ""}`,
         ],
         ["monitor", t`Starts in`, draft.start === "guided" ? t`Guided review` : t`The full viewer`],
+        ["poly", t`Add what was missed`, draft.addMissed ? t`On` : t`Off`],
         ["sliders", t`Display`, displaySummary(draft)],
         ["calendar", "Due", draft.due ? dueText(draft.due) : ""],
         [

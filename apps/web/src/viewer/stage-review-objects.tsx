@@ -311,7 +311,7 @@ export function StageReviewObjects({
   onComments: (object: string) => void;
   onNote?: (object: string) => void;
   onCurrent?: (object: string | null) => void;
-  onAddMissed?: () => void;
+  onAddMissed?: (kind: ReviewObject["kind"]) => void;
   answersOff?: string | undefined;
   readOnly?: boolean;
   opinionLocked?: string | undefined;
@@ -1023,7 +1023,11 @@ export function StageReviewObjects({
               onNote={() => {
                 if (current !== null) onNote?.(current);
               }}
-              onAddMissed={() => onAddMissed?.()}
+              onAddMissed={
+                onAddMissed === undefined || session.task?.display.add_missed === false
+                  ? undefined
+                  : () => onAddMissed(currentItem.kind)
+              }
               answersOff={answersOff}
               readOnly={readOnly}
               fix={fixFor(currentItem)}

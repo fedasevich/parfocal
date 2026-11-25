@@ -256,6 +256,7 @@ export type Draft = {
   decision: { kind: DecisionKindKey; agreeFrom: number; disagreeTo: number };
   blind: boolean;
   blindFirst: boolean;
+  addMissed: boolean;
   hide: boolean;
   start: "guided" | "full";
   form: string;
@@ -394,6 +395,7 @@ export function initialDraft(data: TaskData): Draft {
     decision: { kind: "certainty5", agreeFrom: 4, disagreeTo: 2 },
     blind: true,
     blindFirst: false,
+    addMissed: true,
     hide: false,
     start: "guided",
     form: "default",
@@ -569,6 +571,14 @@ export type Summary = ReturnType<typeof summary>;
 
 export const scopeKinds = (draft: Draft) =>
   (["regions", "cells", "low", "unsure"] as const).filter((key) => draft.scope[key]);
+
+export const missedKind = (draft: Draft): "region" | "cell" | "both" => {
+  const kinds = scopeKinds(draft);
+  const cells = kinds.some((kind) => kind === "cells" || kind === "low");
+  const regions = kinds.some((kind) => kind === "regions" || kind === "unsure");
+  if (cells && regions) return "both";
+  return cells ? "cell" : "region";
+};
 
 export const span = (from: number, to: number) =>
   Array.from({ length: Math.max(0, to - from + 1) }, (_, index) => from + index);
