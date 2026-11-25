@@ -4758,7 +4758,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when unit tests show every pool's GPU list, no region pin and its worst case under $5 an hour, the deployed PROTO-168 check starts a 2 tile run within its promised time on whatever card is free, recorded with the card, region, wait and cost, and the ADR is indexed.
   Depends on nothing. Size: S.
 
-- [ ] OPS-043 · The live cost report matches Modal's billing page
+- [x] OPS-043 · The live cost report matches Modal's billing page
   The live cost report of 2026-11-24 (docs/results/2026-11-24-lifecycle-drill-and-cost-report.md, from `parfocal_deploy.costs`) said Modal had spent $29.22 of the $30 November credit, $28.39 of it in production against a $23.50 budget. Modal's own billing page on 2026-11-25 showed $11.01 used and $18.99 left for the whole workspace. The report reads Modal's usage some other way, perhaps over a rolling window instead of the billing month, before credits, or counting a line twice. Find the cause in workers/deploy/src/parfocal_deploy/costs.py, make the report read the billing month the way Modal's billing page does, and correct the 2026-11-24 result with a note, since agents and the owner acted on it.
   Done when a unit test feeds a recorded Modal usage answer and gets the billing page's figure, and a live run of the report on the day it is fixed matches Modal's billing page within a dollar, recorded in a result file.
   Depends on nothing. Size: S.

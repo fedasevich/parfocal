@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- OPS-043: the cost report summed row costs that include network egress, which Modal's free allowance covered ($19.18 in November), so it read three times too high. It now takes the all Modal line from the billing summary and the allowance off each environment. The live run read $11.08 against the billing page's $11.01, and the 2026-11-24 result carries a correction. Production reads only: Modal billing summary and report, one R2 storage analytics query, no cost.
 - PROTO-176: the guided final form opens at once on the last decision, counting answers still saving and with move on off too, has Back to X, the object dots and J and Shift+J back, and keeps its answers. A disagree whose reasons panel is open on the last object still needs Next or J to reach the form.
 - OPS-042: the cap moved from all pools together to each pool, so decision 182 (whether the $5 an hour GPU cap holds per pool or for all pools) asks the owner, recommending to keep it per pool under the $30 a month Modal limit.
 - OPS-042: GPU pools list every card big enough, cheapest first from T4 to H100, with no region pin. The $5 an hour cap now holds per pool, so all pools at once could reach $20.25 an hour under the $30 a month Modal limit, and each run logs its card and region as gpu pool run.
