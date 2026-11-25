@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Owner request 2026-11-25: the region picked for Auto region vanishes while it is processed, added as PROTO-185 (the region picked for Auto region stays on screen, animated, while it is processed).
 - Owner request 2026-11-25: drawn cells show as a flat list that cannot be clicked and the arrow does not act like layers, so PROTO-184 (drawn objects live in a Figma style layers tree) asks for one tree with click, drag, groups and Cmd+G, designed with Fable first.
 - PROTO-180 (the Smart select and Auto region bars stay one compact row with the mock's model picker): the owner found the Auto region bar huge too on 2026-11-25 and asked for the mock's model picker dropdown with model descriptions instead of Good and Best, now part of the task.
 - PROTO-182 (found cells show their type color and are typed automatically): the owner asked on 2026-11-25 for an on the fly switch for automatic typing, now part of the task.
