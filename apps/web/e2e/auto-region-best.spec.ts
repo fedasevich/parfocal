@@ -1,4 +1,5 @@
 import { expect, test } from "./a11y.ts";
+import { pickOutlineModel } from "./outline-model.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 
@@ -16,11 +17,7 @@ test("the auto region tool runs once in best quality on one fixture tile", async
   await expect(stage).toHaveAttribute("data-tool", "auto");
   const layer = page.getByTestId("auto-layer");
   await expect(layer).toHaveAttribute("data-quality", "fast");
-  const best = page
-    .getByRole("group", { name: "Model for outlining nuclei" })
-    .getByRole("button", { name: "Best" });
-  await best.click();
-  await expect(best).toHaveAttribute("aria-pressed", "true");
+  await pickOutlineModel(page, "Best");
   await expect(layer).toHaveAttribute("data-quality", "best");
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
