@@ -10,8 +10,9 @@ from storage_support import MIB, with_store
 
 from parfocal_api.sample_files import SampleFile, stored_sample_file
 from parfocal_common.object_store import ObjectStore, StorageLocation
-from parfocal_ingest import sample_files
-from parfocal_ingest.sample_files import send_original, send_samples
+from parfocal_ingest import sending
+from parfocal_ingest.sample_files import send_samples
+from parfocal_ingest.sending import send_original
 
 pytestmark = pytest.mark.db
 
@@ -52,7 +53,7 @@ def test_a_large_original_goes_up_in_parts_without_being_read_whole(
     storage: StorageLocation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert storage.bucket
-    monkeypatch.setattr(sample_files, "PART_BYTES", 5 * MIB)
+    monkeypatch.setattr(sending, "PART_BYTES", 5 * MIB)
     data = os.urandom(6 * MIB)
     path = tmp_path / "big.tif"
     path.write_bytes(data)

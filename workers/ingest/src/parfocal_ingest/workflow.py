@@ -33,8 +33,10 @@ from parfocal_common.ingest import (
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.settings import load_settings
-from parfocal_ingest.identify import Refusal
+from parfocal_ingest.identify import Format, Refusal
 from parfocal_ingest.isolation import (
+    CONVERTED_LIMIT_BYTES,
+    OUTPUT_LIMIT_BYTES,
     JobScope,
     JobTokens,
     ParseLimits,
@@ -57,12 +59,15 @@ from parfocal_ingest.parse_jobs import (
     level_table,
     restricted_output,
 )
+from parfocal_ingest.pyramid_tiff import CONVERTED_OUTPUT, CONVERTED_VARIANT, converted_at_ingest
+from parfocal_ingest.sending import send_original
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
 
 __all__ = ["INGEST", "STEP_NAMES", "Resources", "ingest_workflow", "level_table"]
 
 HASH_CHUNK_BYTES = 1024 * 1024
 PARSERS = "parfocal_ingest.parse_jobs"
+CONVERTER = "parfocal_ingest.pyramid_tiff"
 UNIT_PREVIEWS = 0
 UNIT_TISSUE = 1
 UNIT_RESTRICTED = 2
@@ -199,13 +204,20 @@ async def fetch_for_parser(context: Context, key: str) -> Path:
         await fetch(context)
         return context.local
     target = object_path(context, key)
+    if target.is_file() and target.stat().st_size == await context.store.head_object(key):
+        return target
     target.parent.mkdir(parents=True, exist_ok=True)
     await context.store.download(key, target)
     return target
 
 
 async def parsed(
-    context: Context, parser: str, arguments: Mapping[str, Any], slide_id: uuid.UUID | None = None
+    context: Context,
+    parser: str,
+    arguments: Mapping[str, Any],
+    slide_id: uuid.UUID | None = None,
+    module: str = PARSERS,
+    output_limit: int = OUTPUT_LIMIT_BYTES,
 ) -> Mapping[str, Any]:
     upload = context.upload
 
@@ -213,7 +225,7 @@ async def parsed(
         return await fetch_for_parser(context, key)
 
     return await parse_isolated(
-        f"{PARSERS}:{parser}",
+        f"{module}:{parser}",
         {"key": upload.object_key, **arguments},
         JobScope(upload.tenant_id, slide_id, (upload.object_key,)),
         fetcher,
@@ -221,6 +233,7 @@ async def parsed(
         context.resources.parse_limits,
         context.resources.parse_tokens,
         keep=True,
+        output_limit=output_limit,
     )
 
 
@@ -235,7 +248,43 @@ async def scan(context: Context) -> Mapping[str, Any]:
 
 async def validate(context: Context) -> Mapping[str, Any]:
     results = await earlier_results(context.step)
+    if converted_at_ingest(results["identify"]):
+        return await convert(context, results)
     return await parsed(context, "validate_upload", results["identify"], slide_id_of(results))
+
+
+async def convert(context: Context, results: Mapping[str, Mapping[str, Any]]) -> Mapping[str, Any]:
+    slide_id = slide_id_of(results)
+    out = await outputs_of(context, "convert")
+    facts = await parsed(
+        context,
+        "convert_upload",
+        {**results["identify"], "out": str(out)},
+        slide_id,
+        module=CONVERTER,
+        output_limit=CONVERTED_LIMIT_BYTES,
+    )
+    made = out / CONVERTED_OUTPUT
+    if made.is_symlink() or not made.is_file():
+        raise StepFailedError(Refusal.UNCONVERTIBLE)
+    key = original_key(context.upload.tenant_id, slide_id, CONVERTED_OUTPUT)
+    kept = object_path(context, key)
+    kept.parent.mkdir(parents=True, exist_ok=True)
+    await asyncio.to_thread(made.replace, kept)
+    size, sha256 = await send_original(context.store, kept, key)
+    return {**facts, "served_key": key, "served_bytes": size, "served_sha256": sha256}
+
+
+def served_arguments(upload: Upload, results: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+    key = results["validate"].get("served_key")
+    if key is None:
+        return dict(results["identify"])
+    return {
+        "key": key,
+        "format": Format.GENERIC_TIFF.value,
+        "variant": None,
+        "source": {"key": upload.object_key, **results["identify"]},
+    }
 
 
 def slide_id_of(results: Mapping[str, Mapping[str, Any]]) -> uuid.UUID:
@@ -274,7 +323,10 @@ async def index(context: Context) -> Mapping[str, Any]:
     slide_id = slide_id_of(results)
     out = await outputs_of(context, "index")
     facts = await parsed(
-        context, "index_upload", {**results["identify"], "out": str(out)}, slide_id
+        context,
+        "index_upload",
+        {**served_arguments(context.upload, results), "out": str(out)},
+        slide_id,
     )
     prefix = slide_prefix(context.upload.tenant_id, slide_id)
     levels = await asyncio.to_thread(required_output, out, LEVELS_OUTPUT)
@@ -319,7 +371,10 @@ async def derive(context: Context) -> Mapping[str, Any]:
         "restricted": kept,
     }
     facts = await parsed(
-        context, "derive_upload", {**results["identify"], **wanted, "out": str(out)}, slide_id
+        context,
+        "derive_upload",
+        {**served_arguments(context.upload, results), **wanted, "out": str(out)},
+        slide_id,
     )
     if UNIT_PREVIEWS not in done:
         thumbnail = await asyncio.to_thread(required_output, out, THUMBNAIL_OUTPUT)
@@ -361,17 +416,31 @@ async def publish(context: Context) -> Mapping[str, Any]:
     results = await earlier_results(context.step)
     upload = context.upload
     slide_id = slide_id_of(results)
-    target = original_key(upload.tenant_id, slide_id, upload.stored_name)
-    if await context.store.head_object(target) != upload.size_bytes:
-        await context.store.copy_object(
-            upload.object_key, target, upload.size_bytes, context.resources.copy_part_bytes
-        )
     validated = results["validate"]
     identified = results["identify"]
+    served = validated.get("served_key")
+    if served is None:
+        target = original_key(upload.tenant_id, slide_id, upload.stored_name)
+        if await context.store.head_object(target) != upload.size_bytes:
+            await context.store.copy_object(
+                upload.object_key, target, upload.size_bytes, context.resources.copy_part_bytes
+            )
+        file_bytes, sha256, variant = (
+            upload.size_bytes,
+            results["quarantine"]["sha256"],
+            identified.get("variant"),
+        )
+    else:
+        target = str(served)
+        file_bytes, sha256, variant = (
+            validated["served_bytes"],
+            validated["served_sha256"],
+            CONVERTED_VARIANT,
+        )
     facts = SlideFacts(
         slide_id=slide_id,
         format=identified["format"],
-        variant=identified.get("variant"),
+        variant=variant,
         reader=validated["reader"],
         width=validated["width"],
         height=validated["height"],
@@ -380,8 +449,8 @@ async def publish(context: Context) -> Mapping[str, Any]:
         mpp_y=validated["mpp_y"],
         objective_power=validated["objective_power"],
         notices=validated["notices"],
-        file_bytes=upload.size_bytes,
-        sha256=results["quarantine"]["sha256"],
+        file_bytes=file_bytes,
+        sha256=sha256,
         original_key=target,
         restricted_images=results["derive"]["restricted"],
     )
@@ -401,6 +470,9 @@ async def refuse(context: Context, code: str) -> None:
     async with context.step.transaction() as connection:
         await record_refusal(connection, context.upload.row, code)
     await context.store.discard_object(context.upload.object_key)
+    served = (await earlier_results(context.step)).get("validate", {}).get("served_key")
+    if served is not None:
+        await context.store.discard_object(str(served))
     await finished(context)
 
 

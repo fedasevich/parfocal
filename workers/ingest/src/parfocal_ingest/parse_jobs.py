@@ -190,7 +190,8 @@ def derive_upload(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[
                 "box": mask.box.facts() if mask.box else None,
             }
         if arguments.get("restricted"):
-            for image in associated_images(opened.path, opened.pyramid):
+            labelled = opened_in(arguments["source"], storage) if "source" in arguments else opened
+            for image in associated_images(labelled.path, labelled.pyramid):
                 (out / restricted_output(image.kind.value)).write_bytes(image.data)
         (out / RANGES_OUTPUT).write_bytes(ranges_file(opened.local))
         return facts

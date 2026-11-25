@@ -43,6 +43,7 @@ class Refusal(StrEnum):
     TRUNCATED = "truncated"
     DAMAGED_ARCHIVE = "damaged-archive"
     NO_PYRAMID = "no-pyramid"
+    UNCONVERTIBLE = "unconvertible"
     UNREADABLE = "unreadable"
     UNKNOWN = "unknown"
 
@@ -74,6 +75,11 @@ REASONS = {
     ),
     Refusal.DAMAGED_ARCHIVE: (
         "A file inside the .zip is damaged. Make the .zip again and upload it."
+    ),
+    Refusal.UNCONVERTIBLE: (
+        "Parfocal reads this MIRAX or DICOM slide by converting it, and the conversion could not "
+        "read every level of this file. It may be damaged or incomplete. Export the slide again "
+        "and upload the new .zip."
     ),
     Refusal.UNREADABLE: (
         "Parfocal recognises this format but cannot read the pixels of this file. It may be "
