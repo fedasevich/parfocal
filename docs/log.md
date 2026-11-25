@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Production touch: release v0.54.0 (PROTO-195, PROTO-193, EXP-020 with additive migration 0161 study_links) deployed by run 45706656632, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - EXP-020: the console's Make a join link seeds the participant a seat of their own and gives a one use link that lasts a day, held as a hash and carried in the URL fragment, that opens /study with no sign in, and Remote participants shows each one's progress. Additive migration 0161 adds study_links with tenant isolation. The participant is still a researcher in the study workspace and could create a project there, so a narrower study role is a TODO in the ADR.
 - Production touch: release v0.53.0 (EXP-021, PROTO-184, PROTO-192) deployed by run 45699870458, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - PROTO-193: the What is wrong chips on the stage card update at once, save in order, roll back with a toast on failure and read the saved reasons back by code and class, fixing Artefact never showing and It is X always reading immune. On a cell an It is X type excludes Not a cell, Artefact and the other type because one reason class is saved, while region reasons stay free to combine.
