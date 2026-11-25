@@ -26,6 +26,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL
 from parfocal_common.db import DatabaseScope, metadata, scoped_transaction, tenant_foreign_key
 from parfocal_common.jobs import (
+    SEALED_COUNTS,
     Claimed,
     Step,
     StepFunction,
@@ -194,11 +195,7 @@ async def run_model_run(
     tier: str | None = None,
     machine: str | None = None,
 ) -> None:
-    async def sealed(job: Claimed) -> None:
-        await seal_run_result(engine, job)
-
     async def told(job: Claimed) -> None:
-        await fail_run_result(engine, job)
         await tell_starter(engine, job)
 
     await run_job(
@@ -207,7 +204,6 @@ async def run_model_run(
         claimed.workflow,
         worker,
         labels_of(claimed, tier, machine),
-        on_finished=sealed,
         on_settled=told,
     )
 
@@ -260,49 +256,12 @@ async def tell_starter(engine: AsyncEngine, job: Claimed) -> None:
 
 
 SEAL_RESULT = text(
-    """
-    UPDATE result_sets SET
-      status = 'ready',
-      cell_count = (
-        SELECT coalesce(sum(cell_count), 0) FROM result_chunks
-        WHERE result_chunks.result_set_id = result_sets.id
-      ),
-      region_count = (
-        SELECT count(*) FROM result_objects
-        WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'region'
-      ),
-      zone_count = (
-        SELECT count(*) FROM result_objects
-        WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'zone'
-      )
+    f"""
+    UPDATE result_sets SET status = 'ready', error_code = NULL, {SEALED_COUNTS}
     WHERE job_id = :job_id AND status = 'importing' AND deleted_at IS NULL
     RETURNING id
     """
 )
-
-
-async def seal_run_result(engine: AsyncEngine, job: Claimed) -> list[uuid.UUID]:
-    async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
-        rows = await connection.execute(SEAL_RESULT, {"job_id": job.job_id})
-        return [row.id for row in rows]
-
-
-FAIL_RESULT = text(
-    """
-    UPDATE result_sets SET status = 'failed', error_code = left(jobs.error_code, 60)
-    FROM jobs
-    WHERE jobs.id = :job_id AND jobs.status = 'failed'
-      AND result_sets.job_id = jobs.id AND result_sets.status = 'importing'
-      AND result_sets.deleted_at IS NULL
-    RETURNING result_sets.id
-    """
-)
-
-
-async def fail_run_result(engine: AsyncEngine, job: Claimed) -> list[uuid.UUID]:
-    async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
-        rows = await connection.execute(FAIL_RESULT, {"job_id": job.job_id})
-        return [row.id for row in rows]
 
 
 class RunsInTheModelWorkerError(RuntimeError):

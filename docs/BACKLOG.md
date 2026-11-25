@@ -3978,7 +3978,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-016.
   Size: L.
 
-- [ ] AINUC-018 · Every ended run closes its result set
+- [x] AINUC-018 · Every ended run closes its result set
   Found by AINUC-017 (a nucleus run's cells become its result set) on 2026-11-25: a run that the engine fails after too many claims keeps an open result set, and a failed tumour map run leaves its set open too, so the result set list shows a set that never finishes. Every way a model run can end (done, failed in a stage, failed after too many claims, cancelled) leaves its result set finished, failed with the job's reason, or kept open on purpose with a recorded reason for a cancel.
   Done when database tests end a nucleus run and a tumour map run in each of these ways and the result set ends in the stated state, and no other open result set is left behind.
   Depends on AINUC-017.

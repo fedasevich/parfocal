@@ -20,7 +20,7 @@ from parfocal_common.chunk_store import (
     read_summary,
     write_cells,
 )
-from parfocal_common.jobs import StepFailedError, StepFunction, StepRun
+from parfocal_common.jobs import SEALED_COUNTS, StepFailedError, StepFunction, StepRun
 from parfocal_common.model_runs import MODEL_STAGE, STAGES, run_prefix, tile_key
 from parfocal_common.object_ids import Letter
 from parfocal_common.result_imports import result_set_prefix
@@ -76,21 +76,8 @@ CLASS_OBJECTS = text(
     "WHERE result_set_id = :set_id AND position = :position"
 )
 READY = text(
-    """
-    UPDATE result_sets SET
-      status = 'ready',
-      cell_count = (
-        SELECT coalesce(sum(cell_count), 0) FROM result_chunks
-        WHERE result_chunks.result_set_id = result_sets.id
-      ),
-      region_count = (
-        SELECT count(*) FROM result_objects
-        WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'region'
-      ),
-      zone_count = (
-        SELECT count(*) FROM result_objects
-        WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'zone'
-      )
+    f"""
+    UPDATE result_sets SET status = 'ready', error_code = NULL, {SEALED_COUNTS}
     WHERE id = :set_id AND status = 'importing'
     RETURNING cell_count
     """

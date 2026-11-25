@@ -85,6 +85,45 @@ ALLOWED_FROM: Mapping[JobControl, frozenset[JobStatus]] = {
     JobControl.RETRY: frozenset({JobStatus.FAILED}),
 }
 JOB_STATUS_CHECK = "status IN ({})".format(", ".join(f"'{status}'" for status in JobStatus))
+RUN_CANCELLED = "run-cancelled"
+SEALED_COUNTS = """
+  cell_count = (
+    SELECT coalesce(sum(cell_count), 0) FROM result_chunks
+    WHERE result_chunks.result_set_id = result_sets.id
+  ),
+  region_count = (
+    SELECT count(*) FROM result_objects
+    WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'region'
+  ),
+  zone_count = (
+    SELECT count(*) FROM result_objects
+    WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'zone'
+  )
+"""
+OPEN_RUN_SETS = """
+  result_sets.job_id = jobs.id AND result_sets.source = 'run'
+  AND result_sets.status = 'importing' AND result_sets.deleted_at IS NULL
+"""
+SEAL_DONE_RUN_SETS = text(
+    f"""
+    UPDATE result_sets SET status = 'ready', error_code = NULL, {SEALED_COUNTS}
+    FROM jobs
+    WHERE jobs.id = :job_id AND jobs.status = 'done' AND {OPEN_RUN_SETS}
+    """
+)
+CLOSE_ENDED_RUN_SETS = text(
+    f"""
+    UPDATE result_sets SET
+      status = CASE jobs.status WHEN 'failed' THEN 'failed' ELSE 'importing' END,
+      error_code = CASE jobs.status
+        WHEN 'failed' THEN left(coalesce(jobs.error_code, 'unknown'), 60)
+        WHEN 'cancelled' THEN '{RUN_CANCELLED}'
+      END
+    FROM jobs
+    WHERE jobs.id = :job_id AND jobs.status IN ('failed', 'cancelled', 'queued')
+      AND {OPEN_RUN_SETS}
+    """
+)
 
 
 def timestamp(name: str, *, nullable: bool = True) -> Column[Any]:
@@ -365,7 +404,7 @@ async def claim(
             )
         )
     async with scoped_transaction(engine, PLATFORM) as connection:
-        await connection.execute(
+        cancelled = await connection.execute(
             update(jobs)
             .where(
                 mine,
@@ -373,7 +412,9 @@ async def claim(
                 jobs.c.lease_until < func.clock_timestamp(),
             )
             .values(status=JobStatus.CANCELLED, lease_until=None, finished_at=func.now())
+            .returning(jobs.c.id, jobs.c.tenant_id)
         )
+        ended = [(found.id, found.tenant_id) for found in cancelled]
         abandoned = await fail_abandoned(connection, mine)
         claimable = (
             select(jobs.c.id)
@@ -407,6 +448,7 @@ async def claim(
             )
         ).one_or_none()
     await fail_running_steps(engine, abandoned)
+    await close_ended(engine, [*ended, *abandoned])
     if row is None:
         return None
     workflow = kinds[row.kind]
@@ -445,6 +487,17 @@ async def fail_running_steps(
                 .where(job_steps.c.job_id == job_id, job_steps.c.status == StepStatus.RUNNING)
                 .values(status=StepStatus.FAILED, finished_at=func.now())
             )
+
+
+async def close_run_sets(connection: AsyncConnection, job_id: uuid.UUID) -> None:
+    await connection.execute(SEAL_DONE_RUN_SETS, {"job_id": job_id})
+    await connection.execute(CLOSE_ENDED_RUN_SETS, {"job_id": job_id})
+
+
+async def close_ended(engine: AsyncEngine, ended: Sequence[tuple[uuid.UUID, uuid.UUID]]) -> None:
+    for job_id, tenant_id in ended:
+        async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant_id)) as connection:
+            await close_run_sets(connection, job_id)
 
 
 def waiting_order(kinds: Mapping[str, Workflow]) -> Any:
@@ -519,6 +572,7 @@ async def finish(
                 finished_at=None if final is JobStatus.PAUSED else func.now(),
             )
         )
+        await close_run_sets(connection, job.job_id)
         return final
 
 
@@ -573,6 +627,7 @@ async def move(connection: AsyncConnection, job_id: uuid.UUID, control: JobContr
             finished_at=func.now() if after is JobStatus.CANCELLED else None,
         )
     )
+    await close_run_sets(connection, job_id)
     return Move(before, after)
 
 
