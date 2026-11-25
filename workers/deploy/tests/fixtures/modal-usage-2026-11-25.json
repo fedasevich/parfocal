@@ -1,0 +1,53 @@
+{
+  "read_at": "2026-11-25T19:56:49Z",
+  "summary": {
+    "metered_cost": "30.26426501",
+    "metered_cost_breakdown": {
+      "Ephemeral Apps": "0.26802989",
+      "Network Egress": "19.18426501",
+      "Deployed Apps": "10.81173527",
+      "Volumes": "0E-8",
+      "LLM Tokens": "0E-8"
+    },
+    "adjustments": {
+      "Credits": "-11.08000000",
+      "Free Storage": "-0E-8",
+      "Network Egress Allowance": "-19.18426501",
+      "Plan Cost": "0E-8",
+      "Reservation Adjustment": "-0E-8"
+    },
+    "billed_cost": "0E-8"
+  },
+  "report": [
+    {
+      "environment_name": "dev",
+      "cost": "0.82828937",
+      "cost_by_resource": {
+        "CPU": "0.02352312",
+        "L4": "0.02311124",
+        "Memory": "0.01747853",
+        "Network Egress": "0.56621608",
+        "T4": "0.19796038"
+      }
+    },
+    {
+      "environment_name": "main",
+      "cost": "29.41071586",
+      "cost_by_resource": {
+        "CPU": "1.76206115",
+        "L4": "0.90908289",
+        "Memory": "1.77563452",
+        "Network Egress": "18.61787667",
+        "T4": "6.34606071"
+      }
+    },
+    {
+      "environment_name": "staging",
+      "cost": "0.00027090",
+      "cost_by_resource": {
+        "CPU": "0.00020979",
+        "Memory": "0.00006111"
+      }
+    }
+  ]
+}
