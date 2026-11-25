@@ -90,8 +90,23 @@ export function placeBar(
   const clear = [first, second].find(
     (top) => top >= margin && top + bar.height <= size.height - margin && hits(top).length === 0,
   );
-  if (clear !== undefined || hits(first).length === 0)
-    return { left, top: clear ?? first, width: bar.width, height: bar.height };
+  if (clear !== undefined) return { left, top: clear, width: bar.width, height: bar.height };
+  const sideTop = Math.min(
+    Math.max(cell.y - bar.height / 2, margin),
+    Math.max(margin, size.height - bar.height - margin),
+  );
+  const beside = [cell.x + radius + gap, cell.x - radius - gap - bar.width].find(
+    (x) =>
+      x >= margin &&
+      x + bar.width <= size.width - margin &&
+      !blocked.some(
+        ([bx, by, bw, bh]) =>
+          x < bx + bw && bx < x + bar.width && sideTop < by + bh && by < sideTop + bar.height,
+      ),
+  );
+  if (beside !== undefined)
+    return { left: beside, top: sideTop, width: bar.width, height: bar.height };
+  if (hits(first).length === 0) return { left, top: first, width: bar.width, height: bar.height };
   const roof = Math.min(...hits(first).map(([, y]) => y));
   return {
     left,

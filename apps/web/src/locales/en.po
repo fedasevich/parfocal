@@ -8863,6 +8863,10 @@ msgstr "Hide the sidebar"
 msgid "Hide the steps"
 msgstr "Hide the steps"
 
+#: src/screens/review/type-bar.tsx
+msgid "Hide the type bar"
+msgstr "Hide the type bar"
+
 #: src/screens/admin/connect-model.tsx
 #: src/screens/onboarding/auth-inputs.tsx
 msgid "Hide what you typed"
@@ -16335,6 +16339,10 @@ msgstr "Show the steps"
 msgid "Show the title"
 msgstr "Show the title"
 
+#: src/screens/review/type-bar.tsx
+msgid "Show the type bar"
+msgstr "Show the type bar"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/comments-tab.tsx
 msgid "Show threads"
@@ -19877,6 +19885,10 @@ msgstr "Type at least two letters to search."
 #: src/screens/review/type-bar.tsx
 msgid "Type for {object}"
 msgstr "Type for {object}"
+
+#: src/screens/review/type-bar.tsx
+msgid "Type keys for {object}"
+msgstr "Type keys for {object}"
 
 #: src/study/prepare-participant.tsx
 msgid "Type or accept the code the participant page shows. Preparing seeds a fresh project for that code, with you as its seat, and replaces an earlier one. If you are new to the study workspace, you join it as an admin, so you can remove the project from there."

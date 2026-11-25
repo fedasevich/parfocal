@@ -8858,6 +8858,10 @@ msgstr ""
 msgid "Hide the steps"
 msgstr ""
 
+#: src/screens/review/type-bar.tsx
+msgid "Hide the type bar"
+msgstr ""
+
 #: src/screens/admin/connect-model.tsx
 #: src/screens/onboarding/auth-inputs.tsx
 msgid "Hide what you typed"
@@ -16326,6 +16330,10 @@ msgstr ""
 msgid "Show the title"
 msgstr ""
 
+#: src/screens/review/type-bar.tsx
+msgid "Show the type bar"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/comments-tab.tsx
 msgid "Show threads"
@@ -19867,6 +19875,10 @@ msgstr ""
 
 #: src/screens/review/type-bar.tsx
 msgid "Type for {object}"
+msgstr ""
+
+#: src/screens/review/type-bar.tsx
+msgid "Type keys for {object}"
 msgstr ""
 
 #: src/study/prepare-participant.tsx
