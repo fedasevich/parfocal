@@ -22,12 +22,13 @@ On Python 3.14 the annotations of a class are evaluated lazily, and msgspec 0.19
 
 ## A PNG or TIFF result is told apart in the worker
 
-RSET-015 (masks import as result sets) left every `.png`, `.tif` and `.tiff` result stored as `result_format = 'heatmap'`, so no migration was needed. After the isolated `parse_heatmap` decode, `parfocal_ingest.mask_import.raster_kind` decides from the array and the file name. A float array or a name word such as `heat`, `prob` or `score` is a heatmap, a boolean array or a word such as `classes` or `tissue` is a class mask, and a word such as `labels`, `instances` or `nuclei` is an instance mask. Otherwise a byte array with more than 64 values is a heatmap unless the name says `mask`, and an integer array with at least as many labels as connected parts is an instance mask, else a class mask.
+RSET-015 (masks import as result sets) left every `.png`, `.tif` and `.tiff` result stored as `result_format = 'heatmap'`, so no migration was needed. After the isolated `parse_heatmap` decode, `parfocal_ingest.mask_import.raster_kind` decides from the array and the file name. A float array or a name word such as `heat`, `prob` or `score` is a heatmap, a boolean array or a word such as `classes` or `tissue` is a class mask, and a word such as `labels`, `instances` or `nuclei` is an instance mask. Otherwise a byte array with more than 64 values is a heatmap unless the name says `mask`, an array with a single non-zero value is a class mask, and an integer array with at least as many labels as connected parts is an instance mask, else a class mask.
 
 - An instance mask becomes cells and a class mask becomes regions, both through the isolated `parse_mask` child, `Reading.take` and the same checks, numbering and storage as GeoJSON. Result sets are named "Instance mask import" or "Class mask import".
 - A class value takes the name of the project class whose `key` equals it. Any other value is named by its number and goes through the `classes-unknown` mapping.
 - A mask whose size fits a slide level imports at that level's downsample, and a slide with no known size imports it at level 0. Any other size asks `mask-scale` with the same guesses and `heatmap_level` choice as a heatmap, in the same ask as its class problems, and `result-mask-unplaced` refuses it when nothing fits. An all-background mask is refused as `result-mask-empty`.
-- The browser takes a `.tif` or `.tiff` whose name ends in `mask`, `masks`, `labels`, `instances`, `classes` or `segmentation` as a result, not a slide (`kindOf` in `apps/web/src/upload/drop.ts`).
+- The browser takes a `.tif` or `.tiff` whose name ends in `mask`, `masks`, `labels`, `instances`, `classes` or `segmentation` as a result, not a slide, in both `kindOf` in `apps/web/src/upload/drop.ts` and `kind_of` in `parfocal_common.pairing`.
+- Before RSET-015 the upload wizard sent a result dropped beside a new slide without `kind: "result"`, so it was stored as a slide upload and its pairing failed quietly. `place.ts` now passes `result: true` to the engine.
 
 ## The chunk codec and the chunk store live in py-common
 

@@ -41,6 +41,9 @@ def test_a_byte_raster_with_many_values_is_a_heatmap_unless_named_a_mask() -> No
     assert raster_kind(values, "A1.png") is RasterKind.HEATMAP
     assert raster_kind(values, "A1_mask.png") is not RasterKind.HEATMAP
     assert raster_kind(values > 100, "A1.png") is RasterKind.CLASS_MASK
+    single = np.zeros((32, 32), np.uint8)
+    single[2:6, 2:6] = 255
+    assert raster_kind(single, "A1.png") is RasterKind.CLASS_MASK
 
 
 def test_a_mask_at_a_slide_level_is_placed_and_any_other_size_is_asked() -> None:

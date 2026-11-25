@@ -67,6 +67,8 @@ def raster_kind(values: NDArray[Any], file_name: str) -> RasterKind:
     labels = int(np.count_nonzero(distinct))
     if values.dtype.itemsize == 1 and labels > HEATMAP_LEVELS and not words & MASK_WORDS:
         return RasterKind.HEATMAP
+    if labels == 1:
+        return RasterKind.CLASS_MASK
     return RasterKind.INSTANCE_MASK if labels >= parts_of(values) else RasterKind.CLASS_MASK
 
 
