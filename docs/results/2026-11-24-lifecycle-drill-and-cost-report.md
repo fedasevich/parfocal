@@ -7,6 +7,8 @@
 - Environment: MacBook, the Cloudflare API and Wrangler with the `CLOUDFLARE_API_TOKEN` in `.env`, Modal CLI, `uv run --package parfocal-deploy python -m parfocal_deploy.costs`
 - Data: no tenant data. The drill objects hold one line of plain text, 48 bytes each
 
+> Correction of 2026-11-25 (OPS-043, the live cost report matches Modal's billing page): the Modal figures below are wrong. The report counted network egress that Modal's free egress allowance covers, so it read $29.22 used where the credit had drawn about $10.09, and production $28.39 where it was about $9.83. Production was inside its $23.50 budget and the month far from the $30 credit, so the over-budget reading and the follow-up about pausing work are void. See the [result of 2026-11-25](2026-11-25-cost-report-matches-modal-billing.md).
+
 ## Question
 
 ADR 0341 (old tenant objects tier to Infrequent Access and budgets live in a cost report) owes a drill that shows the tiering rule move objects under `t/` and leave other prefixes alone, and a live run of the cost report now that the token reads account analytics.
@@ -59,5 +61,5 @@ A second run at 22:39:29 UTC, after a tumor map of about 12 minutes on the GPU p
 
 ## Follow-ups
 
-- `TODO` the owner decides whether production Modal gets a larger budget or work stops until December, because the month is near the $30 credit.
+- Void since the correction of 2026-11-25: the owner decides whether production Modal gets a larger budget or work stops until December. The month was not near the $30 credit.
 - `TODO` the drill bucket `parfocal-drill-lifecycle` with its two objects should be deleted after the drill. Deleting is an owner action.
