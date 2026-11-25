@@ -1,4 +1,6 @@
 import type { CountsAsChange, DecisionSettings, DecisionValue } from "../generated/api.ts";
+import { fakeQueueScene } from "./queue-scene.ts";
+import { queueTask } from "./scenario-adjudication.ts";
 import { decisionStyles, type ScenarioDecisionStyle } from "./scenario-review.ts";
 
 const apiStyles = {
@@ -35,7 +37,8 @@ type CountsAsStore = { countsAs: DecisionValue[]; changes: CountsAsChange[] };
 const edited = new Map<string, CountsAsStore>();
 
 export const decisionSettingsFor = (code: string): Required<DecisionSettings> => {
-  const base = toDecisionSettings(decisionStyles[code] ?? fallback);
+  const certainQueue = code === queueTask && fakeQueueScene().certainty;
+  const base = toDecisionSettings(decisionStyles[certainQueue ? "RT-13" : code] ?? fallback);
   const store = edited.get(code);
   return store ? { ...base, counts_as: store.countsAs } : base;
 };

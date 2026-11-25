@@ -67,7 +67,15 @@ test("the queue holds the mock's seven objects with five where reviewers differ"
   assert.equal(queue.locked, null);
   assert.deepEqual(
     queue.rows.map((row) => `${row.slide_label}:${row.object}`),
-    ["A1:T2", "A1:T4", "A1:T5", "A1:T1·C212", "A1:T1·C145", "tumor_031:T1", "tumor_044:T2·C88"],
+    [
+      "A1:T2",
+      "A1:T4",
+      "A1:T5",
+      "A1:T1·C212",
+      "A1:T1·C145",
+      "CMU-1-Small-Region-tumor_031.svs:T1",
+      "tumor_044:T2·C88",
+    ],
   );
   assert.equal(queue.rows.filter((row) => row.tag !== "bothai").length, 5);
   assert.equal(queue.rows.find((row) => row.object === "T4")?.tag, "second");
@@ -125,7 +133,7 @@ test("deciding and leaving open count as resolved, and signing freezes the task"
   assert.equal(summary.queue.by_researcher, 2);
   assert.deepEqual(
     summary.queue.left_open.map((row) => `${row.object} on ${row.slide_label}`),
-    ["T1·C212 on A1", "T1 on tumor_031"],
+    ["T1·C212 on A1", "T1 on CMU-1-Small-Region-tumor_031.svs"],
   );
   forgetFakeSignIn();
   await assert.rejects(signOffReviewTask(rt14), /Sign in again to sign/);
