@@ -13,6 +13,8 @@ from parfocal_ml.gpu_pool import (
     Family,
     Gpu,
     PoolLimitError,
+    card_label,
+    cards_big_enough,
     concurrency_options,
     cpu_stand_in,
     function_options,
@@ -40,29 +42,93 @@ def test_every_model_family_has_exactly_one_pool() -> None:
     validate_pools(POOLS)
 
 
-def test_only_t4_and_l4_class_cards_are_allowed() -> None:
-    assert {gpu.value for gpu in Gpu} == {"T4", "L4", "A10G"}
+def test_the_cards_are_the_modal_gpus_up_to_the_h100() -> None:
+    assert [gpu.value for gpu in Gpu] == [
+        "T4",
+        "L4",
+        "A10",
+        "L40S",
+        "A100-40GB",
+        "A100-80GB",
+        "H100",
+    ]
     with pytest.raises(ValueError, match="is not a valid Gpu"):
-        Gpu("A100")
-    with pytest.raises(ValueError, match="is not a valid Gpu"):
-        Gpu("H100")
+        Gpu("B200")
 
 
-def test_best_tiers_run_on_l4_and_the_rest_on_t4() -> None:
+def test_best_tiers_start_on_l4_and_the_rest_on_t4() -> None:
     assert pool_for(Family.DETECTOR_BEST).gpu is Gpu.L4
     assert pool_for(Family.TYPER_BEST).gpu is Gpu.L4
     assert pool_for(Family.DETECTOR_GOOD).gpu is Gpu.T4
     assert pool_for(Family.TYPER_GOOD).gpu is Gpu.T4
     assert pool_for(Family.EMBEDDER).gpu is Gpu.T4
     assert pool_for(Family.LAB_MODEL).gpu is None
-    assert [function_options(pool)["gpu"] for pool in POOLS] == [
-        "L4",
-        "T4",
-        "L4",
-        "T4",
-        ["T4", "L4"],
-        None,
-    ]
+
+
+def test_every_pool_asks_modal_for_any_card_big_enough_cheapest_first() -> None:
+    assert {pool.family: function_options(pool)["gpu"] for pool in POOLS} == {
+        Family.DETECTOR_BEST: ["L4", "A10", "L40S", "A100-40GB"],
+        Family.DETECTOR_GOOD: ["T4", "L4", "A10", "L40S", "A100-40GB"],
+        Family.TYPER_BEST: ["L4", "A10", "L40S", "A100-40GB", "A100-80GB", "H100"],
+        Family.TYPER_GOOD: ["T4", "L4", "A10", "L40S", "A100-40GB", "A100-80GB", "H100"],
+        Family.EMBEDDER: ["T4", "L4", "A10", "L40S", "A100-40GB", "A100-80GB", "H100"],
+        Family.LAB_MODEL: None,
+    }
+    for pool in POOLS:
+        expected = cards_big_enough(pool.gpu_memory_budget_mib, pool.max_containers)
+        assert pool.gpus == (expected if pool.gpu is not None else ())
+
+
+def test_a_card_that_would_take_a_pool_to_the_hourly_cap_is_left_out() -> None:
+    two = cards_big_enough(20 * 1024, 2)
+    assert Gpu.A100_40GB in two
+    assert Gpu.A100_80GB not in two
+    assert Gpu.H100 not in two
+    assert cards_big_enough(20 * 1024, 1)[-1] is Gpu.H100
+    assert Gpu.T4 not in cards_big_enough(20 * 1024, 1)
+    assert cards_big_enough(60 * 1024, 1) == (Gpu.A100_80GB, Gpu.H100)
+
+
+def test_every_pool_at_its_container_cap_stays_under_five_dollars_an_hour() -> None:
+    worst = {pool.family: pool.hourly_usd_at_max for pool in POOLS}
+    assert worst == pytest.approx(
+        {
+            Family.DETECTOR_BEST: 2 * 2.10,
+            Family.DETECTOR_GOOD: 2 * 2.10,
+            Family.TYPER_BEST: 3.95,
+            Family.TYPER_GOOD: 3.95,
+            Family.EMBEDDER: 3.95,
+            Family.LAB_MODEL: 0.0,
+        }
+    )
+    assert all(cost < MAX_HOURLY_SPEND_USD for cost in worst.values())
+    assert MAX_HOURLY_SPEND_USD == 5.0
+
+
+def test_a_list_out_of_price_order_or_over_the_cap_is_rejected() -> None:
+    best = pool_for(Family.DETECTOR_BEST)
+    with pytest.raises(PoolLimitError, match="cheapest first"):
+        validate_pools((replace(best, fallback_gpus=(Gpu.L40S, Gpu.A10)),))
+    with pytest.raises(PoolLimitError, match="hourly spend cap"):
+        validate_pools((replace(best, fallback_gpus=(Gpu.A10, Gpu.H100)),))
+
+
+@pytest.mark.parametrize(
+    ("name", "label"),
+    [
+        ("Tesla T4", "T4"),
+        ("NVIDIA L4", "L4"),
+        ("NVIDIA A10", "A10"),
+        ("NVIDIA A10G", "A10"),
+        ("NVIDIA L40S", "L40S"),
+        ("NVIDIA A100-SXM4-40GB", "A100-40GB"),
+        ("NVIDIA A100 80GB PCIe", "A100-80GB"),
+        ("NVIDIA H100 80GB HBM3", "H100"),
+        ("NVIDIA H200", "NVIDIA H200"),
+    ],
+)
+def test_the_card_a_container_got_is_named_like_the_pool_list(name: str, label: str) -> None:
+    assert card_label(f" {name}\n") == label
 
 
 def test_model_gpu_memory_fits_its_card() -> None:
@@ -110,9 +176,9 @@ def test_every_call_has_a_timeout() -> None:
     assert pool_for(Family.EMBEDDER).timeout_seconds <= 60
 
 
-def test_all_pools_at_their_cap_stay_under_the_hourly_spend_cap() -> None:
-    assert worst_case_hourly_usd(POOLS) == pytest.approx(2 * 0.80 + 2 * 0.59 + 0.80 + 0.59 + 0.80)
-    assert worst_case_hourly_usd(POOLS) <= MAX_HOURLY_SPEND_USD
+def test_all_pools_on_their_dearest_card_at_once_is_counted_not_capped() -> None:
+    assert worst_case_hourly_usd(POOLS) == pytest.approx(2 * 2.10 + 2 * 2.10 + 3 * 3.95)
+    validate_pools(POOLS)
 
 
 @pytest.mark.parametrize(
@@ -135,12 +201,10 @@ def test_a_pool_that_breaks_a_limit_is_rejected(change: dict[str, int], message:
         validate_pools((*others, broken))
 
 
-def test_large_cards_at_the_container_cap_break_the_spend_cap() -> None:
-    wide = tuple(
-        replace(pool, gpu=Gpu.A10G, max_containers=MAX_CONTAINERS_PER_POOL) for pool in POOLS
-    )
+def test_more_containers_on_the_same_list_break_the_spend_cap() -> None:
+    wide = replace(pool_for(Family.DETECTOR_GOOD), max_containers=3)
     with pytest.raises(PoolLimitError, match="hourly spend cap"):
-        validate_pools(wide)
+        validate_pools((wide,))
 
 
 def test_a_family_cannot_have_two_pools() -> None:
@@ -163,6 +227,9 @@ def test_pools_run_anywhere_unless_a_gpu_region_is_set() -> None:
     assert gpu_region({GPU_REGION_VARIABLE: "eu"}) == "eu"
     pinned = all(function_options(pool).get("region") == GPU_POOL_REGION for pool in POOLS)
     assert pinned
+    unpinned = [replace(pool, region=gpu_region({})) for pool in POOLS]
+    assert all("region" not in function_options(pool) for pool in unpinned)
+    validate_pools(tuple(unpinned))
 
 
 def test_a_pinned_pool_passes_its_region_to_modal() -> None:
@@ -176,12 +243,10 @@ def test_a_pool_pinned_outside_the_eu_and_us_is_rejected() -> None:
         validate_pools((replace(pool_for(Family.DETECTOR_GOOD), region="uk"),))
 
 
-def test_the_interactive_pool_falls_back_to_an_l4() -> None:
-    embedder = pool_for(Family.EMBEDDER)
-    options = function_options(embedder)
-    assert options["gpu"] == ["T4", "L4"]
-    validate_pools((replace(embedder, region=None),))
-    assert embedder.hourly_usd_at_max == pytest.approx(0.80)
+def test_the_same_lists_pass_when_the_pools_are_pinned_to_the_eu_again() -> None:
+    pinned = tuple(replace(pool, region="eu") for pool in POOLS)
+    validate_pools(pinned)
+    assert all(function_options(pool).get("region") == "eu" for pool in pinned)
 
 
 def test_a_cold_interactive_container_gets_longer_to_start_than_a_call_runs() -> None:
