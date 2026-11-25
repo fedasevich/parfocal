@@ -19,6 +19,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { useLengthUnits } from "../measure/length-units.ts";
+import { formatArea, formatPerimeter, measureShape } from "../measure/shape-measure.ts";
+import { useStageMicronsPerPixel } from "../viewer/stage-measurements.tsx";
 import { type AnnotationDocument, removeGroup, updateGroup } from "./document.ts";
 import { drawnObjectIds, useSavedCodes } from "./drawn-object-ids.ts";
 import {
@@ -131,9 +134,11 @@ const Row = memo(function Row({
   aimed,
   renaming,
   drop,
+  measure,
   actions,
 }: {
   row: TreeRow;
+  measure: string | null;
   top: number;
   selected: boolean;
   picked: boolean;
@@ -175,7 +180,7 @@ const Row = memo(function Row({
         }
       }}
       className={cn(
-        "absolute inset-x-0 grid grid-cols-[16px_10px_minmax(0,1fr)_auto_24px_24px_24px] items-center gap-1.5 rounded-md pr-1 text-body-sm text-fg-dim select-none",
+        "absolute inset-x-0 grid grid-cols-[16px_10px_minmax(0,1fr)_minmax(0,max-content)_24px_24px_24px] items-center gap-1.5 rounded-md pr-1 text-body-sm text-fg-dim select-none",
         (selected || picked) && "bg-accent-soft text-fg",
         aimed && "ring-1 ring-accent ring-inset",
         (row.hiddenAbove || off) && "italic",
@@ -253,7 +258,17 @@ const Row = memo(function Row({
           )}
         </button>
       )}
-      <span className="font-mono text-caption text-fg-faint">{group ? row.count : ""}</span>
+      {group ? (
+        <span className="font-mono text-caption text-fg-faint">{row.count}</span>
+      ) : (
+        <span
+          data-testid="layers-row-measure"
+          title={measure ?? undefined}
+          className="truncate font-mono text-caption text-fg-dim"
+        >
+          {measure ?? ""}
+        </span>
+      )}
       <button
         type="button"
         aria-pressed={!off}
@@ -327,6 +342,14 @@ export function LayersTree({
 }: LayersTreeProps) {
   const { t } = useLingui();
   const codes = useSavedCodes();
+  const micronsPerPixel = useStageMicronsPerPixel();
+  const units = useLengthUnits();
+  const measureOf = (row: TreeRow): string | null => {
+    if (row.kind !== "shape") return null;
+    const shape = doc.shapes.get(row.shapeId);
+    const found = shape === undefined ? null : measureShape(shape, micronsPerPixel);
+    return found === null ? null : `${formatArea(found, units)} · ${formatPerimeter(found, units)}`;
+  };
   const [open, setOpen] = useState<ReadonlySet<string>>(() => readOpen(storageKey));
   const [anchor, setAnchor] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
@@ -632,6 +655,7 @@ export function LayersTree({
                 aimed={parsed?.kind === "group" && parsed.id === target}
                 renaming={row.key === renaming}
                 drop={drop?.key === row.key ? drop.place : null}
+                measure={measureOf(row)}
                 actions={actions}
               />
             );

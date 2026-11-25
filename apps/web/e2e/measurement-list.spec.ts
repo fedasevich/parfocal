@@ -52,6 +52,9 @@ async function regionInTree(page: Page, label: string) {
   }
   await expect(tree.locator('[data-kind="shape"]')).toHaveCount(1);
   await expect(tree.locator('[data-kind="shape"]')).toContainText(label);
+  await expect(tree.getByTestId("layers-row-measure")).toHaveText(
+    /^[\d.,\s]+ (µm|mm)² · [\d.,\s]+ (µm|mm)$/,
+  );
   await inspector.getByRole("tab", { name: "Objects" }).click();
 }
 

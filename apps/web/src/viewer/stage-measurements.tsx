@@ -28,6 +28,7 @@ export type StageMeasurements = {
   readonly claim: () => () => void;
   readonly claimed: boolean;
   readonly codes: SavedCodes;
+  readonly micronsPerPixel: number | null;
 };
 
 const MeasurementsContext = createContext<StageMeasurements | null>(null);
@@ -51,6 +52,9 @@ export function StageDockProvider({
 }
 
 export const useRulersClaimed = () => useContext(MeasurementsContext)?.claimed ?? false;
+
+export const useStageMicronsPerPixel = () =>
+  useContext(MeasurementsContext)?.micronsPerPixel ?? null;
 
 const noTimes = new Map<ShapeId, number>();
 
@@ -94,8 +98,8 @@ export function useStageMeasurementsValue(
   );
   const claimed = claims > 0;
   return useMemo(
-    () => ({ rulers, remove, claim, claimed, codes }),
-    [rulers, remove, claim, claimed, codes],
+    () => ({ rulers, remove, claim, claimed, codes, micronsPerPixel }),
+    [rulers, remove, claim, claimed, codes, micronsPerPixel],
   );
 }
 
