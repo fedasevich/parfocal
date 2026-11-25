@@ -1395,6 +1395,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on VIEW-081.
   Size: M.
 
+- [ ] INGEST-034 · The Check step fixes act on the real upload
+  Found while writing the thesis user guide on 2026-11-25: on the real API the upload's Check step lists the problems, but its fix buttons from INGEST-022 (per-file problems in the Check step), such as adding a MRXS data folder, skipping or keeping a duplicate and mapping new classes, are wired only to the imitated API. First confirm this on the local stack, then connect each fix to the real upload, so a fixed file uploads and an unfixed one waits.
+  Done when a real-stack end-to-end test uploads a mixed set, resolves a duplicate and a result file with new classes through the Check step, and ends with the fixed files stored and the others waiting.
+  Depends on INGEST-022.
+  Size: M.
+
 ## 06 TILES · Tile delivery
 
 - [x] TILES-000 · Research check for tile delivery
