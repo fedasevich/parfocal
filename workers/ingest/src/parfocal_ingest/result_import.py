@@ -415,8 +415,9 @@ async def rows_of(
         geometries = [item.geometry for item in items]
         known = await known_objects(connection, slide_id, stored_kind)
         matching = await asyncio.to_thread(matched, known, geometries)
+        above = max((number for number, _ in known), default=0)
         first = (
-            await reserve(connection, upload.tenant_id, slide_id, letter, len(matching.new))
+            await reserve(connection, upload.tenant_id, slide_id, letter, len(matching.new), above)
             if matching.new
             else 0
         )

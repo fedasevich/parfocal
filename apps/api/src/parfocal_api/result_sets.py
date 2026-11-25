@@ -14,6 +14,7 @@ from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on, require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.event_emit import emit
+from parfocal_api.numbering import cover
 from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
@@ -39,10 +40,12 @@ from parfocal_api.tables import (
 )
 from parfocal_api.taxonomy import resolve_names
 from parfocal_common.chunk_store import ChunkEntry, chunk_key, summary_key
+from parfocal_common.object_ids import Letter
 from parfocal_common.result_imports import HEATMAP_FACTS, HEATMAP_GRID, result_set_prefix
 from parfocal_common.result_store import MissingObjectError
 
 MAX_CLASSES = 255
+REGION_LETTERS = {ResultObjectKind.REGION: Letter.REGION, ResultObjectKind.ZONE: Letter.ZONE}
 
 type Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 
@@ -347,7 +350,9 @@ class ChunkRow:
 async def importing(connection: AsyncConnection, set_id: uuid.UUID) -> Any:
     row = (
         await connection.execute(
-            select(result_sets.c.tenant_id, result_sets.c.status).where(result_sets.c.id == set_id)
+            select(result_sets.c.tenant_id, result_sets.c.slide_id, result_sets.c.status).where(
+                result_sets.c.id == set_id
+            )
         )
     ).one()
     if row.status != ResultStatus.IMPORTING:
@@ -382,6 +387,9 @@ async def add_regions(
                 for region in regions
             ],
         )
+    for kind, letter in REGION_LETTERS.items():
+        last = max((region.number for region in regions if region.kind == kind), default=0)
+        await cover(connection, owner.tenant_id, owner.slide_id, letter, last)
 
 
 async def add_chunks(

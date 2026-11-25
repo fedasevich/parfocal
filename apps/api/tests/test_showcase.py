@@ -673,7 +673,7 @@ async def test_every_demo_slide_has_the_results_its_model_runs_made(seeded: str)
     assert len(WITH_CELLS) >= len(FORMAT_GALLERY) - 1
 
 
-async def test_every_slide_with_seeded_cells_counts_its_highest_cell_number(seeded: str) -> None:
+async def test_every_seeded_slide_counts_its_highest_cell_and_region_numbers(seeded: str) -> None:
     await run_seed(seeded)
     rows = await run_sql(
         seeded,
@@ -687,6 +687,15 @@ async def test_every_slide_with_seeded_cells_counts_its_highest_cell_number(seed
         assert found is not None
         assert last is not None, label
         assert int(str(last)) >= max(cell.number for cell in found.cells), label
+    uncounted = await run_sql(
+        seeded,
+        "SELECT o.result_set_id, o.number FROM result_objects o "
+        "JOIN result_sets r ON r.id = o.result_set_id "
+        "LEFT JOIN slide_counters c ON c.slide_id = r.slide_id "
+        "AND c.letter = CASE o.kind WHEN 'zone' THEN 'Z' ELSE 'T' END "
+        "WHERE r.source <> 'drawn' AND (c.last IS NULL OR c.last < o.number)",
+    )
+    assert uncounted == []
 
 
 async def test_the_result_sets_of_one_slide_can_be_told_apart_by_name(seeded: str) -> None:
