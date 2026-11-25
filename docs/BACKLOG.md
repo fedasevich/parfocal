@@ -7479,7 +7479,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when the cause is named in the log with evidence, a test reproduces it, a deployed rerun on that slide or a small real tissue slide returns cells, recorded with its time and cost, and an empty run shows its reason on the row.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-196 · A whole slide run stores its cells on a slide that already has cells
+- [x] PROTO-196 · A whole slide run stores its cells on a slide that already has cells
   The deployed check of 2026-11-25 (docs/results/2026-11-25-deployed-gpu-pool-and-empty-run-checks.md) ran PathoSAM + HoVer-NeXt on CMU-1-Small-Region.svs in P03, where job f4471924 found 2,428 objects in 11 tiles and then failed at the ids-given step as run-cells-unstorable, while the same image in P01 stored all 2,428. The likely cause is that the P03 slide holds 1,418 seeded cells but has no C row in slide_counters, so new cell numbers start at 1 and clash with the kept ones, and the exact error is logged nowhere. Make new cell numbers start above the highest stored number on the slide, seed slide_counters with the seeded cells, log the storing error with its job, and stop the gpu-busy wait reason showing during a cold start when no GPU is busy.
   Done when an API test runs the store step on a slide with seeded cells and no counter row and keeps every cell with numbers above the old ones, the seed writes the counter, the error is logged, and a deployed rerun on CMU-1-Small-Region.svs in P03 stores its cells, recorded with its time and cost.
   Depends on PROTO-195. Size: S.
