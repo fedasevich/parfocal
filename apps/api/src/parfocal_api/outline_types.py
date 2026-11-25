@@ -30,6 +30,7 @@ from parfocal_common.outline_types import (
     MAX_OUTLINES,
     MAX_POINTS,
     MIN_POINTS,
+    SINGLE_VIEW,
     TYPER,
     TYPER_VERSION,
     OutlineTypesCall,
@@ -39,8 +40,6 @@ from parfocal_common.outline_types import (
 from parfocal_common.view_maps import seconds_in
 
 logger = logging.getLogger("parfocal.api.outline_types")
-
-SINGLE_VIEW = 1
 
 router = APIRouter(prefix="/api/slides/{slide_id}/outline-types", tags=["slides"])
 

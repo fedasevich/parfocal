@@ -83901,6 +83901,28 @@
               }
             ],
             "title": "Objects"
+          },
+          "typed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Typed"
+          },
+          "untyped_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Untyped Reason"
           }
         },
         "type": "object",

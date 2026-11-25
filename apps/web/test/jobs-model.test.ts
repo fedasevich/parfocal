@@ -365,6 +365,39 @@ test("a run that is waiting says how long the runs ahead take, and a running one
   assert.equal(stepsOf(running, { model: undefined, resultSet: "" })[2]?.detail, "tile 4 of 11");
 });
 
+test("the model step says how many cells the typer typed, or why the cells stay untyped", () => {
+  const typing = run("running", [
+    rawStage("tiles-read", "done", 11, 11),
+    rawStage("tissue-found", "done", 1, 1),
+    { ...rawStage("model-running", "running", 4, 11, 900), typed: 900 },
+  ]);
+  assert.equal(
+    stepsOf(typing, { model: undefined, resultSet: "" })[2]?.detail,
+    "tile 4 of 11 · 900 cells typed",
+  );
+  const typed = run("done", [
+    rawStage("tiles-read", "done", 11, 11),
+    rawStage("tissue-found", "done", 1, 1),
+    { ...rawStage("model-running", "done", 11, 11, 2428), typed: 2428 },
+  ]);
+  assert.equal(
+    stepsOf(typed, { model: undefined, resultSet: "" })[2]?.detail,
+    "11 tiles · 2,428 cells typed",
+  );
+  const untyped = run("done", [
+    rawStage("tiles-read", "done", 11, 11),
+    rawStage("tissue-found", "done", 1, 1),
+    {
+      ...rawStage("model-running", "done", 11, 11, 2428),
+      untyped_reason: "typer-weights-missing",
+    },
+  ]);
+  assert.equal(
+    stepsOf(untyped, { model: undefined, resultSet: "" })[2]?.detail,
+    "11 tiles · cells untyped, the typer weights are missing",
+  );
+});
+
 test("a job with no minutes left says no minutes at all", () => {
   assert.equal(knownMinutes(0), null);
   assert.equal(knownMinutes(null), null);

@@ -169,10 +169,12 @@ class Area:
     width: int
     height: int
     objects: int
+    typed: int | None = None
 
 
 async def mark_area(step: StepRun, connection: AsyncConnection, unit: int, area: Area) -> None:
-    await step.mark_unit(connection, unit, asdict(area))
+    found = {name: value for name, value in asdict(area).items() if value is not None}
+    await step.mark_unit(connection, unit, found)
 
 
 def labels_of(claimed: ClaimedRun, tier: str | None, machine: str | None) -> RunLabels:

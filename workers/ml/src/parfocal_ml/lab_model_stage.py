@@ -183,7 +183,7 @@ class LabProgress:
     async def total(self, count: int) -> None:
         await self.step.set_total(count)
 
-    async def mark(self, tile: Tile, objects: int) -> None:
+    async def mark(self, tile: Tile, objects: int, typed: int) -> None:
         found = self.detector.take_regions(self.plan.window_of(tile))
         core = tile.core
         async with self.step.transaction() as connection:

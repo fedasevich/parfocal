@@ -7,7 +7,7 @@ import pytest
 from db_support import ApiAs
 from test_gpu_warm import FakeModal
 from test_lab_model_stage import MemoryStore, job_of
-from test_model_runs import Lab, control, make_lab, ok, run_async, started
+from test_model_runs import Lab, control, make_lab, ok, read, run_async, started
 from workspace_support import owner
 
 from parfocal_common.model_runs import NUCLEI_POOL_FUNCTION, run_prefix, tile_key
@@ -19,6 +19,7 @@ pytestmark = pytest.mark.db
 
 WIDTH, HEIGHT, DOWNSAMPLE = 2048, 1536, 32
 NUCLEI = {"detector": {"name": "pathosam-hovernext"}}
+MODEL = "model-running"
 
 
 class FlatReader:
@@ -61,13 +62,18 @@ def lab(api: ApiAs, database: str) -> Lab:
 
 
 def drained(
-    database: str, lab: Lab, slides: FakeSlides, model: BlankMaps, store: MemoryStore
+    database: str,
+    lab: Lab,
+    slides: FakeSlides,
+    model: BlankMaps,
+    store: MemoryStore,
+    typer: Any = None,
 ) -> int:
     async def no_sleep(seconds: float) -> None:
         return None
 
     async def go(engine: Any) -> int:
-        plan = nuclei_run_workflow(slides, model, store, "L4")
+        plan = nuclei_run_workflow(slides, model, store, "L4", typer)
         drain = Drain(idle_exit_seconds=1.0, poll_seconds=1.0, tenant_id=lab.tenant)
         return await drain_nuclei_runs(engine, plan, "nuclei-worker", drain, no_sleep)
 
@@ -117,6 +123,31 @@ def test_a_whole_slide_nuclei_run_reads_only_tissue_tiles_and_logs_its_gpu_time(
     assert gpu_seconds(database, run) == [("pathosam-hovernext", "L4")]
     [(status,)] = owner(database, f"SELECT status FROM result_sets WHERE job_id = '{run['id']}'")
     assert status == "ready"
+    classes = owner(
+        database,
+        "SELECT c.source_name FROM result_set_classes c JOIN result_sets s "
+        f"ON s.id = c.result_set_id WHERE s.job_id = '{run['id']}' ORDER BY c.position",
+    )
+    assert [name for (name,) in classes] == ["tumor", "stroma", "immune", "other"]
+    stage = next(item for item in read(api, lab, run).json()["stages"] if item["name"] == MODEL)
+    assert stage["typed"] is None
+    assert stage["untyped_reason"] == "typer-weights-missing"
+
+
+def even_classes(rgb: np.ndarray) -> np.ndarray:
+    return np.full((6, *rgb.shape[:2]), 1 / 6, np.float32)
+
+
+def test_a_typed_nuclei_run_counts_its_typed_cells_on_the_model_step(
+    api: ApiAs, lab: Lab, database: str
+) -> None:
+    [run] = started(api, lab, parameters=NUCLEI)
+    store, model, slides = MemoryStore(), BlankMaps(), FakeSlides(tissue_right=20)
+    assert drained(database, lab, slides, model, store, even_classes) == 1
+    assert job_of(database, run) == ("done", None)
+    stage = next(item for item in read(api, lab, run).json()["stages"] if item["name"] == MODEL)
+    assert stage["typed"] == stage["objects"] == 0
+    assert stage["untyped_reason"] is None
 
 
 def test_a_run_with_no_tiles_planned_finishes_empty_without_a_gpu_call(
