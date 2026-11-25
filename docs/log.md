@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Production touch: release v0.55.0 (PROTO-180, PROTO-174, EXP-022 with its hourly study backup that stays idle while STUDY_BACKUP_BUCKET is unset) deployed by run 45710957141, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - PROTO-181: Smart select queues clicks and boxes made while a request runs, with numbered dashed markers and N queued in the state word, Undo, Backspace and Esc take back the last queued click first, and queued extensions of one object go in one model call. The undo key wiring moved to apps/web/src/viewer/use-undo-keys.ts to keep slide-stage.tsx under the file length limit.
 - PROTO-195 ticked: the cause is in the log, tests reproduce it, the deployed rerun job 9559ce01 stored 2,428 cells, and empty runs show their reason. The cells unstorable failure on a slide with seeded cells moved to PROTO-196.
 - OPS-042 and PROTO-195 deployed check on v0.54.0 as agent-walk: a cold 2 tile run in P03 left the queue in 24 s against the 24 min promise, on an A100-40GB in eu-west on GCP, and a later run got an L4 in eu-west. Job 9559ce01 on CMU-1-Small-Region.svs in P01 stored 2,428 cells after 23 s queued and 68.7 model seconds on an L4. Production reads: Modal app list, container list, logs and hourly billing in env main and Neon SELECTs on gpu_usage, job_steps, result_sets, slide_counters and slides. GPU cost $0.171 measured plus about $0.02 of L4 not yet itemised (TODO).
