@@ -2,6 +2,34 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.57.0 (2026-11-25)
+
+### Features
+
+- PROTO-170: Make the flow page header compact
+- PROTO-182: Color found cells by class, type them on accept and switch typing per person
+- PROTO-182: Leave Smart select cells unclassed when typing is off and draw them neutral grey
+
+### Fixes
+
+- PROTO-177: Keep the queue's Decide panel and its buttons inside the column
+
+### Docs
+
+- PROTO-196: Log the v0.56.0 deploy
+- PROTO-170: Log and tick after merge
+- PROTO-177: Log and tick after merge
+- PROTO-196: Record the deployed rerun on the seeded slide
+- PROTO-196: Log and tick after merge
+- PROTO-182: Log and tick after merge
+
+### Other
+
+- PROTO-194: Claim PROTO-194 for the parallel run
+- PROTO-177: Claim PROTO-177 for the parallel run
+- PROTO-169: Claim PROTO-169 for the parallel run
+- PROTO-178: Claim PROTO-178 for the parallel run
+
 ## v0.56.0 (2026-11-25)
 
 ### Features
