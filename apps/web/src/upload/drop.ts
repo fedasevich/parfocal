@@ -23,6 +23,7 @@ const slideExtensions = new Set([
   "qptiff",
   "isyntax",
   "dcm",
+  "zip",
 ]);
 
 const resultExtensions = new Set([

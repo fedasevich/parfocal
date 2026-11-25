@@ -165,6 +165,7 @@ class SandboxChild:
 
     async def deliver(self, path: Path) -> Path:
         if path not in self.delivered:
+            await self.sandbox.make_directory(path.parent)
             await self.sandbox.copy_in(path, path)
             self.delivered.add(path)
         return path
@@ -223,6 +224,7 @@ class SandboxLauncher:
         environment: Mapping[str, str],
         work_dir: Path,
         keep: bool,
+        output_limit: int = OUTPUT_LIMIT_BYTES,
     ) -> ChildProcess:
         sandbox = held.sandbox
         try:
@@ -242,7 +244,12 @@ class SandboxLauncher:
             self.kept[work_dir] = held
 
         return SandboxChild(
-            sandbox, process, work_dir, delivered=held.delivered, kept=kept if keep else None
+            sandbox,
+            process,
+            work_dir,
+            output_limit=output_limit,
+            delivered=held.delivered,
+            kept=kept if keep else None,
         )
 
     async def start(
@@ -251,12 +258,15 @@ class SandboxLauncher:
         environment: Mapping[str, str],
         work_dir: Path,
         keep: bool = False,
+        output_limit: int = OUTPUT_LIMIT_BYTES,
     ) -> ChildProcess:
         held = await self.reusable(work_dir) if keep else None
         if held is not None:
             with contextlib.suppress(Exception):
-                return await self.opened(held, command, environment, work_dir, keep)
-        return await self.opened(await self.fresh(), command, environment, work_dir, keep)
+                return await self.opened(held, command, environment, work_dir, keep, output_limit)
+        return await self.opened(
+            await self.fresh(), command, environment, work_dir, keep, output_limit
+        )
 
     async def release(self, work_dir: Path) -> None:
         held = self.kept.pop(work_dir, None)

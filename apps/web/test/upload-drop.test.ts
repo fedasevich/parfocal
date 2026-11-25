@@ -22,6 +22,11 @@ test("files are told apart by extension", () => {
   assert.equal(kindOf("noextension"), "other");
 });
 
+test("a zipped MIRAX folder or DICOM set is a slide", () => {
+  assert.equal(kindOf("a/CMU-1-Saved-1_16.zip"), "slide");
+  assert.equal(kindOf("a/CMU-1-JP2K-33005-v2.ZIP"), "slide");
+});
+
 test("a mask is a result, even as a TIFF, and a slide named like one stays a slide", () => {
   assert.equal(kindOf("a/A1_HE_mask.png"), "result");
   assert.equal(kindOf("a/A1_HE_mask.tif"), "result");

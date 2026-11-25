@@ -44,6 +44,7 @@ MAX_MESSAGE_BYTES = 1024 * 1024
 MIB = 1024 * 1024
 KIB = 1024
 OUTPUT_LIMIT_BYTES = 1024 * MIB
+CONVERTED_LIMIT_BYTES = 16 * 1024 * MIB
 
 type Fetcher = Callable[[str], Awaitable[Path]]
 
@@ -75,6 +76,7 @@ class Launcher(Protocol):
         environment: Mapping[str, str],
         work_dir: Path,
         keep: bool = False,
+        output_limit: int = OUTPUT_LIMIT_BYTES,
     ) -> ChildProcess: ...
 
     async def release(self, work_dir: Path) -> None: ...
@@ -297,6 +299,7 @@ class LocalLauncher:
         environment: Mapping[str, str],
         work_dir: Path,
         keep: bool = False,
+        output_limit: int = OUTPUT_LIMIT_BYTES,
     ) -> ChildProcess:
         user = self.limits.user
         if user is not None:
@@ -416,6 +419,7 @@ async def parse_isolated(
     paths: Sequence[str] = (),
     inputs: Sequence[Path] = (),
     keep: bool = False,
+    output_limit: int = OUTPUT_LIMIT_BYTES,
 ) -> dict[str, Any]:
     chosen = limits or ParseLimits()
     issuer = tokens or JobTokens()
@@ -426,6 +430,7 @@ async def parse_isolated(
         child_environment(issuer.issue(scope), work_dir),
         work_dir,
         keep,
+        output_limit,
     )
     try:
         for path in inputs:

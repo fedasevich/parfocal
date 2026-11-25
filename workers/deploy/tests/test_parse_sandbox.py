@@ -18,7 +18,9 @@ from parfocal_deploy.parse_sandbox import (
     hydrated_image,
 )
 from parfocal_ingest.isolation import (
+    CONVERTED_LIMIT_BYTES,
     MAX_MESSAGE_BYTES,
+    OUTPUT_LIMIT_BYTES,
     JobScope,
     ParseLimits,
     launcher_of,
@@ -360,6 +362,32 @@ async def test_the_five_steps_of_one_job_share_one_sandbox_and_one_copy_of_the_s
     await launcher.release(work)
     assert sandbox.terminated
     assert launcher.kept == {}
+
+
+async def test_a_conversion_may_return_a_file_over_the_default_output_cap(
+    tmp_path: Path,
+) -> None:
+    converted = [RemoteEntry("original.tiff", OUTPUT_LIMIT_BYTES + 1, regular=True)]
+    launcher = Factory().launcher()
+    limits = []
+    for limit in (OUTPUT_LIMIT_BYTES, CONVERTED_LIMIT_BYTES):
+        child = await launcher.start(("true",), {}, tmp_path, output_limit=limit)
+        assert isinstance(child, SandboxChild)
+        limits.append(child.output_limit)
+        await child.stop()
+    assert limits == [OUTPUT_LIMIT_BYTES, CONVERTED_LIMIT_BYTES]
+    with pytest.raises(StepFailedError):
+        checked(converted, limits[0])
+    assert checked(converted, limits[1]) == converted
+
+
+async def test_a_file_from_another_folder_is_delivered_with_its_folder(tmp_path: Path) -> None:
+    sandbox = FakeSandbox()
+    child = SandboxChild(sandbox, FakeExit(0), tmp_path / "job")
+    kept = tmp_path / "job" / "objects" / "abc"
+    assert await child.deliver(kept) == kept
+    assert await child.deliver(kept) == kept
+    assert (sandbox.made, sandbox.copied_in) == ([kept.parent], [kept])
 
 
 async def test_two_jobs_never_share_a_sandbox(tmp_path: Path) -> None:

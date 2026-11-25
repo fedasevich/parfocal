@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 import gzip
-import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,19 +9,18 @@ import httpx2
 from parfocal_api.sample_files import SampleFile, facts_key
 from parfocal_api.sample_project import SAMPLE_SLIDES
 from parfocal_common.ingest import RESTRICTED_RANGES_NAME, sample_folder, sample_original_key
-from parfocal_common.object_store import ObjectStore, StoredPart
+from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import load_settings
 from parfocal_ingest.identify import Identified, identify
 from parfocal_ingest.identifying_text import ranges_file
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
+from parfocal_ingest.sending import send_original
 from parfocal_ingest.settings import IngestSettings
 from parfocal_ingest.thumbnail import previews
 from parfocal_ingest.tile_index import index_document, tile_index
 from parfocal_ingest.workflow import TILE_INDEX_NAME, level_table
 
-PART_BYTES = 16 * 1024 * 1024
-PART_SECONDS = 15 * 60
 SAMPLE_SUFFIXES = (".tif", ".tiff")
 
 
@@ -39,38 +37,6 @@ def opened(path: Path) -> tuple[Identified, Pyramid]:
     if not isinstance(found, Pyramid):
         raise NotASampleSlideError(f"{path.name} has no readable pyramid")
     return identified, found
-
-
-def read_part(path: Path, offset: int) -> bytes:
-    with path.open("rb") as handle:
-        handle.seek(offset)
-        return handle.read(PART_BYTES)
-
-
-async def send_original(store: ObjectStore, path: Path, key: str) -> tuple[int, str]:
-    digest = hashlib.sha256()
-    size = (await asyncio.to_thread(path.stat)).st_size
-    if size <= PART_BYTES:
-        body = await asyncio.to_thread(read_part, path, 0)
-        digest.update(body)
-        await store.put_object(key, body, "image/tiff")
-        return size, digest.hexdigest()
-    upload_id = await store.create_multipart_upload(key)
-    parts: list[StoredPart] = []
-    try:
-        for offset in range(0, size, PART_BYTES):
-            body = await asyncio.to_thread(read_part, path, offset)
-            digest.update(body)
-            number = len(parts) + 1
-            url = store.presign_part(key, upload_id, number, PART_SECONDS)
-            answer = await store.http.put(url, content=body)
-            answer.raise_for_status()
-            parts.append(StoredPart(number, len(body), answer.headers["etag"].strip('"')))
-        await store.complete_multipart_upload(key, upload_id, parts)
-    except BaseException:
-        await store.abort_multipart_upload(key, upload_id)
-        raise
-    return size, digest.hexdigest()
 
 
 @dataclass(frozen=True)

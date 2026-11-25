@@ -10,6 +10,10 @@ How an upload is identified before any reader opens it. The readers per format a
 
 A zip with a `.mrxs` and a `Slidedat.ini` is MIRAX. A zip whose files are all `.dcm` (or a `DICOMDIR`) is a DICOM set. Two OpenSlide test files with DICOM-looking names are zips of DICOM instances: `CMU-1-JP2K-33005-v2.zip` and `Leica-4.zip`.
 
+## An uploaded MIRAX or DICOM zip is converted in the validate step
+
+INGEST-033 (uploaded MIRAX and DICOM zips open in the viewer) runs `parfocal_ingest.pyramid_tiff:convert_upload` in the isolated parser in place of `validate_upload` when `converted_at_ingest` holds. The parent moves `original.tiff` out of the output folder, sends it to the slide's `original.tiff` key and keeps it under `objects/` so later steps skip the download. The validate result carries `served_key`, `served_bytes` and `served_sha256`. Index and derive then read the TIFF as `generic-tiff`, derive still takes the label and macro from the zip through `source`, and publish keeps the format, sets the variant `pyramid-tiff` and never copies the zip. A conversion that fails for any reason other than a refusal is refused as `unconvertible`. The converter streams 256 px tiles from 1024-row bands into tifffile, so no level is held whole, and the conversion call alone may return up to `CONVERTED_LIMIT_BYTES` (16 GiB) because a converted DICOM is about 8.5 times its zip. The upload window takes a `.zip` as a slide, and it still zips a MIRAX folder itself but not a folder of `.dcm` files.
+
 ## The formats CI job proves the corpus
 
 The `formats` job in `.github/workflows/ci.yml` fetches the `small` and `formats` fixture groups (about 2.3 GB, kept in the Actions cache) and runs `workers/ingest/tests` with `PARFOCAL_REQUIRE_FIXTURES=small,formats`, so a missing fixture fails instead of skipping. The `big`, `huge` and `camelyon` groups are too large for the cache. Their rows skip in CI and run on a machine that has them.
