@@ -79,6 +79,34 @@ def test_an_admin_prepares_and_removes_a_participant_project(
     assert api(admin).delete("/api/tenant/study-participants/P-T1").json()["removed"] == 0
 
 
+def test_a_moderator_new_to_the_study_workspace_joins_as_an_admin_and_removes_there(
+    api: ApiAs, database: str, people: dict[str, MemberPrincipal]
+) -> None:
+    moderator = people["admin"]
+    owner(
+        database,
+        f"UPDATE users SET email = 'moderator@study.invalid' WHERE id = '{moderator.user_id}'",
+    )
+    prepared = api(moderator).post("/api/tenant/study-participants/P-T4")
+    assert prepared.status_code == 200, prepared.text
+    study_id = uuid.UUID(prepared.json()["workspace_id"])
+    assert study_id != moderator.tenant_id
+    [(role, admin_rights)] = query(
+        with_database_owner(database),
+        "SELECT role, admin_rights FROM memberships "
+        f"WHERE tenant_id = '{study_id}' AND user_id = '{moderator.user_id}'",
+    )
+    assert (str(role), admin_rights) == ("researcher", True)
+
+    in_study = MemberPrincipal(
+        moderator.subject, study_id, moderator.user_id, Role.RESEARCHER, bool(admin_rights)
+    )
+    removed = api(in_study).delete("/api/tenant/study-participants/P-T4")
+    assert removed.status_code == 200, removed.text
+    assert removed.json() == {"code": "P-T4", "removed": 1}
+    assert live_projects(database, "Study P-T4") == []
+
+
 def test_only_an_admin_prepares_or_removes_a_participant(
     api: ApiAs, database: str, people: dict[str, MemberPrincipal]
 ) -> None:
