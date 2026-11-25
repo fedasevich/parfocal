@@ -604,7 +604,18 @@ export function StageReviewObjects({
     void engine.flyToFit();
   };
   const index = current === null ? -1 : order.indexOf(current);
-  const stepping = guided && ready && !done && focus === null && !busy;
+  const stepKeysLive = guided && ready && !done && focus === null;
+  const stepping = stepKeysLive && !busy;
+  const leaveFor = (target: string | null | undefined) => {
+    if (target === null || target === undefined) return;
+    setDraft([]);
+    setMerging([]);
+    setShaping(null);
+    setFixing(null);
+    pick(target);
+  };
+  const stepNext = () => leaveFor(order[index + 1] ?? nextOpenObject(order, decided, current));
+  const stepPrevious = () => leaveFor(index > 0 ? order[index - 1] : null);
   useAnswerKeys(
     answersOf(session.style, session.classes, currentItem),
     (raw) => {
@@ -612,11 +623,7 @@ export function StageReviewObjects({
     },
     stepping && typedCell === null && currentItem !== undefined,
   );
-  useObjectKeys(
-    () => pick(order[index + 1] ?? null),
-    () => pick(order[index - 1] ?? null),
-    stepping,
-  );
+  useObjectKeys(stepNext, stepPrevious, stepKeysLive);
   const jump = (id: string) =>
     pick(
       id === "cells"
@@ -752,10 +759,7 @@ export function StageReviewObjects({
           onSave={(geometry) => fixes.change(current, { geometry })}
           {...(canSplit ? { onSplit: splitCurrent } : {})}
           onClose={() => setShaping(null)}
-          onStep={(delta) => {
-            setShaping(null);
-            pick(order[index + delta] ?? null);
-          }}
+          onStep={(delta) => (delta === 1 ? stepNext() : stepPrevious())}
         />
       ) : null}
       {guided && ready && focus === null && currentItem !== undefined ? (
@@ -851,8 +855,8 @@ export function StageReviewObjects({
                 if (id === "cells") setGridOpen(true);
                 jump(id);
               }}
-              onPrevious={() => pick(order[index - 1] ?? null)}
-              onSkip={() => pick(order[index + 1] ?? nextOpenObject(order, decided, current))}
+              onPrevious={stepPrevious}
+              onSkip={stepNext}
               onNote={() => {
                 if (current !== null) onNote?.(current);
               }}
