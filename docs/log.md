@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-25
 
+- Added PROTO-173 (J and Shift+J step through review objects reliably) and PROTO-174 (outline edits in review are a draft saved once, with points added and removed) for the owner's review findings of 2026-11-25. Fable advised a local draft sent once on Done over a debounce, crossings allowed while editing and blocked at Done, no automatic repair and no API change, and PROTO-174 follows that advice.
+- Owner request 2026-11-25 from a review screenshot, to add as tasks for later: J and Shift+J do not work properly in the review, shape edits need a debounce, the self-intersection check fires while points are moved one by one, points must be addable and removable, and either a save button that sends the edit and reports a broken shape or another design, with Fable asked for the best one.
 - ADMIN-014 (Admin tables show an empty state): the owner found on 2026-11-25 that the Your lab's models table is empty with no message too, now named in the task.
 - Owner request 2026-11-25 from a screenshot: the templates table in Admin repeats its Preview and Duplicate buttons inside the row menu, added as ADMIN-015 (the templates table shows each action once).
 - PROTO-170 (the page header takes less height): the owner confirmed on 2026-11-25 that the page header is too tall, not the global top bar, so the task now leaves the global top bar alone.
