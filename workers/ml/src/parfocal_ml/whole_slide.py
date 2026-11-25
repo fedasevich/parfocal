@@ -141,7 +141,7 @@ class Progress(Protocol):
 
     async def total(self, count: int) -> None: ...
 
-    async def mark(self, tile: Tile, objects: int) -> None: ...
+    async def mark(self, tile: Tile, objects: int, typed: int) -> None: ...
 
     async def should_stop(self) -> bool: ...
 
@@ -161,7 +161,7 @@ def owned_cells(tile: Tile, cells: Sequence[Cell], classes: int) -> list[Cell]:
     return [replace(cell, number=position + 1) for position, (_, _, cell) in enumerate(kept)]
 
 
-def tile_chunk(tile: Tile, cells: Sequence[Cell], classes: int) -> tuple[bytes, int]:
+def tile_chunk(tile: Tile, cells: Sequence[Cell], classes: int) -> tuple[bytes, int, int]:
     members = [placed(cell) for cell in owned_cells(tile, cells, classes)]
     probs = bool(members) and all(member.cell.probs is not None for member in members)
     alt = any(member.cell.alt_class is not None for member in members)
@@ -175,7 +175,7 @@ def tile_chunk(tile: Tile, cells: Sequence[Cell], classes: int) -> tuple[bytes, 
         "tile": tile.core.described(),
     }
     fields = chunk_fields(members) + optional_fields(members, probs=probs, alt=alt, nucleus=nucleus)
-    return packed(encode(header, fields)), len(members)
+    return packed(encode(header, fields)), len(members), len(members) if probs else 0
 
 
 async def run_tiles(
@@ -193,9 +193,9 @@ async def run_tiles(
 
     async def finish() -> None:
         tile, task = running.popleft()
-        data, count = tile_chunk(tile, await task, detector.classes)
+        data, count, typed = tile_chunk(tile, await task, detector.classes)
         await store.put(tile_key(prefix, tile.index), data)
-        await progress.mark(tile, count)
+        await progress.mark(tile, count, typed)
 
     ran = 0
     try:
@@ -220,6 +220,7 @@ async def run_tiles(
 @dataclass(frozen=True)
 class StepProgress:
     step: StepRun
+    typing: bool = False
 
     async def done(self) -> frozenset[int]:
         return await self.step.done_units()
@@ -227,9 +228,11 @@ class StepProgress:
     async def total(self, count: int) -> None:
         await self.step.set_total(count)
 
-    async def mark(self, tile: Tile, objects: int) -> None:
+    async def mark(self, tile: Tile, objects: int, typed: int) -> None:
         core = tile.core
-        area = Area(core.x, core.y, core.width, core.height, objects)
+        area = Area(
+            core.x, core.y, core.width, core.height, objects, typed if self.typing else None
+        )
         async with self.step.transaction() as connection:
             await mark_area(self.step, connection, tile.index, area)
 

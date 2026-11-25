@@ -79,7 +79,7 @@ class Marks:
     async def total(self, count: int) -> None:
         return None
 
-    async def mark(self, tile: Tile, objects: int) -> None:
+    async def mark(self, tile: Tile, objects: int, typed: int) -> None:
         self.marked[tile.index] = objects
 
     async def should_stop(self) -> bool:

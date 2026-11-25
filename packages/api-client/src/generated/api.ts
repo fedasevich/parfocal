@@ -5132,6 +5132,8 @@ export interface RunStage {
   finished_at: string | null;
   waiting_reason?: string | null;
   objects?: number | null;
+  typed?: number | null;
+  untyped_reason?: string | null;
 }
 
 export interface ModelRun {

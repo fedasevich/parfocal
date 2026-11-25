@@ -113,16 +113,23 @@ def typed_in_window(
     return type_nuclei(rgb, shapes, model, slide.mpp, temperature=temperature)
 
 
+def typed_outlines(
+    slide: SlideImage, outlines: Sequence[Points], model: Model, temperature: float
+) -> list[TypedNucleus]:
+    nuclei: list[TypedNucleus | None] = [None] * len(outlines)
+    for indices in grouped(outlines):
+        chosen = [outlines[index] for index in indices]
+        for index, nucleus in zip(
+            indices, typed_in_window(slide, chosen, model, temperature), strict=True
+        ):
+            nuclei[index] = nucleus
+    return [nucleus or unknown() for nucleus in nuclei]
+
+
 async def answer_outline_types(
     call: Mapping[str, object], open_slide: SlideOpener, model: Model
 ) -> dict[str, object]:
     request = outline_types_call_of(call)
     slide = await open_slide(request.tenant_id, request.slide_id, request.folder)
-    nuclei: list[TypedNucleus | None] = [None] * len(request.outlines)
-    for indices in grouped(request.outlines):
-        chosen = [request.outlines[index] for index in indices]
-        for index, nucleus in zip(
-            indices, typed_in_window(slide, chosen, model, request.temperature), strict=True
-        ):
-            nuclei[index] = nucleus
-    return {"outlines": [answered(nucleus or unknown()) for nucleus in nuclei]}
+    nuclei = typed_outlines(slide, request.outlines, model, request.temperature)
+    return {"outlines": [answered(nucleus) for nucleus in nuclei]}

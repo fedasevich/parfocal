@@ -229,7 +229,7 @@ async def measure(full: bool) -> dict[str, object]:
         async def total(self, count: int) -> None:
             self.tiles_started = time.perf_counter()
 
-        async def mark(self, tile: Tile, objects: int) -> None:
+        async def mark(self, tile: Tile, objects: int, typed: int) -> None:
             self.marked += 1
             self.objects += objects
             if self.marked == RATE_TILES:

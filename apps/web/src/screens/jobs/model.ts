@@ -182,6 +182,22 @@ export const stageLabel = (stage: RunStage) => stageLabels[stageKey(stage)] ?? s
 
 type StepContext = { model: ProjectModel | undefined; resultSet: string };
 
+const untypedReasons: Record<string, string> = {
+  "typer-weights-missing": "the typer weights are missing",
+};
+
+function typingDetail(stage: RunStage): string | undefined {
+  if (stage.untyped_reason) {
+    return `cells untyped, ${untypedReasons[stage.untyped_reason] ?? stage.untyped_reason}`;
+  }
+  return (stage.typed ?? null) === null ? undefined : `${counted(stage.typed ?? 0, "cell")} typed`;
+}
+
+function withTyping(detail: string, stage: RunStage): string {
+  const typing = typingDetail(stage);
+  return typing ? `${detail} · ${typing}` : detail;
+}
+
 export function cellsOf(run: ModelRun): number | null {
   const found = run.stages.find((stage) => (stage.objects ?? null) !== null);
   return found?.objects ?? null;
@@ -203,9 +219,12 @@ function stageDetail(
     case "tissue-found":
       return stage.units_total ? counted(stage.units_total, "level") : undefined;
     case "model-running":
-      return done
-        ? counted(stage.units_done, "tile")
-        : `tile ${thousands(stage.units_done)} of ${thousands(stage.units_total ?? 0)}`;
+      return withTyping(
+        done
+          ? counted(stage.units_done, "tile")
+          : `tile ${thousands(stage.units_done)} of ${thousands(stage.units_total ?? 0)}`,
+        stage,
+      );
     case "objects-placed":
       return done && cells !== null ? counted(cells, "cell") : undefined;
     case "ids-given":

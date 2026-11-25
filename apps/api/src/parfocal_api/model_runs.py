@@ -80,6 +80,7 @@ from parfocal_common.model_runs import (
     wake_nuclei_pool,
 )
 from parfocal_common.object_ids import Letter, ObjectIdError, parse
+from parfocal_common.outline_types import TYPER_CLASSES
 from parfocal_common.warm_gate import Pools
 
 MAX_SLIDES = 200
@@ -222,6 +223,8 @@ class RunStage(BaseModel):
     finished_at: datetime | None
     waiting_reason: str | None = None
     objects: int | None = None
+    typed: int | None = None
+    untyped_reason: str | None = None
 
 
 class ModelRun(BaseModel):
@@ -449,8 +452,19 @@ async def stages_of(
         .where(job_units.c.job_id == job_steps.c.job_id, job_units.c.ordinal == job_steps.c.ordinal)
         .scalar_subquery()
     )
+    typed = (
+        select(func.sum(cast(job_units.c.result["typed"].astext, Integer)))
+        .where(job_units.c.job_id == job_steps.c.job_id, job_units.c.ordinal == job_steps.c.ordinal)
+        .scalar_subquery()
+    )
     rows = await connection.execute(
-        select(job_steps, units.label("units_done"), placed.label("objects"))
+        select(
+            job_steps,
+            units.label("units_done"),
+            placed.label("objects"),
+            typed.label("typed"),
+            job_steps.c.result["untyped"].astext.label("untyped_reason"),
+        )
         .where(job_steps.c.job_id.in_(list(job_ids)))
         .order_by(job_steps.c.job_id, job_steps.c.ordinal)
     )
@@ -466,6 +480,8 @@ async def stages_of(
                 started_at=row.started_at,
                 finished_at=row.finished_at,
                 objects=None if row.objects is None else int(row.objects),
+                typed=None if row.typed is None else int(row.typed),
+                untyped_reason=row.untyped_reason,
             )
         )
     return stages
@@ -623,7 +639,10 @@ def result_set_draft(parameters: RunParameters) -> ResultSetDraft:
     detector = parameters.detector
     known = BY_NAME.get(detector.name)
     title = known.title if known is not None else detector.name
-    return ResultSetDraft(name=f"{title} {detector.version}"[:120], model_version=detector.version)
+    classes = list(TYPER_CLASSES) if detector.name in NUCLEI_DETECTORS else []
+    return ResultSetDraft(
+        name=f"{title} {detector.version}"[:120], model_version=detector.version, classes=classes
+    )
 
 
 def wake_pool_for(detector: str) -> Callable[[Pools], bool]:

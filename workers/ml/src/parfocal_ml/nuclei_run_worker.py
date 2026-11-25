@@ -1,9 +1,11 @@
 import asyncio
+import logging
 import os
 import tempfile
 import time
 import uuid
 from collections.abc import Awaitable, Callable, Mapping, Sequence
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -11,11 +13,12 @@ import httpx2
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from parfocal_common.chunk_store import Cell
 from parfocal_common.db import create_engine
 from parfocal_common.gpu_usage import report_gpu_seconds
 from parfocal_common.ingest import folder_of
 from parfocal_common.jobs import StepFailedError, StepFunction, StepRun, Workflow
-from parfocal_common.model_artifacts import ModelArtifacts
+from parfocal_common.model_artifacts import ArtifactError, ModelArtifacts
 from parfocal_common.model_runs import (
     MODEL_STAGE,
     NUCLEI_DETECTORS,
@@ -32,25 +35,76 @@ from parfocal_common.model_runs import (
     workflow,
 )
 from parfocal_common.object_store import ObjectStore
+from parfocal_common.outline_types import SINGLE_VIEW, TYPER_CLASSES, TYPER_TEMPERATURES
 from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import StorageSettings, load_settings
 from parfocal_ml.lab_model_worker import STORAGE_TIMEOUT_SECONDS, ScaledReader, passed
 from parfocal_ml.nuclei import MapModel, OnnxPathoSam, PathoSamDetector, Quality
+from parfocal_ml.outline_typer import typed_outlines
+from parfocal_ml.outline_typer_worker import fetched_typer
 from parfocal_ml.sam_contract import GRAPHS
 from parfocal_ml.stored_slides import StoredSlides
 from parfocal_ml.tumor_map_job import SlideImage
 from parfocal_ml.tumor_map_worker import Drain, drain_of, refuse_cpu_on_a_gpu, worker_name
-from parfocal_ml.whole_slide import StepProgress, Window, plan_tiles, run_tiles, tile_sizes
+from parfocal_ml.typer import Model as TyperModel
+from parfocal_ml.typer import TypedNucleus
+from parfocal_ml.whole_slide import (
+    Detector,
+    StepProgress,
+    Window,
+    plan_tiles,
+    run_tiles,
+    tile_sizes,
+)
 
 NOT_SERVED = "model-not-served"
 NO_SCALE = "model-run-no-scale"
 NO_AREA = "model-run-no-area"
+TYPER_MISSING = "typer-weights-missing"
+PROBABILITY_SCALE = 255
 WEIGHTS_FAMILY = "pathosam-vit-b-ais"
 WEIGHTS_VERSION = "v1.2"
 WEIGHTS_FILES = (GRAPHS.encoder, GRAPHS.ais_decoder_full)
 
 type SlideOpener = Callable[[uuid.UUID, uuid.UUID, str | None], Awaitable[SlideImage]]
 ORIGINAL_KEY = text("SELECT original_key FROM slides WHERE id = :slide_id")
+logger = logging.getLogger("parfocal.nuclei_runs")
+
+
+def probability_byte(value: float) -> int:
+    return max(0, min(PROBABILITY_SCALE, round(value * PROBABILITY_SCALE)))
+
+
+def typed_cell(cell: Cell, nucleus: TypedNucleus) -> Cell:
+    return replace(
+        cell,
+        class_index=TYPER_CLASSES.index(nucleus.type),
+        probs=[probability_byte(nucleus.probabilities[name]) for name in TYPER_CLASSES],
+    )
+
+
+def typed_cells(
+    slide: SlideImage, cells: Sequence[Cell], typer: TyperModel, temperature: float
+) -> list[Cell]:
+    if not cells:
+        return []
+    nuclei = typed_outlines(slide, [tuple(cell.ring) for cell in cells], typer, temperature)
+    return [typed_cell(cell, nucleus) for cell, nucleus in zip(cells, nuclei, strict=True)]
+
+
+@dataclass(frozen=True)
+class TypingDetector:
+    detector: Detector
+    slide: SlideImage
+    typer: TyperModel | None
+    temperature: float = TYPER_TEMPERATURES[SINGLE_VIEW]
+    classes: int = len(TYPER_CLASSES)
+
+    async def detect(self, window: Window) -> Sequence[Cell]:
+        cells = await self.detector.detect(window)
+        if self.typer is None:
+            return cells
+        return await asyncio.to_thread(typed_cells, self.slide, cells, self.typer, self.temperature)
 
 
 def quality_of(settings: RunSettings) -> Quality:
@@ -98,6 +152,7 @@ def nuclei_running(
     model: MapModel,
     store: ResultStore,
     gpu: str | None = None,
+    typer: TyperModel | None = None,
 ) -> StepFunction:
     async def run(step: StepRun) -> Mapping[str, Any]:
         slide_id = uuid.UUID(str(step.input["slide_id"]))
@@ -112,25 +167,33 @@ def nuclei_running(
         tissue = image.tissue()
         core, halo = tile_sizes(image.mpp, quality.mpp)
         plan = plan_tiles(whole, bounds_of(settings, whole), core, halo, tissue)
-        detector = PathoSamDetector(
-            ScaledReader(image.reader, image.mpp), model, quality, tissue=tissue
+        detector = TypingDetector(
+            PathoSamDetector(ScaledReader(image.reader, image.mpp), model, quality, tissue=tissue),
+            image,
+            typer,
         )
         prefix = run_prefix(step.tenant_id, slide_id, step.job_id)
         started = time.perf_counter()
-        ran = await run_tiles(plan, plan.tiles, detector, store, prefix, StepProgress(step))
+        progress = StepProgress(step, typing=typer is not None)
+        ran = await run_tiles(plan, plan.tiles, detector, store, prefix, progress)
         seconds = time.perf_counter() - started
         if ran:
             await report_gpu_seconds(step, seconds, gpu)
-        return {"tiles": len(plan.tiles), "ran": ran, "seconds": round(seconds, 1)}
+        found = {"tiles": len(plan.tiles), "ran": ran, "seconds": round(seconds, 1)}
+        return found if typer is not None else {**found, "untyped": TYPER_MISSING}
 
     return run
 
 
 def nuclei_run_workflow(
-    slide_of: SlideOpener, model: MapModel, store: ResultStore, gpu: str | None = None
+    slide_of: SlideOpener,
+    model: MapModel,
+    store: ResultStore,
+    gpu: str | None = None,
+    typer: TyperModel | None = None,
 ) -> Workflow:
     stages: dict[str, StepFunction] = dict.fromkeys(STAGES, passed)
-    stages[MODEL_STAGE] = nuclei_running(slide_of, model, store, gpu)
+    stages[MODEL_STAGE] = nuclei_running(slide_of, model, store, gpu, typer)
     return workflow(stages)
 
 
@@ -164,6 +227,14 @@ async def fetched_weights(storage: ObjectStore, folder: Path) -> Path:
     return folder
 
 
+async def loaded_typer(storage: ObjectStore, folder: Path) -> TyperModel | None:
+    try:
+        return await fetched_typer(storage, folder)
+    except (ArtifactError, OSError, RuntimeError) as error:
+        logger.warning("The cells stay untyped, because the typer did not load: %s", error)
+        return None
+
+
 async def drained_from_environment(call: Mapping[str, object], gpu: str | None) -> int:
     location = load_settings(StorageSettings).storage()
     engine = create_engine(os.environ["DATABASE_URL"])
@@ -174,9 +245,11 @@ async def drained_from_environment(call: Mapping[str, object], gpu: str | None) 
                 weights = await fetched_weights(storage, Path(folder))
                 model = await asyncio.to_thread(OnnxPathoSam, weights)
                 refuse_cpu_on_a_gpu(tuple(model.encoder.get_providers()), gpu)
+                typer = await loaded_typer(storage, Path(folder))
                 slides = StoredSlides(storage, Path(folder))
                 try:
-                    plan = nuclei_run_workflow(slides.open, model, ObjectResultStore(storage), gpu)
+                    results = ObjectResultStore(storage)
+                    plan = nuclei_run_workflow(slides.open, model, results, gpu, typer)
                     return await drain_nuclei_runs(engine, plan, worker_name(), drain_of(call))
                 finally:
                     slides.close()

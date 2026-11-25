@@ -7,6 +7,8 @@ from typing import Annotated
 
 from pydantic import StringConstraints
 
+from parfocal_common.outline_types import SINGLE_VIEW, TYPER_TEMPERATURES
+
 
 class ModelMakes(StrEnum):
     REGIONS = "regions"
@@ -172,8 +174,8 @@ PANNUKE_SITES_BUT_LUNG = (
 )
 
 CALIBRATIONS: Mapping[tuple[str, str, int], TyperCalibration] = {
-    ("pathosam-hovernext", "v1.2", 1): TyperCalibration(
-        temperature=1.42,
+    ("pathosam-hovernext", "v1.2", SINGLE_VIEW): TyperCalibration(
+        temperature=TYPER_TEMPERATURES[SINGLE_VIEW],
         ece_after=0.0223,
         test_set_accuracy=0.8297,
         test_set_confident_share=0.5941,
@@ -182,7 +184,7 @@ CALIBRATIONS: Mapping[tuple[str, str, int], TyperCalibration] = {
         bands=typer_bands((0.594, 0.950), (0.278, 0.722), (0.117, 0.512), (0.011, 0.438)),
     ),
     ("pathosam-hovernext", "v1.2", 8): TyperCalibration(
-        temperature=1.29,
+        temperature=TYPER_TEMPERATURES[8],
         ece_after=0.0187,
         test_set_accuracy=0.8348,
         test_set_confident_share=0.6076,

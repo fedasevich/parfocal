@@ -75,7 +75,7 @@ class MemoryProgress:
     async def total(self, count: int) -> None:
         self.counted = count
 
-    async def mark(self, tile: Tile, objects: int) -> None:
+    async def mark(self, tile: Tile, objects: int, typed: int) -> None:
         self.marked[tile.index] = objects
 
     async def should_stop(self) -> bool:
@@ -190,9 +190,9 @@ class OverlappingDetector(FakeDetector):
 class OrderedProgress(MemoryProgress):
     order: list[int] = field(default_factory=list[int])
 
-    async def mark(self, tile: Tile, objects: int) -> None:
+    async def mark(self, tile: Tile, objects: int, typed: int) -> None:
         self.order.append(tile.index)
-        await super().mark(tile, objects)
+        await super().mark(tile, objects, typed)
 
 
 async def test_looking_one_tile_ahead_stores_the_same_chunks_in_order():
