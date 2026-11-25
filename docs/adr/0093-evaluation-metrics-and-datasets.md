@@ -33,7 +33,7 @@ Datasets, as found on 2026-10-18:
 |---|---|---|---|
 | MoNuSeg | Reference only, in PathoSAM's training set | CC BY-NC-SA 4.0 | [challenge data page](https://monuseg.grand-challenge.org/Data/) |
 | PanNuke | Reference for segmentation, folds 1 and 3 for calibration and typing | CC BY-NC-SA 4.0 | [Warwick TIA page](https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke) |
-| TNBC (Naylor et al., v1.1) | Held-out segmentation | CC BY 4.0 | [Zenodo 2579118](https://zenodo.org/records/2579118) |
+| TNBC (Naylor et al., v1.1) | Segmentation. Not held out for PathoSAM, see the amendment below | CC BY 4.0 | [Zenodo 2579118](https://zenodo.org/records/2579118) |
 | NuInsSeg | Held-out segmentation, per organ | CC BY 4.0 | [Zenodo 10518968](https://zenodo.org/records/10518968) |
 | CryoNuSeg | Held-out segmentation on frozen sections | TODO: not stated on the [GitHub repository](https://github.com/masih4/CryoNuSeg) (its code is MIT), and the Kaggle page could not be read | Kaggle |
 | Lizard | Native 20× colon nuclei with six classes | CC BY-NC-SA 4.0 according to a [derived Zenodo record](https://zenodo.org/records/10636591). TODO: confirm on the Warwick page, which needs a sign-in | CoNIC challenge |
@@ -50,3 +50,7 @@ Allowed use:
 - MLEVAL-001 (dataset registry and loaders) records each entry's licence, source, citation and checksum from this table, and its tests run where the data is cached.
 - MLEVAL-002 to MLEVAL-005 use the metrics above. The POC fixture paths in `test_scoring.py` move to the registry with MLEVAL-001.
 - SEC-021 (GDPR documentation) needs nothing from this, because none of these datasets holds personal data about Parfocal's users or patients.
+
+## Amendment of 2026-11-25
+
+TNBC is not held out for PathoSAM. Section 2.5 of the PathoSAM paper (arXiv 2502.00408) lists Naylor et al. 2019, the TNBC dataset, among the six datasets its generalist models were trained on, with a separate test split, and Parfocal scores all 50 images. A TNBC number for PathoSAM is therefore on its training data. NuInsSeg and CryoNuSeg stay held out for it. Found while checking the thesis section on model accuracy.

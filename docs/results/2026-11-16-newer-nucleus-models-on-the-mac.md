@@ -43,9 +43,9 @@ Pooled PQ, with F1 at IoU 0.5 in brackets, then the mean PQ over images.
 
 | Model | TNBC | NuInsSeg | CryoNuSeg | Held out for it |
 |---|---|---|---|---|
-| PathoSAM ViT-B AIS, kept, stored POC prediction | 0.828 (0.952), 0.829 | 0.524 (0.696), 0.488 | 0.483 (0.632), 0.471 | all three |
-| PathoSAM ViT-B AIS, kept, rerun on this module's path | 0.828 (0.952), 0.829 | 0.524 (0.695), 0.488 | 0.483 (0.632), 0.471 | all three |
-| PathoSAM ViT-L AIS | 0.854 (0.957), 0.850 | 0.554 (0.734), 0.523 | 0.481 (0.630), 0.465 | all three |
+| PathoSAM ViT-B AIS, kept, stored POC prediction | 0.828 (0.952), 0.829, in its training data | 0.524 (0.696), 0.488 | 0.483 (0.632), 0.471 | NuInsSeg and CryoNuSeg |
+| PathoSAM ViT-B AIS, kept, rerun on this module's path | 0.828 (0.952), 0.829, in its training data | 0.524 (0.695), 0.488 | 0.483 (0.632), 0.471 | NuInsSeg and CryoNuSeg |
+| PathoSAM ViT-L AIS | 0.854 (0.957), 0.850, in its training data | 0.554 (0.734), 0.523 | 0.481 (0.630), 0.465 | NuInsSeg and CryoNuSeg |
 | InstanSeg brightfield nuclei | 0.712 (0.887), 0.716, in its training data | 0.694 (0.875), 0.681, in its training data | 0.439 (0.577), 0.421 | CryoNuSeg only |
 | HoVer-Net, POC whole-slide job until doc 26 | 0.512 (0.682), 0.447 | 0.000 (0.000), 0.000 | 0.190 (0.276), 0.187 | all three |
 
@@ -75,3 +75,5 @@ On the first TNBC image, ViT-B through this module's runner path scores PQ 0.881
 - CryoNuSeg through the MLEVAL-010 archive loader. On 2026-11-18 `~/.cache/parfocal/datasets/cryonuseg/` still did not exist, so CryoNuSeg stays scored from the POC fixture.
 - A ViT-L rerun capped under 8 GB. ViT-B with 4 threads also ends near 8.05 GB over a full set, so the growth is not only threads. One process per batch of images would cap both.
 - HoVer-NeXt as a detector. Only its foreground scores are stored in the POC fixtures, not instances.
+
+Corrected on 2026-11-25: TNBC is in PathoSAM's training data (arXiv 2502.00408, section 2.5), so the held-out column no longer lists it for PathoSAM. See the amendment of ADR 0093.
