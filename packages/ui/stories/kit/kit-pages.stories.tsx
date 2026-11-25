@@ -598,6 +598,60 @@ export const SmallModalsAndFlowPages: Story = {
   ),
 };
 
+export const FlowPageHeader: Story = {
+  name: "Flow page header, compact",
+  render: () => (
+    <KitPage
+      title="Flow page header"
+      intro="The breadcrumb and the title share one line, the subtitle sits under them, and the stepper or a status line takes the last line. The content starts about 105 px below the top with steps and about 75 px below it with a status line."
+    >
+      <Frame label="With the stepper" flush>
+        <FlowPage
+          className="h-[420px]"
+          crumbs={[{ label: "P03 · Clinical nodes" }, { label: "S26-04812" }, { label: "Report" }]}
+          title="Clinical report"
+          subtitle="S26-04812 · Sentinel node report v2 · assigned to Lenka Malá"
+          steps={[
+            { label: "Findings" },
+            { label: "Staging" },
+            { label: "Report text" },
+            { label: "Sign out" },
+          ]}
+          current={0}
+          bar={<FlowBar hint="The draft is saved as you go." next={<Button>Next</Button>} />}
+        >
+          <Zone title="Findings">
+            <Hint>The zones of this step go here.</Hint>
+          </Zone>
+        </FlowPage>
+      </Frame>
+      <Frame label="With a status line in place of the stepper" flush>
+        <FlowPage
+          className="h-[420px]"
+          crumbs={[{ label: "P03 · Clinical nodes" }, { label: "S26-04812" }, { label: "Report" }]}
+          title="Clinical report"
+          subtitle="S26-04812 · Sentinel node report v2"
+          steps={[]}
+          current={0}
+          status={
+            <p className="m-0 flex items-center gap-2 text-body-sm text-fg">
+              <Icon name="lock" className="text-fg-dim" />
+              <span>Locked as version 1. A change is an amendment with a reason.</span>
+            </p>
+          }
+          bar={
+            <FlowBar hint="A change from now on is an amendment." next={<Button>Back</Button>} />
+          }
+        >
+          <Zone title="Signed report">
+            <Hint>The report is locked.</Hint>
+          </Zone>
+        </FlowPage>
+      </Frame>
+    </KitPage>
+  ),
+};
+
 export const ErrorAndIssueStates: Story = {
   name: "Error and issue states",
   render: () => (

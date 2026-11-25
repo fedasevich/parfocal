@@ -481,7 +481,7 @@ function NewTaskFlow({
   });
   const sentOn = draft.sentAt ?? (created ? shortDate(created.created_at) : shortDate(data.today));
   const sentLine = (
-    <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
+    <p className="m-0 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="check" className="text-ok" />
       <span>
         {draft.invites.length

@@ -22,11 +22,13 @@ function Breadcrumbs({
   className,
   renderLink = anchorLink,
   start,
+  trailingSeparator = false,
 }: {
   items: Crumb[];
   className?: string | undefined;
   renderLink?: LinkRenderer | undefined;
   start?: React.ReactNode;
+  trailingSeparator?: boolean;
 }) {
   const { t } = useLingui();
 
@@ -40,7 +42,7 @@ function Breadcrumbs({
     >
       {start}
       {items.map((item, index) =>
-        index === items.length - 1 ? (
+        index === items.length - 1 && !trailingSeparator ? (
           <span key={item.label} aria-current="page" className="text-fg">
             {item.label}
           </span>
@@ -310,17 +312,33 @@ function FlowPage({
       )}
       {...props}
     >
-      <header className="border-b border-line pt-5 pb-4.5">
+      <header className="border-b border-line py-2.5">
         <div className="mx-auto w-full max-w-208 px-9">
-          <Breadcrumbs items={crumbs} className="mb-2" renderLink={renderLink} start={crumbStart} />
-          <h2 className="m-0 text-page-title leading-[1.25] font-semibold">{title}</h2>
-          {subtitle ? (
-            <p className="mt-1 mb-4 text-body-sm leading-[1.45] text-fg-dim">{subtitle}</p>
-          ) : (
-            <div className="h-4" />
-          )}
-          {status ?? (
+          <div data-slot="flow-heading" className="flex flex-wrap items-center gap-x-1.5">
+            {crumbs.length > 1 || crumbStart ? (
+              <Breadcrumbs
+                items={crumbs.slice(0, -1)}
+                renderLink={renderLink}
+                start={crumbStart}
+                trailingSeparator
+              />
+            ) : null}
+            <h2
+              aria-current="page"
+              className="m-0 min-w-0 text-page-title leading-[1.25] font-semibold"
+            >
+              {title}
+            </h2>
+          </div>
+          {subtitle || status ? (
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm leading-[1.45] text-fg-dim">
+              {subtitle ? <p className="m-0">{subtitle}</p> : null}
+              {status}
+            </div>
+          ) : null}
+          {status ? null : (
             <Stepper
+              className="mt-2"
               steps={steps}
               current={current}
               {...(reached === undefined ? {} : { reached })}
