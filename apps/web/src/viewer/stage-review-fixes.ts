@@ -12,7 +12,7 @@ import {
   useSaveReviewEdit,
 } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { geometryOf, type Ring } from "../annotations/ai-edit.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { ringOfGeometry } from "../screens/review/outline-coords.ts";
@@ -71,7 +71,12 @@ export function ringOfFix(fix: ReviewFix | undefined): number[] | null {
   return ring === null || ring.length < 3 ? null : ring.flatMap((point) => [point.x, point.y]);
 }
 
-export function useReviewFixes(taskId: string, slideId: string, enabled: boolean): ReviewFixes {
+export function useReviewFixes(
+  taskId: string,
+  slideId: string,
+  enabled: boolean,
+  onRejected?: (objectId: string, error: unknown) => void,
+): ReviewFixes {
   const queryClient = useQueryClient();
   const layer = okData(
     useGetReviewedLayer(taskId, slideId, undefined, { query: { enabled } }).data,
@@ -103,13 +108,29 @@ export function useReviewFixes(taskId: string, slideId: string, enabled: boolean
       queryKey: getListReviewEditHistoryQueryKey(taskId, slideId, objectId),
     });
   };
-  const saver = useSaveReviewEdit();
-  const clearer = useClearReviewEdit();
   const keep = (objectId: string, fix: ReviewFix | null) =>
     setKept((now) => ({
       slide: slideKey,
       fixes: new Map(now.slide === slideKey ? now.fixes : []).set(objectId, fix),
     }));
+  const forget = (objectId: string) =>
+    setKept((now) => {
+      const fixes = new Map(now.slide === slideKey ? now.fixes : []);
+      fixes.delete(objectId);
+      return { slide: slideKey, fixes };
+    });
+  const rejected = useRef(onRejected);
+  rejected.current = onRejected;
+  const saver = useSaveReviewEdit({
+    mutation: {
+      onError: (error, { objectId }) => {
+        forget(objectId);
+        refresh(objectId);
+        rejected.current?.(objectId, error);
+      },
+    },
+  });
+  const clearer = useClearReviewEdit();
   const put = (objectId: string, fix: ReviewFix) => {
     keep(objectId, fix);
     saver.mutate(

@@ -74,7 +74,6 @@ export function StageShapeEdit({
   object,
   classId,
   ring,
-  original,
   edited,
   tool,
   candidates = [],
@@ -90,7 +89,6 @@ export function StageShapeEdit({
   object: string;
   classId: string | null;
   ring: Ring;
-  original: Ring;
   edited: boolean;
   tool: ShapeTool;
   candidates?: readonly MergeCandidate[];
@@ -104,12 +102,6 @@ export function StageShapeEdit({
   const escRegistry = useEscRegistry();
   const closing = useRef(onClose);
   closing.current = onClose;
-  const cells = useMemo(
-    (): AiCell[] => [
-      { ...cellOfRing(object, classId, ring, edited), original: { classId: null, ring: original } },
-    ],
-    [object, classId, ring, original, edited],
-  );
   const mergeCells = useMemo(
     (): AiCell[] => [
       cellOfRing(object, classId, ring, edited),
@@ -168,29 +160,7 @@ export function StageShapeEdit({
       />
     );
   }
-  return (
-    <AiLayer
-      engine={engine}
-      stage={stage}
-      cells={cells}
-      checkOf={() => (edited ? "edited" : "confirmed")}
-      selection={[object]}
-      selecting
-      locked={false}
-      tag={null}
-      colourOf={() => "var(--accent)"}
-      startEditing={object}
-      onEditing={(editing) => {
-        if (editing === null) closing.current();
-      }}
-      onPick={(ids) => {
-        if (ids.length === 0) closing.current();
-      }}
-      onReshape={(_, next) => onSave(geometryOf(next))}
-      onDelete={() => undefined}
-      onStep={onStep}
-    />
-  );
+  return null;
 }
 
 export function StageShapeFateBar({
@@ -227,24 +197,32 @@ export function StageShapeEditBar({
   edited,
   canSplit = false,
   merging = 0,
+  crossing = false,
+  asking = false,
   onTool,
   onRestore,
   onMerge,
   onDone,
+  onKeepEditing,
+  onDiscard,
 }: {
   object: string;
   tool: ShapeTool;
   edited: boolean;
   canSplit?: boolean;
   merging?: number;
+  crossing?: boolean;
+  asking?: boolean;
   onTool: (tool: ShapeTool) => void;
   onRestore: () => void;
   onMerge?: () => void;
   onDone: () => void;
+  onKeepEditing?: () => void;
+  onDiscard?: () => void;
 }) {
   const { t } = useLingui();
   const hints: Record<ShapeTool, string> = {
-    handles: t`Drag a point or the outline of ${object}. Each move is saved as your edit.`,
+    handles: t`Drag a point or the outline of ${object}. Drag the dot on an edge to add a point, Alt+click a point or select it and press Backspace to remove it. Done saves the outline once, Esc discards it.`,
     brush: t`Paint to add to ${object}, hold Shift to erase. The [ and ] keys change the size.`,
     cut: t`Draw a line across ${object} to split it into parts.`,
     merge: t`Click the regions to merge with ${object}, then press Merge.`,
@@ -257,6 +235,26 @@ export function StageShapeEditBar({
       className="m-0 flex min-w-0 flex-col gap-2 rounded-ctl border border-line p-3"
     >
       <p className="m-0 text-body-sm text-fg">{hints[tool]}</p>
+      {tool === "handles" && crossing ? (
+        <p data-testid="outline-crossing" role="status" className="m-0 text-body-sm text-bad">
+          {t`Outline crosses itself`}
+        </p>
+      ) : null}
+      {tool === "handles" && asking ? (
+        <div data-testid="outline-leave" className="flex flex-col gap-2">
+          <p className="m-0 text-body-sm text-fg">
+            {t`The outline of ${object} crosses itself, so it cannot be saved. Fix it, or discard the change and go on.`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="secondary" onClick={onKeepEditing}>
+              {t`Fix the outline`}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onDiscard}>
+              {t`Discard the change`}
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         <Button
           size="sm"
@@ -304,7 +302,12 @@ export function StageShapeEditBar({
             {t`Restore the AI original`}
           </Button>
         ) : null}
-        <Button size="sm" variant="ghost" onClick={onDone}>
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={tool === "handles" && crossing}
+          onClick={onDone}
+        >
           {t`Done`}
         </Button>
       </div>

@@ -91,17 +91,17 @@ test("J and Shift+J step while an outline edit is open", async ({ page }) => {
     .getByTestId("object-fix-row")
     .getByRole("button", { name: /Edit shape/ })
     .click();
-  await expect(page.getByTestId("ai-layer")).toHaveAttribute("data-editing", start);
+  await expect(page.getByTestId("outline-editor")).toHaveAttribute("data-editing", start);
   await press(page, "j", place + 1);
-  await expect(page.getByTestId("ai-layer")).toHaveCount(0);
+  await expect(page.getByTestId("outline-editor")).toHaveCount(0);
   expect(await press(page, "Shift+j", place)).toBe(start);
   await panel(page)
     .getByTestId("object-fix-row")
     .getByRole("button", { name: /Edit shape/ })
     .click();
-  await expect(page.getByTestId("ai-layer")).toHaveAttribute("data-editing", start);
+  await expect(page.getByTestId("outline-editor")).toHaveAttribute("data-editing", start);
   await press(page, "Shift+j", place - 1);
-  await expect(page.getByTestId("ai-layer")).toHaveCount(0);
+  await expect(page.getByTestId("outline-editor")).toHaveCount(0);
 });
 
 test("J and Shift+J step while the brush is open", async ({ page }) => {
