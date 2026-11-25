@@ -2,6 +2,34 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.53.0 (2026-11-25)
+
+### Features
+
+- PROTO-184: Drawn objects live in a Figma style layers tree
+- PROTO-184: Show a drawn region's area and perimeter on its layers tree row
+- EXP-021: A moderator new to the study workspace joins it as an admin and removes there
+- PROTO-192: Hide the cell type bar with a key and keep it clear of the cell
+
+### Docs
+
+- OPS-042: Log the v0.52.0 deploy
+- PROTO-184: Log the run's 07:40 stop time
+- EXP-021: Amend the console prepare decision record for the admin seat
+- EXP-021: Log and tick after merge
+- PROTO-195: Add the empty whole slide run to the backlog
+- PROTO-184: Number the ADR from the merge
+- PROTO-184: Log and tick after merge
+- PROTO-192: Log and tick after merge
+- OPS-042: Log the deploy approvals for v0.52.0
+
+### Other
+
+- EXP-020: Claim EXP-020 for the parallel run
+- PROTO-184: Merge main
+- PROTO-195: Claim PROTO-195 for the parallel run
+- PROTO-193: Claim PROTO-193 for the parallel run
+
 ## v0.52.0 (2026-11-25)
 
 ### Features
