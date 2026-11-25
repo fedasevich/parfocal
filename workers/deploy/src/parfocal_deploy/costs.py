@@ -6,7 +6,7 @@ import sys
 import urllib.request
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
@@ -52,10 +52,61 @@ class Status(StrEnum):
     OVER = "over"
 
 
+CREDITS = "Credits"
+PLAN_COST = "Plan Cost"
+ALLOWANCES = {"Network Egress Allowance": "Network Egress", "Free Storage": "Volumes"}
+
+
 @dataclass(frozen=True)
 class ModalCost:
     environment_name: str
     cost: Decimal
+    cost_by_resource: Mapping[str, Decimal] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class ModalBill:
+    metered_cost: Decimal
+    metered_cost_breakdown: Mapping[str, Decimal]
+    adjustments: Mapping[str, Decimal]
+    billed_cost: Decimal
+
+
+@dataclass(frozen=True)
+class ModalUsage:
+    bill: ModalBill
+    items: list[ModalCost]
+
+
+def credit_used(bill: ModalBill) -> Decimal:
+    if CREDITS not in bill.adjustments:
+        raise RuntimeError(
+            f"Modal's billing summary has no {CREDITS!r} adjustment, "
+            f"only {sorted(bill.adjustments)}, so the credit used cannot be read"
+        )
+    return (
+        bill.billed_cost - bill.adjustments[CREDITS] - bill.adjustments.get(PLAN_COST, Decimal(0))
+    )
+
+
+def covered_shares(bill: ModalBill) -> dict[str, Decimal]:
+    shares: dict[str, Decimal] = {}
+    for adjustment, resource in ALLOWANCES.items():
+        metered = bill.metered_cost_breakdown.get(resource, Decimal(0))
+        if metered > 0:
+            covered = -bill.adjustments.get(adjustment, Decimal(0)) / metered
+            shares[resource] = min(Decimal(1), max(Decimal(0), covered))
+    return shares
+
+
+def chargeable(item: ModalCost, covered: Mapping[str, Decimal]) -> Decimal:
+    return item.cost - sum(
+        (
+            item.cost_by_resource.get(resource, Decimal(0)) * share
+            for resource, share in covered.items()
+        ),
+        Decimal(0),
+    )
 
 
 @dataclass(frozen=True)
@@ -74,7 +125,13 @@ class Line:
         return Status.OK
 
 
-ModalReader = Callable[[date], list[ModalCost]]
+@dataclass(frozen=True)
+class Report:
+    lines: list[Line]
+    modal_credit_used: Decimal
+
+
+ModalReader = Callable[[date], ModalUsage]
 R2Reader = Callable[[], dict[str, int]]
 
 
@@ -93,10 +150,12 @@ def environment_of_bucket(name: str) -> str:
     return BUCKETS.get(name, UNBUDGETED)
 
 
-def modal_spend(items: Iterable[ModalCost]) -> dict[str, Decimal]:
+def modal_spend(
+    items: Iterable[ModalCost], covered: Mapping[str, Decimal] | None = None
+) -> dict[str, Decimal]:
     spend: dict[str, Decimal] = defaultdict(Decimal)
     for item in items:
-        spend[environment_of_modal(item.environment_name)] += item.cost
+        spend[environment_of_modal(item.environment_name)] += chargeable(item, covered or {})
     return dict(spend)
 
 
@@ -122,14 +181,15 @@ def budget_lines(spend: Mapping[Service, Mapping[str, Decimal]]) -> list[Line]:
     return lines
 
 
-def collect(today: date, read_modal: ModalReader, read_r2: R2Reader) -> list[Line]:
-    month_start = today.replace(day=1)
-    return budget_lines(
+def collect(today: date, read_modal: ModalReader, read_r2: R2Reader) -> Report:
+    usage = read_modal(today.replace(day=1))
+    lines = budget_lines(
         {
-            Service.MODAL: modal_spend(read_modal(month_start)),
+            Service.MODAL: modal_spend(usage.items, covered_shares(usage.bill)),
             Service.R2: r2_spend(read_r2()),
         }
     )
+    return Report(lines, credit_used(usage.bill))
 
 
 def usd(amount: Decimal) -> str:
@@ -140,22 +200,25 @@ def table_row(*cells: str) -> str:
     return f"| {' | '.join(cells)} |"
 
 
-def render(lines: list[Line], today: date) -> str:
+def render(report: Report, today: date) -> str:
+    lines = report.lines
     modal_lines = [line for line in lines if line.service is Service.MODAL]
-    total_spend = sum((line.spend for line in modal_lines), Decimal(0))
     total_budget = sum((line.budget for line in modal_lines), Decimal(0))
     rows = [
         table_row(line.environment, line.service, usd(line.spend), usd(line.budget), line.status)
         for line in lines
     ]
-    cap_status = "over" if total_spend > MONTHLY_CAP_USD else "ok"
+    cap_status = "over" if report.modal_credit_used > MONTHLY_CAP_USD else "ok"
     return "\n".join(
         [
             f"# Cost dashboard for {today:%Y-%m}",
             "",
-            f"Read on {today.isoformat()}. Modal is spend so far this month. "
-            "R2 is the month's storage cost at today's size, priced as Standard storage "
-            "past the account's free 10 GB.",
+            f"Read on {today.isoformat()}. The all Modal line is the credit used this billing "
+            "month as Modal's billing page shows it, so network egress inside Modal's free "
+            "allowance is left out. Each environment's Modal line counts the hours Modal has "
+            "itemised so far, with the same allowance taken off, so the current hour shows "
+            "only in the all line. R2 is the month's storage cost at today's size, priced as "
+            "Standard storage past the account's free 10 GB.",
             "",
             "| Environment | Service | Spend | Budget | Status |",
             "|---|---|---|---|---|",
@@ -163,7 +226,7 @@ def render(lines: list[Line], today: date) -> str:
             table_row(
                 "all",
                 Service.MODAL,
-                usd(total_spend),
+                usd(report.modal_credit_used),
                 usd(total_budget),
                 f"{cap_status} against the {usd(MONTHLY_CAP_USD)} Modal credit",
             ),
@@ -176,11 +239,29 @@ def failing(lines: list[Line]) -> list[Line]:
     return [line for line in lines if line.status is Status.OVER]
 
 
-def read_modal_live(start: date) -> list[ModalCost]:
-    from modal.billing import workspace_billing_report
+def read_modal_live(start: date, now: datetime | None = None) -> ModalUsage:
+    import modal
 
-    items = workspace_billing_report(start=datetime(start.year, start.month, start.day, tzinfo=UTC))
-    return [ModalCost(item["environment_name"], Decimal(item["cost"])) for item in items]
+    billing = modal.Workspace.from_context().billing
+    month = datetime(start.year, start.month, 1, tzinfo=UTC)
+    today = (now or datetime.now(UTC)).replace(hour=0, minute=0, second=0, microsecond=0)
+    summary = billing.summary(month)
+    items = [
+        *(billing.report(start=month, end=today, resolution="d") if today > month else []),
+        *billing.report(start=today, resolution="h"),
+    ]
+    return ModalUsage(
+        ModalBill(
+            summary.metered_cost,
+            dict(summary.metered_cost_breakdown),
+            dict(summary.adjustments),
+            summary.billed_cost,
+        ),
+        [
+            ModalCost(item.environment_name, Decimal(item.cost), dict(item.cost_by_resource))
+            for item in items
+        ],
+    )
 
 
 R2_QUERY = """
@@ -240,12 +321,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, help="write the dashboard here as well as to stdout")
     args = parser.parse_args(argv)
     now = datetime.now(UTC)
-    lines = collect(now.date(), read_modal_live, lambda: read_r2_live(os.environ, now))
-    dashboard = render(lines, now.date())
+    report = collect(now.date(), read_modal_live, lambda: read_r2_live(os.environ, now))
+    dashboard = render(report, now.date())
     sys.stdout.write(dashboard)
     if args.out:
         args.out.write_text(dashboard)
-    return 1 if failing(lines) else 0
+    return 1 if failing(report.lines) else 0
 
 
 if __name__ == "__main__":

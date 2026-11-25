@@ -157,3 +157,54 @@ export function CanvasNotice({
     </div>
   );
 }
+
+export function CanvasIssue({
+  tileFail,
+  noResults,
+  slideShort,
+  setName,
+}: {
+  tileFail: boolean;
+  noResults: boolean;
+  slideShort: string;
+  setName: string;
+}) {
+  const { t } = useLingui();
+  if (tileFail) {
+    return (
+      <CanvasNotice
+        icon="warn"
+        title={t`${slideShort} could not be read at 20x and 40x.`}
+        actions={
+          <>
+            <Button variant="primary">
+              <Trans>Retry</Trans>
+            </Button>
+            <Button>
+              <Trans>Ask the researcher</Trans>
+            </Button>
+          </>
+        }
+      >
+        <Trans>
+          Tiles are missing on the server. Lower magnifications still show, and your other slides
+          work.
+        </Trans>
+      </CanvasNotice>
+    );
+  }
+  if (!noResults) return null;
+  return (
+    <CanvasNotice
+      icon="smart"
+      title={t`No ${setName} result on ${slideShort} yet.`}
+      actions={
+        <Button>
+          <Trans>Ask the researcher</Trans>
+        </Button>
+      }
+    >
+      <Trans>Review the slide without AI, or ask the researcher to run the model.</Trans>
+    </CanvasNotice>
+  );
+}

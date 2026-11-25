@@ -2,6 +2,152 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.52.0 (2026-11-25)
+
+### Features
+
+- RSET-015: Import instance and class masks as result sets
+- INGEST-033: Convert uploaded MIRAX and DICOM zips to a pyramid TIFF at ingest
+- AINUC-016: Type every cell of a whole-slide nucleus run with the viewer typer
+- AINUC-016: Log the run typing, its L4 cost estimate and fix its types
+- AINUC-016: Keep runs untyped on any typer load failure and correct the L4 estimate
+- INGEST-034: Find duplicates on the real upload in the Check step
+- AINUC-017: Build a model run's result set from its tile chunks
+- AINUC-017: Audit the replaced failed set and fix the lab stage test types
+- PROTO-173: Make J and Shift+J step in guided review during fixes and edit modes
+- OPS-042: Let every GPU pool take any card big enough, cheapest first, in any region
+- PROTO-176: Open the guided final form at once and keep a way back from it
+- OPS-043: Read the Modal credit used as the billing page does, leaving out covered egress
+
+### Fixes
+
+- EXP-018: Dismiss the passkey offer in the smoke sign in
+- EXP-018: Trust the seeded study workspace in the agent sign in
+- PILOT-014: Make the deployed tour run set its workspace and wait for the role return
+- PILOT-014: Wait for the tour menu and refuse an empty chapter list
+- EXP-018: Walk the deployed study cells, SEQ race and opinion question, mark the dry run
+- ci: List ADR 0439 in the index and skip the role accounts test outside uv
+- ci: Name the tour switch and study participant writes in the tenant write suite
+- ci: Cover the study seed, worker entry and cell crop backfill in ingest unit tests
+- ci: Wait in e2e until a preparing review order is ready, not only past 409
+- ci: List every project slide in a fake review task so the outside task guard lets them open
+- ci: Open the annotate fallback check on a slide of the annotate task
+- ci: Give the case detail stories a requester and expect it in the new case form
+- ci: Let a compared task slide keep a swapped case slide open past the task guard
+- ci: Keep the sampled cells chip inside the stage so it never sits under the tool rail
+- ci: Zoom in before the focus minimap and fixed-cell specs expect cells and the minimap
+- OPS-036: Retry passing R2 errors in the object store after a deployed tumor map died on 503
+- ci: Seed the local stack through parfocal_ingest.showcase_seed, which still has a main
+- ci: Wait for the ready stage and zoom until the focus mode minimap shows
+- ci: Wait for the second hint write and a settled search page in two flaky specs
+- ci: Approve the case detail and new case goldens that show who requested the case
+- EVAL-017: Write the patch cut's facts to a file and fail an export whose cut breaks
+- EVAL-017: Test that a slide breaking mid-read is skipped and name the fix in the index
+- RSET-015: Sort a TIFF mask as a result on the server and a single-value mask as a class mask
+- ci: Wait for the tour route to resolve before asserting it in the app tour spec
+- AINUC-016: Describe the nucleus model by what its run makes
+- AINUC-018: Close every ended run's result set in the job engine
+- AINUC-016: Approve the model picker goldens for the new catalogue text
+- OPS-017: Answer 416 for a tile range past the end of the file
+
+### Docs
+
+- EXP-018: Log the v0.50.0 and v0.51.0 deploys and checks
+- EXP-018: Record the deployed dry run and tick
+- PILOT-014: Record the deployed tour of every chapter and tick
+- PILOT-014: Name each chapter's accounts in the tour result
+- EXP-017: Tick the study tasks after the deployed dry run
+- PILOT-014: Note the agent sign in traps of the deployed checks
+- PILOT-014: Refresh the state on 2026-11-24
+- PROTO-073: Record the deployed checks and tick PROTO-073 and PROTO-145
+- ci: Log the CI repair
+- ci: Log the spec fixes and the session end
+- FOUND-002: Consolidate the docs
+- OPS-009: Record the R2 drill bucket and the live cost report
+- TEST-010: Record the api and tiles load run on production with a read-only token
+- OPS-009: Log the deployed checks and ask about the Modal budget and the load run
+- ci: Log the second round of the main CI repair
+- ci: Log the owner's request for the overnight run
+- TEST-060: Add the main paths the performance measurement still lacks
+- TEST-060: Fix the export, decision and opening budgets before measuring
+- TEST-060: Record export, decision and opening against the fixed budgets
+- TEST-060: Correct the decision method, the COCO cause and the cache state
+- TEST-060: Tick the main path measurement and add the COCO export fix
+- EVAL-017: Record the COCO export of 10,000 annotations within its 30,000 ms budget
+- EVAL-017: Log and tick the COCO export fix
+- RSET-015: Add the mask import task
+- AINUC-015: Note that TNBC is in PathoSAM's training data
+- RSET-015: Log and tick the mask import
+- AINUC-015: Correct TNBC as PathoSAM training data
+- ci: Log the app tour race fix
+- INGEST-033: Add the task for uploaded MIRAX and DICOM zips
+- AINUC-016: Add the task for typing every cell of a whole-slide run
+- INGEST-034: Add the task for Check step fixes on the real upload
+- AINUC-017: Add the task for building a nucleus run's result set
+- AINUC-018: Add the task for closing the result set of every ended run
+- ci: Log the checkout flake on the INGEST-033 merge
+- IAM-027: Log the start of the local build
+- TEST-008: Note how UI baselines are published to the EU bucket
+- ci: Log the prefetch timing flake on 544351b1
+- PROTO-169: Add five UI slips from the owner to the backlog
+- PROTO-172: Add the broken template report PDFs to the backlog
+- PROTO-170: Narrow the task to the page header
+- ADMIN-015: Add the duplicated template row actions to the backlog
+- ADMIN-014: Name the lab models table in the empty state task
+- PROTO-174: Add the review outline editing and J key tasks to the backlog
+- PROTO-176: Add the guided review missed object and final form tasks to the backlog
+- PROTO-177: Add the overflowing Decide panel to the backlog
+- PROTO-178: Add the bigger adjudication slide view to the backlog
+- ONB-012: Add the short sample review to the backlog
+- ONB-012: Add a cell review slide to the sample review
+- ONB-012: Add an empty small slide for a whole slide run to the sample
+- ONB-012: Ask for a small real tissue slide for the sample run
+- PROTO-179: Add empty states outside Admin to the backlog
+- PROTO-180: Add the compact Smart select bar to the backlog
+- PROTO-181: Add the Smart select click queue to the backlog
+- PROTO-182: Add cell type colors and visible typing to the backlog
+- PROTO-183: Add readable rail tooltips to the backlog
+- PROTO-182: Add an on the fly switch for automatic cell typing
+- PROTO-180: Add the Auto region bar and the model picker
+- PROTO-184: Add the Figma style layers tree to the backlog
+- PROTO-185: Add the animated Auto region outline to the backlog
+- PROTO-186: Add the sharper whole slide map to the backlog
+- PROTO-187: Add the overflowing Comments tab header to the backlog
+- PROTO-188: Add removing the comment box hint to the backlog
+- PROTO-189: Add comments on selections, regions and objects on the slide
+- PROTO-189: Add layer comments and mention links
+- PROTO-190: Add the cut off slide switcher to the backlog
+- PROTO-189: Anchor a comment dropped on a cell to the cell
+- PROTO-191: Add the viewer result set import redesign to the backlog
+- OPS-042: Apply the owner's answers to decisions 175 to 181
+- OPS-043: Record the deleted US bucket, the Modal credit and the cost report mismatch
+- PROTO-193: Add the cell review bar, reasons and opacity tasks to the backlog
+- PROTO-184: Log the 2026-11-25 walkthrough fix run
+- PROTO-173: Log and tick after merge
+- OPS-042: Number the ADR from the merge
+- OPS-042: Log and tick after merge
+- OPS-042: Ask whether the GPU cap holds per pool
+- PROTO-176: Log and tick after merge
+- OPS-043: Log and tick after merge
+
+### Tests
+
+- TEST-060: Measure exports and the production build behind the local edge Worker
+- IAM-027: Rerun sign-up checks on a local Zitadel and move to review
+- TEST-009: Wait for the filter search box before arrowing in the keyboard spec
+
+### Other
+
+- agents: Surface knowledge lessons on the board and guard big result files
+- TEST-060: Claim TEST-060 for the parallel run
+- EVAL-017: Claim EVAL-017 for the parallel run
+- RSET-015: Claim RSET-015 for the parallel run
+- OPS-042: Claim OPS-042 PROTO-173 PROTO-184 for the parallel run
+- PROTO-176: Claim PROTO-176 for the parallel run
+- OPS-043: Claim OPS-043 for the parallel run
+- PROTO-192: Claim PROTO-192 for the parallel run
+- EXP-021: Claim EXP-021 for the parallel run
+
 ## v0.51.0 (2026-11-24)
 
 ### Features

@@ -4,6 +4,7 @@
 - Status: Accepted
 - Deciders: Claude
 - Backlog: OPS-038 (a GPU call waiting for an EU GPU shows the wait, not an error)
+- Amended by: [ADR 0440](0440-gpu-pools-take-any-card-big-enough.md) (GPU pools take any card big enough for their model, cheapest first, in any region), which replaces the embedder's `["T4", "L4"]` in `eu`
 
 ## Context
 
