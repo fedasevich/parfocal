@@ -94,6 +94,20 @@ def test_a_run_behind_a_busy_gpu_says_so(api: ApiAs, database: str, pool: Loaded
     assert pool.spawned == []
 
 
+def test_a_run_during_a_cold_start_waits_for_a_gpu_instead_of_a_busy_one(
+    api: ApiAs, database: str, pool: LoadedPool
+) -> None:
+    s = study(database)
+    pool.current = PoolLoad(backlog=1, runners=1)
+    queued_run(database, s, "10 seconds")
+
+    assert only(api, s)["wait"] == {
+        "reason": "waiting-for-gpu",
+        "since": only(api, s)["created_at"],
+    }
+    assert pool.spawned == []
+
+
 def test_a_lost_wake_wakes_the_pool_again_once(api: ApiAs, database: str, pool: LoadedPool) -> None:
     s = study(database)
     queued_run(database, s, "5 minutes")

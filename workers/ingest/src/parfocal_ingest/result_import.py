@@ -415,8 +415,9 @@ async def rows_of(
         geometries = [item.geometry for item in items]
         known = await known_objects(connection, slide_id, stored_kind)
         matching = await asyncio.to_thread(matched, known, geometries)
+        above = max((number for number, _ in known), default=0)
         first = (
-            await reserve(connection, upload.tenant_id, slide_id, letter, len(matching.new))
+            await reserve(connection, upload.tenant_id, slide_id, letter, len(matching.new), above)
             if matching.new
             else 0
         )
@@ -530,9 +531,10 @@ async def write_imported_cells(
         incoming.outlines.centres,
         cell_distance(slide.mpp_x),
     )
+    above = int(known_numbers.max()) if len(known_numbers) else 0
     del known_numbers, known_centres
     first = (
-        await reserve(connection, tenant_id, slide.id, Letter.CELL, len(matching.new))
+        await reserve(connection, tenant_id, slide.id, Letter.CELL, len(matching.new), above)
         if len(matching.new)
         else 0
     )

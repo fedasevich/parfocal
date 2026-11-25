@@ -1,3 +1,4 @@
+import logging
 import uuid
 from collections.abc import Mapping
 from typing import Any
@@ -13,6 +14,7 @@ from test_lab_model_stage import job_of
 from test_model_runs import Lab, control, expire_lease, make_lab, ok, run_async, started
 from workspace_support import owner
 
+from parfocal_common.cell_chunks import ChunkError
 from parfocal_common.chunk_store import read_summary
 from parfocal_common.jobs import (
     RUN_FOUND_NO_TISSUE,
@@ -29,7 +31,7 @@ from parfocal_common.outline_types import TYPER_CLASSES
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest import cell_import, matching
-from parfocal_ml import cell_numbers
+from parfocal_ml import cell_numbers, run_result_set
 from parfocal_ml.lab_model_worker import passed
 from parfocal_ml.nuclei_run_worker import drain_nuclei_runs, nuclei_run_workflow
 from parfocal_ml.tumor_map_job import SlideImage, SlideOpener
@@ -60,14 +62,21 @@ class PixelReader:
         return out
 
 
-def disk_slide() -> SlideImage:
-    rgb = disks(HEIGHT, WIDTH, CENTRES, RADIUS)
+def disk_slide(centres: list[tuple[float, float]] = CENTRES) -> SlideImage:
+    rgb = disks(HEIGHT, WIDTH, centres, RADIUS)
     rgb[(rgb == 240).all(axis=2)] = TISSUE
     return SlideImage(PixelReader(rgb), rgb[::16, ::16].copy(), 16.0, WIDTH, HEIGHT, MPP)
 
 
 async def open_slide(tenant_id: uuid.UUID, slide_id: uuid.UUID, folder: str | None) -> SlideImage:
     return disk_slide()
+
+
+def disks_at(centres: list[tuple[float, float]]) -> SlideOpener:
+    async def opened(tenant_id: uuid.UUID, slide_id: uuid.UUID, folder: str | None) -> SlideImage:
+        return disk_slide(centres)
+
+    return opened
 
 
 def dark_is_neoplastic(rgb: np.ndarray) -> np.ndarray:
@@ -239,6 +248,43 @@ def test_a_worker_that_dies_before_the_set_is_added_resumes_without_writing_twic
     assert numbered_centres(lab, set_id) == numbers
     assert class_counts(database, set_id)[0] == ("tumor", len(CENTRES))
     assert counter(database, lab) == [(len(CENTRES),)]
+
+
+def test_a_run_on_a_slide_with_stored_cells_and_no_counter_numbers_new_cells_above_them(
+    api: ApiAs, lab: Lab, database: str
+) -> None:
+    seeded = CENTRES[::2]
+    [first] = started(api, lab, [lab.slides[1]], parameters=NUCLEI)
+    assert drained(database, lab, opener=disks_at(seeded)) == 1
+    kept = numbered_centres(lab, set_of(database, first)[0])
+    assert sorted(kept) == list(range(1, len(seeded) + 1))
+    owner(database, f"DELETE FROM slide_counters WHERE slide_id = '{lab.slides[1]}'")
+
+    [run] = started(api, lab, [lab.slides[1]], parameters=NUCLEI)
+    assert drained(database, lab) == 1
+    assert job_of(database, run) == ("done", None)
+    set_id, status, cells, error = set_of(database, run)
+    assert (status, cells, error) == ("ready", len(CENTRES), None)
+    numbers = numbered_centres(lab, set_id)
+    assert {number: numbers[number] for number in kept} == kept
+    assert sorted(set(numbers) - set(kept)) == list(range(len(seeded) + 1, len(CENTRES) + 1))
+    assert counter(database, lab) == [(len(CENTRES),)]
+
+
+def test_a_run_whose_cells_cannot_be_stored_logs_why_with_its_job(
+    api: ApiAs, lab: Lab, database: str, monkeypatch: pytest.MonkeyPatch, caplog: Any
+) -> None:
+    def unstorable(*args: Any) -> Any:
+        raise ChunkError("Cell C7 appears twice")
+
+    monkeypatch.setattr(run_result_set, "built", unstorable)
+    [run] = started(api, lab, [lab.slides[1]], parameters=NUCLEI)
+    with caplog.at_level(logging.WARNING, logger=run_result_set.logger.name):
+        assert drained(database, lab) == 1
+    assert job_of(database, run) == ("failed", run_result_set.CELLS_UNSTORABLE)
+    [logged] = [record for record in caplog.records if record.name == run_result_set.logger.name]
+    assert "Cell C7 appears twice" in logged.getMessage()
+    assert getattr(logged, "job_id", None) == str(run["id"])
 
 
 def test_a_run_that_fails_records_the_reason_on_its_result_set(

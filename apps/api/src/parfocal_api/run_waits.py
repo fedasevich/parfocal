@@ -22,6 +22,7 @@ logger = logging.getLogger("parfocal.api.run_waits")
 
 LOAD_FRESH_SECONDS = 10.0
 WAKE_AGAIN_AFTER_SECONDS = 60.0
+COLD_START_SECONDS = 60.0
 WOKEN_AGAIN = "woken_again_at"
 
 
@@ -121,6 +122,13 @@ async def woken_again(
     return set()
 
 
+def busy_or_starting(load: PoolLoad, run: QueuedRun, now: datetime) -> RunWaitReason:
+    waited = (now - run.created_at).total_seconds()
+    if load.runners > 0 and waited >= COLD_START_SECONDS:
+        return RunWaitReason.GPU_BUSY
+    return RunWaitReason.WAITING_FOR_GPU
+
+
 async def run_waits(
     connection: AsyncConnection,
     watch: PoolWatch | None,
@@ -133,8 +141,10 @@ async def run_waits(
     if load is None:
         return {}
     if load.runners > 0 or load.backlog > 0:
-        reason = RunWaitReason.GPU_BUSY if load.runners > 0 else RunWaitReason.WAITING_FOR_GPU
-        return {run.job_id: RunWait(reason=reason, since=run.created_at) for run in queued}
+        return {
+            run.job_id: RunWait(reason=busy_or_starting(load, run, now), since=run.created_at)
+            for run in queued
+        }
     due = [
         run.job_id
         for run in queued

@@ -39,8 +39,9 @@ REGIONS = (RESULTS / "regions.geojson").read_bytes()
 SLIDE = "synthetic-jpeg.tiff"
 
 
-def parfocal_file(slide_id: uuid.UUID | None = None) -> bytes:
-    square = [[[1000, 1000], [3000, 1000], [3000, 2500], [1000, 2500], [1000, 1000]]]
+def parfocal_file(slide_id: uuid.UUID | None = None, shift: int = 0) -> bytes:
+    corners = [[1000, 1000], [3000, 1000], [3000, 2500], [1000, 2500], [1000, 1000]]
+    square = [[[x + shift, y] for x, y in corners]]
     document: dict[str, Any] = {
         "format": "parfocal-results",
         "version": 1,
@@ -240,6 +241,24 @@ def test_a_new_set_inherits_the_ids_of_the_objects_it_shares_with_an_older_set(
     run_worker(database, lab.tenant_id, tmp_path / "work")
     sets = [status_of(api, lab.lead, upload)["result_set_id"] for upload in (first, second)]
     assert [numbers(database, set_id) for set_id in sets] == [[("region", 1, 0, 240)]] * 2
+
+
+def test_a_new_region_on_a_slide_with_stored_regions_and_no_counter_is_numbered_above_them(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    slide_id = make_slide(database, lab.tenant_id, lab.project, "Biopsy")
+    upload_result(api, lab, "first.json", parfocal_file(), slide_id=str(slide_id))
+    run_worker(database, lab.tenant_id, tmp_path / "work")
+    owner(database, f"DELETE FROM slide_counters WHERE slide_id = '{slide_id}'")
+    elsewhere = parfocal_file(shift=10_000)
+    second = upload_result(api, lab, "second.json", elsewhere, slide_id=str(slide_id))
+    run_worker(database, lab.tenant_id, tmp_path / "work")
+    set_id = status_of(api, lab.lead, second)["result_set_id"]
+    assert numbers(database, set_id) == [("region", 2, 0, 240)]
+    assert single(
+        database,
+        f"SELECT last FROM slide_counters WHERE slide_id = '{slide_id}' AND letter = 'T'",
+    ) == (2,)
 
 
 def test_an_unpaired_result_waits_until_a_person_picks_its_slide(

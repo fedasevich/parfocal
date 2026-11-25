@@ -14,11 +14,7 @@ from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.projects import ProjectDeletion, ProjectDraft, create_project, delete_project
 from parfocal_api.result_sets import (
-    ChunkRow,
     ResultSetDraft,
-    add_chunks,
-    cells_per_class,
-    finish,
     insert_result_set,
 )
 from parfocal_api.review_order import cancel_order_jobs
@@ -43,7 +39,7 @@ from parfocal_api.showcase import (
 )
 from parfocal_api.showcase_accounts import SeededAccount, add_account, add_member
 from parfocal_api.showcase_case import SPECIMEN, seed_http
-from parfocal_api.showcase_demo import built_in_templates
+from parfocal_api.showcase_demo import built_in_templates, store_seeded_cells
 from parfocal_api.showcase_results import CELLS_FILE, CELLS_MODEL, model_cells, model_regions
 from parfocal_api.showcase_reviews import (
     Seeded,
@@ -70,7 +66,6 @@ from parfocal_api.tables import (
     tenants,
     users,
 )
-from parfocal_common.chunk_store import build_cells, write_cells
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.ingest import fixture_folder
 from parfocal_common.object_store import ObjectStore
@@ -309,10 +304,9 @@ async def cell_set(
         actor_of(creator),
         creator.user_id,
     )
-    built = build_cells(creator.tenant_id, slide.id, set_id, found.cells, len(found.classes))
-    entries = await write_cells(results, built)
-    await add_chunks(connection, set_id, [ChunkRow.of(entry) for entry in entries])
-    await finish(connection, set_id, cells_per_class(entries))
+    await store_seeded_cells(
+        connection, results, creator.tenant_id, slide.id, set_id, found.cells, len(found.classes)
+    )
     return set_id
 
 
