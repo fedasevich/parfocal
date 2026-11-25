@@ -56,7 +56,7 @@ function rangeOf(header: string | undefined, size: number): [number, number] | n
   return [Number(from), to === "" ? size - 1 : Math.min(Number(to), size - 1)];
 }
 
-function sendFile(
+export function sendFile(
   file: string,
   request: Connect.IncomingMessage,
   response: Parameters<Connect.NextHandleFunction>[1],
@@ -73,6 +73,12 @@ function sendFile(
     return;
   }
   const [start, end] = range;
+  if (!Number.isSafeInteger(start) || start >= size || start > end) {
+    response.statusCode = 416;
+    response.setHeader("Content-Range", `bytes */${size}`);
+    response.end();
+    return;
+  }
   response.statusCode = 206;
   response.setHeader("Content-Range", `bytes ${start}-${end}/${size}`);
   response.setHeader("Content-Length", end - start + 1);
