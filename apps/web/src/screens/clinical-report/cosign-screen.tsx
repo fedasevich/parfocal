@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
+import { SkeletonZone } from "@parfocal/ui/components/skeleton-layouts";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { Zone } from "@parfocal/ui/components/zone";
 import { type ReactNode, useRef, useState } from "react";
@@ -27,10 +28,10 @@ import { useLengthUnits } from "../../measure/length-units.ts";
 import { currentPath, signingPending } from "../../session/signature-sign-in.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { FlowQueryState } from "../flow-query-state.tsx";
 import { formatClock, formatDayMonth } from "../format.ts";
 import { FieldNote } from "../new-task/parts.tsx";
 import { usePeople } from "../people.ts";
-import { QueryState } from "../placeholder.tsx";
 import { signedOf, valuesOfParts } from "./case-report.ts";
 import { ReasonModal, SignModal } from "./modals.tsx";
 import {
@@ -64,14 +65,14 @@ export function CosignScreen(props: CosignScreenProps) {
   const { t } = useLingui();
 
   useLengthUnits();
-  const { loaded, pending, failed } = useCaseReportData(props.projectId, props.caseId);
+  const { loaded, pending } = useCaseReportData(props.projectId, props.caseId);
   if (!loaded) {
     return (
-      <main className="p-8">
-        <QueryState label={t`the co-sign request`} isPending={pending} error={failed || !pending}>
-          {null}
-        </QueryState>
-      </main>
+      <FlowQueryState label={t`the co-sign request`} pending={pending}>
+        <SkeletonZone fields={2} />
+        <SkeletonZone fields={4} />
+        <SkeletonZone fields={5} />
+      </FlowQueryState>
     );
   }
   return <CosignFlow key={props.scene ?? "live"} loaded={loaded} {...props} />;

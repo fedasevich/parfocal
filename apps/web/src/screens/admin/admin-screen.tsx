@@ -3,7 +3,8 @@ import { useGetMe, useListStudyTemplates } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
-import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
+import { SkeletonLine } from "@parfocal/ui/components/skeleton";
+import { SkeletonZones } from "@parfocal/ui/components/skeleton-layouts";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo, useRouterLink } from "../../shell/router-link.tsx";
@@ -59,8 +60,16 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
 
   if (me === undefined) {
     return (
-      <AdminShell section={section} folded>
-        <SkeletonPanel label={t`Checking your access`} className="p-8" />
+      <AdminShell section={section}>
+        <main className="flex min-h-full flex-col gap-(--space-zone) bg-surf-panel px-(--pad-modal) pb-(--pad-modal)">
+          <header className="flex items-center gap-4 pt-5 pb-1">
+            <div aria-hidden="true" className="grid flex-1">
+              <SkeletonLine width="12rem" className="text-title-sm" />
+              <SkeletonLine width="20rem" className="mt-0.75 text-body-sm" />
+            </div>
+          </header>
+          <SkeletonZones label={t`Checking your access`} count={4} />
+        </main>
       </AdminShell>
     );
   }

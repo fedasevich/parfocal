@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
-import { SkeletonRows } from "@parfocal/ui/components/skeleton";
+import { SkeletonTableRows } from "@parfocal/ui/components/skeleton-layouts";
 import {
   Table,
   TableBody,
@@ -308,13 +308,7 @@ export function SlidesTab({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="p-0">
-                  <SkeletonRows label={t`Loading slides`} rows={6} columns={4} />
-                </TableCell>
-              </TableRow>
-            ) : null}
+            {loading ? <SkeletonTableRows label={t`Loading slides`} rows={6} columns={4} /> : null}
             {filtering && groups.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="px-4 py-6 text-center text-fg-dim">

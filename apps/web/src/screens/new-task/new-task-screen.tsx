@@ -13,13 +13,15 @@ import { BeforeYouList } from "@parfocal/ui/components/before-you-list";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
+import { SkeletonZone } from "@parfocal/ui/components/skeleton-layouts";
 import { Toast } from "@parfocal/ui/components/undo-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
-import { okData, QueryState } from "../placeholder.tsx";
+import { FlowQueryState } from "../flow-query-state.tsx";
+import { okData } from "../placeholder.tsx";
 import { decisionSettings } from "../review/decision-style.ts";
 import { checkChangeOf, checkPresetOf } from "./annotate-draft.ts";
 import { CheckStep } from "./check-step.tsx";
@@ -107,14 +109,14 @@ export function NewTaskScreen(props: NewTaskScreenProps) {
   const { t } = useLingui();
 
   const owner = useFlowOwner();
-  const { data, pending, failed } = useTaskData(props.projectId);
+  const { data, pending } = useTaskData(props.projectId);
   if (!data) {
     return (
-      <main className="p-8">
-        <QueryState label={t`the new review task`} isPending={pending} error={failed || !pending}>
-          {null}
-        </QueryState>
-      </main>
+      <FlowQueryState label={t`the new review task`} pending={pending} steps={6}>
+        <SkeletonZone fields={1} />
+        <SkeletonZone fields={3} />
+        <SkeletonZone fields={2} />
+      </FlowQueryState>
     );
   }
   return <NewTaskFlow key={`${props.scene}|${owner}`} owner={owner} data={data} {...props} />;

@@ -131,4 +131,4 @@ function SkeletonPanel({ label, sections = 3, className, ...props }: SkeletonPan
 }
 
 export type { SkeletonCardsProps, SkeletonPanelProps, SkeletonRowsProps };
-export { Skeleton, SkeletonCards, SkeletonLine, SkeletonPanel, SkeletonRows };
+export { columnWidths, Skeleton, SkeletonCards, SkeletonLine, SkeletonPanel, SkeletonRows };

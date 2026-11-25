@@ -12,11 +12,12 @@ import { DropOverlay } from "@parfocal/ui/components/drop-overlay";
 import {
   FlowBar,
   FlowPage,
+  FlowPageSkeleton,
   type FlowStep,
   type StepState,
 } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
-import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
+import { SkeletonZone } from "@parfocal/ui/components/skeleton-layouts";
 import { CategoryTag } from "@parfocal/ui/components/tag";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useNavigate } from "@tanstack/react-router";
@@ -64,8 +65,11 @@ export function UploadPage(props: UploadPageProps) {
   const batch = okData(useGetUploadBatch(props.projectId).data);
   if (project === undefined || batch === undefined) {
     return (
-      <main className="mx-auto w-full max-w-3xl flex-1 p-8">
-        <SkeletonPanel label={t`Loading the upload`} sections={4} />
+      <main className="flex min-h-0 flex-1 flex-col">
+        <FlowPageSkeleton className="h-full" label={t`Loading the upload`} steps={3}>
+          <SkeletonZone fields={2} />
+          <SkeletonZone fields={3} />
+        </FlowPageSkeleton>
       </main>
     );
   }

@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
-import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
+import { SkeletonFormZone } from "@parfocal/ui/components/skeleton-layouts";
 import {
   Table,
   TableBody,
@@ -182,7 +182,7 @@ function SecurityContactZone({ notify }: { notify: Notify }) {
   const queryClient = useQueryClient();
   const update = useSetSecurityContact();
   if (contact === undefined)
-    return <SkeletonPanel label={t`Loading the security contact`} sections={1} />;
+    return <SkeletonFormZone label={t`Loading the security contact`} rows={1} />;
   const send: SendContact = (email, message, undo) =>
     update.mutate(
       { data: { email } },

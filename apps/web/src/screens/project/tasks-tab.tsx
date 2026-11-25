@@ -11,7 +11,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
-import { SkeletonRows } from "@parfocal/ui/components/skeleton";
+import { SkeletonTableRows } from "@parfocal/ui/components/skeleton-layouts";
 import {
   Table,
   TableBody,
@@ -74,13 +74,7 @@ export function TasksTab({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="p-0">
-                  <SkeletonRows label={t`Loading tasks`} rows={4} columns={5} />
-                </TableCell>
-              </TableRow>
-            ) : null}
+            {loading ? <SkeletonTableRows label={t`Loading tasks`} rows={4} columns={5} /> : null}
             {tasks.map((task) => (
               <TaskRow
                 key={task.id}

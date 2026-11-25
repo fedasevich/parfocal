@@ -8,6 +8,7 @@ import {
   useListTasksAssignedByMe,
 } from "@parfocal/api-client";
 import { SkeletonRows } from "@parfocal/ui/components/skeleton";
+import { SkeletonZone } from "@parfocal/ui/components/skeleton-layouts";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { useEffect } from "react";
 import { now } from "../../clock.ts";
@@ -160,8 +161,20 @@ export function MyWorkScreen({
       </Tabs>
       <div className="flex min-h-0 flex-col gap-3">
         {loading ? (
-          <div className="rounded-zone border border-line bg-surf-panel">
-            <SkeletonRows label={t`Loading your work`} rows={6} columns={4} />
+          <div
+            className={
+              state.tab === "review" ? "grid grid-cols-[1fr_340px] items-start gap-6" : "grid"
+            }
+          >
+            <div
+              data-testid="work-skeleton-list"
+              className="rounded-zone border border-line bg-surf-panel"
+            >
+              <SkeletonRows label={t`Loading your work`} rows={6} columns={4} />
+            </div>
+            {state.tab === "review" ? (
+              <SkeletonZone data-testid="work-skeleton-side" fields={3} />
+            ) : null}
           </div>
         ) : null}
         {loading ? null : state.tab === "review" ? (

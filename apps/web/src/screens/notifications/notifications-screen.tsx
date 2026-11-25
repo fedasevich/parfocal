@@ -3,7 +3,7 @@ import { useListNotifications, useMarkNotificationsRead } from "@parfocal/api-cl
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { NotificationRow } from "@parfocal/ui/components/notifications-panel";
-import { SkeletonRows } from "@parfocal/ui/components/skeleton";
+import { NotificationSkeletonRow } from "@parfocal/ui/components/notifications-skeleton";
 import { useState } from "react";
 import { toNotification, useInboxRefresh } from "../../shell/bell.tsx";
 import { useGoTo } from "../../shell/router-link.tsx";
@@ -26,8 +26,12 @@ function NotificationsPage({
   const page = okData(query.data);
   if (page === undefined) {
     return (
-      <li className="p-4">
-        <SkeletonRows rows={4} columns={2} label={t`Loading notifications`} />
+      <li role="status" aria-label={t`Loading notifications`} className="list-none">
+        <div aria-hidden="true">
+          {[0, 1, 2, 3].map((row) => (
+            <NotificationSkeletonRow key={row} row={row} />
+          ))}
+        </div>
       </li>
     );
   }

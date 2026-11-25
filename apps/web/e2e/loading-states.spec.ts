@@ -1,28 +1,9 @@
-import type { Page } from "./a11y.ts";
+import { holdApi, releaseApi } from "./hold-api.ts";
 import { expect, test } from "./telemetry-capture.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 
-async function holdApi(page: Page, part = "/api/") {
-  await page.addInitScript((heldPart) => {
-    const original = window.fetch.bind(window);
-    let release: () => void = () => undefined;
-    const held = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    Object.assign(window, { releaseApi: () => release() });
-    window.fetch = async (input, init) => {
-      const url = typeof input === "string" ? input : input instanceof Request ? input.url : "";
-      const session =
-        heldPart === "/api/" && new URL(url, location.href).pathname.endsWith("/api/me");
-      if (url.includes(heldPart) && !session) await held;
-      return original(input, init);
-    };
-  }, part);
-}
-
-const releaseApi = (page: Page) =>
-  page.evaluate(() => (window as unknown as { releaseApi: () => void }).releaseApi());
+const rowsOrZones = '[data-slot="skeleton-rows"], [data-slot="skeleton-zones"]';
 
 const screens = [
   {
@@ -48,12 +29,12 @@ for (const screen of screens) {
     await holdApi(page);
     await page.goto(screen.path);
     await expect(page.getByRole("progressbar", { name: "Loading" })).toBeAttached();
-    const skeleton = page.locator('[data-slot="skeleton-rows"]').first();
+    const skeleton = page.locator(rowsOrZones).first();
     await expect(skeleton).toBeVisible();
     await expect(skeleton).toContainText(screen.skeleton);
     await releaseApi(page);
     await expect(page.locator("main").first()).toContainText(screen.loaded);
-    await expect(page.locator('[data-slot="skeleton-rows"]')).toHaveCount(0);
+    await expect(page.locator(rowsOrZones)).toHaveCount(0);
     await expect(page.getByRole("progressbar", { name: "Loading" })).toHaveCount(0);
   });
 }
@@ -105,9 +86,9 @@ test("the admin overview and the project tasks tab show skeletons shaped like th
 }) => {
   await holdApi(page, "/api/tenant/overview");
   await page.goto("/admin");
-  await expect(page.locator('[data-slot="skeleton-cards"]')).toContainText("Loading the overview");
+  await expect(page.locator('[data-slot="skeleton-zones"]')).toContainText("Loading the overview");
   await releaseApi(page);
-  await expect(page.locator('[data-slot="skeleton-cards"]')).toHaveCount(0);
+  await expect(page.locator('[data-slot="skeleton-zones"]')).toHaveCount(0);
 
   await holdApi(page, "/review-tasks");
   await page.goto(`/projects/${p07}?tab=tasks`);
@@ -115,7 +96,7 @@ test("the admin overview and the project tasks tab show skeletons shaped like th
     "Loading tasks",
   );
   await releaseApi(page);
-  await expect(page.locator('[data-slot="skeleton-rows"]')).toHaveCount(0);
+  await expect(page.locator(rowsOrZones)).toHaveCount(0);
 });
 
 test("the project slides tab shows skeleton rows until its slides arrive", async ({ page }) => {

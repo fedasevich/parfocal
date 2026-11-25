@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
-import { SkeletonRows } from "@parfocal/ui/components/skeleton";
+import { Skeleton, SkeletonLine } from "@parfocal/ui/components/skeleton";
+import { SkeletonZones } from "@parfocal/ui/components/skeleton-layouts";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import {
   ConfirmInButton,
@@ -145,13 +146,28 @@ export function TeamScreen({
 
   if (!team) {
     return (
-      <main className="grid content-start gap-(--density-flow-gap) px-8 pt-5.5 pl-7">
-        <h1 className="m-0 text-page-title font-semibold text-fg">
-          <Trans>Team</Trans>
-        </h1>
-        <div className="rounded-zone border border-line bg-surf-panel">
-          <SkeletonRows label={t`Loading Team`} rows={5} columns={4} />
+      <main className="flex min-h-0 flex-1 flex-col gap-(--density-flow-gap) px-8 pt-5.5 pb-4.5 pl-7">
+        <header>
+          <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">
+            <Trans>Team</Trans>
+          </h1>
+          <SkeletonLine width="18rem" className="mt-0.75 text-body-sm leading-[1.45]" />
+        </header>
+        <Tabs value="open">
+          <TabsList variant="page">
+            <TabsTrigger value="open" disabled>
+              <Trans>Open tasks</Trans>
+            </TabsTrigger>
+            <TabsTrigger value="done" disabled>
+              <Trans>Done</Trans>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <div aria-hidden="true" className="flex items-center gap-2">
+          <Skeleton className="h-7 w-27" />
+          <Skeleton className="h-7 w-30" />
         </div>
+        <SkeletonZones label={t`Loading Team`} count={2} columns={1} fields={2} />
       </main>
     );
   }
