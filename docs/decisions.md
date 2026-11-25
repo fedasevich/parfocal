@@ -10,6 +10,7 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 - **Approve or cancel the load test run** (TEST-010, load test tooling). GitHub Actions run 45503594810 from v0.51.0 waits for your approval in the production environment. It runs the API and tile scenarios at 2 users for 60 s with a read-only token, about 0.002 dollars. Recommended: approve it, in GitHub, Actions, that run, Review deployments.
 - **Delete the lifecycle drill bucket after its check** (OPS-009, storage lifecycle and cost controls). An agent created the EU bucket `parfocal-drill-lifecycle` outside OpenTofu for the R2 tiering drill. From 2026-11-25 23:00 UTC an agent checks that its two objects moved to Infrequent Access. Recommended: let the agent delete the bucket and its two test objects right after that check. Reply "delete after the check" or "keep".
+- **Make an R2 key for the study backup** (EXP-022, study recordings backed up to R2). In the Cloudflare dashboard, R2, Manage API tokens, create a token with Object Read and Write on the bucket `parfocal-prod` only, then put `STUDY_BACKUP_ACCESS_KEY_ID`, `STUDY_BACKUP_SECRET_ACCESS_KEY`, `STUDY_BACKUP_BUCKET=parfocal-prod` and `STUDY_BACKUP_ENDPOINT=https://<account>.r2.cloudflarestorage.com` in the Modal secret `parfocal-api-keys` (not `parfocal-api-config`, which bootstrap rewrites). It costs nothing until a backup writes, then a few cents a month, and must leave `parfocal-dev-eu` and its key alone. An agent then runs the first backup and logs its size.
 
 ## Later
 
