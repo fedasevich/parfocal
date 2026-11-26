@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- EXP-023 Production touch: release v0.64.0 (EXP-023 with migration 0163, which widens the memberships role check and has no safety check findings) deployed by run 45758982693, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order; deploy and browser smoke green
 - FOUND-002 Consolidated the docs after the 2026-11-25 parallel run: README state, Where we are now and Next up rewritten, five lead lessons added to agent-workflow.md (push before briefing, never pipe merge.sh into push.sh, regenerate .po conflicts, no Docker quit or foreign scripts, generated files out of biome), the tag-only deploy and its required review written into deploy.md, risks R18 (fake API differences) and R21 (dev study seeding) and the M6 roadmap row updated, and the two study dry run results indexed
 - PROTO-198 Production touch: release v0.63.0 (PROTO-198) deployed by run 45758082855, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order; deploy and browser smoke green
 - EXP-023: join link participants are seated as study-participant with their own matrix column, refused project creation and deletion, sample projects, other workspaces, passkeys, invitations, access requests, template offers, model runs, settings and the console, and migration 0163 widens the memberships role check with no data change; waits for the deployed study join dry run
