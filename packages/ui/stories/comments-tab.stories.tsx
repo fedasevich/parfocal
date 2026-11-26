@@ -68,18 +68,22 @@ function Tab({
   items,
   start,
   notes,
+  slide = "A1",
+  width = "w-80",
 }: {
   items: CommentThreadCard[];
   start?: string;
   notes?: typeof decisionNotes;
+  slide?: string;
+  width?: string;
 }) {
   const [selected, setSelected] = useState(start);
   const [went, setWent] = useState("");
   const [created, setCreated] = useState(0);
   return (
-    <div className="grid w-80 gap-3">
+    <div className={`grid ${width} gap-3`}>
       <CommentsTab
-        slideLabel="A1"
+        slideLabel={slide}
         threads={items}
         notes={notes}
         selectedId={selected}
@@ -135,3 +139,9 @@ const scoped: CommentThreadCard[] = [
 ];
 
 export const SlideAndTaskThreads: Story = { render: () => <Tab items={scoped} /> };
+
+export const LongSlideName: Story = {
+  render: () => (
+    <Tab items={[...scoped.slice(1), ...threads]} slide="CMU-1-JP2K-33005-v2.zip" width="w-64" />
+  ),
+};
