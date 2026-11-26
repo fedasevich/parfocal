@@ -12100,6 +12100,10 @@ msgstr ""
 msgid "No version is frozen yet."
 msgstr ""
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "No workspace"
+msgstr ""
+
 #: src/screens/home/home-screen.tsx
 msgid "No workspace yet"
 msgstr ""
@@ -18089,6 +18093,10 @@ msgstr ""
 
 #: src/study/study-screen.tsx
 msgid "Study mode"
+msgstr ""
+
+#: src/screens/admin/people.tsx
+msgid "Study participant"
 msgstr ""
 
 #: src/study/participant-host.tsx

@@ -77,4 +77,11 @@ export const firstDestination = (first: SetupFirst, sampleProjectId?: string): s
   return destinations.home();
 };
 
+export type WorkspaceOutcome = "none" | "joined" | "asked" | "new";
+
+export const workspaceOutcomeOf = (move: WorkspaceMove, movedKey: string): WorkspaceOutcome => {
+  if (move.kind === "none" || JSON.stringify(move) !== movedKey) return "none";
+  return move.kind === "join" ? "joined" : move.kind === "ask" ? "asked" : "new";
+};
+
 export const creatorNote = "Creating a workspace gives you admin rights on it as a researcher.";

@@ -204,6 +204,26 @@ test("setup saves the specialties and joins the workspace that matches the email
   await expect(page.getByText("Joined Fakultní nemocnice Vltava")).toBeVisible();
 });
 
+test("setup skips the workspace step and the done list has no Joined line", async ({ page }) => {
+  const posted: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().includes("/api/me/joinable-workspaces/")) {
+      posted.push(request.url());
+    }
+  });
+  await startSetup(page);
+  await page.getByRole("button", { name: "Next: Workspace" }).click();
+  await expect(page.getByRole("heading", { name: "Your workspace" })).toBeVisible();
+  await page.getByRole("button", { name: "Skip this step" }).click();
+  await page.getByRole("button", { name: "Next: Viewer" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await expect(page.getByText("Account and email confirmed")).toBeVisible();
+  await expect(page.getByText(/^Joined/)).toHaveCount(0);
+  await expect(page.getByText(/^Asked to join/)).toHaveCount(0);
+  await expect(page.getByText(/^Created/)).toHaveCount(0);
+  expect(posted).toEqual([]);
+});
+
 test("setup asks to join a workspace that needs an admin to say yes", async ({ page }) => {
   const asked: string[] = [];
   page.on("request", (request) => {

@@ -61,8 +61,10 @@ import {
   recommendedFirst,
   type SetupMode,
   specialtiesOf,
+  type WorkspaceOutcome,
   wheelModeOf,
   workspaceMoveOf,
+  workspaceOutcomeOf,
 } from "./setup-rules.ts";
 
 const roles: Record<Role, { icon: IconName; title: string; detail: string; effect: string }> =
@@ -285,9 +287,24 @@ export function SetupScreen({ step, change }: Props) {
       : joinable.find((item) => item.id === ws)?.name;
   const device = devices.find((item) => item.key === u.device) ?? devices[0];
   const recommended = recommendedFirst(u.role);
+  const workspaceMove = () =>
+    workspaceMoveOf({
+      picked: ws,
+      matchedId: asking ? undefined : picked?.id,
+      askedId: asking ? picked?.id : undefined,
+      name: u.newName,
+      mode: u.mode,
+    });
+  const outcome = workspaceOutcomeOf(workspaceMove(), moved);
   const summary = [
     `${roles[u.role].title}${u.spec.length ? ` · ${u.spec.slice(0, 2).join(", ")}` : ""}`,
-    ws === "new" ? t`New workspace` : asking ? t`Request sent` : t`Joined`,
+    outcome === "new"
+      ? t`New workspace`
+      : outcome === "asked"
+        ? t`Request sent`
+        : outcome === "joined"
+          ? t`Joined`
+          : t`No workspace`,
     firsts[u.first].title,
     `${device?.label ?? ""} · ${u.theme}`,
     t`Getting started`,
@@ -581,7 +598,7 @@ export function SetupScreen({ step, change }: Props) {
       firstName={firstName}
       role={u.role}
       first={u.first}
-      ws={ws === "new" ? "new" : asking ? "asked" : "joined"}
+      ws={outcome}
       wsName={wsName ?? ""}
       outline={outline}
     />,
@@ -594,14 +611,6 @@ export function SetupScreen({ step, change }: Props) {
       : index === 1 && ws === "new"
         ? t`Create it and continue`
         : `Next: ${stepNames[index + 1] ?? ""}`;
-  const workspaceMove = () =>
-    workspaceMoveOf({
-      picked: ws,
-      matchedId: asking ? undefined : picked?.id,
-      askedId: asking ? picked?.id : undefined,
-      name: u.newName,
-      mode: u.mode,
-    });
   const next = async () => {
     setFailed("");
     try {
@@ -731,18 +740,20 @@ function DoneStep({
   firstName: string;
   role: Role;
   first: First;
-  ws: "joined" | "asked" | "new";
+  ws: WorkspaceOutcome;
   wsName: string;
   outline: SampleOutline | undefined;
 }) {
   const { t } = useLingui();
 
-  const workspaceRow: [IconName, string, boolean, string?] =
+  const workspaceRows: [IconName, string, boolean, string?][] =
     ws === "joined"
-      ? ["check", `Joined ${wsName}`, true]
+      ? [["check", `Joined ${wsName}`, true]]
       : ws === "asked"
-        ? ["mail", t`Asked to join ${wsName}`, false, t`waiting for its admin`]
-        : ["check", `Created ${wsName}`, true];
+        ? [["mail", t`Asked to join ${wsName}`, false, t`waiting for its admin`]]
+        : ws === "new"
+          ? [["check", `Created ${wsName}`, true]]
+          : [];
   const slides = outline?.slides ?? 0;
   const reviewed = outline?.review_slides ?? 0;
   const runSlide = outline?.run_slide ?? null;
@@ -782,7 +793,7 @@ function DoneStep({
       : [];
   const rows: [IconName, string, boolean, string?][] = [
     ["check", t`Account and email confirmed`, true],
-    workspaceRow,
+    ...workspaceRows,
     projectRow,
     ...runRow,
     ...todo.map(([icon, text]): [IconName, string, boolean, string] => [

@@ -9,6 +9,7 @@ import {
   specialtiesOf,
   wheelModeOf,
   workspaceMoveOf,
+  workspaceOutcomeOf,
 } from "../src/screens/onboarding/setup-rules.ts";
 
 test("each role sets the home layout and the recommended first project", () => {
@@ -50,6 +51,18 @@ test("the workspace choice becomes a join, a request or a new workspace", () => 
     name: "Brno",
     privacy: "clinical",
   });
+});
+
+test("the done list names a workspace only when one was joined, asked for or created", () => {
+  const join = { kind: "join", workspaceId: "a" } as const;
+  const ask = { kind: "ask", workspaceId: "b" } as const;
+  const create = { kind: "create", name: "Brno", privacy: "de-identified" } as const;
+  assert.equal(workspaceOutcomeOf(join, JSON.stringify(join)), "joined");
+  assert.equal(workspaceOutcomeOf(ask, JSON.stringify(ask)), "asked");
+  assert.equal(workspaceOutcomeOf(create, JSON.stringify(create)), "new");
+  assert.equal(workspaceOutcomeOf(join, ""), "none");
+  assert.equal(workspaceOutcomeOf(join, JSON.stringify(ask)), "none");
+  assert.equal(workspaceOutcomeOf({ kind: "none" }, ""), "none");
 });
 
 test("setup ends in the place of the chosen first project", () => {
