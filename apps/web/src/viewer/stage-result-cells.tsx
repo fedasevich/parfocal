@@ -444,9 +444,7 @@ function ResultSetLayer({
           paints={paints}
           retype={retype}
           focus={focus}
-          comments={
-            commentSlide === undefined ? undefined : { slideId: commentSlide, anchorSet: !inTask }
-          }
+          comments={commentSlide === undefined ? undefined : { slideId: commentSlide }}
         />
       ) : null}
       {!inTask && (set.region_count ?? 0) > 0 ? (

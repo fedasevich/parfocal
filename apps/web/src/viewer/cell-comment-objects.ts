@@ -9,15 +9,15 @@ import {
 import { cellAt, type PickedCell } from "./result-cell-pick.ts";
 import type { PagedCells } from "./viewer-engine.ts";
 
-export type CellComments = { readonly slideId: string; readonly anchorSet: boolean };
+export type CellComments = { readonly slideId: string };
 
 const plainCell = /^C([1-9]\d*)$/;
 
-const cellObject = (
-  number: number,
-  ring: ArrayLike<number>,
-  set: string | undefined,
-): ResultObject => ({ id: `C${number}`, ring: Array.from(ring), set });
+const cellObject = (number: number, ring: ArrayLike<number>, set: string): ResultObject => ({
+  id: `C${number}`,
+  ring: Array.from(ring),
+  set,
+});
 
 const noObjects: readonly ResultObject[] = [];
 
@@ -28,7 +28,7 @@ export function useCellCommentObjects(
   picked: PickedCell | null,
 ) {
   const slideId = comments?.slideId;
-  const set = comments?.anchorSet ? setId : undefined;
+  const set = setId;
   const wantedKey = useWantedResults(slideId ?? "").join(",");
   const [loaded, setLoaded] = useState<readonly ResultObject[]>(noObjects);
   useEffect(() => {

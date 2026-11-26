@@ -352,3 +352,28 @@ def test_groups_are_saved_on_the_shared_layer_for_every_expert(api: ApiAs, datab
     refused = api(layer.people["owner"]).put(f"{layer.base}/groups", json=body)
     assert refused.json()["code"] == "not-assigned"
     assert api(layer.people["third"]).get(f"{layer.base}/groups").status_code == 404
+
+
+def test_a_comment_on_an_ai_cell_in_an_annotate_task_keeps_the_layer_result_set(
+    api: ApiAs, database: str
+) -> None:
+    layer = shared_layer(api, database)
+    threads = f"/api/review-tasks/{layer.task}/slides/{layer.slide}/threads"
+    expert = api(layer.people["first"])
+
+    def comment(anchor: dict[str, Any]) -> Any:
+        return expert.post(
+            threads, json={"title": "Retype?", "body": "Retype this cell?", "anchor": anchor}
+        )
+
+    named = comment({"kind": "object", "object_id": "C3", "result_set_id": str(layer.result_set)})
+    assert named.status_code == 201, named.text
+    assert named.json()["anchor"]["object_id"] == "C3"
+    assert named.json()["anchor"]["result_set_id"] == str(layer.result_set)
+    unnamed = comment({"kind": "object", "object_id": "C4"})
+    assert unnamed.status_code == 201, unnamed.text
+    assert unnamed.json()["anchor"]["result_set_id"] == str(layer.result_set)
+    missing = comment({"kind": "object", "object_id": "C9", "result_set_id": str(layer.result_set)})
+    assert missing.status_code == 400
+    other = comment({"kind": "object", "object_id": "C3", "result_set_id": str(uuid.uuid4())})
+    assert other.status_code == 400

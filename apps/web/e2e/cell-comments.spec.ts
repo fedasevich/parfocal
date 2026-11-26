@@ -99,8 +99,7 @@ test("an annotate task AI cell picked and commented with C anchors to the cell",
   await expect(composer(page)).toHaveAttribute("data-target", "object");
   await expect(page.getByTestId("comment-target")).toContainText(`Comment on C${number}`);
   const anchor = await sendComment(page, "Retype this one?");
-  expect(anchor).toMatchObject({ kind: "object", object_id: `C${number}` });
-  expect(anchor.result_set_id).toBeUndefined();
+  expect(anchor).toMatchObject({ kind: "object", object_id: `C${number}`, result_set_id: samSet });
   await expect(marks(page)).toHaveCount(1);
   await page.getByRole("tab", { name: /Comments/ }).click();
   const card = cards(page).filter({ hasText: "Retype this one?" });
