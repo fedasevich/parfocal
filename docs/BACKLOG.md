@@ -6100,7 +6100,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-006.
   Size: S.
 
-- [ ] ADMIN-013 · The row menu in Admin People opens and acts
+- [x] ADMIN-013 · The row menu in Admin People opens and acts
   The owner found on 2026-11-25 that the three dots button at the end of each row in Admin People (apps/web/src/screens/admin/people.tsx) does nothing when clicked. Open a menu with the actions an admin can take on that person, such as change role, resend or revoke an invite, suspend and remove, each saving through the API under its permission, and leave out an action that has no route yet instead of showing a dead item.
   Done when a browser spec on the fake API opens the menu on a row, runs one action and reads the change back after a reload, and the deployed app opens the menu.
   Depends on nothing.
@@ -7345,7 +7345,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The deployed walk of v0.46.0 started a 2 tile PathoSAM + HoVer-NeXt run on synthetic-zlib.ome.tiff at 22:09:37 UTC with the dialog promising About 2 min and 0 runs ahead. /api/me/jobs read queued with 0 units until about 22:28, then the run finished both tiles in about 30 s. Modal main showed parfocal-gpu-pool with 1 task the whole time, and the v0.47.0 deploy ran from about 22:11 to 22:27, so the wait may come from the deploy replacing the dispatcher or the pool. Find the cause from the run's timestamps and the Modal logs, make a queued run start when the pool is free (including after a deploy), and make the dialog's estimate and the job's state say why it waits.
   Done when a test reproduces the cause, and a deployed run of a small slide starts within the dialog's estimate, recorded with its cost.
   Depends on nothing. Size: M.
-- [ ] PROTO-169 · Skeletons take the shape of the page they stand for
+- [x] PROTO-169 · Skeletons take the shape of the page they stand for
   The owner found on 2026-11-25 that the Clinical report page loads with a skeleton of label and field rows, like a form, while the page itself is a header, a sign-out banner and a white report sheet, and that some forms show skeletons that do not match their shape either. DS-015 (skeletons and placeholders that hold space) and SHELL-022 (skeletons that fit each page) meant to prevent this. Give the report page a skeleton of its header, banner and sheet, then sweep every page and form that shows a skeleton and fix each one whose blocks do not line up with what replaces them.
   Done when a browser spec compares skeleton and loaded layout boxes on the report page and the forms the sweep fixed, and the log lists every skeleton the sweep checked.
   Depends on nothing. Size: M.
@@ -7364,27 +7364,27 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a test renders each template's sample PDF and checks its fonts, margins and table styling against the on-screen report, the PDF preview spec still passes, and the deployed templates page shows a laid out sample report.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-173 · J and Shift+J step through review objects reliably
+- [x] PROTO-173 · J and Shift+J step through review objects reliably
   The owner found on 2026-11-25 that J (next object) and Shift+J (previous object) do not work properly while reviewing. The keys are bound in apps/web/src/screens/review/object-keys.ts through the review device intents, which skip a press inside a layer such as a popover or toast and map the key through mapInput, so a focused field, an open edit mode, the Move points tools or a stale binding may swallow or misroute them. Reproduce on the deployed review queue, name the cause in the log, and make J always move to the next object and Shift+J to the previous one in list order, wrapping or stopping at the ends as the hint says, in every review mode where the hint lists them.
   Done when a browser spec on the fake API presses J and Shift+J through a list of objects, including after a decision, while an outline edit mode is open and after a toast, and lands on the expected object each time, and the deployed queue does the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-174 · Outline edits in review are a draft saved once, with points added and removed
+- [x] PROTO-174 · Outline edits in review are a draft saved once, with points added and removed
   The owner found on 2026-11-25 that Move points in review saves on every drag, which spams the API, and that the server's self-intersection check rejects the in-between shapes an outline must pass through while points move one by one ("The shape is not valid: Self-intersection[...]"). The owner also wants to add and remove points, and asked Fable for the best design. Fable's advice of 2026-11-25, which this task follows: Move points edits a draft ring in the browser and sends one request on Done, Enter or stepping to another object, and Esc discards it, so no debounce is needed. Crossings are allowed while editing, a client check draws the crossing edges in red with "Outline crosses itself", Done is off while a crossing exists, and stepping away asks to fix or discard. Nothing repairs a shape on its own, because a repaired bowtie becomes two shapes, which is a Split, and the server keeps its validity check as the backstop with no API change. Done goes through saveFix, so the reviewer reaches the reasons step and gets the undo toast, and the decision on the object is not touched. Points are added by dragging a ghost midpoint on a hovered edge and removed with Alt+click or Backspace and Delete on a selected point, never below 3, with the pure helpers of apps/web/src/annotations/reshape.ts from ANN-035 (Figma style point editing) ported to rings. Backspace must remove a point while editing instead of deleting the object, as AiLayer does today. Cmd+Z and Shift+Cmd+Z step through the draft. Fix two bugs Fable found on the way: put in apps/web/src/viewer/stage-review-fixes.ts has no error handler, so a rejected outline still shows as saved, and outlines over 32 points are simplified on entering edit, so the first move rewrites the whole AI outline. The files are apps/web/src/annotations/ai-layer.tsx, ai-edit.ts and reshape.ts, and apps/web/src/viewer/stage-shape-edit.tsx, stage-review-objects.tsx and stage-review-fixes.ts.
   Done when a browser spec on the fake API drags points through a crossing and back with no request until Done, sends exactly one outline on Done, adds and removes a point, undoes a step, sees Done off and the red edges on a crossing outline, sees a rejected outline reported instead of saved, and keeps an outline of more than 32 points unchanged where it was not moved, and the deployed review does the same.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-175 · Add what the AI missed fits the task and can be turned off
+- [x] PROTO-175 · Add what the AI missed fits the task and can be turned off
   The owner found on 2026-11-25 that guided review offers "add something the AI missed" on a tumor outline task, where it makes little sense in its current form, and that nothing turns it off. In apps/web/src/screens/review/guided-review.tsx the button only shows a prototype toast ("Draw around what the AI missed. It becomes T..+ (prototype)") and draws nothing. Make it a task setting the task owner chooses in the task wizard, worded per object kind (a missed region on outline tasks, a missed cell on cell tasks), hidden when the setting is off, and when on, let the reviewer really draw the missed object, saved as a drawn object with the person mark.
   Done when a browser spec on the fake API hides the button on a task with the setting off, and on a task with it on draws a missed region that is saved and listed after a reload, and the deployed review shows no prototype toast anywhere.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-176 · Guided review reaches the final form as soon as every object is checked, and goes back from it
+- [x] PROTO-176 · Guided review reaches the final form as soon as every object is checked, and goes back from it
   The owner found on 2026-11-25 that moving to the final opinion form in guided review is unreliable. It lags behind every object being checked, and once it shows there is no way back to fix an object. In apps/web/src/screens/review/guided-review.tsx the form opens only through advance when auto advance is on and finds no open object, or through Submit, and goTo hides it again. Open the form right after the last open object is decided whether auto advance is on or not, without waiting for saves to return, keep a way back from the form to the object list and to any object (a back button, the list and J or Shift+J), and return to the form with its answers kept.
   Done when a browser spec on the fake API decides the last object with auto advance on and off and sees the form at once, goes back from the form to change one object, comes back and finds the form answers kept, and the deployed guided review does the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-177 · The disagreement queue's Decide panel fits its column
+- [x] PROTO-177 · The disagreement queue's Decide panel fits its column
   The owner found on 2026-11-25 that the Decide panel in the disagreement queue (apps/web/src/screens/disagreements/queue-screen.tsx) overflows its column. With "T2 on CMU-1-Small-Region.svs" in the heading, the "the reviewer vs AI" chip and the five decision buttons from Certainly not to Certainly run past the panel's right edge and are cut off. Let the heading wrap or truncate the slide name with its full name on hover, keep the buttons inside the panel at every supported width, and check the rest of the queue for the same overflow.
   Done when a browser spec on the fake API with a long slide name finds the chip and every decision button inside the panel at the narrow and wide viewport sizes, and the deployed queue shows the same.
   Depends on nothing. Size: S.
@@ -7394,17 +7394,17 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API opens the bigger view from a queue row, sees the reviewers' outlines there, decides and returns to the next row, and measures the magnification bar with no overlapping or clipped parts at the queue's width and at 360 px, and the deployed queue shows the same.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-179 · An empty project and every other table outside Admin show an empty state
+- [x] PROTO-179 · An empty project and every other table outside Admin show an empty state
   The owner found on 2026-11-25 that a new project with 0 slides shows only the header row of its Slides table (apps/web/src/screens/project/slides-tab.tsx), with nothing below it. Show an empty state there that says the project has no slides yet and offers Upload, the drop target and a link to a remote source, and one per filter, such as "No slides need review" on Needs review. Then sweep every other table and list outside Admin (review tasks, cases, result sets, objects, dataset exports, my work and the rest) and give each its own empty state. ADMIN-014 (Admin tables show an empty state) covers the Admin tables.
   Done when a browser spec on the fake API shows the empty state on a new project's Slides tab with a working Upload, on one filter with no match and on the Review tasks tab, the log lists every table the sweep checked, and the deployed app shows the same on a new project.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-180 · The Smart select and Auto region bars stay one compact row with the mock's model picker
+- [x] PROTO-180 · The Smart select and Auto region bars stay one compact row with the mock's model picker
   The owner found on 2026-11-25 that the Smart select bar (apps/web/src/annotations/smart-layer.tsx) grows to three rows when it shows a long status chip such as "You stopped waiting for Best, Good outlined this view. Click again to ask Best again", next to "Outline found", "nuclei · 0.5 µm" and "1 found". Keep the bar to one compact row of proposals, Good or Best, hover preview, the found count and Discard and Accept, with a short state word in place of a sentence. Show any longer message or error once as a toast that closes on its own, and keep its full text in the toast, not in the bar. The owner found the same on 2026-11-25 in the Auto region bar, which wraps Accept as other onto a second row next to Good and Best, "Tile 5 of 12 · 47 found", "nuclei · 0.5 µm" and "64 found", and asked why the bars use a Good and Best switch instead of the mock's model selector. Replace Good and Best in both bars with the model picker dropdown from packages/ui/src/components/model-picker.tsx, which the Run a model window already uses, showing each model's name, description, speed and cost, with the chosen model kept per person. Fold tile progress and found counts into one short reading in the bar.
   Done when a browser spec on the fake API stops a Best request and measures the bar at one row with the message shown in a toast, measures the Auto region bar at one row while it runs over tiles, picks a model from the dropdown in both bars and sees its description, and an error from the model shows as a toast with the bar unchanged in size, and the deployed Smart select shows the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-181 · Smart select queues clicks made while the model works
+- [x] PROTO-181 · Smart select queues clicks made while the model works
   The owner asked on 2026-11-25 for the click queue the POC had: while a Smart select request runs, each new positive or negative click is kept in order, drawn at once as a numbered dashed marker, and sent when the model is free, so a reviewer can place many points without waiting. In the app (apps/web/src/annotations/smart-layer.tsx) clicks made while a request runs are dropped. The POC does it in /Users/yuriifedas/WebstormProjects/poc/src/segment/controller.ts (point puts a marker in queued and runs it through a serial enqueue, undoPoint removes the last queued marker first), src/annotations/overlay.ts (drawQueuedMarker, a dashed ring with its order number) and src/ui/toolbar.ts (the status shows "N queued"). Write it fresh for the app: queue clicks and boxes in order, draw them numbered, show the queued count in the Smart select bar's state word, let Undo and Backspace remove the last queued point before the sent ones, let Discard and Esc clear the queue, and send the queued points together in one request when that gives the same result as one at a time, so a burst of clicks costs one model call.
   Done when a browser spec on the fake API with a slow model places five points during one request, sees five numbered markers and "5 queued", undoes one, and gets the outline from the other four with the request count it expects, and the deployed Smart select does the same.
   Depends on nothing. Size: M.
@@ -7414,7 +7414,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API turns automatic typing off and finds new cells untyped, turns it on mid session and finds the next cells typed at once, and accepts three Smart select cells, sees them typed by a fake typer and drawn in three class colors with their type on hover, sees a typer failure as a toast, changes one type with a key, and the deployed Annotate types and colors cells found on a real slide, recorded with the typer's time and cost.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-183 · Tool tooltips on the viewer rail are readable
+- [x] PROTO-183 · Tool tooltips on the viewer rail are readable
   The owner found on 2026-11-25 that the tooltip of a tool on the viewer's left rail is unreadable. On Select · M the description "Drag on empty tissue for a marquee. ⇧ adds to the selection. Double-click an edge to add a point" is pale grey on a light grey card over a dark app, so it barely shows. The text comes from apps/web/src/screens/viewer-tools/rails.ts. Give rail tooltips the app's dark popover surface with body text that passes WCAG AA contrast (4.5 to 1), keep the tool name and key on top and the description under it, and check every other tooltip in the app with the same component.
   Done when a unit or browser test measures the tooltip text contrast at 4.5 to 1 or more in dark and light themes, a Storybook story shows the rail tooltip, and the deployed viewer shows a readable Select tooltip.
   Depends on nothing. Size: S.
@@ -7429,12 +7429,12 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API with a slow model draws a region, finds the animated outline and the done tiles while it runs and no outline after the results, a reduced motion run shows the still outline, and the deployed Auto region shows the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-186 · The whole slide map is sharp at its size
+- [x] PROTO-186 · The whole slide map is sharp at its size
   The owner found on 2026-11-25 that the Whole slide map (Z, apps/web/src/viewer/viewed-peek.tsx) looks blurry. It reuses the small minimap picture from useMinimapImage in apps/web/src/viewer/stage-minimap.tsx, the slide thumbnail or else the overview, and stretches it to a near full screen dialog. Give the map a picture sized to the dialog times the device pixel ratio, read from the pyramid level that fits or rendered through the viewer's own tiles, shown over the small thumbnail while it loads, and cached per slide. Keep the small minimap on the thumbnail. The seen, AI area, checked and you are here overlays must still line up with the sharper picture.
   Done when a browser spec on the fake API opens the map and finds its picture at least as many pixels wide as the dialog times the device pixel ratio with the overlays aligned to a known region, and the deployed map of a CAMELYON16 slide is sharp, compared by number against the old one with shot --against.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-187 · The Comments tab header fits the side panel
+- [x] PROTO-187 · The Comments tab header fits the side panel
   The owner found on 2026-11-25 that in the viewer's Comments tab (packages/ui/src/components/comments-tab.tsx) the Open and Resolved switch runs past the right edge of the side panel, so "Resolved 1" is cut off, because "Threads on CMU-1-JP2K-33005-v2.zip" wraps onto two lines beside it. Put the switch on its own row under the title or shorten the title to the slide name truncated with the full name on hover, so the switch always fits, and check the thread rows of the same tab, where the type chip and the "Pin" title repeat the same word, for the same overflow and for a clearer title.
   Done when a browser spec on the fake API with a long slide name finds the whole switch inside the panel at the narrowest panel width, a Storybook story shows the tab with a long name, and the deployed Comments tab shows the same.
   Depends on nothing. Size: S.
@@ -7449,7 +7449,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API comments on a selected cell, on a selection of three cells, on a layer from its row and on a dragged region from the slide, follows a mentioned object ID and a mentioned layer from a comment to their place on the slide, drops the comment tool on a drawn cell and finds the thread listed under that cell's ID, finds each thread in the Comments tab with the right kind, flies back to each, finds the cell's thread in its side panel, and the deployed viewer does the same.
   Depends on nothing. Size: L.
 
-- [ ] PROTO-190 · The viewer's slide switcher fits its popover
+- [x] PROTO-190 · The viewer's slide switcher fits its popover
   The owner found on 2026-11-25 that the "Slides in this project" popover under the slide name in the viewer's top bar (apps/web/src/viewer/live-slides-popover.tsx, with the review variant in apps/web/src/screens/review/review-top-popovers.tsx) is cut off on the right. The selected row's result set count is clipped, a control after the count is hidden past the edge, and the footer's Compare and upload buttons run out of the popover. Size the popover to its content within the window, let slide names truncate with the full name on hover, keep each row's count and controls inside, and wrap or shorten the footer so all its buttons show.
   Done when a browser spec on the fake API opens the switcher with a long slide name and finds every row control and footer button inside the popover at the narrow and wide viewport sizes, and the deployed viewer shows the same.
   Depends on nothing. Size: S.
@@ -7459,7 +7459,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when Fable's advice is in the log, a browser spec on the fake API drops a GeoJSON and a CSV of cells onto the viewer, previews each on the slide, sees a failed check explained, saves one and cancels the other, and the deployed viewer adds a result set the same way.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-192 · The cell review's floating decision bar can be hidden and keeps clear of the cell
+- [x] PROTO-192 · The cell review's floating decision bar can be hidden and keeps clear of the cell
   The owner found on 2026-11-25 that in cell review the floating bar of K Agree, 1 Tumor, 2 Stroma, 3 Immune, 4 Other and X Disagree (apps/web/src/screens/review/type-bar.tsx) covers much of the tissue around the cell under review, which a doctor needs to see to judge it. Let the reviewer hide and show the bar with a key and a small handle, remember the choice per person, keep the keys working while it is hidden with a one line hint of them, and place the bar where it does not cover the cell and a margin around it, moving to the other side when the cell is near it.
   Done when a browser spec on the fake API hides the bar with its key, decides a cell by key while hidden, reloads and finds it still hidden, and measures the shown bar clear of the current cell's box plus margin on cells near each screen edge, and the deployed cell review does the same.
   Depends on nothing. Size: S.
@@ -7469,7 +7469,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API ticks and unticks reasons on a cell, steps away and back and finds the saved set, sees a failed save rolled back with a toast, cannot tick Not a cell together with a cell type if they are exclusive, and the deployed cell review does the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-194 · Object opacity fades the outlines too
+- [x] PROTO-194 · Object opacity fades the outlines too
   The owner found on 2026-11-25 that the Opacity slider under How objects draw in the Display tab (packages/ui/src/components/display-panel.tsx) does not make the outlines less visible, so at 10% the white outline of a cell still hides the tissue at its edge. Apply opacity to the outline stroke, the fill and the dots alike in every draw mode, keep the current object's highlight visible enough to find at low opacity, and keep the setting per person.
   Done when a browser spec on the fake API sets opacity to 10% and reads the outline, fill and dot alpha of drawn objects at 10% with the current object still marked, a golden image of a cell at 10% and 100% changes as expected, and the deployed review shows the same.
   Depends on nothing. Size: S.

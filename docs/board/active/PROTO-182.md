@@ -1,4 +1,4 @@
-status: review
+status: in-progress
 by: claude parallel run
 since: 2026-11-25
-note: waits for the deployed Annotate check of typed and colored Smart select cells with the typer's time and cost
+note: the deployed walkthrough found no outline-types request after accepting three Best Smart select cells with typing on; a fix agent takes it
