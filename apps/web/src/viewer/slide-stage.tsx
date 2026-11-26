@@ -102,7 +102,6 @@ import { StageTips } from "./stage-tips.tsx";
 import { stageToolOf } from "./stage-tools.ts";
 import { ViewerKeys } from "./stage-viewer-keys.tsx";
 import { ThreadFocus } from "./thread-focus.tsx";
-import { threadAnchorPoint } from "./thread-target.ts";
 import { firstGrant, type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
@@ -888,7 +887,8 @@ function OpenedSlide({
                         active={tool === "comment"}
                         selecting={tool === "select"}
                         registry={pinRegistry}
-                        anchorOf={(anchor) => threadAnchorPoint(anchor, areas)}
+                        areas={areas}
+                        selected={selectedIds}
                         document={annotations}
                         projectId={projectId}
                         taskId={taskId}
@@ -1116,6 +1116,8 @@ function OpenedSlide({
                       areas={areas}
                       request={inspector.focus ?? null}
                       pinRegistry={pinRegistry}
+                      document={annotations}
+                      onPick={focus.pickFromLayers}
                     />
                   ) : null}
                   {session && hostNode && systematicScan ? (

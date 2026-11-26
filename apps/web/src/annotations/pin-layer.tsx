@@ -1,6 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { type Thread, useListThreads, useListThreadsOnSlide } from "@parfocal/api-client";
-import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -9,18 +8,40 @@ import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { markTried } from "../screens/home/getting-started.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
-import { pinThread } from "../screens/review/comment-pin.ts";
 import { useMentionable } from "../screens/review/use-mentionable.ts";
+import type { SlideAreaEntry } from "../viewer/slide-areas.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { type AnchorPlace, anchorArea, anchorCorner, anchorRowKey } from "./anchor-place.ts";
 import { bindClickPress, clickSlopScreenPixels } from "./click-press.ts";
+import { AnchorMarks, AnchorOutline, SelectionComment } from "./comment-anchors.tsx";
+import {
+  layerNames,
+  onLayerComment,
+  onRowThread,
+  publishThreadCounts,
+  useLayerNames,
+} from "./comment-bus.ts";
+import {
+  areaOfExtent,
+  type CommentDraft,
+  type CommentTarget,
+  regionTarget,
+  targetExtent,
+  targetOfShapes,
+  targetThread,
+} from "./comment-target.ts";
 import type { AnnotationDocument } from "./document.ts";
+import { useSavedCodes } from "./drawn-object-ids.ts";
+import { pickShape } from "./hit-test.ts";
 import type { PinRegistry } from "./pin-registry.ts";
 import { removalDetail, removalTitle } from "./pin-removal.ts";
 import { PinThread } from "./pin-thread.tsx";
 import { dropPin, movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
 import type { Point } from "./polygon-draft.ts";
+import type { ShapeId } from "./shapes.ts";
 import { useStageRect } from "./stage-size.ts";
+import { TargetComposer } from "./target-composer.tsx";
 import {
   homeOf,
   moveThreadPin,
@@ -37,7 +58,8 @@ type PinLayerProps = {
   active: boolean;
   selecting?: boolean;
   registry?: PinRegistry;
-  anchorOf?: ((anchor: Thread["anchor"]) => Point | null) | undefined;
+  areas?: readonly SlideAreaEntry[];
+  selected?: readonly ShapeId[];
   document: AnnotationDocument;
   projectId?: string | undefined;
   taskId: string | undefined;
@@ -49,7 +71,9 @@ type PinLayerProps = {
 
 const onPinOrThread = (event: Event) =>
   event.target instanceof Element &&
-  event.target.closest('[data-slot="comment-pin"], [data-testid="pin-thread"]') !== null;
+  event.target.closest(
+    '[data-slot="comment-pin"], [data-slot="comment-anchor"], [data-testid="pin-thread"], [data-testid="pin-composer"], [data-testid="stage-menu"]',
+  ) !== null;
 
 const noPlaceReason = "Open the slide from its project to comment on it";
 
@@ -57,58 +81,10 @@ type Removal = { threadIds: readonly string[]; proceed: () => void };
 
 type Drag = { threadId: string; point: Point; moved: boolean };
 
-function Composer({
-  at,
-  offReason,
-  failed,
-  busy,
-  onSend,
-  onCancel,
-}: {
-  at: Point;
-  offReason: string | undefined;
-  failed: boolean;
-  busy: boolean;
-  onSend: (text: string) => void;
-  onCancel: () => void;
-}) {
-  const { t } = useLingui();
-  const [text, setText] = useState("");
-  const section = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    section.current?.querySelector("textarea")?.focus();
-  }, []);
-  return (
-    <section
-      ref={section}
-      aria-label={t`New pinned thread`}
-      data-testid="pin-composer"
-      className="pointer-events-auto absolute z-10 grid w-72 gap-2 rounded-ctl border border-line bg-chrome p-3 shadow-pop"
-      style={{ left: at.x + 12, top: at.y + 12 }}
-      onKeyDown={(event) => {
-        if (event.key !== "Escape") return;
-        event.preventDefault();
-        event.stopPropagation();
-        onCancel();
-      }}
-    >
-      <CommentComposer
-        value={text}
-        onValueChange={setText}
-        onSend={() => {
-          if (!busy) onSend(text);
-        }}
-        label={t`Comment at the pin`}
-        offReason={offReason}
-      />
-      {failed ? (
-        <p role="alert" className="m-0 text-body-sm text-bad">
-          <Trans>The thread did not save. Try again.</Trans>
-        </p>
-      ) : null}
-    </section>
-  );
-}
+const noAreas: readonly SlideAreaEntry[] = [];
+const noSelection: readonly ShapeId[] = [];
+
+type Box = { from: Point; to: Point };
 
 export function PinLayer({
   engine,
@@ -116,7 +92,8 @@ export function PinLayer({
   active,
   selecting = false,
   registry,
-  anchorOf,
+  areas = noAreas,
+  selected = noSelection,
   document: doc,
   projectId,
   taskId,
@@ -148,11 +125,17 @@ export function PinLayer({
       : null;
   const refreshList = (home: ThreadHome) =>
     void queryClient.invalidateQueries({ queryKey: threadListKey(home) });
-  const [draft, setDraft] = useState<Point | null>(null);
+  const codes = useSavedCodes();
+  const names = useLayerNames();
+  const layerName = (key: string) => names.find((item) => item.key === key)?.name;
+  const place: AnchorPlace = { doc, codes, areas };
+  const [draft, setDraft] = useState<CommentDraft | null>(null);
+  const [box, setBox] = useState<Box | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const latest = useRef({ doc, engine, onDocumentChange, onCommit, draft, drag, openId });
-  latest.current = { doc, engine, onDocumentChange, onCommit, draft, drag, openId };
+  const now = { doc, engine, onDocumentChange, onCommit, draft, drag, openId, place, selected };
+  const latest = useRef(now);
+  latest.current = now;
   const [removal, setRemoval] = useState<Removal | null>(null);
   const [removing, setRemoving] = useState(false);
   const [removalFailed, setRemovalFailed] = useState(false);
@@ -171,9 +154,45 @@ export function PinLayer({
   });
   const dragStart = useRef<{ from: Point; grab: Point } | null>(null);
 
+  const openTarget = useCallback((target: CommentTarget, clicked?: Point) => {
+    const { doc: shown, place: where } = latest.current;
+    const area =
+      target.kind === "layer"
+        ? anchorArea({ kind: "layer", layer: target.layer }, where)
+        : areaOfExtent(targetExtent(shown, target));
+    const at = clicked ?? (area === null ? null : { x: area.x + area.width, y: area.y });
+    if (at === null) return;
+    setOpenId(null);
+    setDraft({ target, at, clicked });
+  }, []);
+
+  const commentOnSelection = useCallback(() => {
+    const { doc: shown, selected: picked, place: where } = latest.current;
+    const target = targetOfShapes(shown, where.codes, picked);
+    if (target !== null) openTarget(target);
+  }, [openTarget]);
+
   useEffect(() => {
-    if (!active) setDraft(null);
-  }, [active]);
+    if (!active) {
+      setDraft((current) =>
+        current?.target.kind === "point" || current?.target.kind === "region" ? null : current,
+      );
+      setBox(null);
+      return;
+    }
+    if (latest.current.selected.length > 0) commentOnSelection();
+  }, [active, commentOnSelection]);
+
+  useEffect(
+    () =>
+      onLayerComment((key) => {
+        const name = layerNames().find((item) => item.key === key)?.name ?? key;
+        const area = anchorArea({ kind: "layer", layer: key }, latest.current.place);
+        if (area !== null) void latest.current.engine.flyToArea(area);
+        openTarget({ kind: "layer", layer: key, name });
+      }),
+    [openTarget],
+  );
 
   const escRegistry = useEscRegistry();
   useEffect(
@@ -195,20 +214,42 @@ export function PinLayer({
       ignore: onPinOrThread,
       onClick: (event) => {
         const current = latest.current.engine.getCamera();
-        setDraft(
-          screenToSlide(current, stage.getBoundingClientRect(), event.clientX, event.clientY),
+        const at = screenToSlide(
+          current,
+          stage.getBoundingClientRect(),
+          event.clientX,
+          event.clientY,
         );
+        const { doc: shown, place: where } = latest.current;
+        const hit = pickShape(shown, at, pinHitScreenPixels / 2 ** current.zoom);
+        const target = hit === null ? null : targetOfShapes(shown, where.codes, [hit.id]);
+        if (target !== null) openTarget(target, at);
+        else setDraft({ target: { kind: "point", at }, at });
+      },
+      onDrag: (from, event, done) => {
+        const current = latest.current.engine.getCamera();
+        const bounds = stage.getBoundingClientRect();
+        const start = screenToSlide(current, bounds, from.clientX, from.clientY);
+        const end = screenToSlide(current, bounds, event.clientX, event.clientY);
+        if (!done) {
+          setDraft(null);
+          setBox({ from: start, to: end });
+          return;
+        }
+        setBox(null);
+        openTarget(regionTarget(start, end));
       },
     });
-  }, [active, stage]);
+  }, [active, stage, openTarget]);
 
-  const draftAt = draft ? slideToScreen(camera, rect, draft) : null;
+  const draftAt = draft ? slideToScreen(camera, rect, draft.at) : null;
   const toleranceNow = () => pinHitScreenPixels / 2 ** latest.current.engine.getCamera().zoom;
 
   const send = (text: string) => {
-    const point = latest.current.draft;
-    const data = point === null ? null : pinThread(point, text, members);
-    if (point === null || data === null || startHome === null) return;
+    const current = latest.current.draft;
+    const data = current === null ? null : targetThread(current.target, text, members);
+    if (current === null || data === null || startHome === null) return;
+    const point = current.target.kind === "point" ? current.target.at : null;
     const home = startHome;
     create.mutate(
       { home, data },
@@ -217,9 +258,11 @@ export function PinLayer({
           if (response.status !== 201) return;
           markTried("comment");
           const { doc: before } = latest.current;
-          latest.current.onDocumentChange(
-            placePin(before, response.data.id, point, toleranceNow()),
-          );
+          if (point !== null) {
+            latest.current.onDocumentChange(
+              placePin(before, response.data.id, point, toleranceNow()),
+            );
+          }
           refreshList(home);
           setDraft(null);
         },
@@ -327,13 +370,44 @@ export function PinLayer({
     return () => window.clearTimeout(timer);
   }, [settledKey, drag]);
 
+  const marks = threads.flatMap((thread) => {
+    if (thread.resolved_at !== null || thread.anchor.kind === "point") return [];
+    const corner = anchorCorner(thread.anchor, place);
+    return corner === null ? [] : [{ thread, point: corner }];
+  });
+  const rowCounts = new Map<string, number>();
+  for (const { thread } of marks) {
+    const key = anchorRowKey(thread.anchor, place);
+    if (key !== null) rowCounts.set(key, (rowCounts.get(key) ?? 0) + 1);
+  }
+  useEffect(() => publishThreadCounts(rowCounts));
+  const rowThread = useRef<(key: string) => void>(() => undefined);
+  rowThread.current = (key) => {
+    const found = marks.find(({ thread }) => anchorRowKey(thread.anchor, place) === key);
+    if (found === undefined) return;
+    setDraft(null);
+    setOpenId(found.thread.id);
+  };
+  useEffect(() => onRowThread((key) => rowThread.current(key)), []);
+  useEffect(() => () => publishThreadCounts(new Map()), []);
+
   const pinned = pins.find(({ thread }) => thread.id === openId);
   const unpinned =
     pinned || openId === null ? undefined : threads.find((item) => item.id === openId);
-  const unpinnedAt = unpinned && anchorOf ? anchorOf(unpinned.anchor) : null;
+  const unpinnedAt = unpinned ? anchorCorner(unpinned.anchor, place) : null;
   const opened =
     pinned ?? (unpinned && unpinnedAt ? { thread: unpinned, point: unpinnedAt } : undefined);
   const openedAt = opened ? slideToScreen(camera, rect, opened.point) : null;
+  const drafted =
+    draft === null || draft.target.kind === "point"
+      ? null
+      : draft.target.kind === "layer"
+        ? anchorArea({ kind: "layer", layer: draft.target.layer }, place)
+        : areaOfExtent(targetExtent(doc, draft.target));
+  const outlined =
+    box !== null
+      ? areaOfExtent(regionTarget(box.from, box.to).extent)
+      : (drafted ?? (unpinned ? anchorArea(unpinned.anchor, place) : null));
 
   return (
     <div
@@ -398,6 +472,22 @@ export function PinLayer({
           </button>
         );
       })}
+      <AnchorMarks
+        marks={marks}
+        camera={camera}
+        rect={rect}
+        selecting={selecting}
+        layerName={layerName}
+        initials={(thread) => people(thread.created_by)?.initials ?? "?"}
+        onOpen={(threadId) => {
+          setDraft(null);
+          setOpenId((already) => (already === threadId ? null : threadId));
+        }}
+      />
+      <AnchorOutline area={outlined} camera={camera} rect={rect} />
+      {selecting ? (
+        <SelectionComment stage={stage} count={selected.length} onComment={commentOnSelection} />
+      ) : null}
       {opened && openedAt ? (
         <PinThread
           key={opened.thread.id}
@@ -431,20 +521,32 @@ export function PinLayer({
       </SmallModal>
       {draft && draftAt ? (
         <>
-          <span
-            data-testid="pin-draft"
-            aria-hidden
-            className="absolute size-7 -translate-y-full rounded-full rounded-bl-none bg-accent-fill opacity-70"
-            style={{ left: draftAt.x, top: draftAt.y }}
-          />
-          <Composer
-            key={`${draft.x},${draft.y}`}
+          {draft.target.kind === "point" ? (
+            <span
+              data-testid="pin-draft"
+              aria-hidden
+              className="absolute size-7 -translate-y-full rounded-full rounded-bl-none bg-accent-fill opacity-70"
+              style={{ left: draftAt.x, top: draftAt.y }}
+            />
+          ) : null}
+          <TargetComposer
+            key={`${draft.target.kind}:${draft.at.x},${draft.at.y}`}
+            target={draft.target}
+            doc={doc}
             at={draftAt}
             offReason={startHome === null ? noPlaceReason : undefined}
             failed={create.isError}
             busy={create.isPending}
             onSend={send}
             onCancel={() => setDraft(null)}
+            onPinInstead={
+              draft.clicked === undefined
+                ? undefined
+                : () => {
+                    const at = draft.clicked ?? draft.at;
+                    setDraft({ target: { kind: "point", at }, at });
+                  }
+            }
           />
         </>
       ) : null}

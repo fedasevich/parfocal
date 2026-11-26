@@ -13,6 +13,10 @@ export function asciiObjectId(shown: string): string {
   return shown.replaceAll("·", ".").replaceAll("⁺", "+");
 }
 
+export function shownObjectId(ascii: string): string {
+  return ascii.replaceAll(".", "·").replaceAll("+", "⁺");
+}
+
 export function objectIdPath({ project, caseLabel, slide, object }: ObjectIdParts): string {
   const caseSegment =
     caseLabel === null || caseLabel === undefined || caseLabel === ""

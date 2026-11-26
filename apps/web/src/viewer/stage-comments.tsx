@@ -4,6 +4,7 @@ import {
   type CommentThreadCard,
   type DecisionNoteCard,
 } from "@parfocal/ui/components/comments-tab";
+import { useLayerNames } from "../annotations/comment-bus.ts";
 import { threadScope } from "../annotations/thread-home.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -67,6 +68,8 @@ export function StageComments({
   onNewComment,
 }: StageCommentsProps) {
   const person = usePeople();
+  const names = useLayerNames();
+  const layerName = (key: string) => names.find((item) => item.key === key)?.name;
   const onTask = useListThreads(taskId ?? "", slideId, undefined, {
     query: { enabled: taskId !== undefined },
   });
@@ -79,8 +82,8 @@ export function StageComments({
   ].sort((a, b) => a.created_at.localeCompare(b.created_at));
   const cards: CommentThreadCard[] = threads.map((thread) => ({
     id: thread.id,
-    anchor: anchorLabel(thread),
-    kind: anchorKind(thread),
+    anchor: anchorLabel(thread, layerName),
+    kind: anchorKind(thread, layerName),
     scope: threadScope(thread, taskName),
     title: thread.title,
     author: person(thread.created_by),

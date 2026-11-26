@@ -83,6 +83,8 @@ PERSON_KINDS = {
     Letter.TEXT: AnnotationKind.TEXT,
 }
 OBJECT_ANCHORS = frozenset({AnchorKind.OBJECT, AnchorKind.ROI})
+GEOMETRY_ANCHORS = frozenset({AnchorKind.POINT, AnchorKind.SHAPE})
+type LayerKey = Annotated[str, StringConstraints(pattern=r"^(g:[1-9]\d{0,8}|c:[^\s]{0,96})$")]
 SHAPES = (PolygonGeometry, MultiPolygonGeometry, LineStringGeometry)
 
 
@@ -92,6 +94,7 @@ class Anchor(BaseModel):
     geometry: Geometry | None = None
     offset: Position | None = None
     result_set_id: uuid.UUID | None = None
+    layer: LayerKey | None = None
 
     @model_validator(mode="after")
     def fits_kind(self) -> Anchor:
@@ -99,7 +102,9 @@ class Anchor(BaseModel):
             raise ValueError("Only an object anchor names a result set")
         if (self.kind in OBJECT_ANCHORS) != (self.object_id is not None):
             raise ValueError("An object or ROI anchor names an object ID, and only it does")
-        if (self.kind not in OBJECT_ANCHORS) != (self.geometry is not None):
+        if (self.kind is AnchorKind.LAYER) != (self.layer is not None):
+            raise ValueError("A layer anchor names a layer, and only it does")
+        if (self.kind in GEOMETRY_ANCHORS) != (self.geometry is not None):
             raise ValueError("A point or shape anchor gives a geometry, and only it does")
         if self.offset is not None and self.kind not in OBJECT_ANCHORS:
             raise ValueError("Only an object or ROI anchor takes an offset")
@@ -496,6 +501,7 @@ def anchor_of(row: Any) -> Anchor:
             "geometry": row.geometry,
             "offset": offset,
             "result_set_id": row.result_set_id,
+            "layer": row.layer,
         }
     )
 
@@ -771,6 +777,7 @@ async def start_in(
                 offset_x=offset[0] if offset else None,
                 offset_y=offset[1] if offset else None,
                 result_set_id=anchored.result_set_id,
+                layer=draft.anchor.layer,
                 created_by_user_id=me,
             )
             .returning(*threads.c)

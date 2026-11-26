@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { CommentLinksHost } from "./annotations/comment-links.tsx";
 import { selectWebClients } from "./clients.ts";
 import { readBuildConfig } from "./config.ts";
 import { installDebugHandle, provideDebug } from "./debug-handle.ts";
@@ -77,7 +78,9 @@ createRoot(container, {
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AppI18n>
-        <RouterProvider router={router} />
+        <CommentLinksHost>
+          <RouterProvider router={router} />
+        </CommentLinksHost>
         <ErrorToasts />
         <UndoToasts />
       </AppI18n>

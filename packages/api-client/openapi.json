@@ -62836,6 +62836,16 @@
               }
             ],
             "title": "Result Set Id"
+          },
+          "layer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LayerKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -62850,7 +62860,8 @@
           "object",
           "roi",
           "point",
-          "shape"
+          "shape",
+          "layer"
         ],
         "title": "AnchorKind"
       },
@@ -73288,6 +73299,10 @@
           "annotation_id"
         ],
         "title": "LayerItem"
+      },
+      "LayerKey": {
+        "type": "string",
+        "pattern": "^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"
       },
       "LayerMember": {
         "properties": {

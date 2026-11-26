@@ -696,7 +696,13 @@ export const AnchorKind = {
   roi: "roi",
   point: "point",
   shape: "shape",
+  layer: "layer",
 } as const;
+
+/**
+ * @pattern ^(g:[1-9]\d{0,8}|c:[^\s]{0,96})$
+ */
+export type LayerKey = string;
 
 export interface Anchor {
   kind: AnchorKind;
@@ -704,6 +710,7 @@ export interface Anchor {
   geometry?: Geometry | null;
   offset?: Position | null;
   result_set_id?: string | null;
+  layer?: LayerKey | null;
 }
 
 export interface ExpertCheck {

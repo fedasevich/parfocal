@@ -11289,10 +11289,6 @@ msgstr ""
 msgid "New classes"
 msgstr ""
 
-#: ../../packages/ui/src/components/comments-tab.tsx
-msgid "New comment on an ID <0/>"
-msgstr ""
-
 #: src/screens/upload/watched-folder.tsx
 msgid "New files in this folder arrive in {projectCode} on their own, checked like an upload."
 msgstr ""
@@ -21845,4 +21841,54 @@ msgstr ""
 
 #: src/annotations/smart-typing.tsx
 msgid "Typing on"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "{comments, plural, one {# comment on it} other {# comments on it}}"
+msgstr ""
+
+#. placeholder {0}: words.label
+#. placeholder {1}: thread.title
+#: src/annotations/comment-anchors.tsx
+msgid "{mark}, comment on {0}: {1}"
+msgstr ""
+
+#: src/annotations/target-composer.tsx
+msgid "Comment on"
+msgstr ""
+
+#: src/annotations/comment-anchors.tsx
+msgid "Comment on {count} objects"
+msgstr ""
+
+#: src/annotations/target-composer.tsx
+msgid "Comment on {label}"
+msgstr ""
+
+#: src/annotations/comment-anchors.tsx
+msgid "Comment on the selected object"
+msgstr ""
+
+#: ../../packages/ui/src/components/comments-tab.tsx
+msgid "Comment on the slide <0/>"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Comment on this layer"
+msgstr ""
+
+#: src/annotations/target-composer.tsx
+msgid "New thread on {label}"
+msgstr ""
+
+#: src/annotations/target-composer.tsx
+msgid "Objects and layers"
+msgstr ""
+
+#: src/annotations/layers-tree.tsx
+msgid "Open the comments on it"
+msgstr ""
+
+#: src/annotations/target-composer.tsx
+msgid "Pin the point instead"
 msgstr ""

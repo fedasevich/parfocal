@@ -8,6 +8,7 @@ import { fromMentionTokens } from "../screens/review/mention-picking.ts";
 import type { AnnotationDocument } from "./document.ts";
 import type { SavedCodes } from "./drawn-object-ids.ts";
 import type { Point } from "./polygon-draft.ts";
+import type { ShapeId } from "./shapes.ts";
 
 export const popoverWidth = 320;
 export const popoverGap = 14;
@@ -36,8 +37,9 @@ export function threadMeasurement(
   threadId: string,
   micronsPerPixel: number | null,
   codes?: SavedCodes,
+  anchorShape: ShapeId | null = null,
 ): ThreadMeasurement | undefined {
-  const shapeId = doc.pins.get(threadId)?.shapeId;
+  const shapeId = doc.pins.get(threadId)?.shapeId ?? anchorShape;
   if (shapeId === null || shapeId === undefined) return undefined;
   const row = buildMeasurementRows(
     doc,

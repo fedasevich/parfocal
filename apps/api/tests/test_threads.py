@@ -75,6 +75,24 @@ def test_threads_anchor_to_an_object_an_roi_a_point_or_a_shape(api: ApiAs, datab
         assert start(api, s, "first", anchor).status_code == 422, anchor
 
 
+def test_threads_anchor_to_a_saved_group_or_a_class_layer(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    anchors = [{"kind": "layer", "layer": "g:12"}, {"kind": "layer", "layer": "c:tumour-class"}]
+    made = [ok(start(api, s, "first", anchor)).json() for anchor in anchors]
+    assert [thread["anchor"]["layer"] for thread in made] == ["g:12", "c:tumour-class"]
+    listed = ok(api(s.people["first"]).get(f"{s.base}/threads")).json()
+    assert sorted(thread["anchor"]["layer"] for thread in listed) == ["c:tumour-class", "g:12"]
+    malformed = [
+        {"kind": "layer"},
+        {"kind": "layer", "layer": "g:0"},
+        {"kind": "layer", "layer": "x:1"},
+        {"kind": "layer", "layer": "g:1", "geometry": POINT},
+        {"kind": "point", "geometry": POINT, "layer": "g:1"},
+    ]
+    for anchor in malformed:
+        assert start(api, s, "first", anchor).status_code == 422, anchor
+
+
 def test_replies_resolve_reopen_and_delete_with_confirmation(api: ApiAs, database: str) -> None:
     s = study(api, database, blinded=False, hidden=False)
     first, owner_ = s.people["first"], s.people["owner"]
