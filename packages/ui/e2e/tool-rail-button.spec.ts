@@ -88,6 +88,30 @@ test("the tooltip names the tool and its key", async ({ page }) => {
   await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText("Select · V");
 });
 
+test("the tooltip story shows the name and key on top and the hint under it on the popover surface", async ({
+  page,
+}) => {
+  await page.goto(story("tooltip-with-hint"));
+  const popup = page.locator('[data-slot="tooltip-content"]');
+  await expect(popup).toContainText("Select · M");
+  await expect(popup.locator('[data-slot="tool-rail-hint"]')).toContainText(
+    "Drag on empty tissue for a marquee",
+  );
+  const surface = await popup.evaluate((element) => getComputedStyle(element).backgroundColor);
+  const card = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.className = "bg-popover";
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return colour;
+  });
+  expect(surface).toBe(card);
+  const popupBox = await popup.boundingBox();
+  const hintBox = await popup.locator('[data-slot="tool-rail-hint"]').boundingBox();
+  expect(hintBox?.y ?? 0).toBeGreaterThan((popupBox?.y ?? 0) + 8);
+});
+
 test("in a rail one tool is active at a time, by click or by keyboard", async ({ page }) => {
   await page.goto(story("rail-picks-one-tool"));
   const rail = page.getByRole("toolbar", { name: "Tools" });
