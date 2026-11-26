@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-198 Production touch: release v0.63.0 (PROTO-198) deployed by run 45758082855, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order; deploy and browser smoke green
 - EXP-023: join link participants are seated as study-participant with their own matrix column, refused project creation and deletion, sample projects, other workspaces, passkeys, invitations, access requests, template offers, model runs, settings and the console, and migration 0163 widens the memberships role check with no data change; waits for the deployed study join dry run
 - PROTO-198: annotate task AI cells and plain viewer cells take comments by their IDs, region, selection and slide mentions are saved as tokens so every reader reaches the same thing, and notification links open their object; waits for the deployed check
 - PROTO-198 Server renders no reference tokens, because no server path (emails, notification payloads, exports) shows a comment body and the app already shows #[name|...] tokens as their names, so a server renderer would have no caller (lead chose option a)
