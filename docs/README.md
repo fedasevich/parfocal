@@ -2,11 +2,11 @@
 
 Start here. Every file in `docs/` is listed below, and agents keep this index current. See [AGENTS.md](../AGENTS.md) for how these files are maintained.
 
-Last consolidated: 2026-11-24
+Last consolidated: 2026-11-26
 
 ## In progress
 
-State on 2026-11-24. `app.parfocal.eu` runs v0.51.0 in Europe and is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). Agents sign in there with `scripts/agent_session.py`, run the deployed checks themselves and tick tasks on them. The lead fixed main CI on 2026-11-24, and its run was not finished at consolidation. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+State on 2026-11-26. `app.parfocal.eu` runs v0.64.0 in Europe and is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The parallel run of 2026-11-25 built the owner's 2026-11-25 fixes, deployed v0.52.0 to v0.64.0 and walked them twice on the deployed app. The review column holds tasks that wait for a deployed check, and main CI was red at the end of the run. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
 The owner's open steps and questions are in [decisions.md](decisions.md), which starts with what to do next in order. Answered decisions move to [decisions-answered.md](decisions-answered.md).
 
@@ -18,21 +18,21 @@ Parfocal reviews AI results on whole slides and annotates slides for training da
 |---|---|
 | Cloud | Production is the only cloud environment, with a standing yes for additive writes inside $30 a month ([ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md)). Deploys are cut by hand with `pnpm release` and `deploy.yml`, and CI deploys on main are on hold (SKEL-009, OPS-005) ([knowledge/deploy.md](knowledge/deploy.md)) |
 | Viewer (M2) | Viv reads every POC format natively ([knowledge/slide-formats.md](knowledge/slide-formats.md)). Open are the hardware checks at the owner's Mac (VIEW-021, VIEW-052, DEV-013) and a CDN in front of slide storage (TILES-002) |
-| Review, annotate and AI | Built and walked on the deployed app with real model results, from upload through review, adjudication, sign-off and a frozen dataset. Whole slide runs wait for a free L4, which PROTO-168 measured at 29.6 minutes |
+| Review, annotate and AI | Built and walked on the deployed app with real model results, from upload through review, adjudication, sign-off and a frozen dataset. The owner's 2026-11-25 fixes are built and walked twice ([results](results/2026-11-26-walkthrough-of-the-2026-11-25-fixes.md)), and five failed the deployed check. Whole slide runs wait for a free L4, which PROTO-168 measured at 29.6 minutes |
 | Guided tour | 16 chapters ring every control across the six role accounts, switching account through a flagged server switch ([ADR 0437](adr/0437-the-guided-tour-switches-to-role-accounts-on-the-dev-app.md)) |
-| Usability study | Round 5 runs for a participant in one tab, uploads traces to the API, measures as round 4 did, and the console prepares a participant project through the seed function ([ADR 0439](adr/0439-the-console-prepares-a-participant-through-the-seed-function.md), [project/study-round-5.md](project/study-round-5.md)) |
+| Usability study | Round 5 runs for a participant in one tab, uploads traces to the API, measures as round 4 did, and the console prepares a participant project through the seed function ([ADR 0439](adr/0439-the-console-prepares-a-participant-through-the-seed-function.md), [project/study-round-5.md](project/study-round-5.md)). A join link seats the participant in a study only role (EXP-023), and the remote walk stops at the change-type task (EXP-020) |
 | Security and pilot (M6) | Row-level security, a hash-chained audit log, sandboxed parsing and an agent guard. Backups, observability, alerting and production readiness are on hold by the owner's answers |
 
 ## Next up
 
-1. PROTO-168 (a queued whole slide run starts in time), after the owner's decision on a bigger GPU fallback.
-2. The ui visual goldens refresh with the `update_goldens` CI run, then a green main CI.
-3. PILOT-005 (moderated usability study, second round), the last open task of the annotation path.
-4. PROTO-129 (the overview map marker follows the camera on every slide).
-5. OPS-036 (view maps and tumor maps open a seeded slide from the folder beside its original).
-6. OPS-009 (storage lifecycle and cost controls): the R2 lifecycle drill and a first live cost report.
-7. TEST-010 (load test tooling): an agent mints the read-only load token that decision 124 (a load workflow token, option A) asked for, now that deploys run.
-8. OPS-014 (prepare production for the first real user), which removes the tour switch and the seed secret.
+1. PROTO-182 (found cells are typed automatically): the typer fails on a slide with no microns per pixel and its chip never ends.
+2. EXP-020 (a participant joins a remote session by one link): the change-type task never finishes.
+3. The other deployed check failures: PROTO-184 (layers tree rows), PROTO-171 (report PDF time) and PROTO-178 (queue magnification bar).
+4. The walkthrough's new fixes: PROTO-200 (Auto region under reduced motion), PROTO-201 (a review opened with no mode), PROTO-202 (jobs tray refresh) and ONB-013 (no Joined line when skipped).
+5. Deployed checks for the review column, PROTO-197, PROTO-198, PROTO-199, EXP-023 and ONB-012 among them.
+6. A green main CI, red at the end of the 2026-11-25 run.
+7. PROTO-168 (a queued whole slide run starts in time), with decision 182 (whether the GPU cap holds per pool or for all pools).
+8. EXP-022 (study recordings backed up to R2) after the owner's R2 key, then PILOT-005 (moderated usability study, second round).
 
 ## Index
 

@@ -126,6 +126,11 @@ What the lead does with a hand-back:
 - Timing tests flake when five agents share the Mac: the sidecar open check in `tile-index.test.ts` and the quadratic matching checks in ingest failed on most merges of 2026-11-15 and passed alone. Rerun the one failing test alone, then finish the merge, and TEST-043 (the sidecar open check does not depend on machine load) replaces the wall time.
 - A locked Mac screen makes Chrome report every tab hidden, so headed checks that need a visible tab wait for the owner, while GPU timings still run.
 - `verify-changed.sh` checks only the changed packages, so a night of green branches can still leave `main` red. Check `ci.sh` after each push, and when `ci` fails give the fix to one agent before anything else.
+- Push the lead before briefing a lane's next task. Agent worktrees branch from `origin/main`, and on 2026-11-25 PROTO-181 started without the PROTO-180 work it needed and had to merge main itself.
+- Never pipe `merge.sh` through `tail` into `push.sh`, because the pipe hides a failed verify. On 2026-11-25 that pushed a 1202 line `slide-stage.tsx` past the file length guard. Push only after `grep -q MERGED-OK` on its saved output.
+- Resolve a `.po` catalog conflict by regenerating with `pnpm -s i18n:extract` in `apps/web`, not by hand. A hand merge on 2026-11-25 left one entry inside another.
+- Briefs say never to quit Docker and never to run another agent's scratchpad scripts. Both happened on 2026-11-25 and stopped another agent's tests.
+- A generated file that a test compares byte for byte, such as the web permission matrix, must be in biome's `files.includes` exclusions, or the formatter rewraps it on commit and the test fails at the lead's merge (EXP-023, 2026-11-26).
 - When the run ends, consolidate the docs memory ([Consolidation](#consolidation)), push and only then report. The README went three weeks without it once, while the board more than tripled its ticks.
 
 ## Tasks in review

@@ -11,4 +11,4 @@ Milestone gates are defined in [BACKLOG.md](../BACKLOG.md#milestones). Status is
 | M3 Review loop | Done | 2026-10-17 | by 2026-11-24 | Every gate task is ticked, and the review loop runs on the deployed app with real model results |
 | M4 AI runs and visualization | Done | 2026-10-18 | by 2026-11-24 | Every gate task is ticked, the tumor map epic included. Whole slide runs wait for a free L4 (PROTO-168) |
 | M5 Collaboration and evaluation | Done | 2026-10-14 | by 2026-11-24 | Every gate task is ticked, remote sources included |
-| M6 Pilot ready | In progress | 2026-10-14 | | Security controls, the guided tour and the round 5 study are built. Backups, observability, alerting and production readiness are on hold by the owner's answers, and the pilot study rounds are open |
+| M6 Pilot ready | In progress | 2026-10-14 | | Security controls, the guided tour and the round 5 study with its study only role are built, and the remote join walk is open (EXP-020). Backups, observability, alerting and production readiness are on hold by the owner's answers, and the pilot study rounds are open |

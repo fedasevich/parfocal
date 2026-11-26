@@ -48,9 +48,9 @@ OPS-016 (a real browser checks the deployed app) adds the job `browser-smoke` to
 
 - Turn it on: `gh variable set DEPLOY_ON_MAIN --body true`. It must be a repository variable, an environment variable is not seen by the gate.
 - Turn it off: `gh variable set DEPLOY_ON_MAIN --body false`.
-- A deploy by hand works either way: `gh workflow run deploy.yml --ref main -f environment=production`, or `--ref vX.Y.Z` for a tag.
+- A deploy by hand names a tag: cut it with `pnpm -s release` in a clean main checkout, `git push --follow-tags origin main`, then `gh workflow run deploy.yml --ref vX.Y.Z -f environment=production`. The `production` environment accepts tags only, so `--ref main` is refused.
 - `gh run list --workflow deploy.yml --status success` is the release history. Each run is titled `deploy <commit>` or `rollback <ref>`. A run that was replaced by a newer commit is green too and deployed nothing. Its log ends with "nothing was run", and a real one ends with "is deployed at".
-- TODO: if the `production` environment has protection rules, such as required reviewers, automatic runs wait for them.
+- The `production` environment requires the owner as reviewer, so a deploy and the browser smoke it calls each wait for an approval. An agent approves them through the `pending_deployments` API only under an order from the owner that covers the run, as on 2026-11-25 for that night's lead deploys, and logs each approval with its run ID.
 
 ## Migration safety check
 
