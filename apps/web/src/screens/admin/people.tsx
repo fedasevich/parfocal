@@ -34,6 +34,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -105,7 +106,8 @@ export function PeopleSection({
 }) {
   const { t } = useLingui();
 
-  const members = okData(useListTenantMembers().data) ?? [];
+  const memberList = okData(useListTenantMembers().data);
+  const members = memberList ?? [];
   const activityList = useListMemberActivity();
   const activity = okData(activityList.data) ?? [];
   const viewerId = okData(useGetMe().data)?.user_id;
@@ -212,6 +214,22 @@ export function PeopleSection({
     );
   const shownInvites = shownInvitations(invitations, find, filter);
   const waiting = invitations.length;
+  const emptyTitle =
+    find.trim() !== ""
+      ? t`No one matches this search`
+      : filter === "res"
+        ? t`No researchers`
+        : filter === "rev"
+          ? t`No reviewers`
+          : filter === "adm"
+            ? t`No one has admin rights`
+            : t`No one is in this workspace yet`;
+  const emptyLine =
+    find.trim() !== ""
+      ? t`Check the spelling, or search by email.`
+      : filter === "all"
+        ? t`Invite people and they appear here once they accept.`
+        : t`Show everyone to see the rest of the workspace.`;
   const signOutIds = overview?.can_sign_out_user_ids ?? [];
   const peopleFor = (who: (typeof roleDefinitions)[number]["who"]) => {
     if (who === "admin") return members.filter(rightOf);
@@ -419,6 +437,31 @@ export function PeopleSection({
                 </TableCell>
               </TableRow>
             ))}
+            {memberList !== undefined && rows.length === 0 && shownInvites.length === 0 ? (
+              <TableEmpty
+                colSpan={7}
+                data-testid="people-empty"
+                title={emptyTitle}
+                action={
+                  find.trim() !== "" ? (
+                    <Button onClick={() => setFind("")}>
+                      <Trans>Clear the search</Trans>
+                    </Button>
+                  ) : filter !== "all" ? (
+                    <Button onClick={() => setFilter("all")}>
+                      <Trans>Show everyone</Trans>
+                    </Button>
+                  ) : (
+                    <Button variant="primary" onClick={() => setInviting(true)}>
+                      <Icon name="mail" />
+                      <Trans>Invite people</Trans>
+                    </Button>
+                  )
+                }
+              >
+                {emptyLine}
+              </TableEmpty>
+            ) : null}
           </TableBody>
         </Table>
         <span className="text-body-sm text-fg-dim">

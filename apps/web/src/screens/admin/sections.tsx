@@ -33,6 +33,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -75,7 +76,8 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
   const { t } = useLingui();
 
   const [view, setView] = useState<ProjectView>("active");
-  const projects = okData(useListProjects({ archived: view === "archived" }).data) ?? [];
+  const projectList = okData(useListProjects({ archived: view === "archived" }).data);
+  const projects = projectList ?? [];
   const queryClient = useQueryClient();
   const archive = useArchiveProject();
   const restore = useRestoreProject();
@@ -213,6 +215,29 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
                 </TableRow>
               );
             })}
+            {projectList !== undefined && projects.length === 0 ? (
+              <TableEmpty
+                colSpan={7}
+                data-testid="projects-empty"
+                title={view === "archived" ? t`No archived projects` : t`No active projects`}
+                action={
+                  view === "archived" ? undefined : (
+                    <Button onClick={() => void goTo(destinations.newProject())}>
+                      <Icon name="folder" />
+                      <Trans>New project</Trans>
+                    </Button>
+                  )
+                }
+              >
+                {view === "archived" ? (
+                  <Trans>
+                    A project you archive waits here, still readable, until you unarchive it.
+                  </Trans>
+                ) : (
+                  <Trans>Create a project to start evaluating slides.</Trans>
+                )}
+              </TableEmpty>
+            ) : null}
           </TableBody>
         </Table>
       </Zone>
@@ -336,7 +361,7 @@ function useRunCancellation(notify: Notify) {
   return { cancelled, start };
 }
 
-export function ModelsSection({ notify }: { notify: Notify }) {
+export function ModelsSection({ notify, onConnect }: { notify: Notify; onConnect: () => void }) {
   const { t } = useLingui();
 
   const data = okData(useListAiModels().data);
@@ -409,6 +434,15 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                 </TableRow>
               );
             })}
+            {parfocal.length === 0 ? (
+              <TableEmpty
+                colSpan={5}
+                data-testid="parfocal-models-empty"
+                title={t`No Parfocal models are available`}
+              >
+                <Trans>Parfocal adds its models here as they are released.</Trans>
+              </TableEmpty>
+            ) : null}
           </TableBody>
         </Table>
       </Zone>
@@ -472,6 +506,23 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                 </TableCell>
               </TableRow>
             ))}
+            {lab.length === 0 ? (
+              <TableEmpty
+                colSpan={6}
+                data-testid="lab-models-empty"
+                title={t`Your lab has no model connected`}
+                action={
+                  <Button variant="primary" onClick={onConnect}>
+                    <Icon name="plus" />
+                    <Trans>Connect your own model</Trans>
+                  </Button>
+                }
+              >
+                <Trans>
+                  Connect a model your lab runs on its own server and it shows in every model list.
+                </Trans>
+              </TableEmpty>
+            ) : null}
           </TableBody>
         </Table>
       </Zone>

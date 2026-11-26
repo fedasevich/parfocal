@@ -6,6 +6,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -23,7 +24,8 @@ export function DeletedProjectsZone({ notify }: { notify: Notify }) {
   const { t } = useLingui();
 
   const queryClient = useQueryClient();
-  const deleted = okData(useListDeletedProjects().data) ?? [];
+  const deletedList = okData(useListDeletedProjects().data);
+  const deleted = deletedList ?? [];
   const [busy, setBusy] = useState<string | null>(null);
   const restore = async (id: string, code: string, name: string) => {
     setBusy(id);
@@ -46,59 +48,62 @@ export function DeletedProjectsZone({ notify }: { notify: Notify }) {
         </span>
       }
     >
-      {deleted.length === 0 ? (
-        <p className="m-0 px-4 py-3 text-body-sm text-fg-dim" data-testid="deleted-projects-empty">
-          <Trans>
-            Projects you delete wait here until you restore them. Only owners see this list.
-          </Trans>
-        </p>
-      ) : (
-        <Table className={tableClass} data-testid="deleted-projects">
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Trans>Project</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Deleted</Trans>
-              </TableHead>
-              <TableHead />
+      <Table className={tableClass} data-testid="deleted-projects">
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              <Trans>Project</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Deleted</Trans>
+            </TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {deleted.map((project) => (
+            <TableRow key={project.id}>
+              <TableCell>
+                <NameCell
+                  lead={
+                    <i
+                      aria-hidden="true"
+                      className="block size-3 rounded-[3px]"
+                      style={{ background: projectColour(project.colour) }}
+                    />
+                  }
+                  title={project.name}
+                  sub={<span className="font-mono">{project.code}</span>}
+                />
+              </TableCell>
+              <TableCell>{relativeDay(new Date(project.deleted_at), new Date())}</TableCell>
+              <TableCell>
+                <span className="flex items-center justify-end">
+                  <Button
+                    size="sm"
+                    disabled={busy === project.id}
+                    aria-label={t`Restore ${project.name}`}
+                    onClick={() => void restore(project.id, project.code, project.name)}
+                  >
+                    <Trans>Restore</Trans>
+                  </Button>
+                </span>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {deleted.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell>
-                  <NameCell
-                    lead={
-                      <i
-                        aria-hidden="true"
-                        className="block size-3 rounded-[3px]"
-                        style={{ background: projectColour(project.colour) }}
-                      />
-                    }
-                    title={project.name}
-                    sub={<span className="font-mono">{project.code}</span>}
-                  />
-                </TableCell>
-                <TableCell>{relativeDay(new Date(project.deleted_at), new Date())}</TableCell>
-                <TableCell>
-                  <span className="flex items-center justify-end">
-                    <Button
-                      size="sm"
-                      disabled={busy === project.id}
-                      aria-label={t`Restore ${project.name}`}
-                      onClick={() => void restore(project.id, project.code, project.name)}
-                    >
-                      <Trans>Restore</Trans>
-                    </Button>
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+          ))}
+          {deletedList !== undefined && deleted.length === 0 ? (
+            <TableEmpty
+              colSpan={3}
+              data-testid="deleted-projects-empty"
+              title={t`No deleted projects`}
+            >
+              <Trans>
+                Projects you delete wait here until you restore them. Only owners see this list.
+              </Trans>
+            </TableEmpty>
+          ) : null}
+        </TableBody>
+      </Table>
     </Zone>
   );
 }

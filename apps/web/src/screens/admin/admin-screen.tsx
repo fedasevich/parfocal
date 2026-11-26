@@ -171,7 +171,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
       />
     ),
     projects: <ProjectsSection notify={notify} />,
-    models: <ModelsSection notify={notify} />,
+    models: <ModelsSection notify={notify} onConnect={() => change({ scene: "addmodel" })} />,
     templates: (
       <TemplatesSection
         notify={notify}

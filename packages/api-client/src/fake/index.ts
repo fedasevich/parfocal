@@ -159,6 +159,7 @@ export {
   resetJobsState,
   setFakeJobsScene,
 } from "./jobs-scene.ts";
+export { setFakeLabModelsAbsent } from "./lab-models-scene.ts";
 export { paintedMapHandlers, resetFakePaintedMaps } from "./painted-map-handlers.ts";
 export { resetFakeProfile } from "./profile-changes.ts";
 export {
