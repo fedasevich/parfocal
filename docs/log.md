@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- Production touch: release v0.58.0 (PROTO-169, PROTO-171, PROTO-172, PROTO-178, PROTO-187, PROTO-188, PROTO-194) deployed by run 45729144657, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - PROTO-194: the merge put slide-stage.tsx at 1202 lines, over the 1200 limit, and a lead command chain pushed it before the fix, so ViewerKeys moved to apps/web/src/viewer/stage-viewer-keys.tsx and the fix was pushed right after.
 - PROTO-187: the Comments tab title is one truncated line with the full Threads on name on hover, the Open and Resolved switch has its own full width row, and a thread row no longer repeats its type when it matches the chip, covered by the LongSlideName story and a 280 px panel spec.
 - PROTO-172: the evaluation report and the template samples use the same Typst layout as PROTO-171 (ADR, one Typst report layout for every PDF), with IBM Plex Sans, the screen's 40 by 36 pt A4 margins, a heading block, a metadata grid and full width ruled tables, and test_template_sample_pdf.py checks every built in sample against the screen's numbers.
