@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-183: every tooltip used the inverse surface, so in dark mode the pale hint sat on a light card at 1.36 to 1. The shared tooltip now uses the popover surface with a border, the rail tooltip stacks name and key over its hint, tool-tooltip-contrast.spec.ts measures 4.5 to 1 or more in both themes, and the Tooltip with hint story passes axe. The UI visual baselines of the open tooltip stories need approving at the CI fix.
 - Production touch: release v0.58.0 (PROTO-169, PROTO-171, PROTO-172, PROTO-178, PROTO-187, PROTO-188, PROTO-194) deployed by run 45729144657, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - PROTO-194: the merge put slide-stage.tsx at 1202 lines, over the 1200 limit, and a lead command chain pushed it before the fix, so ViewerKeys moved to apps/web/src/viewer/stage-viewer-keys.tsx and the fix was pushed right after.
 - PROTO-187: the Comments tab title is one truncated line with the full Threads on name on hover, the Open and Resolved switch has its own full width row, and a thread row no longer repeats its type when it matches the chip, covered by the LongSlideName story and a 280 px panel spec.
