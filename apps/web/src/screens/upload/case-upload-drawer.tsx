@@ -6,11 +6,10 @@ import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Progress } from "@parfocal/ui/components/progress";
 import { Hint } from "@parfocal/ui/components/zone";
-import { cn } from "@parfocal/ui/lib/utils";
-import { type DragEvent, useRef, useState } from "react";
+import { useRef } from "react";
 import { formatBytes, type UploadEntry } from "../../upload/entries.ts";
 import { useUploads } from "../../upload/use-uploads.ts";
-import { FileList, FileRow, TextLink } from "./parts.tsx";
+import { FileDropZone, FileList, FileRow } from "./parts.tsx";
 
 function percent(entry: UploadEntry): number {
   if (entry.size === 0) return 0;
@@ -113,17 +112,11 @@ export function CaseUploadDrawer({
 
   const { engine, entries } = useUploads();
   const picker = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
   const mine = entries.filter((entry) => entry.projectId === project.id && entry.caseId === caseId);
 
-  const take = (files: FileList | null) => {
-    if (files === null || files.length === 0) return;
-    void engine.addFiles([...files], { projectId: project.id, caseId });
-  };
-  const onDrop = (event: DragEvent) => {
-    event.preventDefault();
-    setDragging(false);
-    take(event.dataTransfer.files);
+  const take = (files: File[]) => {
+    if (files.length === 0) return;
+    void engine.addFiles(files, { projectId: project.id, caseId });
   };
 
   return (
@@ -135,47 +128,26 @@ export function CaseUploadDrawer({
       testId="upload-drawer"
       onClose={onClose}
     >
-      <section
-        data-testid="drop-zone"
-        aria-label={t`Drop slides here`}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-        className={cn(
-          "grid justify-items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center",
-          dragging ? "border-accent bg-chrome-2" : "border-line-strong",
-        )}
-      >
-        <Icon name="upload" size="lg" className="text-accent" />
-        <b className="text-body text-fg">
-          <Trans>Drop slides here</Trans>
-        </b>
-        <span className="text-body-sm text-fg-dim">
-          <Trans>or</Trans>{" "}
-          <TextLink onClick={() => picker.current?.click()}>
-            <Trans>choose files</Trans>
-          </TextLink>
+      <FileDropZone
+        title={<Trans>Drop slides here</Trans>}
+        label={t`Drop slides here`}
+        pickerRef={picker}
+        lead={
+          <>
+            <Trans>or</Trans>{" "}
+          </>
+        }
+        pick={<Trans>choose files</Trans>}
+        detail={
           <Trans>
             . Large files upload in parts, so a lost connection or a closed tab does not start them
             over.
           </Trans>
-        </span>
-        <input
-          ref={picker}
-          type="file"
-          multiple
-          data-testid="file-input"
-          aria-label={t`Choose slide files`}
-          className="sr-only"
-          onChange={(event) => {
-            take(event.currentTarget.files);
-            event.currentTarget.value = "";
-          }}
-        />
-      </section>
+        }
+        inputLabel={t`Choose slide files`}
+        multiple
+        onFiles={(items) => take(items.map((item) => item.file))}
+      />
       {mine.length > 0 ? (
         <FileList>
           {mine.map((entry) => (

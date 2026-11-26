@@ -8,6 +8,7 @@ import {
   projects,
   type ScenarioCase,
   type ScenarioProject,
+  sampleOutline,
   sampleProject,
   scenarioNow,
   uuid,
@@ -59,6 +60,7 @@ export const createdRecordHandlers = (): RequestHandler[] => [
     };
     return HttpResponse.json(workspace, { status: 201 });
   }),
+  http.get("*/api/sample-project", () => HttpResponse.json(sampleOutline)),
   http.post("*/api/projects/sample", () =>
     HttpResponse.json(
       {

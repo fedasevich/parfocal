@@ -160,10 +160,16 @@ test("setup carries the role into the first project and ends in the sample proje
   await page.getByRole("button", { name: "Create it and continue" }).click();
   const create = page.getByRole("radio", { name: /Create a project/ });
   await expect(create).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("radio", { name: /Open the sample project/ }).click();
+  const sample = page.getByRole("radio", { name: /Open the sample project/ });
+  await expect(sample).toContainText(
+    "12 slides with AI results, a review of 4 of them with regions and typed cells, and one slide to run a model on",
+  );
+  await sample.click();
   await page.getByRole("button", { name: "Skip this step" }).click();
   await page.getByRole("button", { name: "Next: Done" }).click();
   await expect(page.getByText("Created Brno AI group")).toBeVisible();
+  await expect(page.getByText("Sample project ready: 12 slides, a review of 4")).toBeVisible();
+  await expect(page.getByText("Run a model on CMU-1-Small-Region.svs")).toBeVisible();
   await expect(page.getByText("Upload slides and their AI results")).toBeVisible();
   await page.getByRole("button", { name: "Open the sample project", exact: true }).click();
   await expect(page).toHaveURL(/\/projects\/00000000-0000-4000-8003-000000000001(\?|$)/);

@@ -2,6 +2,24 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.60.0 (2026-11-26)
+
+### Features
+
+- PROTO-191: Add result sets from the viewer in every import format with a preview
+- ONB-012: Make the sample a 4-slide review with cells and a slide to run a model on
+
+### Fixes
+
+- ADMIN-013: Put the Give admin rights catalog entry back outside its neighbour
+
+### Docs
+
+- PROTO-189: Log the v0.59.0 deploy
+- PROTO-191: Number the ADR from the merge
+- PROTO-191: Log and tick after merge
+- ONB-012: Log and tick after merge
+
 ## v0.59.0 (2026-11-26)
 
 ### Features

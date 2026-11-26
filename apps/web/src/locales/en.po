@@ -7,6 +7,26 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "in the sample project"
+msgstr "in the sample project"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Run a model on {runSlide}"
+msgstr "Run a model on {runSlide}"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample project ready"
+msgstr "Sample project ready"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample project ready: {slides} slides, a review of {reviewed}"
+msgstr "Sample project ready: {slides} slides, a review of {reviewed}"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample slides with AI results and a short review task for you, to try everything safely"
+msgstr "Sample slides with AI results and a short review task for you, to try everything safely"
+
 #. placeholder {0}: batch.storage.needed_gb
 #. placeholder {0}: batch.storage.trimmed_gb
 #. placeholder {1}: batch.storage.left_gb
@@ -254,6 +274,14 @@ msgstr ". Large files upload in parts, so a lost connection or a closed tab does
 #: src/screens/upload/files-step.tsx
 msgid ". Skip it, or replace the existing slide and keep its reviews."
 msgstr ". Skip it, or replace the existing slide and keep its reviews."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "{slides} slides with AI results and a review of {reviewed} of them, regions and typed cells"
+msgstr "{slides} slides with AI results and a review of {reviewed} of them, regions and typed cells"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "{slides} slides with AI results, a review of {reviewed} of them with regions and typed cells, and one slide to run a model on"
+msgstr "{slides} slides with AI results, a review of {reviewed} of them with regions and typed cells, and one slide to run a model on"
 
 #: src/flow-map/prototype-bar.tsx
 msgid "· mock control, not in the app"
@@ -1120,11 +1148,6 @@ msgstr "{0} object{1} still open."
 #: src/screens/project/project-page.tsx
 msgid "{0} objects with an ID"
 msgstr "{0} objects with an ID"
-
-#. placeholder {0}: picked.results.objects
-#: src/results/add-result-set.tsx
-msgid "{0} objects, shown in cyan and not saved yet"
-msgstr "{0} objects, shown in cyan and not saved yet"
 
 #. placeholder {0}: progress.decided
 #. placeholder {1}: progress.total
@@ -2842,10 +2865,6 @@ msgstr "3 px"
 msgid "3D mouse"
 msgstr "3D mouse"
 
-#: src/screens/onboarding/setup-screen.tsx
-msgid "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
-msgstr "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
-
 #: src/screens/upload/progress-step.tsx
 msgid "46% · about 3 min left"
 msgstr "46% · about 3 min left"
@@ -3493,7 +3512,6 @@ msgstr "Add only a finished result set of the same slide."
 msgid "Add projects by name"
 msgstr "Add projects by name"
 
-#: src/results/add-result-set.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Add result set"
 msgstr "Add result set"
@@ -3592,10 +3610,6 @@ msgstr "Added to the email the reviewers get."
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Added, {0}"
 msgstr "Added, {0}"
-
-#: src/results/add-result-set.tsx
-msgid "Adding the result set to the slide"
-msgstr "Adding the result set to the slide"
 
 #: src/viewer/run-stream-layer.tsx
 msgid "Adding the run to the task"
@@ -5268,6 +5282,7 @@ msgstr "Center {object} again"
 
 #: ../../packages/ui/src/components/flow-page.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/results/add-result-set.tsx
 #: src/screens/clinical-report/steps.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/new-task/send-step.tsx
@@ -5546,6 +5561,7 @@ msgstr "Choose a class for the sentence below, or leave it out of results."
 msgid "Choose a class for the sentences below, or leave them out of results."
 msgstr "Choose a class for the sentences below, or leave them out of results."
 
+#: src/results/add-result-set.tsx
 #: src/screens/developer/developer-screen.tsx
 msgid "Choose a file"
 msgstr "Choose a file"
@@ -5553,10 +5569,6 @@ msgstr "Choose a file"
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose a folder"
 msgstr "Choose a folder"
-
-#: src/results/add-result-set.tsx
-msgid "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved."
-msgstr "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved."
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Choose a model"
@@ -6532,7 +6544,7 @@ msgstr "CSV"
 msgid "CSV columns"
 msgstr "CSV columns"
 
-#: src/screens/upload/formats-drawer.tsx
+#: src/screens/upload/result-format-rows.ts
 msgid "CSV or TSV"
 msgstr "CSV or TSV"
 
@@ -7296,6 +7308,7 @@ msgstr "Drawn, agreed"
 msgid "Drawn, edited"
 msgstr "Drawn, edited"
 
+#: src/results/add-result-set.tsx
 #: src/screens/upload/formats-drawer.tsx
 msgid "Drop a result file"
 msgstr "Drop a result file"
@@ -8628,7 +8641,7 @@ msgstr "GeoJSON"
 msgid "GeoJSON and .fgb"
 msgstr "GeoJSON and .fgb"
 
-#: src/screens/upload/formats-drawer.tsx
+#: src/screens/upload/result-format-rows.ts
 msgid "GeoJSON or a QuPath export"
 msgstr "GeoJSON or a QuPath export"
 
@@ -8652,12 +8665,12 @@ msgstr "Give a reason of at least 10 characters."
 msgid "Give a reason to change a signed-off slide."
 msgstr "Give a reason to change a signed-off slide."
 
-#: src/screens/admin/role-permissions.tsx
-msgid "Give decisions, annotate, fix results, comment"
 #: src/screens/admin/people-menu.tsx
 msgid "Give admin rights"
 msgstr "Give admin rights"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Give decisions, annotate, fix results, comment"
 msgstr "Give decisions, annotate, fix results, comment"
 
 #: src/screens/admin/connect-model.tsx
@@ -10729,7 +10742,7 @@ msgstr "Mask level"
 msgid "Masks and COCO"
 msgstr "Masks and COCO"
 
-#: src/screens/upload/formats-drawer.tsx
+#: src/screens/upload/result-format-rows.ts
 msgid "Masks or heatmaps"
 msgstr "Masks or heatmaps"
 
@@ -12692,7 +12705,7 @@ msgstr "One object at a time with big buttons. They can still zoom and pan."
 msgid "One question for every object. The AI's claim stays hidden."
 msgstr "One question for every object. The AI's claim stays hidden."
 
-#: src/screens/upload/formats-drawer.tsx
+#: src/screens/upload/result-format-rows.ts
 msgid "One row per cell with x, y and a class."
 msgstr "One row per cell with x, y and a class."
 
@@ -13906,7 +13919,7 @@ msgstr "Play all, from upload to the signed report"
 msgid "Please answer statement {0}."
 msgstr "Please answer statement {0}."
 
-#: src/screens/upload/formats-drawer.tsx
+#: src/screens/upload/result-format-rows.ts
 msgid "PNG or TIFF at one pyramid level. The level is checked with an overlay."
 msgstr "PNG or TIFF at one pyramid level. The level is checked with an overlay."
 
@@ -13926,7 +13939,7 @@ msgstr "Pointer only"
 msgid "Polygon"
 msgstr "Polygon"
 
-#: src/screens/upload/formats-drawer.tsx
+#: src/screens/upload/result-format-rows.ts
 msgid "Polygons and points. QuPath classes and measurements are kept."
 msgstr "Polygons and points. QuPath classes and measurements are kept."
 
@@ -14567,7 +14580,7 @@ msgstr "Regions match at an overlap (IoU) of at least"
 msgid "Regions of interest"
 msgstr "Regions of interest"
 
-#: src/screens/upload/formats-drawer.tsx
+#: src/screens/upload/result-format-rows.ts
 msgid "Regions, cells, classes, scores and IDs in one file. The native format."
 msgstr "Regions, cells, classes, scores and IDs in one file. The native format."
 
@@ -14620,6 +14633,7 @@ msgstr "Remove"
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: ../../packages/ui/src/components/token-field.tsx
 #: src/measure/measurement-list.tsx
+#: src/screens/admin/people-menu.tsx
 #: src/screens/new-task/steps.tsx
 #: src/screens/upload/case-upload-drawer.tsx
 msgid "Remove {0}"
@@ -15721,10 +15735,6 @@ msgstr "Sample or your own"
 msgid "Sample project · sample numbers"
 msgstr "Sample project · sample numbers"
 
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Sample project ready: 4 slides, 2 result sets"
-msgstr "Sample project ready: 4 slides, 2 result sets"
-
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Sample size"
 msgstr "Sample size"
@@ -15747,6 +15757,7 @@ msgid "Samples"
 msgstr "Samples"
 
 #: ../../packages/ui/src/components/display-panel.tsx
+#: src/results/add-result-set.tsx
 #: src/results/painted-map-layer.tsx
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/review/object-card.tsx
@@ -18243,10 +18254,6 @@ msgstr "That did not work. Try again in a moment."
 #: src/screens/home/announcements.tsx
 msgid "That did not work. Try again."
 msgstr "That did not work. Try again."
-
-#: src/results/add-result-set.tsx
-msgid "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
-msgstr "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
 
 #: src/annotations/layers-panel.tsx
 msgid "that layer is hidden or locked"
@@ -20979,6 +20986,7 @@ msgstr "What each role may do"
 msgid "What experts check"
 msgstr "What experts check"
 
+#: src/results/add-result-set.tsx
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/formats-drawer.tsx
@@ -22221,3 +22229,78 @@ msgstr "Objects, layers and slides"
 #: ../../packages/ui/src/components/notifications-panel.tsx
 msgid "on"
 msgstr "on"
+
+#: src/results/add-result-set.tsx
+msgid " or drop it on the slide. GeoJSON, Parfocal JSON, CSV, masks and heatmaps. You see it on the slide before anything is saved."
+msgstr " or drop it on the slide. GeoJSON, Parfocal JSON, CSV, masks and heatmaps. You see it on the slide before anything is saved."
+
+#. placeholder {0}: preview.results.objects
+#: src/results/add-result-set.tsx
+msgid "{0} objects, shown in cyan and not saved yet."
+msgstr "{0} objects, shown in cyan and not saved yet."
+
+#: src/results/stage-result-adding.tsx
+msgid "{name} added"
+msgstr "{name} added"
+
+#: src/results/add-result-set.tsx
+msgid "A TIFF has no preview here. It is checked after Save."
+msgstr "A TIFF has no preview here. It is checked after Save."
+
+#: src/results/add-result-set.tsx
+msgid "Add one result file at a time here."
+msgstr "Add one result file at a time here."
+
+#: src/results/add-result-set.tsx
+msgid "Checking the file and adding it to the slide"
+msgstr "Checking the file and adding it to the slide"
+
+#: src/results/add-result-set.tsx
+msgid "Drawn over the slide at half strength in the preview, not saved yet."
+msgstr "Drawn over the slide at half strength in the preview, not saved yet."
+
+#: src/results/stage-result-adding.tsx
+msgid "Drop a result file to preview it on this slide"
+msgstr "Drop a result file to preview it on this slide"
+
+#: src/results/add-result-set.tsx
+msgid "One file at a time: .geojson, .json, .csv, .tsv, .png, .tif or .tiff. Parfocal checks it after Save."
+msgstr "One file at a time: .geojson, .json, .csv, .tsv, .png, .tif or .tiff. Parfocal checks it after Save."
+
+#: src/results/add-result-set.tsx
+msgid "Parfocal cannot draw this file here. It is checked after Save."
+msgstr "Parfocal cannot draw this file here. It is checked after Save."
+
+#: src/results/add-result-set.tsx
+msgid "Parfocal cannot read that kind of file as results."
+msgstr "Parfocal cannot read that kind of file as results."
+
+#. placeholder {0}: total.toLocaleString("en")
+#: src/results/add-result-set.tsx
+msgid "Showing {cap} of {0} shapes in cyan, not saved yet."
+msgstr "Showing {cap} of {0} shapes in cyan, not saved yet."
+
+#: src/results/add-result-set.tsx
+msgid "That is a slide, not a result file."
+msgstr "That is a slide, not a result file."
+
+#. placeholder {0}: slide.label
+#: src/results/add-result-set.tsx
+msgid "To slide {0}"
+msgstr "To slide {0}"
+
+#: src/results/add-result-set.tsx
+msgid "To this slide"
+msgstr "To this slide"
+
+#: src/results/add-result-set.tsx
+msgid "Too large to preview, it is checked after Save."
+msgstr "Too large to preview, it is checked after Save."
+
+#: src/results/add-result-set.tsx
+msgid "Upload of {name}"
+msgstr "Upload of {name}"
+
+#: src/results/add-result-set.tsx
+msgid "Use the full upload"
+msgstr "Use the full upload"
