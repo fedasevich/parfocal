@@ -2,6 +2,19 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.61.1 (2026-11-26)
+
+### Fixes
+
+- PROTO-193: Open What is wrong on Disagree and X in guided cell review
+- PROTO-182: Release the focused model picker on a slide press so Enter accepts and types
+
+### Docs
+
+- PROTO-193: Log and tick after merge
+- PROTO-182: Log and tick after merge
+- PROTO-189: Log the v0.61.0 deploy
+
 ## v0.61.0 (2026-11-26)
 
 ### Features
