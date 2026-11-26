@@ -96,7 +96,7 @@ function SlidePicker({
         data-testid="slide-picker"
         aria-haspopup="dialog"
         title={t`Slides in this ${list.scope}`}
-        className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2.5 rounded-ctl border border-line-strong bg-btn-bg pr-2.5 pl-1.5 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
+        className="inline-flex h-8 min-w-32 shrink cursor-pointer items-center gap-2.5 rounded-ctl border border-line-strong bg-btn-bg pr-2.5 pl-1.5 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
       >
         <span
           aria-hidden="true"
@@ -104,7 +104,7 @@ function SlidePicker({
           className="h-5.5 w-7.5 shrink-0 rounded-[4px] bg-[#f1eef2] bg-cover bg-center"
           style={{ backgroundImage: `url(${slideThumbUrl(slideId)})` }}
         />
-        <b className="max-w-56 truncate text-body-sm font-semibold" data-phi="">
+        <b className="min-w-0 max-w-56 truncate text-body-sm font-semibold" data-phi="">
           {label}
         </b>
         <Icon name="down" className="text-fg-faint" />

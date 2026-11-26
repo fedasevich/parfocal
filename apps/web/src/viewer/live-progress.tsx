@@ -63,7 +63,7 @@ export function LiveProgress({
   const timeLeft = timeLeftText(position, list.total);
   const inTask = task !== undefined && load?.task != null && position > 0;
   const heading = (
-    <span className="grid leading-tight text-left">
+    <span className="grid leading-tight text-left max-[960px]:sr-only">
       <b className="font-semibold">
         {position > 0 ? t`Slide ${position} of ${list.total}` : t`Slide`}
       </b>
