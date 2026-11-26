@@ -2,6 +2,30 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.61.0 (2026-11-26)
+
+### Features
+
+- PROTO-189: Comment on AI result objects and link regions, selections and slides
+
+### Fixes
+
+- ci: Cover the study join route, store a fake run's cells and fix racy selectors
+- ci: Start every custom WebGPU ring mid first edge as deck now does
+- ci: Regenerate the message catalogs so no entry sits inside another
+
+### Docs
+
+- ONB-012: Log the v0.60.0 deploy
+- PROTO-184: Record the walkthrough of the 2026-11-25 fixes
+- PROTO-184: Tick what the walkthrough passed and reopen two
+- PROTO-189: Log and tick after merge
+- ci: Log the first CI fixes
+
+### Other
+
+- PROTO-189: Merge main
+
 ## v0.60.0 (2026-11-26)
 
 ### Features
