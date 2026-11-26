@@ -74,6 +74,7 @@ export {
 } from "./prefetch.ts";
 export { type PixelRendererRouteOptions, pixelRendererRoutes } from "./renderer-routes.ts";
 export {
+  levelForWidth,
   OVERVIEW_MAX_SIDE,
   readSlideOverview,
   rgbToRgba,

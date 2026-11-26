@@ -22,6 +22,31 @@ export function smallestLevel(source: Pick<PixelSource, "levels">): number {
   return best;
 }
 
+export function levelForWidth(
+  source: Pick<PixelSource, "levels">,
+  wanted: number,
+  maxSide = OVERVIEW_MAX_SIDE,
+): number {
+  let best = -1;
+  let bestWidth = 0;
+  let bestEnough = false;
+  source.levels.forEach((level, index) => {
+    if (Math.max(level.width, level.height) > maxSide) return;
+    const enough = level.width >= wanted;
+    const better =
+      best === -1 ||
+      (enough && !bestEnough) ||
+      (enough && bestEnough && level.width < bestWidth) ||
+      (!enough && !bestEnough && level.width > bestWidth);
+    if (better) {
+      best = index;
+      bestWidth = level.width;
+      bestEnough = enough;
+    }
+  });
+  return best;
+}
+
 export function rgbToRgba(rgb: ArrayLike<number>, count: number): Uint8ClampedArray<ArrayBuffer> {
   const out = new Uint8ClampedArray(count * 4);
   for (let index = 0; index < count; index++) {
@@ -37,8 +62,10 @@ export async function readSlideOverview(
   source: PixelSource,
   signal?: AbortSignal,
   maxSide = OVERVIEW_MAX_SIDE,
+  wantedWidth?: number,
 ): Promise<SlideOverview | null> {
-  const level = smallestLevel(source);
+  const level =
+    wantedWidth === undefined ? smallestLevel(source) : levelForWidth(source, wantedWidth, maxSide);
   const info = source.levels[level];
   if (info === undefined || Math.max(info.width, info.height) > maxSide) return null;
   if (source.dtype !== "uint8") return null;

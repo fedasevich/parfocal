@@ -1,9 +1,10 @@
 import { useLingui } from "@lingui/react/macro";
 import { useListDecisions, useListReviewObjects } from "@parfocal/api-client";
 import { PeekArea, PeekHere, WholeSlidePeek } from "@parfocal/ui/components/smart-minimap";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { okData } from "../screens/placeholder.tsx";
+import { usePictureWidth, useSharpPicture, wantedPictureWidth } from "./peek-picture.ts";
 import { runCells, seenRuns } from "./seen-runs.ts";
 import { outlineArea, viewportRect } from "./stage-geometry.ts";
 import type { StageSession } from "./stage-inspector.tsx";
@@ -118,7 +119,11 @@ export function ViewedPeek({
   const { cell, columns, rows } = raster.grid;
   const runs = useMemo(() => seenRuns(raster, tissue), [raster, tissue]);
   const basis = useMemo(() => tissueCells(raster, tissue), [raster, tissue]);
-  const picture = useMinimapImage(slideId, overview);
+  const small = useMinimapImage(slideId, overview);
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  const mapWidth = usePictureWidth(node);
+  const wanted = wantedPictureWidth(mapWidth, window.devicePixelRatio);
+  const sharp = useSharpPicture(slideId, overview, wanted);
   const scope = usePeekRegions(taskId, slideId);
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   useEffect(() => {
@@ -130,7 +135,7 @@ export function ViewedPeek({
   }, [onClose]);
   const slide = engine.getSlide();
   const image = {
-    src: picture?.src ?? blankSlide,
+    src: sharp?.src ?? small?.src ?? blankSlide,
     width: slide?.width ?? columns * cell,
     height: slide?.height ?? rows * cell,
   };
@@ -150,7 +155,9 @@ export function ViewedPeek({
   const peek = (
     <WholeSlidePeek
       data-testid="viewed-peek"
-      data-source={picture?.source ?? "loading"}
+      ref={setNode}
+      data-source={sharp === null ? (small?.source ?? "loading") : "sharp"}
+      data-picture-width={sharp?.width}
       image={image}
       sub={sub}
       onClose={onClose}
