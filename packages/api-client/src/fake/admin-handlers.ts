@@ -56,6 +56,7 @@ import type {
 } from "../generated/api.ts";
 import { problemMediaType } from "../problem.ts";
 import { isModelHidden } from "./hidden-models.ts";
+import { fakeLabModelsAbsent } from "./lab-models-scene.ts";
 import {
   changedMember,
   createdInvitations,
@@ -207,21 +208,24 @@ function withVisibility(model: AiModelSeed): AiModelSeed {
 }
 
 export const toAiModels = (): AiModels => ({
-  models: aiModels.map(withVisibility).map((model) => ({
-    id: model.id,
-    name: model.name,
-    version: model.version,
-    source: model.source,
-    catalogue_name: model.catalogueName,
-    makes: model.makes,
-    description: model.description,
-    runs_on: model.runsOn,
-    who_can_run: model.whoCanRun,
-    result_sets: model.resultSets,
-    shown: model.shown,
-    status: model.status,
-    latency_ms: model.latencyMs,
-  })),
+  models: aiModels
+    .filter((model) => !(fakeLabModelsAbsent() && model.source === "lab"))
+    .map(withVisibility)
+    .map((model) => ({
+      id: model.id,
+      name: model.name,
+      version: model.version,
+      source: model.source,
+      catalogue_name: model.catalogueName,
+      makes: model.makes,
+      description: model.description,
+      runs_on: model.runsOn,
+      who_can_run: model.whoCanRun,
+      result_sets: model.resultSets,
+      shown: model.shown,
+      status: model.status,
+      latency_ms: model.latencyMs,
+    })),
   running: runningNow.map((run) => ({
     id: run.id,
     model: run.model,

@@ -157,3 +157,28 @@ export const Selection: Story = {
 export const Empty: Story = {
   render: () => <SlideTable pickable rows={[]} />,
 };
+
+export const EmptyWithAction: Story = {
+  render: () => (
+    <div className="w-[640px]">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Model</TableHead>
+            <TableHead>Runs on</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableEmpty
+            colSpan={3}
+            title="No model connected yet"
+            action={<Button variant="primary">Connect your own model</Button>}
+          >
+            Connect a model your lab runs on its own server and it shows in every model list.
+          </TableEmpty>
+        </TableBody>
+      </Table>
+    </div>
+  ),
+};

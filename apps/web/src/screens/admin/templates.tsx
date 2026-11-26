@@ -34,6 +34,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -86,7 +87,8 @@ export function TemplatesSection({
 }) {
   const { t } = useLingui();
 
-  const templates = okData(useListStudyTemplates().data) ?? [];
+  const templateList = okData(useListStudyTemplates().data);
+  const templates = templateList ?? [];
   const lab = okData(useGetMySettingLayers().data)?.lab ?? emptyLab;
   const queryClient = useQueryClient();
   const retire = useRetireStudyTemplate();
@@ -278,6 +280,24 @@ export function TemplatesSection({
                 </TableRow>
               );
             })}
+            {templateList !== undefined && templates.length === 0 ? (
+              <TableEmpty
+                colSpan={5}
+                data-testid="templates-empty"
+                title={t`No study templates`}
+                action={
+                  <Button variant="primary" onClick={() => setCreating(true)}>
+                    <Icon name="plus" />
+                    <Trans>New template</Trans>
+                  </Button>
+                }
+              >
+                <Trans>
+                  A template lays out the evaluation report and fills in what a new review task
+                  checks.
+                </Trans>
+              </TableEmpty>
+            ) : null}
           </TableBody>
         </Table>
       </Zone>

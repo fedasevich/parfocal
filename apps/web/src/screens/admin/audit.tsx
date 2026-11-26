@@ -16,6 +16,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -72,7 +73,9 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
   const { t } = useLingui();
 
   const today = now();
-  const events = okData(useListAuditEvents(auditParams(filter, today)).data) ?? [];
+  const eventList = okData(useListAuditEvents(auditParams(filter, today)).data);
+  const events = eventList ?? [];
+  const filtered = Object.values(filter).some((value) => value !== undefined);
   const members = okData(useListTenantMembers().data) ?? [];
   const projects = okData(useListProjects().data) ?? [];
   const codeOf = new Map(projects.map((project) => [project.id, project.code]));
@@ -158,13 +161,28 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
               </TableRow>
             );
           })}
+          {eventList !== undefined && events.length === 0 ? (
+            <TableEmpty
+              colSpan={5}
+              data-testid="audit-empty"
+              title={filtered ? t`No events match these filters` : t`No events recorded yet`}
+              action={
+                filtered ? (
+                  <Button onClick={() => onFilter({})}>
+                    <Trans>Clear filters</Trans>
+                  </Button>
+                ) : undefined
+              }
+            >
+              {filtered ? (
+                <Trans>Widen the time range or clear a filter to see more.</Trans>
+              ) : (
+                <Trans>Changes to people, projects and settings show up here as they happen.</Trans>
+              )}
+            </TableEmpty>
+          ) : null}
         </TableBody>
       </Table>
-      {events.length === 0 ? (
-        <p className="m-0 text-body-sm text-fg-dim">
-          <Trans>No events match these filters.</Trans>
-        </p>
-      ) : null}
     </Zone>
   );
 }

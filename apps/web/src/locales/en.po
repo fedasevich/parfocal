@@ -21966,3 +21966,123 @@ msgstr "Typing off"
 #: src/annotations/smart-typing.tsx
 msgid "Typing on"
 msgstr "Typing on"
+
+#: src/screens/admin/api-section.tsx
+msgid "A pipeline needs one to send slides or results."
+msgstr "A pipeline needs one to send slides or results."
+
+#: src/screens/admin/sections.tsx
+msgid "A project you archive waits here, still readable, until you unarchive it."
+msgstr "A project you archive waits here, still readable, until you unarchive it."
+
+#: src/screens/admin/templates.tsx
+msgid "A template lays out the evaluation report and fills in what a new review task checks."
+msgstr "A template lays out the evaluation report and fills in what a new review task checks."
+
+#: src/screens/admin/audit.tsx
+msgid "Changes to people, projects and settings show up here as they happen."
+msgstr "Changes to people, projects and settings show up here as they happen."
+
+#: src/screens/admin/people.tsx
+msgid "Check the spelling, or search by email."
+msgstr "Check the spelling, or search by email."
+
+#: src/screens/admin/sections.tsx
+msgid "Connect a model your lab runs on its own server and it shows in every model list."
+msgstr "Connect a model your lab runs on its own server and it shows in every model list."
+
+#: src/screens/admin/sections.tsx
+msgid "Create a project to start evaluating slides."
+msgstr "Create a project to start evaluating slides."
+
+#: src/screens/admin/people.tsx
+msgid "Invite people and they appear here once they accept."
+msgstr "Invite people and they appear here once they accept."
+
+#: src/screens/admin/sections.tsx
+msgid "No active projects"
+msgstr "No active projects"
+
+#: src/screens/admin/sections.tsx
+msgid "No archived projects"
+msgstr "No archived projects"
+
+#: src/screens/admin/deleted-projects.tsx
+msgid "No deleted projects"
+msgstr "No deleted projects"
+
+#: src/screens/admin/api-section.tsx
+msgid "No event targets"
+msgstr "No event targets"
+
+#: src/screens/admin/audit.tsx
+msgid "No events match these filters"
+msgstr "No events match these filters"
+
+#: src/screens/admin/audit.tsx
+msgid "No events recorded yet"
+msgstr "No events recorded yet"
+
+#: src/screens/admin/api-section.tsx
+msgid "No incoming webhooks"
+msgstr "No incoming webhooks"
+
+#: src/screens/admin/people.tsx
+msgid "No one has admin rights"
+msgstr "No one has admin rights"
+
+#: src/screens/admin/people.tsx
+msgid "No one is in this workspace yet"
+msgstr "No one is in this workspace yet"
+
+#: src/screens/admin/people.tsx
+msgid "No one matches this search"
+msgstr "No one matches this search"
+
+#: src/screens/admin/sections.tsx
+msgid "No Parfocal models are available"
+msgstr "No Parfocal models are available"
+
+#: src/screens/admin/people.tsx
+msgid "No researchers"
+msgstr "No researchers"
+
+#: src/screens/admin/people.tsx
+msgid "No reviewers"
+msgstr "No reviewers"
+
+#: src/screens/admin/storage.tsx
+msgid "No saved sources yet"
+msgstr "No saved sources yet"
+
+#: src/screens/admin/templates.tsx
+msgid "No study templates"
+msgstr "No study templates"
+
+#: src/screens/admin/api-section.tsx
+msgid "No tokens yet"
+msgstr "No tokens yet"
+
+#: src/screens/admin/sections.tsx
+msgid "Parfocal adds its models here as they are released."
+msgstr "Parfocal adds its models here as they are released."
+
+#: src/screens/admin/storage.tsx
+msgid "Save one when you import slides from a link or a bucket."
+msgstr "Save one when you import slides from a link or a bucket."
+
+#: src/screens/admin/people.tsx
+msgid "Show everyone"
+msgstr "Show everyone"
+
+#: src/screens/admin/people.tsx
+msgid "Show everyone to see the rest of the workspace."
+msgstr "Show everyone to see the rest of the workspace."
+
+#: src/screens/admin/audit.tsx
+msgid "Widen the time range or clear a filter to see more."
+msgstr "Widen the time range or clear a filter to see more."
+
+#: src/screens/admin/sections.tsx
+msgid "Your lab has no model connected"
+msgstr "Your lab has no model connected"

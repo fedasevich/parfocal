@@ -7,6 +7,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -133,55 +134,52 @@ export function StorageSection({ notify }: { notify: Notify }) {
           </span>
         }
       >
-        {usage.sources.length === 0 ? (
-          <p className="text-body-sm text-fg-dim">
-            <Trans>
-              No saved sources yet. Save one when you import slides from a link or a bucket.
-            </Trans>
-          </p>
-        ) : (
-          <Table className={tableClass}>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <Trans>Source</Trans>
-                </TableHead>
-                <TableHead>
-                  <Trans>Address</Trans>
-                </TableHead>
-                <TableHead>
-                  <Trans>New slides</Trans>
-                </TableHead>
-                <TableHead>
-                  <Trans>State</Trans>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {usage.sources.map((source) => {
-                const state = sourceState(source);
-                return (
-                  <TableRow key={source.id}>
-                    <TableCell>
-                      <NameCell
-                        lead={<Icon name={sourceIcon(source.kind)} />}
-                        title={source.name}
-                        sub={source.access}
-                      />
-                    </TableCell>
-                    <TableCell className="font-mono">{source.address}</TableCell>
-                    <TableCell>
-                      {source.new_slides === "copied" ? t`Copied` : t`Read in place`}
-                    </TableCell>
-                    <TableCell>
-                      <StatusTag tone={state.tone}>{state.text}</StatusTag>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
+        <Table className={tableClass}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>
+                <Trans>Source</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Address</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>New slides</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>State</Trans>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {usage.sources.map((source) => {
+              const state = sourceState(source);
+              return (
+                <TableRow key={source.id}>
+                  <TableCell>
+                    <NameCell
+                      lead={<Icon name={sourceIcon(source.kind)} />}
+                      title={source.name}
+                      sub={source.access}
+                    />
+                  </TableCell>
+                  <TableCell className="font-mono">{source.address}</TableCell>
+                  <TableCell>
+                    {source.new_slides === "copied" ? t`Copied` : t`Read in place`}
+                  </TableCell>
+                  <TableCell>
+                    <StatusTag tone={state.tone}>{state.text}</StatusTag>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {usage.sources.length === 0 ? (
+              <TableEmpty colSpan={4} data-testid="sources-empty" title={t`No saved sources yet`}>
+                <Trans>Save one when you import slides from a link or a bucket.</Trans>
+              </TableEmpty>
+            ) : null}
+          </TableBody>
+        </Table>
       </Zone>
     </>
   );
