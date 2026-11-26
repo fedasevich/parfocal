@@ -2,6 +2,28 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.63.0 (2026-11-26)
+
+### Features
+
+- PROTO-198: Comment on plain viewer and annotate task AI cells by their IDs
+- PROTO-198: Save region, selection and slide mentions as tokens and link notification objects
+- PROTO-198: Keep token parsing small for the first page
+- PROTO-198: Load every commented cell and check the notification Open action
+- PROTO-198: Send the result set of an annotate task cell and test the API accepts it
+
+### Docs
+
+- PROTO-198: Log that the server renders no reference tokens
+- PROTO-197: Log the v0.62.0 deploy
+- PROTO-189: Record the second walkthrough pass
+- PROTO-189: Tick the second walkthrough passes and add its findings
+- PROTO-198: Log and tick after merge
+
+### Other
+
+- PROTO-198: Merge main
+
 ## v0.62.0 (2026-11-26)
 
 ### Features
