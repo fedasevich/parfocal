@@ -7,6 +7,7 @@ import {
   setFakeBulkSlides,
   setFakeConnectModelScene,
   setFakeJobsScene,
+  setFakeLabModelsAbsent,
   setFakeQueueScene,
   setFakeRefusal,
   setFakeSearchDelay,
@@ -59,6 +60,7 @@ export async function startFakeApi(
   setFakeAiStreaming(search["stream"] === "1");
   setFakeViewerIssue(search["issue"]);
   setFakeRefusal(search["refuse"]);
+  setFakeLabModelsAbsent(search["labModels"]);
   setFakeBestScene(search["best"]);
   setFakeTyperScene(search["typer"]);
   setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);

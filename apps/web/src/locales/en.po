@@ -1515,6 +1515,11 @@ msgstr "{0} slides, about {1} hours"
 msgid "{0} sources"
 msgstr "{0} sources"
 
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "{0} stays in the workspace."
+msgstr "{0} stays in the workspace."
+
 #. placeholder {0}: plural(summary.open_threads.total, "thread")
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} still open"
@@ -1624,6 +1629,11 @@ msgstr "{0} was declined and is not in the library"
 msgid "{0} was redrawn by {1} on "
 msgstr "{0} was redrawn by {1} on "
 
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "{0} was removed and can no longer sign in here."
+msgstr "{0} was removed and can no longer sign in here."
+
 #. placeholder {0}: created.name
 #. placeholder {1}: plural(created.reviewer_count, "expert")
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -1639,6 +1649,11 @@ msgstr "{0} was told by email. They see it at the top of My work, with one butto
 #: src/screens/new-task/send-step.tsx
 msgid "{0} were told by email. Each sees it at the top of My work, with one button to start."
 msgstr "{0} were told by email. Each sees it at the top of My work, with one button to start."
+
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "{0} will be removed on {leaveDay}."
+msgstr "{0} will be removed on {leaveDay}."
 
 #. placeholder {0}: row.count
 #. placeholder {1}: nameOf(row.user_id)
@@ -5065,6 +5080,10 @@ msgstr "Cancel run"
 #: src/screens/jobs/job-window-screen.tsx
 msgid "Cancel the run"
 msgstr "Cancel the run"
+
+#: src/screens/admin/people-menu.tsx
+msgid "Cancel the scheduled removal"
+msgstr "Cancel the scheduled removal"
 
 #: src/viewer/annotate-task-panel.tsx
 msgid "Cancel the split"
@@ -8640,6 +8659,10 @@ msgstr "Give a reason to change a signed-off slide."
 
 #: src/screens/admin/role-permissions.tsx
 msgid "Give decisions, annotate, fix results, comment"
+#: src/screens/admin/people-menu.tsx
+msgid "Give admin rights"
+msgstr "Give admin rights"
+
 msgstr "Give decisions, annotate, fix results, comment"
 
 #: src/screens/admin/connect-model.tsx
@@ -10063,6 +10086,10 @@ msgstr "Leave them out"
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Left"
 msgstr "Left"
+#: src/screens/admin/people.tsx
+msgid "Leaves {leaves}"
+msgstr "Leaves {leaves}"
+
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "Left open"
@@ -10647,6 +10674,14 @@ msgstr "Make a link"
 #: src/screens/admin/sections.tsx
 msgid "Makes"
 msgstr "Makes"
+
+#: src/screens/admin/people-menu.tsx
+msgid "Make a researcher"
+msgstr "Make a researcher"
+
+#: src/screens/admin/people-menu.tsx
+msgid "Make a reviewer"
+msgstr "Make a reviewer"
 
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Making the preview"
@@ -12376,6 +12411,10 @@ msgstr "Notifications: {unread} unread. Mentions, replies, tasks and jobs"
 #: src/screens/developer/developer-screen.tsx
 msgid "Nuclei"
 msgstr "Nuclei"
+#: src/screens/admin/people-menu.tsx
+msgid "Now"
+msgstr "Now"
+
 
 #. placeholder {0}: scaleText(proposals.micronsPerPixel)
 #: src/annotations/context-bar.tsx
@@ -12983,6 +13022,10 @@ msgstr "Open. You see other reviewers as you go."
 
 #. placeholder {0}: times(link.opened_count)
 #: src/screens/evaluation/share-links.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Open work that goes back"
+msgstr "Open work that goes back"
+
 msgid "Opened {0}"
 msgstr "Opened {0}"
 
@@ -14588,11 +14631,17 @@ msgid "Remove {0}"
 msgstr "Remove {0}"
 
 #: src/screens/upload/files-step.tsx
+#: src/screens/admin/people-menu.tsx
 msgid "Remove {name}"
 msgstr "Remove {name}"
 
 #: src/screens/viewer/objects-panel.tsx
 msgid "Remove {object}"
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "Remove {0} from the workspace"
+msgstr "Remove {0} from the workspace"
+
 msgstr "Remove {object}"
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -14601,6 +14650,10 @@ msgstr "Remove all"
 
 #: src/screens/admin/retention.tsx
 msgid "Remove deleted items after"
+#: src/screens/admin/people-menu.tsx
+msgid "Remove admin rights"
+msgstr "Remove admin rights"
+
 msgstr "Remove deleted items after"
 
 #: src/screens/upload/files-step.tsx
@@ -14609,11 +14662,23 @@ msgid "Remove from this upload"
 msgstr "Remove from this upload"
 
 #: src/screens/upload/check-step.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Remove from the workspace"
+msgstr "Remove from the workspace"
+
 msgid "Remove the 4 largest slides from this upload"
 msgstr "Remove the 4 largest slides from this upload"
 
 #. placeholder {0}: item.name
 #: src/screens/settings/settings-screen.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Remove on"
+msgstr "Remove on"
+
+#: src/screens/admin/people-menu.tsx
+msgid "Remove on, optional"
+msgstr "Remove on, optional"
+
 msgid "Remove the passkey {0}"
 msgstr "Remove the passkey {0}"
 
@@ -14627,6 +14692,10 @@ msgstr "Removing the project of {typed}."
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/annotations/layers-tree.tsx
+#: src/screens/admin/people.tsx
+msgid "Removed"
+msgstr "Removed"
+
 msgid "Rename"
 msgstr "Rename"
 
@@ -14821,6 +14890,10 @@ msgid "Resend the invite to {0}"
 msgstr "Resend the invite to {0}"
 
 #: src/screens/settings/shortcuts-section.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Resend the invite"
+msgstr "Resend the invite"
+
 msgid "Reset"
 msgstr "Reset"
 
@@ -15328,6 +15401,19 @@ msgid "Revoke the token for {0}"
 msgstr "Revoke the token for {0}"
 
 #: src/screens/evaluation/share-links.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Revoke invite"
+msgstr "Revoke invite"
+
+#: src/screens/admin/people-menu.tsx
+msgid "Revoke the invite"
+msgstr "Revoke the invite"
+
+#. placeholder {0}: invitation.email
+#: src/screens/admin/people-menu.tsx
+msgid "Revoke the invite to {0}"
+msgstr "Revoke the invite to {0}"
+
 msgid "Revoked"
 msgstr "Revoked"
 
@@ -17112,6 +17198,10 @@ msgstr "Slides in order"
 
 #. placeholder {0}: list.scope
 #: src/viewer/live-top-bar.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Slides go back to the pool, tasks to the project owners, adjudications to the queue, and open threads are resolved."
+msgstr "Slides go back to the pool, tasks to the project owners, adjudications to the queue, and open threads are resolved."
+
 msgid "Slides in this {0}"
 msgstr "Slides in this {0}"
 
@@ -18564,6 +18654,11 @@ msgstr "The invite to {email} could not be sent. Try again."
 
 #: src/app-tour/tour-chapters.ts
 msgid "The jobs button counts what runs in the background, such as uploads and model runs. Press it for each job and its progress."
+#. placeholder {0}: invitation.email
+#: src/screens/admin/people.tsx
+msgid "The invite to {0} was revoked."
+msgstr "The invite to {0} was revoked."
+
 msgstr "The jobs button counts what runs in the background, such as uploads and model runs. Press it for each job and its progress."
 
 #: src/screens/clinical-report/steps.tsx
@@ -18586,6 +18681,10 @@ msgstr "The live numbers show in the HUD over the open slide."
 
 #: src/screens/admin/join-settings.tsx
 msgid "The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
+#: src/screens/admin/people-menu.tsx
+msgid "The link in their email stops working. You can invite them again later."
+msgstr "The link in their email stops working. You can invite them again later."
+
 msgstr "The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
 
 #: src/app-tour/tour-chapters.ts
@@ -19353,6 +19452,10 @@ msgstr "They get a one-step sign-up, then the task"
 #: src/screens/admin/people.tsx
 msgid "They get a one-step sign-up."
 msgstr "They get a one-step sign-up."
+#: src/screens/admin/people-menu.tsx
+msgid "They can no longer sign in here. Their decisions, sign-offs and audit entries stay as they are."
+msgstr "They can no longer sign in here. Their decisions, sign-offs and audit entries stay as they are."
+
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "They get every slide of the task and an email."
@@ -19373,6 +19476,10 @@ msgstr "They stay in this tab and save when the connection returns."
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "They stay open after the sign-off."
 msgstr "They stay open after the sign-off."
+#: src/screens/admin/people-menu.tsx
+msgid "They have no open work."
+msgstr "They have no open work."
+
 
 #: src/study/study-copy.ts
 msgid "Think about the whole app. Write as much or as little as you want, or leave it empty."
@@ -21275,6 +21382,10 @@ msgid "Worklist"
 msgstr "Worklist"
 
 #: src/screens/worklist-spike/worklist-spike.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "With a date they keep access until then, and you can cancel before it comes."
+msgstr "With a date they keep access until then, and you can cancel before it comes."
+
 msgid "Worklist rows"
 msgstr "Worklist rows"
 
@@ -21901,3 +22012,123 @@ msgstr "Open the comments on it"
 #: src/annotations/target-composer.tsx
 msgid "Pin the point instead"
 msgstr "Pin the point instead"
+
+#: src/screens/admin/api-section.tsx
+msgid "A pipeline needs one to send slides or results."
+msgstr "A pipeline needs one to send slides or results."
+
+#: src/screens/admin/sections.tsx
+msgid "A project you archive waits here, still readable, until you unarchive it."
+msgstr "A project you archive waits here, still readable, until you unarchive it."
+
+#: src/screens/admin/templates.tsx
+msgid "A template lays out the evaluation report and fills in what a new review task checks."
+msgstr "A template lays out the evaluation report and fills in what a new review task checks."
+
+#: src/screens/admin/audit.tsx
+msgid "Changes to people, projects and settings show up here as they happen."
+msgstr "Changes to people, projects and settings show up here as they happen."
+
+#: src/screens/admin/people.tsx
+msgid "Check the spelling, or search by email."
+msgstr "Check the spelling, or search by email."
+
+#: src/screens/admin/sections.tsx
+msgid "Connect a model your lab runs on its own server and it shows in every model list."
+msgstr "Connect a model your lab runs on its own server and it shows in every model list."
+
+#: src/screens/admin/sections.tsx
+msgid "Create a project to start evaluating slides."
+msgstr "Create a project to start evaluating slides."
+
+#: src/screens/admin/people.tsx
+msgid "Invite people and they appear here once they accept."
+msgstr "Invite people and they appear here once they accept."
+
+#: src/screens/admin/sections.tsx
+msgid "No active projects"
+msgstr "No active projects"
+
+#: src/screens/admin/sections.tsx
+msgid "No archived projects"
+msgstr "No archived projects"
+
+#: src/screens/admin/deleted-projects.tsx
+msgid "No deleted projects"
+msgstr "No deleted projects"
+
+#: src/screens/admin/api-section.tsx
+msgid "No event targets"
+msgstr "No event targets"
+
+#: src/screens/admin/audit.tsx
+msgid "No events match these filters"
+msgstr "No events match these filters"
+
+#: src/screens/admin/audit.tsx
+msgid "No events recorded yet"
+msgstr "No events recorded yet"
+
+#: src/screens/admin/api-section.tsx
+msgid "No incoming webhooks"
+msgstr "No incoming webhooks"
+
+#: src/screens/admin/people.tsx
+msgid "No one has admin rights"
+msgstr "No one has admin rights"
+
+#: src/screens/admin/people.tsx
+msgid "No one is in this workspace yet"
+msgstr "No one is in this workspace yet"
+
+#: src/screens/admin/people.tsx
+msgid "No one matches this search"
+msgstr "No one matches this search"
+
+#: src/screens/admin/sections.tsx
+msgid "No Parfocal models are available"
+msgstr "No Parfocal models are available"
+
+#: src/screens/admin/people.tsx
+msgid "No researchers"
+msgstr "No researchers"
+
+#: src/screens/admin/people.tsx
+msgid "No reviewers"
+msgstr "No reviewers"
+
+#: src/screens/admin/storage.tsx
+msgid "No saved sources yet"
+msgstr "No saved sources yet"
+
+#: src/screens/admin/templates.tsx
+msgid "No study templates"
+msgstr "No study templates"
+
+#: src/screens/admin/api-section.tsx
+msgid "No tokens yet"
+msgstr "No tokens yet"
+
+#: src/screens/admin/sections.tsx
+msgid "Parfocal adds its models here as they are released."
+msgstr "Parfocal adds its models here as they are released."
+
+#: src/screens/admin/storage.tsx
+msgid "Save one when you import slides from a link or a bucket."
+msgstr "Save one when you import slides from a link or a bucket."
+
+#: src/screens/admin/people.tsx
+msgid "Show everyone"
+msgstr "Show everyone"
+
+#: src/screens/admin/people.tsx
+msgid "Show everyone to see the rest of the workspace."
+msgstr "Show everyone to see the rest of the workspace."
+
+#: src/screens/admin/audit.tsx
+msgid "Widen the time range or clear a filter to see more."
+msgstr "Widen the time range or clear a filter to see more."
+
+#: src/screens/admin/sections.tsx
+msgid "Your lab has no model connected"
+msgstr "Your lab has no model connected"

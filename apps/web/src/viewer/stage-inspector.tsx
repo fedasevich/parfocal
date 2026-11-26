@@ -43,7 +43,7 @@ export type StageInspectorLink = {
 export type StageSession = {
   readonly engine: ViewerEngine;
   readonly module: ViewerModule;
-  readonly overview: (signal?: AbortSignal) => Promise<SlideOverview | null>;
+  readonly overview: (signal?: AbortSignal, wantedWidth?: number) => Promise<SlideOverview | null>;
   readonly armTool: (tool: string) => void;
   readonly route: VivRoute | null;
   readonly stage: HTMLElement | null;

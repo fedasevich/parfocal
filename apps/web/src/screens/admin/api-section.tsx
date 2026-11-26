@@ -19,6 +19,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -159,7 +160,8 @@ function TokensZone({ notify }: { notify: Notify }) {
   const { t } = useLingui();
 
   const queryClient = useQueryClient();
-  const accounts = okData(useListServiceAccounts().data) ?? [];
+  const accountList = okData(useListServiceAccounts().data);
+  const accounts = accountList ?? [];
   const revoke = useRevokeApiToken();
   const [creating, setCreating] = useState(false);
   const rows = liveTokens(accounts, now());
@@ -173,71 +175,79 @@ function TokensZone({ notify }: { notify: Notify }) {
       }
     >
       {creating ? <NewTokenModal notify={notify} onClose={() => setCreating(false)} /> : null}
-      {rows.length === 0 ? (
-        <p className="text-body-sm text-fg-dim">
-          <Trans>No tokens yet. A pipeline needs one to send slides or results.</Trans>
-        </p>
-      ) : (
-        <Table className={tableClass}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Trans>Token</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Valid until</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Last used</Trans>
-              </TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map(({ account, token }) => (
-              <TableRow key={token.id}>
-                <TableCell>
-                  <NameCell
-                    lead={<Icon name="key" />}
-                    title={account.name}
-                    sub={scopeNames(account.scopes)}
-                  />
-                </TableCell>
-                <TableCell>{formatDue(token.expires_at.slice(0, 10))}</TableCell>
-                <TableCell>
-                  {token.last_used_at ? lastActive(token.last_used_at) : t`Never`}
-                </TableCell>
-                <TableCell>
-                  <span className="flex justify-end">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      aria-label={t`Revoke the token for ${account.name}`}
-                      disabled={revoke.isPending}
-                      onClick={() =>
-                        revoke.mutate(
-                          { accountId: account.id, tokenId: token.id },
-                          {
-                            onSuccess: () => {
-                              void queryClient.invalidateQueries({
-                                queryKey: getListServiceAccountsQueryKey(),
-                              });
-                              notify(t`Token revoked. Pipelines using it stop at once.`);
-                            },
-                            onError: (problem) => notify(failure(problem)),
+      <Table className={tableClass}>
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              <Trans>Token</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Valid until</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Last used</Trans>
+            </TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map(({ account, token }) => (
+            <TableRow key={token.id}>
+              <TableCell>
+                <NameCell
+                  lead={<Icon name="key" />}
+                  title={account.name}
+                  sub={scopeNames(account.scopes)}
+                />
+              </TableCell>
+              <TableCell>{formatDue(token.expires_at.slice(0, 10))}</TableCell>
+              <TableCell>
+                {token.last_used_at ? lastActive(token.last_used_at) : t`Never`}
+              </TableCell>
+              <TableCell>
+                <span className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={t`Revoke the token for ${account.name}`}
+                    disabled={revoke.isPending}
+                    onClick={() =>
+                      revoke.mutate(
+                        { accountId: account.id, tokenId: token.id },
+                        {
+                          onSuccess: () => {
+                            void queryClient.invalidateQueries({
+                              queryKey: getListServiceAccountsQueryKey(),
+                            });
+                            notify(t`Token revoked. Pipelines using it stop at once.`);
                           },
-                        )
-                      }
-                    >
-                      <Trans>Revoke</Trans>
-                    </Button>
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+                          onError: (problem) => notify(failure(problem)),
+                        },
+                      )
+                    }
+                  >
+                    <Trans>Revoke</Trans>
+                  </Button>
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+          {accountList !== undefined && rows.length === 0 ? (
+            <TableEmpty
+              colSpan={4}
+              data-testid="tokens-empty"
+              title={t`No tokens yet`}
+              action={
+                <Button onClick={() => setCreating(true)}>
+                  <Trans>New token</Trans>
+                </Button>
+              }
+            >
+              <Trans>A pipeline needs one to send slides or results.</Trans>
+            </TableEmpty>
+          ) : null}
+        </TableBody>
+      </Table>
     </Zone>
   );
 }
@@ -269,60 +279,62 @@ function HookState({ hook }: { hook: Webhook }) {
 function WebhooksZone({ direction }: { direction: Webhook["direction"] }) {
   const { t } = useLingui();
 
-  const hooks = (okData(useListWebhooks().data) ?? []).filter(
-    (hook) => hook.direction === direction,
-  );
+  const hookList = okData(useListWebhooks().data);
+  const hooks = (hookList ?? []).filter((hook) => hook.direction === direction);
   const incoming = direction === "incoming";
   return (
     <Zone title={incoming ? t`Webhooks in` : t`Event targets out`}>
-      {hooks.length === 0 ? (
-        <p className="text-body-sm text-fg-dim">
-          {incoming ? (
-            <Trans>No project has an incoming webhook yet.</Trans>
-          ) : (
-            <Trans>No project sends events to a pipeline yet.</Trans>
-          )}
-        </p>
-      ) : (
-        <Table className={tableClass}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{incoming ? <Trans>Webhook</Trans> : <Trans>Target</Trans>}</TableHead>
-              <TableHead>
-                <Trans>Project</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Events</Trans>
-              </TableHead>
-              <TableHead className={right}>
-                <Trans>Today</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>State</Trans>
-              </TableHead>
+      <Table className={tableClass}>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{incoming ? <Trans>Webhook</Trans> : <Trans>Target</Trans>}</TableHead>
+            <TableHead>
+              <Trans>Project</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Events</Trans>
+            </TableHead>
+            <TableHead className={right}>
+              <Trans>Today</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>State</Trans>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {hooks.map((hook) => (
+            <TableRow key={hook.id}>
+              <TableCell>
+                <NameCell
+                  lead={<Icon name={incoming ? "upload" : "link"} />}
+                  title={hook.name}
+                  sub={hook.address ?? undefined}
+                />
+              </TableCell>
+              <TableCell>{hook.project?.name ?? ""}</TableCell>
+              <TableCell className="font-mono">{hook.events.join(", ")}</TableCell>
+              <TableCell className={cn(right, "font-mono")}>{hook.calls_today}</TableCell>
+              <TableCell>
+                <HookState hook={hook} />
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {hooks.map((hook) => (
-              <TableRow key={hook.id}>
-                <TableCell>
-                  <NameCell
-                    lead={<Icon name={incoming ? "upload" : "link"} />}
-                    title={hook.name}
-                    sub={hook.address ?? undefined}
-                  />
-                </TableCell>
-                <TableCell>{hook.project?.name ?? ""}</TableCell>
-                <TableCell className="font-mono">{hook.events.join(", ")}</TableCell>
-                <TableCell className={cn(right, "font-mono")}>{hook.calls_today}</TableCell>
-                <TableCell>
-                  <HookState hook={hook} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+          ))}
+          {hookList !== undefined && hooks.length === 0 ? (
+            <TableEmpty
+              colSpan={5}
+              data-testid="webhooks-empty"
+              title={incoming ? t`No incoming webhooks` : t`No event targets`}
+            >
+              {incoming ? (
+                <Trans>No project has an incoming webhook yet.</Trans>
+              ) : (
+                <Trans>No project sends events to a pipeline yet.</Trans>
+              )}
+            </TableEmpty>
+          ) : null}
+        </TableBody>
+      </Table>
     </Zone>
   );
 }

@@ -56,6 +56,18 @@ import type {
 } from "../generated/api.ts";
 import { problemMediaType } from "../problem.ts";
 import { isModelHidden } from "./hidden-models.ts";
+import { fakeLabModelsAbsent } from "./lab-models-scene.ts";
+import {
+  changedMember,
+  createdInvitations,
+  isWithdrawn,
+  keepInvitation,
+  keepRights,
+  keepRole,
+  leavingOf,
+  resetPeopleActions,
+  withdrawInvitation,
+} from "./people-actions.ts";
 import {
   type PersonKey,
   people,
@@ -96,17 +108,13 @@ import {
 import { resetStudyTemplates } from "./study-template-store.ts";
 import { resetWorkspaceJoin } from "./workspace-join-handlers.ts";
 
-const created: Invitation[] = [];
-const withdrawn = new Set<string>();
-
 const recordedAudit: NamedAuditEvent[] = [];
 const addedAccounts: ServiceAccount[] = [];
 const addedTokens = new Map<string, ApiToken[]>();
 const revokedTokens = new Set<string>();
 
 export const resetAdminActions = () => {
-  created.length = 0;
-  withdrawn.clear();
+  resetPeopleActions();
   recordedAudit.length = 0;
   addedAccounts.length = 0;
   addedTokens.clear();
@@ -139,7 +147,7 @@ const recordAudit = (action: string, targetType: string, targetId: string, subje
 };
 
 const newInvitationId = () =>
-  `00000000-0000-4000-8060-${String(100 + created.length).padStart(12, "0")}`;
+  `00000000-0000-4000-8060-${String(100 + createdInvitations().length).padStart(12, "0")}`;
 
 const ref = (code: (typeof projects)[number]["code"]) => {
   const project = projectByCode(code);
@@ -158,8 +166,8 @@ const toInvitation = (seed: (typeof invitations)[number]): Invitation => ({
 });
 
 export const toInvitations = (): Invitation[] =>
-  [...invitations.map(toInvitation), ...created].filter(
-    (invitation) => !withdrawn.has(invitation.id),
+  [...invitations.map(toInvitation), ...createdInvitations()].filter(
+    (invitation) => !isWithdrawn(invitation.id),
   );
 
 export const toAdminOverview = (): AdminOverview => ({
@@ -185,8 +193,8 @@ export const toMemberActivity = (): MemberActivity[] =>
     email: people[row.key].email,
     last_active_at: row.lastActiveAt,
     project_codes: projectsOf(row.key),
-    deactivates_on: null,
-    deactivated_at: null,
+    deactivates_on: leavingOf(people[row.key].id)?.ends_on ?? null,
+    deactivated_at: leavingOf(people[row.key].id)?.state === "deactivated" ? scenarioNow : null,
   }));
 
 function withVisibility(model: AiModelSeed): AiModelSeed {
@@ -200,21 +208,24 @@ function withVisibility(model: AiModelSeed): AiModelSeed {
 }
 
 export const toAiModels = (): AiModels => ({
-  models: aiModels.map(withVisibility).map((model) => ({
-    id: model.id,
-    name: model.name,
-    version: model.version,
-    source: model.source,
-    catalogue_name: model.catalogueName,
-    makes: model.makes,
-    description: model.description,
-    runs_on: model.runsOn,
-    who_can_run: model.whoCanRun,
-    result_sets: model.resultSets,
-    shown: model.shown,
-    status: model.status,
-    latency_ms: model.latencyMs,
-  })),
+  models: aiModels
+    .filter((model) => !(fakeLabModelsAbsent() && model.source === "lab"))
+    .map(withVisibility)
+    .map((model) => ({
+      id: model.id,
+      name: model.name,
+      version: model.version,
+      source: model.source,
+      catalogue_name: model.catalogueName,
+      makes: model.makes,
+      description: model.description,
+      runs_on: model.runsOn,
+      who_can_run: model.whoCanRun,
+      result_sets: model.resultSets,
+      shown: model.shown,
+      status: model.status,
+      latency_ms: model.latencyMs,
+    })),
   running: runningNow.map((run) => ({
     id: run.id,
     model: run.model,
@@ -534,9 +545,9 @@ const toTenant = (): Tenant => {
   };
 };
 
-const memberOf = (userId: string, change: Partial<Member>): Member => {
+const memberOf = (userId: string): Member => {
   const person = Object.values(people).find((item) => item.id === userId) ?? people.LM;
-  return {
+  return changedMember({
     user_id: person.id,
     display_name: person.name,
     initials: person.key,
@@ -544,8 +555,7 @@ const memberOf = (userId: string, change: Partial<Member>): Member => {
     title: person.title,
     role: person.role,
     admin_rights: adminRightsHolders.includes(person.key),
-    ...change,
-  };
+  });
 };
 
 const userIdFromPath = (url: string) => url.split("/members/")[1]?.split("/")[0] ?? "";
@@ -608,7 +618,7 @@ export function adminHandlers(): RequestHandler[] {
         expires_at: "2026-10-29T23:59:00+02:00",
         expired: false,
       };
-      created.push(invitation);
+      keepInvitation(invitation);
       return invitation;
     }),
     getResendInvitationMockHandler(({ request }) => {
@@ -623,12 +633,12 @@ export function adminHandlers(): RequestHandler[] {
         expires_at: "2026-10-29T23:59:00+02:00",
         expired: false,
       };
-      withdrawn.add(earlier.id);
-      created.push(resent);
+      withdrawInvitation(earlier.id);
+      keepInvitation(resent);
       return resent;
     }),
     getRevokeInvitationMockHandler(({ request }) => {
-      withdrawn.add(new URL(request.url).pathname.split("/").at(-1) ?? "");
+      withdrawInvitation(new URL(request.url).pathname.split("/").at(-1) ?? "");
     }),
     getListMemberActivityMockHandler(() => toMemberActivity()),
     getListAuditEventsMockHandler(({ request }) => filteredAuditEvents(request.url)),
@@ -663,7 +673,8 @@ export function adminHandlers(): RequestHandler[] {
     getGetCurrentTenantMockHandler(() => toTenant()),
     getSetMemberAdminRightsMockHandler(async ({ request }) => {
       const body = (await request.json()) as { admin_rights: boolean };
-      const member = memberOf(userIdFromPath(request.url), { admin_rights: body.admin_rights });
+      keepRights(userIdFromPath(request.url), body.admin_rights);
+      const member = memberOf(userIdFromPath(request.url));
       recordAudit(
         body.admin_rights ? "member.admin-rights-given" : "member.admin-rights-removed",
         "member",
@@ -674,7 +685,8 @@ export function adminHandlers(): RequestHandler[] {
     }),
     getChangeMemberRoleMockHandler(async ({ request }) => {
       const body = (await request.json()) as { role: Member["role"] };
-      const member = memberOf(userIdFromPath(request.url), { role: body.role });
+      keepRole(userIdFromPath(request.url), body.role);
+      const member = memberOf(userIdFromPath(request.url));
       recordAudit("member.role-changed", "member", member.user_id, member.display_name);
       return member;
     }),
@@ -695,7 +707,7 @@ export function adminHandlers(): RequestHandler[] {
         expired: false,
         task_id: String(params["taskId"]),
       };
-      created.push(invitation);
+      keepInvitation(invitation);
       return invitation;
     }),
   ];

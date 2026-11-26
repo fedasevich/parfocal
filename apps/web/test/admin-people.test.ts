@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Invitation, MemberActivity } from "@parfocal/api-client";
-import { adminSwitchOf, shownInvitations, takenEmails } from "../src/screens/admin/people-rules.ts";
+import {
+  adminSwitchOf,
+  memberActionsOf,
+  shownInvitations,
+  takenEmails,
+} from "../src/screens/admin/people-rules.ts";
 
 const invitation = (email: string): Invitation => ({
   id: email,
@@ -38,6 +43,32 @@ test("pending invites show under All and match the search", () => {
     ["karel@cuailab.example"],
   );
   assert.deepEqual(shownInvitations(waiting, "", "res"), []);
+});
+
+const person = {
+  role: "researcher" as const,
+  holdsRight: false,
+  holders: 2,
+  isViewer: false,
+  deactivated: false,
+  scheduled: false,
+};
+
+test("a menu offers only the actions the person can take", () => {
+  assert.deepEqual(memberActionsOf(person), ["make-reviewer", "give-admin", "remove"]);
+  assert.deepEqual(memberActionsOf({ ...person, holdsRight: true }), ["remove-admin", "remove"]);
+  assert.deepEqual(memberActionsOf({ ...person, role: "reviewer" }), ["make-researcher", "remove"]);
+  assert.deepEqual(memberActionsOf({ ...person, scheduled: true }), [
+    "make-reviewer",
+    "give-admin",
+    "cancel-removal",
+  ]);
+});
+
+test("the last holder, the viewer and a removed person lose the actions that would lock them out", () => {
+  assert.deepEqual(memberActionsOf({ ...person, holdsRight: true, holders: 1 }), []);
+  assert.deepEqual(memberActionsOf({ ...person, isViewer: true }), ["make-reviewer", "give-admin"]);
+  assert.deepEqual(memberActionsOf({ ...person, deactivated: true }), []);
 });
 
 test("members and pending invites cannot be invited again", () => {

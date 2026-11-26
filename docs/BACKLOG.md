@@ -6106,7 +6106,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on nothing.
   Size: S.
 
-- [ ] ADMIN-014 · Admin tables show an empty state
+- [x] ADMIN-014 · Admin tables show an empty state
   The owner found on 2026-11-25 that the Projects table in Admin, filtered to Archived with 0 archived projects, shows only its header row and nothing below it, and the owner found the same on the "Your lab's models" table (apps/web/src/screens/admin/sections.tsx) when the lab has connected no model. Give those tables and every other Admin table (people, invites, storage, audit and the rest) an empty state that says what is missing and, where it makes sense, how to get some, worded per filter, such as "No archived projects" on the Archived filter.
   Done when a browser spec on the fake API shows the empty state for the archived projects filter and for the lab models table, with a way to connect a model, and a sweep in the log lists every Admin table it checked.
   Depends on nothing.

@@ -222,13 +222,19 @@ function TableEmpty({
   colSpan,
   title,
   children,
+  action,
   ...props
-}: React.ComponentProps<"tr"> & { colSpan: number; title: React.ReactNode }) {
+}: React.ComponentProps<"tr"> & {
+  colSpan: number;
+  title: React.ReactNode;
+  action?: React.ReactNode;
+}) {
   return (
     <tr data-slot="table-empty" className={className} {...props}>
       <td colSpan={colSpan} className="px-2 py-8 text-center whitespace-normal">
         <b className="block text-body-sm font-medium text-fg">{title}</b>
         {children ? <span className="mt-1 block text-body-sm text-fg-dim">{children}</span> : null}
+        {action ? <span className="mt-3 flex justify-center">{action}</span> : null}
       </td>
     </tr>
   );

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { PixelSource, RasterRequest } from "../src/pixel-source/types.ts";
-import { readSlideOverview, smallestLevel } from "../src/viv/slide-overview.ts";
+import { levelForWidth, readSlideOverview, smallestLevel } from "../src/viv/slide-overview.ts";
 
 const level = (width: number, height: number, downsample: number) => ({
   width,
@@ -69,4 +69,31 @@ test("a slide whose smallest level is too large or not 8 bit gives no overview",
   assert.deepEqual(large.asked, []);
   const deep = source([level(500, 400, 1)], "uint16");
   assert.equal(await readSlideOverview(deep.source), null);
+});
+
+test("a wanted width picks the smallest level that is wide enough", async () => {
+  const slide = source([level(4000, 3000, 1), level(2000, 1500, 2), level(1000, 750, 4)]);
+  assert.equal(levelForWidth(slide.source, 900), 2);
+  assert.equal(levelForWidth(slide.source, 1001), 1);
+  assert.equal(levelForWidth(slide.source, 1800), 1);
+  const overview = await readSlideOverview(slide.source, undefined, undefined, 1500);
+  assert.ok(overview);
+  assert.deepEqual([overview.width, overview.height], [2000, 1500]);
+  assert.deepEqual(
+    slide.asked.map((request) => request.level),
+    [1],
+  );
+});
+
+test("a wanted width past every level takes the largest one within the side cap", () => {
+  const slide = source([level(90000, 60000, 1), level(3000, 2000, 30), level(1500, 1000, 60)]);
+  assert.equal(levelForWidth(slide.source, 8000), 1);
+  assert.equal(levelForWidth(slide.source, 8000, 2000), 2);
+  assert.equal(levelForWidth(slide.source, 8000, 500), -1);
+});
+
+test("a wanted width never reads a level beyond the side cap", async () => {
+  const large = source([level(90000, 60000, 1), level(9000, 6000, 10)]);
+  assert.equal(await readSlideOverview(large.source, undefined, undefined, 2000), null);
+  assert.deepEqual(large.asked, []);
 });

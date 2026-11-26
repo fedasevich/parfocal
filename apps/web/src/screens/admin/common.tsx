@@ -1,6 +1,4 @@
-import { t } from "@lingui/core/macro";
 import type { AiModel } from "@parfocal/api-client";
-import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { now } from "../../clock.ts";
@@ -26,14 +24,6 @@ export function lastActive(at: string | null): string {
 export function ModelStatus({ model }: { model: AiModel }) {
   const status = modelStatus(model);
   return <StatusTag tone={status.tone}>{status.text}</StatusTag>;
-}
-
-export function MoreButton({ label = t`More` }: { label?: string }) {
-  return (
-    <Button variant="ghost" size="icon-sm" aria-label={label} title={label}>
-      <Icon name="more" />
-    </Button>
-  );
 }
 
 export function InfoLine({ children }: { children: React.ReactNode }) {
