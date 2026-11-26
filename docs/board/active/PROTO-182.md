@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-25
-note: the deployed walkthrough found no outline-types request after accepting three Best Smart select cells with typing on; a fix agent takes it
+note: waits for the deployed Annotate check of one typed Smart select cell with the typer's time and cost
