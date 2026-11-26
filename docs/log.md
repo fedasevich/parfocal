@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- Production touch: release v0.61.1 (the PROTO-193 and PROTO-182 deployed fixes) deployed by run 45749007399, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - Production touch: release v0.61.0 (PROTO-189 part two, the first CI fixes and the regenerated catalogs) deployed by run 45748023598, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - PROTO-182 deployed fix: after picking a model in the Smart select bar, focus stayed on the picker and slide clicks did not move it, so Enter reopened the Models list and nothing was accepted or typed. A slide press now releases a focused bar button in apps/web/src/viewer/proposal-enter.ts, checked by a Best and a Good Enter spec in smart-typing.spec.ts.
 - PROTO-193 deployed fix: decideType in apps/web/src/viewer/stage-review-objects.tsx saved the type bar's decision and advanced at once, so Disagree and X in guided cell review skipped the What is wrong chips. They now open the shared reasons step and stay on the cell until Next, J or a skip, X on a cell with saved reasons keeps them, and guided-cell-disagree-reasons.spec.ts covers both. A class key that differs from the AI's still advances, since the class is the reason.
