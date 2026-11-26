@@ -12,6 +12,7 @@ import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 import { CheckRow, FileIcon, FileList, FileRow } from "./parts.tsx";
+import { resultFormatRows } from "./result-format-rows.ts";
 
 const errorCodes = lazyText(() => [
   ["not-json", t`The file is not valid JSON. The line shows where reading stopped.`],
@@ -43,18 +44,6 @@ export default function FormatsDrawer({
 }) {
   const { t } = useLingui();
 
-  const formats = [
-    ["Parfocal JSON", t`Regions, cells, classes, scores and IDs in one file. The native format.`],
-    [
-      t`GeoJSON or a QuPath export`,
-      t`Polygons and points. QuPath classes and measurements are kept.`,
-    ],
-    [t`CSV or TSV`, t`One row per cell with x, y and a class.`],
-    [
-      t`Masks or heatmaps`,
-      t`PNG or TIFF at one pyramid level. The level is checked with an overlay.`,
-    ],
-  ];
   return (
     <DrawerPanel
       scrim
@@ -84,7 +73,7 @@ export default function FormatsDrawer({
         sub={t`A result file goes with the slide that has the same name, or whose ID is inside the file.`}
       >
         <FileList>
-          {formats.map(([name, text]) => (
+          {resultFormatRows.map(([name, text]) => (
             <div key={name} className="grid gap-0.75 border-line px-3.5 py-2.5 [&+&]:border-t">
               <b className="text-body-sm font-semibold">{name}</b>
               <small className="text-body-sm leading-[1.4] text-fg-dim">{text}</small>

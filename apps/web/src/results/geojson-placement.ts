@@ -39,8 +39,15 @@ const ringOf = (positions: Json): number[] | null => {
   return flat.length >= 6 ? flat : null;
 };
 
+const isParfocalJson = (node: Json): node is Record<string, Json> & { objects: Json[] } =>
+  isRecord(node) && node["format"] === "parfocal-results" && Array.isArray(node["objects"]);
+
 const geometriesOf = (node: Json): Record<string, Json>[] => {
   if (!isRecord(node)) return [];
+  if (isParfocalJson(node))
+    return node.objects.flatMap((object) =>
+      isRecord(object) ? geometriesOf(object["geometry"]) : [],
+    );
   if (node["type"] === "FeatureCollection" && Array.isArray(node["features"]))
     return node["features"].flatMap(geometriesOf);
   if (node["type"] === "Feature") return geometriesOf(node["geometry"]);
@@ -72,7 +79,9 @@ const shapesOf = (geometry: Record<string, Json>): Bare<PreviewShape>[] => {
   return [];
 };
 
-export const parseResults = (text: string): ParsedResults | null => {
+export type ReadJson = { results: ParsedResults; geojson: boolean };
+
+export const readJsonResults = (text: string): ReadJson | null => {
   let document: Json;
   try {
     document = JSON.parse(text);
@@ -82,8 +91,13 @@ export const parseResults = (text: string): ParsedResults | null => {
   const geometries = geometriesOf(document);
   if (geometries.length === 0) return null;
   const shapes = geometries.flatMap(shapesOf).map((shape, id): PreviewShape => ({ ...shape, id }));
-  return shapes.length === 0 ? null : { shapes, objects: geometries.length };
+  return shapes.length === 0
+    ? null
+    : { results: { shapes, objects: geometries.length }, geojson: !isParfocalJson(document) };
 };
+
+export const parseResults = (text: string): ParsedResults | null =>
+  readJsonResults(text)?.results ?? null;
 
 export const placePoint = (placement: Placement, x: number, y: number) => ({
   x: x * placement.scale + placement.dx,
