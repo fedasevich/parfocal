@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- FOUND-002 Parallel run of 2026-11-25 stopped at 07:05 on 2026-11-26 before the owner's 07:40 stop: v0.52.0 to v0.65.0 deployed, the last by run 45763119046, main pushed, the docs consolidated, and main CI not yet green on a finished run
+- PROTO-189 CI fix part three: the ui comments-tab spec still pressed New comment, which PROTO-189 renamed Comment on the slide, so it now presses the new name and all 10 comments tab specs pass locally. The CI run 45758070419 on v0.63.0 also failed the guided cell spec fixed in 40e4a003, had comment-mention-reach.spec.ts pass only on retry, and lost its db job to a cancel
 - PROTO-184 Production touch: release v0.65.0 (ONB-013 and the PROTO-184 row name fix) deployed by run 45763119046, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order; deploy and browser smoke green
 - PROTO-184: the layer row name column keeps 64 px, so a long area and perimeter measure truncates with its full value in a title instead of taking the row, with browser specs at 340 and 280 px; waits for the deployed check
 - ONB-013: setup's Done step lists a workspace only when a join, request or create went through, so a skipped step shows none and the summary says No workspace; waits for the deployed check

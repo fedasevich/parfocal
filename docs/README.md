@@ -6,7 +6,7 @@ Last consolidated: 2026-11-26
 
 ## In progress
 
-State on 2026-11-26. `app.parfocal.eu` runs v0.64.0 in Europe and is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The parallel run of 2026-11-25 built the owner's 2026-11-25 fixes, deployed v0.52.0 to v0.64.0 and walked them twice on the deployed app. The review column holds tasks that wait for a deployed check, and main CI was red at the end of the run. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+State on 2026-11-26. `app.parfocal.eu` runs v0.65.0 in Europe and is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The parallel run of 2026-11-25 built the owner's 2026-11-25 fixes, deployed v0.52.0 to v0.65.0 and walked them twice on the deployed app. The review column holds tasks that wait for a deployed check, and main CI was red at the end of the run. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
 The owner's open steps and questions are in [decisions.md](decisions.md), which starts with what to do next in order. Answered decisions move to [decisions-answered.md](decisions-answered.md).
 
@@ -27,10 +27,10 @@ Parfocal reviews AI results on whole slides and annotates slides for training da
 
 1. PROTO-182 (found cells are typed automatically): the typer fails on a slide with no microns per pixel and its chip never ends.
 2. EXP-020 (a participant joins a remote session by one link): the change-type task never finishes.
-3. The other deployed check failures: PROTO-184 (layers tree rows), PROTO-171 (report PDF time) and PROTO-178 (queue magnification bar).
-4. The walkthrough's new fixes: PROTO-200 (Auto region under reduced motion), PROTO-201 (a review opened with no mode), PROTO-202 (jobs tray refresh) and ONB-013 (no Joined line when skipped).
-5. Deployed checks for the review column, PROTO-197, PROTO-198, PROTO-199, EXP-023 and ONB-012 among them.
-6. A green main CI, red at the end of the 2026-11-25 run.
+3. The other deployed check failures: PROTO-171 (report PDF time) and PROTO-178 (queue magnification bar).
+4. The walkthrough's new fixes: PROTO-200 (Auto region under reduced motion), PROTO-201 (a review opened with no mode) and PROTO-202 (jobs tray refresh).
+5. Deployed checks for the review column, PROTO-197, PROTO-198, PROTO-199, PROTO-184, EXP-023, ONB-012 and ONB-013 among them.
+6. A green main CI: the third CI fixes of 2026-11-26 are pushed and no finished run has checked them yet.
 7. PROTO-168 (a queued whole slide run starts in time), with decision 182 (whether the GPU cap holds per pool or for all pools).
 8. EXP-022 (study recordings backed up to R2) after the owner's R2 key, then PILOT-005 (moderated usability study, second round).
 
