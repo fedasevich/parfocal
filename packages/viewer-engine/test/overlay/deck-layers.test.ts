@@ -117,7 +117,7 @@ test("fills hand deck the precomputed triangle indices and skip its own triangul
   assert.equal(props._normalize, false);
 });
 
-test("outlines close each ring with its first two vertices", () => {
+test("outlines close each ring from the middle of its first edge so every edge draws once", () => {
   const builder = createOverlayLayerBuilder();
   const layers = builder.build([vectors("a")]);
   const outlines = propsOf(layers[3]);
@@ -127,8 +127,9 @@ test("outlines close each ring with its first two vertices", () => {
   };
   assert.deepEqual([...data.startIndices], [0, 6, 11]);
   const path = data.attributes.getPath.value;
-  assert.deepEqual([...path.subarray(4 * 2, 6 * 2)], [0, 0, 10, 0]);
-  assert.deepEqual([...path.subarray(9 * 2, 11 * 2)], [20, 20, 30, 20]);
+  assert.deepEqual([...path.subarray(0, 2)], [5, 0]);
+  assert.deepEqual([...path.subarray(4 * 2, 6 * 2)], [0, 0, 5, 0]);
+  assert.deepEqual([...path.subarray(9 * 2, 11 * 2)], [20, 20, 25, 20]);
   assert.equal(outlines._pathType, "loop");
 });
 

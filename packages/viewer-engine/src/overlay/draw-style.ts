@@ -81,8 +81,16 @@ export interface DrawOptions {
   readonly kind?: VectorKind;
 }
 
+export interface ShownAlpha {
+  readonly part: string;
+  readonly outline: number;
+  readonly fill: number;
+  readonly dot: number | null;
+}
+
 export interface DrawnOverlays {
   readonly overlays: VectorOverlay[];
+  readonly shown: readonly ShownAlpha[];
   readonly scope: readonly string[];
   readonly belowCutoff: readonly string[];
   readonly hiddenByClass: readonly string[];
@@ -95,6 +103,22 @@ export const defaultDrawSettings: DrawSettings = {
   colourBy: "class",
   cutoff: 0.4,
 };
+
+export const layerOpacityGamma = 2.2;
+
+export const currentRingFloor = 0.5;
+
+export function layerOpacityOf(share: number): number {
+  return Math.max(0, share) ** layerOpacityGamma;
+}
+
+export function shownAlphaOf(layerOpacity: number): number {
+  return Math.max(0, layerOpacity) ** (1 / layerOpacityGamma);
+}
+
+export function currentRingShare(share: number): number {
+  return currentRingFloor + (1 - currentRingFloor) * share;
+}
 
 export function clampOpacity(opacity: number): number {
   return Math.min(maxDrawOpacity, Math.max(minDrawOpacity, Math.round(opacity)));
@@ -153,7 +177,9 @@ export function drawObjectOverlays(options: DrawOptions): DrawnOverlays {
   const visible = options.objects.filter((object) => !hidden.has(object.className));
   const below = visible.filter((object) => object.score < settings.cutoff);
   const above = visible.filter((object) => object.score >= settings.cutoff);
-  const opacity = clampOpacity(settings.opacity) / 100;
+  const share = clampOpacity(settings.opacity) / 100;
+  const opacity = layerOpacityOf(share);
+  const shown: ShownAlpha[] = [];
   const asDot = (object: DrawnObject) => settings.draw === "dots" && object.kind === "cell";
 
   const overlayFor = (group: readonly DrawnObject[], part: string, dashed: boolean) => {
@@ -176,6 +202,12 @@ export function drawObjectOverlays(options: DrawOptions): DrawnOverlays {
       },
       style: styleOf(settings, dashed),
     });
+    shown.push({
+      part,
+      outline: share * alpha,
+      fill: settings.draw === "fill" ? share * alpha * shownAlphaOf(filledAlpha) : 0,
+      dot: dots.length > 0 ? share * alpha : null,
+    });
     return [withOverlayState(overlay, { opacity })];
   };
 
@@ -191,10 +223,16 @@ export function drawObjectOverlays(options: DrawOptions): DrawnOverlays {
       },
       style: { fillOpacity: 0, lineWidthPx: settings.widthPx + 1, casing: null, dash: null },
     });
-    overlays.push({ ...ring, order: ring.order + 2 });
+    const ringShare = currentRingShare(share);
+    overlays.push({
+      ...withOverlayState(ring, { opacity: layerOpacityOf(ringShare) }),
+      order: ring.order + 2,
+    });
+    shown.push({ part: "current", outline: ringShare, fill: 0, dot: null });
   }
   return {
     overlays,
+    shown,
     scope: options.objects.map((object) => object.id),
     belowCutoff: below.map((object) => object.id),
     hiddenByClass: options.objects

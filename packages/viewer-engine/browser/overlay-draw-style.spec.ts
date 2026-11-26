@@ -32,7 +32,9 @@ const scenes: Array<{ name: string; change: Change; tint?: [number, number, numb
   { name: "outline-width-3", change: { draw: "outline", widthPx: 3, cutoff: 0 } },
   { name: "fill", change: { draw: "fill", widthPx: 2, cutoff: 0 } },
   { name: "dots", change: { draw: "dots", widthPx: 2, cutoff: 0 } },
+  { name: "opacity-10", change: { draw: "outline", widthPx: 2, opacity: 10, cutoff: 0 } },
   { name: "opacity-40", change: { draw: "outline", widthPx: 2, opacity: 40, cutoff: 0 } },
+  { name: "opacity-100", change: { draw: "outline", widthPx: 2, opacity: 100, cutoff: 0 } },
   { name: "colour-score", change: { colourBy: "score", cutoff: 0 } },
   { name: "colour-decision", change: { colourBy: "decision", cutoff: 0 } },
   { name: "cutoff-dimmed", change: { draw: "fill", cutoff: 0.5 } },
@@ -71,7 +73,9 @@ const liveScenes: Array<{ name: string; choices: LiveChoices }> = [
   { name: "outline-width-3", choices: { draw: "outline", width: "3", cutoff: 0 } },
   { name: "fill", choices: { draw: "fill", width: "2", cutoff: 0 } },
   { name: "dots", choices: { draw: "dots", width: "2", cutoff: 0 } },
+  { name: "opacity-10", choices: { draw: "outline", width: "2", opacity: 10, cutoff: 0 } },
   { name: "opacity-40", choices: { draw: "outline", width: "2", opacity: 40, cutoff: 0 } },
+  { name: "opacity-100", choices: { draw: "outline", width: "2", opacity: 100, cutoff: 0 } },
   { name: "colour-score", choices: { colorBy: "score", cutoff: 0 } },
   { name: "colour-decision", choices: { colorBy: "decision", cutoff: 0 } },
   { name: "cutoff-dimmed", choices: { draw: "fill", cutoff: 0.5 } },
@@ -120,3 +124,41 @@ test("the styles differ from each other and the cutoff dims without removing obj
   expect(alphaSum(dimmed.frame)).toBeLessThan(alphaSum(kept.frame));
   expect(inked(dimmed.frame)).toBeGreaterThan(inked(kept.frame) * 0.4);
 });
+
+function pixelsBetween(frame: Frame, low: number, high: number): number {
+  let count = 0;
+  for (let at = 3; at < frame.data.length; at += 4) {
+    const alpha = frame.data[at] ?? 0;
+    if (alpha >= low && alpha <= high) count++;
+  }
+  return count;
+}
+
+const currentRingAlpha = Math.round(255 * 0.55);
+const fadedMaximum = Math.round(255 * 0.27);
+
+for (const draw of ["outline", "fill", "dots"] as const) {
+  test(`at 10% opacity the ${draw} objects draw at a tenth and only the current ring stays marked`, async ({
+    page,
+  }) => {
+    await open(page);
+    const render = (opacity: number) =>
+      page.evaluate(
+        ([mode, share]) =>
+          window.drawStyleHarness.render({ draw: mode, widthPx: 2, opacity: share, cutoff: 0 }),
+        [draw, opacity] as const,
+      );
+    await render(10);
+    const faint = await captureWebglCanvas(page, "#scene");
+    await render(100);
+    const solid = await captureWebglCanvas(page, "#scene");
+    const ring = pixelsBetween(faint, currentRingAlpha - 25, 255);
+    const objects = pixelsBetween(faint, 1, fadedMaximum);
+    const strays = pixelsBetween(faint, fadedMaximum + 1, currentRingAlpha - 26);
+    expect(ring).toBeGreaterThan(200);
+    expect(ring).toBeLessThan(900);
+    expect(objects).toBeGreaterThan(inked(solid) * 0.6);
+    expect(strays).toBeLessThan(objects * 0.03);
+    expect(pixelsBetween(solid, 250, 255)).toBeGreaterThan(pixelsBetween(faint, 250, 255) * 20);
+  });
+}
