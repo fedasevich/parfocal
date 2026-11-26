@@ -116,6 +116,29 @@ test("a built-in template is duplicated, changed and saved as a new template", a
   await expect(page.getByRole("row", { name: /Detection study, landscape/ })).toBeVisible();
 });
 
+test("a row menu holds only what the row has no button for, each item on one line", async ({
+  page,
+}) => {
+  await page.goto("/admin?section=templates");
+  const row = page.getByRole("row", { name: /Detection study/ });
+  await expect(row.getByRole("button", { name: "Preview Detection study" })).toBeVisible();
+  await expect(row.getByRole("button", { name: "Duplicate Detection study" })).toBeVisible();
+
+  await row.getByRole("button", { name: "More for Detection study" }).click();
+  const items = page.getByRole("menuitem");
+  await expect(items).toHaveText(["Use for new projects", "Retire"]);
+  await expect(page.getByRole("menuitem", { name: /Preview/ })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: /Duplicate/ })).toHaveCount(0);
+
+  const lineHeight = await items.first().evaluate((item) => {
+    const style = getComputedStyle(item);
+    return Number.parseFloat(style.lineHeight);
+  });
+  for (const box of await items.evaluateAll((all) => all.map((item) => item.scrollHeight))) {
+    expect(box).toBeLessThan(lineHeight * 2);
+  }
+});
+
 test("the workspace default cannot be retired", async ({ page }) => {
   await page.goto("/admin?section=templates");
   await page.getByRole("button", { name: "More for Detection study" }).click();

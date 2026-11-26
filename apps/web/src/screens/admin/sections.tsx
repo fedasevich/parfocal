@@ -48,7 +48,7 @@ import { percent } from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { InfoLine, ModelStatus, MoreButton, type Notify, tableClass } from "./common.tsx";
+import { InfoLine, ModelStatus, type Notify, tableClass } from "./common.tsx";
 import { DeletedProjectsZone } from "./deleted-projects.tsx";
 import {
   archiveActionLabel,
@@ -468,7 +468,6 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                         <Trans>Test</Trans>
                       </Button>
                     ) : null}
-                    <MoreButton label={t`More for ${model.name}`} />
                   </span>
                 </TableCell>
               </TableRow>

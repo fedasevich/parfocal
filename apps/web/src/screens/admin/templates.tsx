@@ -261,13 +261,7 @@ export function TemplatesSection({
                         >
                           <Icon name="more" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => setPreview(template)}>
-                            <Trans>Preview the PDF</Trans>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onOpen(template)}>
-                            {own ? t`Edit` : t`Duplicate and edit`}
-                          </DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="w-56">
                           <DropdownMenuItem
                             disabled={off || defaultId === template.id}
                             onClick={() => makeDefault(template)}
