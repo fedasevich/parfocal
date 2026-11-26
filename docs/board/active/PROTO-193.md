@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-25
-note: the deployed walkthrough found Disagree and X in guided cell review record a disagree and move on, so the What is wrong chips never show; a fix agent takes it
+note: waits for the deployed check of Disagree and X in guided cell review
