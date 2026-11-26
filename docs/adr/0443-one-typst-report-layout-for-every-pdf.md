@@ -1,4 +1,4 @@
-# XXXX. Every report PDF uses one Typst layout with the app's font, and a signed clinical report is drawn from a server model pinned to the screen model
+# 0443. Every report PDF uses one Typst layout with the app's font, and a signed clinical report is drawn from a server model pinned to the screen model
 
 - Date: 2026-11-26
 - Status: Accepted

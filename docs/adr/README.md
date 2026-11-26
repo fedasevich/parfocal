@@ -395,4 +395,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0440](0440-gpu-pools-take-any-card-big-enough.md) | GPU pools take any card big enough for their model, cheapest first, in any region | Accepted | 2026-11-25 |
 | [0441](0441-the-layers-tree-is-view-organisation.md) | The layers tree is view organisation of the one shared layer | Accepted | 2026-11-25 |
 | [0442](0442-a-one-use-link-signs-a-study-participant-into-their-own-seat.md) | A one-use link signs a remote study participant into a seat of their own, with no identity provider account | Accepted | 2026-11-25 |
-| [XXXX](XXXX-one-typst-report-layout-for-every-pdf.md) | Every report PDF uses one Typst layout with the app's font, and a signed clinical report is drawn from a server model pinned to the screen model | Accepted | 2026-11-26 |
+| [0443](0443-one-typst-report-layout-for-every-pdf.md) | Every report PDF uses one Typst layout with the app's font, and a signed clinical report is drawn from a server model pinned to the screen model | Accepted | 2026-11-26 |
