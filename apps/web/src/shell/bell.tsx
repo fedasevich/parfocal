@@ -14,7 +14,7 @@ import { NotificationsSkeleton } from "@parfocal/ui/components/notifications-ske
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
-import { plainReferenceText } from "../annotations/reference-tokens.ts";
+import { plainReferenceText } from "../annotations/reference-token-parse.ts";
 import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";

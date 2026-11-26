@@ -4,7 +4,8 @@ import type { Thread } from "@parfocal/api-client";
 import type { Reach } from "../src/annotations/comment-bus.ts";
 import { linkParts } from "../src/annotations/comment-link-parts.ts";
 import { anchorReferences } from "../src/annotations/pin-references.ts";
-import { plainReferenceText, toReferenceTokens } from "../src/annotations/reference-tokens.ts";
+import { plainReferenceText } from "../src/annotations/reference-token-parse.ts";
+import { toReferenceTokens } from "../src/annotations/reference-tokens.ts";
 import {
   findResult,
   lookupResultAt,

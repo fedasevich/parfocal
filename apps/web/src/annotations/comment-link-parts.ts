@@ -1,7 +1,7 @@
 import type { CommentLinkPart } from "@parfocal/ui/lib/comment-links";
 import type { LayerName, Reach } from "./comment-bus.ts";
 import type { Reference } from "./comment-references.ts";
-import { reachOfToken, referenceToken } from "./reference-tokens.ts";
+import { reachOfToken, referenceToken } from "./reference-token-parse.ts";
 
 const objectId = "[TCRZMAN]\\d+(?:[·.][TCRZMAN]?\\d+)*[⁺+]?";
 
