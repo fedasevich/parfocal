@@ -117,7 +117,6 @@ function ThreadPopover({
         label={t`Reply to this thread`}
         placeholder={t`Write a reply`}
         sendLabel={t`Reply`}
-        hint={t`Enter posts, Shift+Enter adds a line`}
         offReason={offReason ?? (busy ? t`Posting your reply` : undefined)}
       />
       {failed ? (

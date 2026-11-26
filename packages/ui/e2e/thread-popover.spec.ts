@@ -29,6 +29,7 @@ test("Enter posts a reply and Shift+Enter adds a line", async ({ page }) => {
   await page.goto(story("components-thread-popover--open-thread"));
   const field = page.getByRole("textbox", { name: "Reply to this thread" });
   await expect(page.getByRole("button", { name: /^Reply/ }).last()).toBeDisabled();
+  await expect(popover(page)).not.toContainText("Enter posts");
   await field.fill("First line");
   await page.keyboard.press("Shift+Enter");
   await page.keyboard.type("Second line");

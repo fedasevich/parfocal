@@ -99,7 +99,6 @@ function Composer({
           if (!busy) onSend(text);
         }}
         label={t`Comment at the pin`}
-        hint={t`Enter posts, Shift+Enter adds a line`}
         offReason={offReason}
       />
       {failed ? (

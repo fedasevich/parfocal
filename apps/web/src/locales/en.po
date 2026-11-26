@@ -7581,11 +7581,6 @@ msgstr "Enter an email address."
 msgid "Enter at least 1."
 msgstr "Enter at least 1."
 
-#: ../../packages/ui/src/components/thread-popover.tsx
-#: src/annotations/pin-layer.tsx
-msgid "Enter posts, Shift+Enter adds a line"
-msgstr "Enter posts, Shift+Enter adds a line"
-
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>"
 msgstr "Enter the {codeLength}-character code we sent to <0>{email}</0>"

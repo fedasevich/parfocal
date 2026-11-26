@@ -49,6 +49,7 @@ test("C places a pin, Shift+Enter adds a line and Enter posts", async ({ page })
   await page.mouse.click(box.x + 500, box.y + 450);
   const composer = page.getByRole("textbox", { name: "Comment at the pin" });
   await expect(composer).toBeFocused();
+  await expect(page.getByTestId("pin-composer")).not.toContainText("Enter posts");
   await expect(pins(page)).toHaveCount(0);
   await page.keyboard.type("First line");
   await page.keyboard.press("Shift+Enter");
@@ -137,6 +138,7 @@ test("clicking a pin opens its thread, a reply joins it and Escape closes it", a
   await expect(thread(page).locator('[data-slot="comment"]').first()).toContainText("just now");
   const reply = thread(page).getByRole("textbox", { name: "Reply to this thread" });
   await expect(reply).toBeFocused();
+  await expect(thread(page)).not.toContainText("Enter posts");
   await reply.fill("Yes, it follows the fold");
   await page.keyboard.press("Enter");
   await expect(thread(page).locator('[data-slot="comment"]')).toHaveCount(2);

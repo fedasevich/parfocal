@@ -7576,11 +7576,6 @@ msgstr ""
 msgid "Enter at least 1."
 msgstr ""
 
-#: ../../packages/ui/src/components/thread-popover.tsx
-#: src/annotations/pin-layer.tsx
-msgid "Enter posts, Shift+Enter adds a line"
-msgstr ""
-
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>"
 msgstr ""
