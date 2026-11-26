@@ -24,6 +24,7 @@ import type {
 } from "../generated/api.ts";
 import { viewerPartsOf } from "./analysis-templates.ts";
 import { currentAnnouncements } from "./announcement-board.ts";
+import { changedMember } from "./people-actions.ts";
 import { profileChangeHandler, withProfileChanges } from "./profile-changes.ts";
 import { importSourcesHandler, linkImportHandler, sourceFilesHandler } from "./project-handlers.ts";
 import {
@@ -467,7 +468,7 @@ export function scenarioHandlers(): RequestHandler[] {
       const chosen = toMe().workspaces.find((workspace) => workspace.tenant_id === tenant_id);
       return HttpResponse.json(chosen);
     }),
-    getListTenantMembersMockHandler(toMembers()),
+    getListTenantMembersMockHandler(() => toMembers().map(changedMember)),
     http.get("*/api/projects/deleted", () =>
       HttpResponse.json(
         projects

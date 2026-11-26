@@ -10,6 +10,34 @@ export function adminSwitchOf(role: Member["role"], holds: boolean, holders: num
   return holds ? "on" : "off";
 }
 
+export type MemberAction =
+  | "make-researcher"
+  | "make-reviewer"
+  | "give-admin"
+  | "remove-admin"
+  | "cancel-removal"
+  | "remove";
+
+export function memberActionsOf(person: {
+  role: Member["role"];
+  holdsRight: boolean;
+  holders: number;
+  isViewer: boolean;
+  deactivated: boolean;
+  scheduled: boolean;
+}): MemberAction[] {
+  if (person.deactivated) return [];
+  const actions: MemberAction[] = [];
+  const admin = adminSwitchOf(person.role, person.holdsRight, person.holders);
+  if (person.role === "reviewer") actions.push("make-researcher");
+  if (person.role === "researcher" && !person.holdsRight) actions.push("make-reviewer");
+  if (admin === "on") actions.push("remove-admin");
+  if (admin === "off") actions.push("give-admin");
+  if (person.scheduled) actions.push("cancel-removal");
+  else if (!person.isViewer && admin !== "locked") actions.push("remove");
+  return actions;
+}
+
 export function shownInvitations(
   invitations: Invitation[],
   find: string,

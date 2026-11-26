@@ -1513,6 +1513,11 @@ msgstr ""
 msgid "{0} sources"
 msgstr ""
 
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "{0} stays in the workspace."
+msgstr ""
+
 #. placeholder {0}: plural(summary.open_threads.total, "thread")
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} still open"
@@ -1622,6 +1627,11 @@ msgstr ""
 msgid "{0} was redrawn by {1} on "
 msgstr ""
 
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "{0} was removed and can no longer sign in here."
+msgstr ""
+
 #. placeholder {0}: created.name
 #. placeholder {1}: plural(created.reviewer_count, "expert")
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -1636,6 +1646,11 @@ msgstr ""
 #. placeholder {0}: andJoin(people.map((person) => person.name))
 #: src/screens/new-task/send-step.tsx
 msgid "{0} were told by email. Each sees it at the top of My work, with one button to start."
+msgstr ""
+
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "{0} will be removed on {leaveDay}."
 msgstr ""
 
 #. placeholder {0}: row.count
@@ -5062,6 +5077,10 @@ msgstr ""
 
 #: src/screens/jobs/job-window-screen.tsx
 msgid "Cancel the run"
+msgstr ""
+
+#: src/screens/admin/people-menu.tsx
+msgid "Cancel the scheduled removal"
 msgstr ""
 
 #: src/viewer/annotate-task-panel.tsx
@@ -8635,6 +8654,10 @@ msgstr ""
 
 #: src/screens/admin/role-permissions.tsx
 msgid "Give decisions, annotate, fix results, comment"
+#: src/screens/admin/people-menu.tsx
+msgid "Give admin rights"
+msgstr ""
+
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -10058,6 +10081,10 @@ msgstr ""
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Left"
 msgstr ""
+#: src/screens/admin/people.tsx
+msgid "Leaves {leaves}"
+msgstr ""
+
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "Left open"
@@ -10641,6 +10668,14 @@ msgstr ""
 
 #: src/screens/admin/sections.tsx
 msgid "Makes"
+msgstr ""
+
+#: src/screens/admin/people-menu.tsx
+msgid "Make a researcher"
+msgstr ""
+
+#: src/screens/admin/people-menu.tsx
+msgid "Make a reviewer"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
@@ -12375,6 +12410,10 @@ msgstr ""
 #: src/screens/developer/developer-screen.tsx
 msgid "Nuclei"
 msgstr ""
+#: src/screens/admin/people-menu.tsx
+msgid "Now"
+msgstr ""
+
 
 #. placeholder {0}: scaleText(proposals.micronsPerPixel)
 #: src/annotations/context-bar.tsx
@@ -12982,6 +13021,10 @@ msgstr ""
 
 #. placeholder {0}: times(link.opened_count)
 #: src/screens/evaluation/share-links.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Open work that goes back"
+msgstr ""
+
 msgid "Opened {0}"
 msgstr ""
 
@@ -14583,11 +14626,17 @@ msgid "Remove {0}"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
+#: src/screens/admin/people-menu.tsx
 msgid "Remove {name}"
 msgstr ""
 
 #: src/screens/viewer/objects-panel.tsx
 msgid "Remove {object}"
+#. placeholder {0}: member.display_name
+#: src/screens/admin/people-menu.tsx
+msgid "Remove {0} from the workspace"
+msgstr ""
+
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -14596,6 +14645,10 @@ msgstr ""
 
 #: src/screens/admin/retention.tsx
 msgid "Remove deleted items after"
+#: src/screens/admin/people-menu.tsx
+msgid "Remove admin rights"
+msgstr ""
+
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
@@ -14604,11 +14657,23 @@ msgid "Remove from this upload"
 msgstr ""
 
 #: src/screens/upload/check-step.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Remove from the workspace"
+msgstr ""
+
 msgid "Remove the 4 largest slides from this upload"
 msgstr ""
 
 #. placeholder {0}: item.name
 #: src/screens/settings/settings-screen.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Remove on"
+msgstr ""
+
+#: src/screens/admin/people-menu.tsx
+msgid "Remove on, optional"
+msgstr ""
+
 msgid "Remove the passkey {0}"
 msgstr ""
 
@@ -14622,6 +14687,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/annotations/layers-tree.tsx
+#: src/screens/admin/people.tsx
+msgid "Removed"
+msgstr ""
+
 msgid "Rename"
 msgstr ""
 
@@ -14816,6 +14885,10 @@ msgid "Resend the invite to {0}"
 msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Resend the invite"
+msgstr ""
+
 msgid "Reset"
 msgstr ""
 
@@ -15323,6 +15396,19 @@ msgid "Revoke the token for {0}"
 msgstr ""
 
 #: src/screens/evaluation/share-links.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Revoke invite"
+msgstr ""
+
+#: src/screens/admin/people-menu.tsx
+msgid "Revoke the invite"
+msgstr ""
+
+#. placeholder {0}: invitation.email
+#: src/screens/admin/people-menu.tsx
+msgid "Revoke the invite to {0}"
+msgstr ""
+
 msgid "Revoked"
 msgstr ""
 
@@ -17107,6 +17193,10 @@ msgstr ""
 
 #. placeholder {0}: list.scope
 #: src/viewer/live-top-bar.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "Slides go back to the pool, tasks to the project owners, adjudications to the queue, and open threads are resolved."
+msgstr ""
+
 msgid "Slides in this {0}"
 msgstr ""
 
@@ -18559,6 +18649,11 @@ msgstr ""
 
 #: src/app-tour/tour-chapters.ts
 msgid "The jobs button counts what runs in the background, such as uploads and model runs. Press it for each job and its progress."
+#. placeholder {0}: invitation.email
+#: src/screens/admin/people.tsx
+msgid "The invite to {0} was revoked."
+msgstr ""
+
 msgstr ""
 
 #: src/screens/clinical-report/steps.tsx
@@ -18581,6 +18676,10 @@ msgstr ""
 
 #: src/screens/admin/join-settings.tsx
 msgid "The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
+#: src/screens/admin/people-menu.tsx
+msgid "The link in their email stops working. You can invite them again later."
+msgstr ""
+
 msgstr ""
 
 #: src/app-tour/tour-chapters.ts
@@ -19348,6 +19447,10 @@ msgstr ""
 #: src/screens/admin/people.tsx
 msgid "They get a one-step sign-up."
 msgstr ""
+#: src/screens/admin/people-menu.tsx
+msgid "They can no longer sign in here. Their decisions, sign-offs and audit entries stay as they are."
+msgstr ""
+
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "They get every slide of the task and an email."
@@ -19368,6 +19471,10 @@ msgstr ""
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "They stay open after the sign-off."
 msgstr ""
+#: src/screens/admin/people-menu.tsx
+msgid "They have no open work."
+msgstr ""
+
 
 #: src/study/study-copy.ts
 msgid "Think about the whole app. Write as much or as little as you want, or leave it empty."
@@ -21270,6 +21377,10 @@ msgid "Worklist"
 msgstr ""
 
 #: src/screens/worklist-spike/worklist-spike.tsx
+#: src/screens/admin/people-menu.tsx
+msgid "With a date they keep access until then, and you can cancel before it comes."
+msgstr ""
+
 msgid "Worklist rows"
 msgstr ""
 
