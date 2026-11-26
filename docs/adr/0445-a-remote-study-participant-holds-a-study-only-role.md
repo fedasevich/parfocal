@@ -1,4 +1,4 @@
-# XXXX. A remote study participant holds a study only role that reaches only their own prepared project
+# 0445. A remote study participant holds a study only role that reaches only their own prepared project
 
 - Date: 2026-11-26
 - Status: Accepted
