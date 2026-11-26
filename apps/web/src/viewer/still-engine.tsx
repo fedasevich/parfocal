@@ -66,6 +66,7 @@ export function StillEngine({
     hidden: 0,
     scope: 0,
     styles: "[]",
+    shown: "[]",
     colours: "{}",
   });
 
@@ -178,6 +179,7 @@ export function StillEngine({
           opacity: overlay.opacity,
         })),
       ),
+      shown: JSON.stringify(result?.shown ?? []),
       colours: JSON.stringify(
         Object.fromEntries(
           placed.map((object) => [object.id, module.objectColour(object, colourBy)]),
@@ -199,6 +201,7 @@ export function StillEngine({
         data-hidden={drawn.hidden}
         data-scope={drawn.scope}
         data-styles={drawn.styles}
+        data-shown={drawn.shown}
         data-colours={drawn.colours}
         data-draw={choices.draw}
         data-width={choices.width}

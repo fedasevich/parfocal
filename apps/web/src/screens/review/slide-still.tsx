@@ -403,6 +403,7 @@ export function SlideStill({
                       fill="none"
                       stroke="#0b0b0b"
                       strokeWidth={2}
+                      strokeOpacity={custom?.opacity}
                       data-double-line=""
                       vectorEffect="non-scaling-stroke"
                     />

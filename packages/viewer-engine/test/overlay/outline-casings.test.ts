@@ -88,7 +88,7 @@ test("an AI proposal is a near-black dashed ring from mid first edge on a white 
       .value,
   ];
   assert.deepEqual(pathOf(outline), [5, 0, 10, 0, 10, 10, 0, 10, 0, 0, 5, 0]);
-  assert.deepEqual(pathOf(casing), [0, 0, 10, 0, 10, 10, 0, 10, 0, 0, 10, 0]);
+  assert.deepEqual(pathOf(casing), [5, 0, 10, 0, 10, 10, 0, 10, 0, 0, 5, 0]);
   assert.ok(attributeNames(layer(layers, "fills")).includes("getFillColor"));
   assert.deepEqual(dots.getFillColor, nearBlack);
   assert.deepEqual(dots.getLineColor, white);
@@ -131,7 +131,7 @@ test("a casing that follows alpha takes each outline's alpha in its own colour",
   assert.equal(find(builder.build([overlay])).data, casing.data);
 });
 
-test("the mid edge ring is cached per build and solid outlines keep their wrapped vertices", () => {
+test("solid and dashed outlines both start mid first edge so no edge is drawn twice", () => {
   const builder = createOverlayLayerBuilder();
   const overlay = createVectorOverlay({ id: "a", kind: "ai-proposals", shapes: { polygons } });
   const outlineOf = (built: unknown[]) =>
@@ -141,7 +141,7 @@ test("the mid edge ring is cached per build and solid outlines keep their wrappe
   const solid = layer(build("human-annotations"), "outlines");
   const solidPath = (solid.data as { attributes: { getPath: { value: Float32Array } } }).attributes
     .getPath.value;
-  assert.deepEqual([...solidPath], [0, 0, 10, 0, 10, 10, 0, 10, 0, 0, 10, 0]);
+  assert.deepEqual([...solidPath], [5, 0, 10, 0, 10, 10, 0, 10, 0, 0, 5, 0]);
 });
 
 test("an outline follows the outer ring and every hole as separate closed loops", () => {
@@ -160,7 +160,7 @@ test("an outline follows the outer ring and every hole as separate closed loops"
   assert.ok(path && !(path instanceof Uint32Array));
   assert.deepEqual(
     [...path.value.subarray(12, 24)],
-    [10, 10, 10, 30, 30, 30, 30, 10, 10, 10, 10, 30],
+    [10, 20, 10, 30, 30, 30, 30, 10, 10, 10, 10, 20],
   );
   const colors = data.attributes.getColor;
   assert.ok(colors && !(colors instanceof Uint32Array));

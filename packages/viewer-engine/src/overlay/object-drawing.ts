@@ -111,6 +111,7 @@ export function createObjectDrawing(options: ObjectDrawingOptions): ObjectDrawin
       apply();
     },
     setCurrent: (id) => {
+      if (id === currentId && last !== null) return;
       currentId = id;
       apply();
     },

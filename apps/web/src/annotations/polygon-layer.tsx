@@ -36,6 +36,7 @@ type PolygonLayerProps = {
   onClose: (points: Float32Array) => void;
   draftControl?: RefObject<DraftControl | null>;
   classColour?: ClassColour;
+  opacity?: number;
 };
 
 export type DraftControl = { readonly depth: () => number; readonly pop: () => void };
@@ -66,6 +67,7 @@ export function PolygonLayer({
   onClose,
   draftControl,
   classColour = noClassColour,
+  opacity = 1,
 }: PolygonLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
@@ -260,8 +262,11 @@ export function PolygonLayer({
             data-vertices={Array.from(shape.points, (value) => Math.round(value)).join(" ")}
             d={pathOf(verticesOf(shape.points).map(project), true)}
             style={
-              colour === null ? undefined : { stroke: colour, fill: colour, fillOpacity: 0.15 }
+              colour === null
+                ? { opacity }
+                : { stroke: colour, fill: colour, fillOpacity: 0.15, opacity }
             }
+            data-opacity={opacity}
             strokeWidth={2}
             strokeLinejoin="round"
           />

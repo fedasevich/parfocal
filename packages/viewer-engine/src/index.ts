@@ -575,6 +575,7 @@ export {
   maxDrawOpacity,
   minDrawOpacity,
   objectColour,
+  type ShownAlpha,
   scoreColour,
 } from "./overlay/draw-style.ts";
 export {

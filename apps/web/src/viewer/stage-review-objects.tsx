@@ -2,6 +2,7 @@ import { useLingui } from "@lingui/react/macro";
 import { ApiError, type ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
+import type { ShownAlpha } from "@parfocal/viewer-engine";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { geometryOf, inRing, type Ring } from "../annotations/ai-edit.ts";
 import { loadClipper } from "../annotations/brush.ts";
@@ -126,21 +127,20 @@ function useDrawing(
   objects: Placed,
   choices: ReturnType<typeof drawChoicesOf>,
   current: string | null,
-) {
+): ShownAlpha[] {
   const drawing = useMemo(
     () => module.createObjectDrawing({ id, host: engine, kind }),
     [module, engine, id, kind],
   );
+  const [shown, setShown] = useState<ShownAlpha[]>([]);
   useEffect(() => () => drawing.clear(), [drawing]);
   useEffect(() => {
     drawing.setObjects(objects);
-  }, [drawing, objects]);
-  useEffect(() => {
     drawing.setChoices(choices);
-  }, [drawing, choices]);
-  useEffect(() => {
     drawing.setCurrent(current);
-  }, [drawing, current]);
+    setShown([...(drawing.result()?.shown ?? [])]);
+  }, [drawing, objects, choices, current]);
+  return shown;
 }
 
 function withDecisions(shown: Placed, decisionKey: string): Placed {
@@ -250,9 +250,17 @@ function ObjectOutlines({
     [choices],
   );
   const currentReviewed = current !== null && reviewed.some((item) => item.id === current);
-  useDrawing(engine, module, overlayId, "nuclei", kept, choices, currentReviewed ? null : current);
+  const keptShown = useDrawing(
+    engine,
+    module,
+    overlayId,
+    "nuclei",
+    kept,
+    choices,
+    currentReviewed ? null : current,
+  );
   useDrawing(engine, module, `${overlayId}-ai-dimmed`, "nuclei", dimmed, dimmedChoices, null);
-  useDrawing(
+  const reviewedShown = useDrawing(
     engine,
     module,
     `${overlayId}-reviewed`,
@@ -271,6 +279,7 @@ function ObjectOutlines({
       data-draw={choices.draw}
       data-width={choices.width}
       data-opacity={choices.opacity}
+      data-shown={JSON.stringify([...keptShown, ...reviewedShown])}
       data-color-by={choices.colorBy}
       data-cutoff={choices.cutoff}
     />

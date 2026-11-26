@@ -14,6 +14,7 @@ import {
   drawObjectOverlays,
   scoreColour,
 } from "../../src/index.ts";
+import { currentRingFloor, filledAlpha, shownAlphaOf } from "../../src/overlay/draw-style.ts";
 
 const square = (x: number, y: number, size = 10) => [
   x,
@@ -85,9 +86,49 @@ test("dots draw cells as points at their centre and keep regions as outlines", (
 test("opacity is clamped between 0 and 100 and sets the overlay opacity", () => {
   assert.equal(clampOpacity(-5), 0);
   assert.equal(clampOpacity(250), 100);
-  assert.equal(overlay(draw({ opacity: 40 }), "main").opacity, 0.4);
+  assert.ok(Math.abs(shownAlphaOf(overlay(draw({ opacity: 40 }), "main").opacity) - 0.4) < 1e-9);
   assert.equal(overlay(draw({ opacity: 0 }), "main").opacity, 0);
   assert.equal(overlay(draw(), "main").opacity, 1);
+});
+
+test("the opacity the layer is given draws as exactly the share the person chose", () => {
+  for (const share of [10, 25, 55, 100]) {
+    const drawn = draw({ opacity: share, cutoff: 0 });
+    const main = overlay(drawn, "main");
+    assert.ok(Math.abs(shownAlphaOf(main.opacity) - share / 100) < 1e-9);
+    assert.ok(
+      Math.abs((drawn.shown.find((entry) => entry.part === "main")?.outline ?? 0) - share / 100) <
+        1e-9,
+    );
+  }
+});
+
+test("the current ring fades with the opacity but never below its floor", () => {
+  const picked = { id: "C1", tint: null };
+  const at = (opacity: number) =>
+    drawObjectOverlays({
+      id: "o",
+      objects,
+      settings: { ...defaultDrawSettings, opacity, cutoff: 0 },
+      current: picked,
+    });
+  const ringAlpha = (opacity: number) => {
+    const ring = at(opacity).overlays.find((entry) => entry.id === "o:current");
+    return shownAlphaOf(ring?.opacity ?? -1);
+  };
+  assert.ok(Math.abs(ringAlpha(100) - 1) < 1e-9);
+  assert.ok(Math.abs(ringAlpha(0) - currentRingFloor) < 1e-9);
+  assert.ok(ringAlpha(10) > ringAlpha(0));
+  assert.ok(ringAlpha(10) < 0.6);
+  assert.equal(at(10).shown.find((entry) => entry.part === "current")?.fill, 0);
+});
+
+test("fills and dots report the chosen share as their own alpha", () => {
+  const filled = draw({ draw: "fill", opacity: 10, cutoff: 0 });
+  assert.ok(Math.abs((filled.shown[0]?.fill ?? 0) - 0.1 * shownAlphaOf(filledAlpha)) < 1e-9);
+  const dotted = draw({ draw: "dots", opacity: 10, cutoff: 0 });
+  assert.ok(Math.abs((dotted.shown[0]?.dot ?? 0) - 0.1) < 1e-9);
+  assert.equal(draw({ draw: "outline", cutoff: 0 }).shown[0]?.dot, null);
 });
 
 test("colour by class, score and decision pick different colours", () => {
