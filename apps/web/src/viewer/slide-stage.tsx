@@ -1112,6 +1112,7 @@ function OpenedSlide({
                     : null}
                   {session ? (
                     <ThreadFocus
+                      slideId={slideId}
                       engine={session.engine}
                       areas={areas}
                       request={inspector.focus ?? null}

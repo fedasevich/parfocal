@@ -18,6 +18,8 @@ import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { sameObjectId } from "@parfocal/ui/lib/object-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
+import { objectAnchor } from "../../annotations/comment-target.ts";
+import { useReferencePicking } from "../../annotations/reference-picker.tsx";
 import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -105,6 +107,7 @@ export function ObjectThread({
   const query = mentionQuery(draft);
   const options = mentionOptions(draft, members, meId, blind ? blindReviewers : []);
   const pickable = options.filter((option) => !option.disabledReason);
+  const referencing = useReferencePicking(draft, setDraft);
   const pick = (id: string) => {
     const name = members.find((member) => member.id === id)?.name;
     if (name) setDraft(withMention(draft, name));
@@ -138,7 +141,7 @@ export function ObjectThread({
       data: {
         title: pinTitle(text),
         body,
-        anchor: { kind: "object", object_id: object, geometry: null, offset: null },
+        anchor: { ...objectAnchor(object), geometry: null, offset: null },
       },
     });
   };
@@ -170,6 +173,10 @@ export function ObjectThread({
         replyingTo={replyingTo?.author.name}
         onCancelReply={() => setReplyTo(null)}
         onPickerKey={(key) => {
+          if (referencing) {
+            referencing.onPickerKey(key);
+            return;
+          }
           if (key === "Escape") {
             setDraft(`${draft} `);
             return;
@@ -183,7 +190,9 @@ export function ObjectThread({
           if (chosen) pick(chosen.id);
         }}
         picker={
-          query === undefined ? undefined : (
+          referencing ? (
+            referencing.picker
+          ) : query === undefined ? undefined : (
             <MentionPicker
               options={options}
               activeId={pickable[Math.min(active, pickable.length - 1)]?.id}

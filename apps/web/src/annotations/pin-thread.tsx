@@ -10,6 +10,7 @@ import { useMentionable } from "../screens/review/use-mentionable.ts";
 import { shapeOfObject } from "./anchor-place.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { useSavedCodes } from "./drawn-object-ids.ts";
+import { useReferencePicking } from "./reference-picker.tsx";
 import {
   homeOf,
   markResolved,
@@ -24,7 +25,7 @@ type PinThreadProps = {
   thread: Thread;
   document: AnnotationDocument;
   micronsPerPixel: number | null;
-  spot: PopoverSpot;
+  spot: PopoverSpot | null;
   onClose: () => void;
 };
 
@@ -47,13 +48,16 @@ export function PinThread({
       .data,
   );
   const [reply, setReply] = useState("");
+  const referencing = useReferencePicking(reply, setReply);
   const section = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     section.current?.querySelector("textarea")?.focus();
   }, []);
 
+  const floating = spot !== null;
   useEffect(() => {
+    if (!floating) return;
     const away = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
@@ -63,7 +67,7 @@ export function PinThread({
     };
     window.addEventListener("pointerdown", away, true);
     return () => window.removeEventListener("pointerdown", away, true);
-  }, [onClose]);
+  }, [onClose, floating]);
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: threadKey(home, threadId) });
@@ -109,8 +113,8 @@ export function PinThread({
       ref={section}
       data-testid="pin-thread"
       data-thread={threadId}
-      className="pointer-events-auto absolute z-10"
-      style={{ left: spot.left, top: spot.top }}
+      className={spot === null ? "grid" : "pointer-events-auto absolute z-10"}
+      style={spot === null ? undefined : { left: spot.left, top: spot.top }}
     >
       <ThreadPopover
         title={thread.title}
@@ -128,6 +132,8 @@ export function PinThread({
         )}
         reply={reply}
         onReplyChange={setReply}
+        replyPicker={referencing?.picker}
+        onReplyPickerKey={referencing?.onPickerKey}
         onSend={send}
         busy={replying.isPending}
         failed={failed}

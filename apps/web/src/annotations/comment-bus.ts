@@ -1,8 +1,13 @@
+import type { Thread } from "@parfocal/api-client";
 import { useSyncExternalStore } from "react";
 
 export type Reach =
   | { readonly kind: "object"; readonly id: string }
-  | { readonly kind: "layer"; readonly key: string };
+  | { readonly kind: "layer"; readonly key: string }
+  | { readonly kind: "anchor"; readonly anchor: Thread["anchor"] }
+  | { readonly kind: "slide"; readonly slideId: string };
+
+type Scoped = { readonly target: Reach; readonly slideId: string | null };
 
 type Listener<T> = (value: T) => void;
 
@@ -41,15 +46,22 @@ function store<T>(initial: T) {
   };
 }
 
-const reaches = channel<Reach>();
+const reaches = channel<Scoped>();
 const layerComments = channel<string>();
 const rowThreads = channel<string>();
 
 export const requestRowThread = rowThreads.send;
 export const onRowThread = rowThreads.listen;
 
-export const reachMention = reaches.send;
-export const onReach = reaches.listen;
+export const reachMention = (target: Reach, slideId: string | null = null) =>
+  reaches.send({ target, slideId });
+
+export const onReach = (slideId: string | null, listener: (target: Reach) => void) =>
+  reaches.listen((message) => {
+    if (message.slideId === null || slideId === null || message.slideId === slideId) {
+      listener(message.target);
+    }
+  });
 export const requestLayerComment = layerComments.send;
 export const onLayerComment = layerComments.listen;
 

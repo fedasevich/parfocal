@@ -10,7 +10,12 @@ import type { Extent, ShapeId } from "./shapes.ts";
 
 export type CommentTarget =
   | { readonly kind: "point"; readonly at: Point }
-  | { readonly kind: "object"; readonly objectId: string; readonly shapes: readonly ShapeId[] }
+  | {
+      readonly kind: "object";
+      readonly objectId: string;
+      readonly shapes: readonly ShapeId[];
+      readonly extent?: Extent | undefined;
+    }
   | { readonly kind: "shape"; readonly extent: Extent; readonly shapes: readonly ShapeId[] }
   | {
       readonly kind: "selection";
@@ -87,6 +92,7 @@ export function targetExtent(doc: AnnotationDocument, target: CommentTarget): Ex
     case "shape":
       return target.extent;
     case "object":
+      return target.shapes.length === 0 ? (target.extent ?? null) : unionBounds(doc, target.shapes);
     case "selection":
       return unionBounds(doc, target.shapes);
     case "layer":
@@ -116,6 +122,11 @@ export function targetLabel(target: CommentTarget): string {
   }
 }
 
+export const objectAnchor = (objectId: string): ThreadCreate["anchor"] => ({
+  kind: objectId.startsWith("R") ? "roi" : "object",
+  object_id: asciiObjectId(objectId),
+});
+
 function anchorOf(target: CommentTarget): ThreadCreate["anchor"] {
   switch (target.kind) {
     case "point":
@@ -124,10 +135,7 @@ function anchorOf(target: CommentTarget): ThreadCreate["anchor"] {
         geometry: { type: "Point", coordinates: [target.at.x, target.at.y] },
       };
     case "object":
-      return {
-        kind: target.objectId.startsWith("R") ? "roi" : "object",
-        object_id: asciiObjectId(target.objectId),
-      };
+      return objectAnchor(target.objectId);
     case "shape":
     case "region":
       return { kind: "shape", geometry: { type: "Polygon", coordinates: [ring(target.extent)] } };

@@ -1,5 +1,6 @@
 import type { CommentLinkPart } from "@parfocal/ui/lib/comment-links";
 import type { LayerName, Reach } from "./comment-bus.ts";
+import type { Reference } from "./comment-references.ts";
 
 const objectId = "[TCRZMAN]\\d+(?:[·.][TCRZMAN]?\\d+)*[⁺+]?";
 
@@ -9,13 +10,24 @@ export function linkParts(
   text: string,
   names: readonly LayerName[],
   reach: (target: Reach) => void,
+  extra: readonly Pick<Reference, "text" | "reach">[] = [],
 ): CommentLinkPart[] {
-  const layers = [...names]
-    .filter((item) => item.name.trim() !== "")
-    .sort((a, b) => b.name.length - a.name.length);
-  const layerPart = layers.map((item) => `#${literal(item.name)}`).join("|");
+  const named = new Map<string, Reach>();
+  for (const item of extra) {
+    if (item.text.trim() !== "") named.set(item.text, item.reach);
+  }
+  for (const item of names) {
+    if (item.name.trim() !== "") named.set(`#${item.name}`, { kind: "layer", key: item.key });
+  }
+  const namedPart = [...named.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map(literal)
+    .join("|");
+  const edge = "(?<![\\p{L}\\p{N}_])";
+  const end = "(?![\\p{L}\\p{N}_])";
+  const namedEnd = "(?![\\p{L}\\p{N}_·⁺+]|\\.[\\p{L}\\p{N}])";
   const pattern = new RegExp(
-    `(?<![\\p{L}\\p{N}_])(${objectId})(?![\\p{L}\\p{N}_])${layerPart ? `|(${layerPart})` : ""}`,
+    `${namedPart ? `${edge}(${namedPart})${namedEnd}|` : "()"}${edge}(${objectId})${end}`,
     "gu",
   );
   const parts: CommentLinkPart[] = [];
@@ -23,16 +35,14 @@ export function linkParts(
   for (const match of text.matchAll(pattern)) {
     const at = match.index ?? 0;
     if (at > last) parts.push(text.slice(last, at));
-    const [whole, object, layer] = match;
-    if (object !== undefined) {
+    const [whole, name, object] = match;
+    const found = name === undefined || name === "" ? undefined : named.get(name);
+    if (found !== undefined) {
+      parts.push({ text: whole, reach: () => reach(found) });
+    } else if (object !== undefined) {
       parts.push({ text: whole, reach: () => reach({ kind: "object", id: object }) });
-    } else if (layer !== undefined) {
-      const found = layers.find((item) => `#${item.name}` === layer);
-      parts.push(
-        found === undefined
-          ? whole
-          : { text: whole, reach: () => reach({ kind: "layer", key: found.key }) },
-      );
+    } else {
+      parts.push(whole);
     }
     last = at + whole.length;
   }

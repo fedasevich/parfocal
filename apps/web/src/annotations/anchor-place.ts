@@ -7,12 +7,14 @@ import { areaOfExtent } from "./comment-target.ts";
 import type { AnnotationDocument } from "./document.ts";
 import type { SavedCodes } from "./drawn-object-ids.ts";
 import { membersOf, shapeKey, unionBounds } from "./layers-tree.ts";
+import { findResult, type ResultObject, ringExtent } from "./result-objects.ts";
 import type { ShapeId } from "./shapes.ts";
 
 export type AnchorPlace = {
   readonly doc: AnnotationDocument;
   readonly codes: SavedCodes | undefined;
   readonly areas: readonly SlideAreaEntry[];
+  readonly results?: readonly ResultObject[] | undefined;
 };
 
 type Anchor = Thread["anchor"];
@@ -37,6 +39,9 @@ export function anchorArea(anchor: Anchor, place: AnchorPlace): SlideArea | null
   const shapes = anchorShapes(anchor, place);
   if (shapes.length > 0) return areaOfExtent(unionBounds(place.doc, shapes));
   if (anchor.kind === "layer") return null;
+  const result = anchor.object_id ? findResult(place.results ?? [], anchor.object_id) : undefined;
+  const ring = result === undefined ? null : ringExtent(result.ring);
+  if (ring !== null) return areaOfExtent(ring);
   return threadTarget(anchor, place.areas);
 }
 

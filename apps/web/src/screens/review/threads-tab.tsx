@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import {
   type Thread,
   useGetReviewTask,
@@ -5,13 +6,22 @@ import {
   useListThreads,
   useListThreadsOnSlide,
 } from "@parfocal/api-client";
+import { Button } from "@parfocal/ui/components/button";
 import { CommentsTab, type CommentThreadCard } from "@parfocal/ui/components/comments-tab";
 import type { ThreadFilter } from "@parfocal/ui/lib/comment-threads";
+import { useEffect, useState } from "react";
 import { anchorWords } from "../../annotations/anchor-words.ts";
+import { reachMention } from "../../annotations/comment-bus.ts";
+import { publishReferences } from "../../annotations/comment-references.ts";
+import { createDocument } from "../../annotations/document.ts";
+import { anchorReferences } from "../../annotations/pin-references.ts";
+import { PinThread } from "../../annotations/pin-thread.tsx";
 import { threadScope } from "../../annotations/thread-home.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { formatStamp } from "./object-comments.tsx";
+
+const noDocument = createDocument();
 
 type LayerNameOf = (key: string) => string | undefined;
 
@@ -78,7 +88,12 @@ export function ThreadsTab({
 }: ThreadsTabProps) {
   const { threads, taskName, setName } = useTaskAndSlideThreads(taskId, slideId);
   const person = usePeople();
+  const [reading, setReading] = useState<string | null>(null);
   const shown = hidden ? [] : threads;
+  const read = shown.find((thread) => thread.id === reading);
+  const source = `tab:${slideId}`;
+  useEffect(() => publishReferences(source, anchorReferences(shown)));
+  useEffect(() => () => publishReferences(source, []), [source]);
   const selectedThread = shown.find((thread) => thread.anchor.object_id === selected);
   const filter: ThreadFilter =
     selectedThread && selectedThread.resolved_at !== null ? "resolved" : "open";
@@ -94,6 +109,31 @@ export function ThreadsTab({
     resolved: thread.resolved_at !== null,
   }));
   const anchorOf = (id: string) => shown.find((thread) => thread.id === id)?.anchor.object_id;
+  const reachOther = (id: string) => {
+    const thread = shown.find((item) => item.id === id);
+    if (thread) reachMention({ kind: "anchor", anchor: thread.anchor }, slideId);
+  };
+  if (read) {
+    return (
+      <div data-testid="thread-reader" data-thread={read.id} className="grid gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-body text-fg-dim">
+            {anchorLabel(read)} · {anchorKind(read)}
+          </span>
+          <Button size="sm" variant="secondary" onClick={() => setReading(null)}>
+            <Trans>All comments</Trans>
+          </Button>
+        </div>
+        <PinThread
+          thread={read}
+          document={noDocument}
+          micronsPerPixel={null}
+          spot={null}
+          onClose={() => setReading(null)}
+        />
+      </div>
+    );
+  }
   return (
     <CommentsTab
       slideLabel={slideLabel}
@@ -104,10 +144,15 @@ export function ThreadsTab({
       onSelect={(id) => {
         const anchor = anchorOf(id);
         if (anchor) onOpen(anchor);
+        else {
+          reachOther(id);
+          setReading(id);
+        }
       }}
       onGoTo={(id) => {
         const anchor = anchorOf(id);
         if (anchor) onGoTo(anchor);
+        else reachOther(id);
       }}
       {...(onNewComment ? { onNewComment } : {})}
     />

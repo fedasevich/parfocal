@@ -21,6 +21,7 @@ function NotificationsPage({
   onOpen: (id: string, link: string, read: boolean) => void;
 }) {
   const { t } = useLingui();
+  const goTo = useGoTo();
   const [more, setMore] = useState(false);
   const query = useListNotifications({ limit: size, ...(cursor ? { cursor } : {}) });
   const page = okData(query.data);
@@ -40,7 +41,7 @@ function NotificationsPage({
       {page.notifications.map((item) => (
         <NotificationRow
           key={item.id}
-          item={toNotification(item)}
+          item={toNotification(item, (link) => void goTo(link))}
           onOpen={() => onOpen(item.id, item.link, item.read)}
         />
       ))}

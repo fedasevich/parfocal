@@ -1,8 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
-import { LinkedText } from "@parfocal/ui/components/comment-thread";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { LinkedText } from "@parfocal/ui/components/linked-text";
 import { Person, type PersonInfo } from "@parfocal/ui/components/person";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";

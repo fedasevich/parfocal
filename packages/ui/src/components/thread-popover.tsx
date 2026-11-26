@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
   CommentComposer,
+  type CommentComposerProps,
   type CommentMessage,
   CommentThread,
 } from "@parfocal/ui/components/comment-thread";
@@ -46,6 +47,8 @@ type ThreadPopoverProps = Omit<React.ComponentProps<"section">, "title" | "child
   busy?: boolean;
   reply: string;
   onReplyChange: (value: string) => void;
+  replyPicker?: React.ReactNode;
+  onReplyPickerKey?: CommentComposerProps["onPickerKey"];
   onSend: () => void;
   offReason?: string | undefined;
   onToggleResolved: () => void;
@@ -62,6 +65,8 @@ function ThreadPopover({
   busy = false,
   reply,
   onReplyChange,
+  replyPicker,
+  onReplyPickerKey,
   onSend,
   offReason,
   onToggleResolved,
@@ -113,6 +118,8 @@ function ThreadPopover({
       <CommentComposer
         value={reply}
         onValueChange={onReplyChange}
+        picker={replyPicker}
+        onPickerKey={onReplyPickerKey}
         onSend={onSend}
         label={t`Reply to this thread`}
         placeholder={t`Write a reply`}

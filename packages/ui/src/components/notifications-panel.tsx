@@ -1,10 +1,12 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import { LinkedText } from "@parfocal/ui/components/linked-text";
 import { NotificationsSkeleton, popoverRows } from "@parfocal/ui/components/notifications-skeleton";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
 import { CountBadge, ObjectIdTag } from "@parfocal/ui/components/tag";
+import { type CommentLinker, CommentLinksProvider } from "@parfocal/ui/lib/comment-links";
 import { useState } from "react";
 
 type NotificationGroup = "all" | "mentions" | "jobs";
@@ -15,7 +17,14 @@ type NotificationItem = {
   icon: IconName;
   title: string;
   detail?: string | undefined;
-  quote?: { text: string; objectId: string; slide?: string | undefined } | undefined;
+  quote?:
+    | {
+        text: string;
+        objectId: string;
+        slide?: string | undefined;
+        linker?: CommentLinker | undefined;
+      }
+    | undefined;
   time: string;
   read: boolean;
   action?: string | undefined;
@@ -36,7 +45,15 @@ function NotificationDetail({ item }: { item: NotificationItem }) {
   if (item.quote) {
     return (
       <small className={detailClass}>
-        "<Trans>{item.quote.text}" on</Trans> <ObjectIdTag>{item.quote.objectId}</ObjectIdTag>
+        "
+        {item.quote.linker ? (
+          <CommentLinksProvider value={item.quote.linker}>
+            <LinkedText text={item.quote.text} />
+          </CommentLinksProvider>
+        ) : (
+          item.quote.text
+        )}
+        " <Trans>on</Trans> <ObjectIdTag>{item.quote.objectId}</ObjectIdTag>
         {item.quote.slide ? ` · ${item.quote.slide}` : ""}
       </small>
     );

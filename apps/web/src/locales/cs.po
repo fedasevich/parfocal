@@ -1910,11 +1910,6 @@ msgstr ""
 msgid "{0}. Nothing was changed."
 msgstr ""
 
-#. placeholder {0}: item.quote.text
-#: ../../packages/ui/src/components/notifications-panel.tsx
-msgid "{0}\" on"
-msgstr ""
-
 #. placeholder {0}: report.project.code
 #. placeholder {1}: report.task_code
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -21992,10 +21987,6 @@ msgstr ""
 msgid "New thread on {label}"
 msgstr ""
 
-#: src/annotations/target-composer.tsx
-msgid "Objects and layers"
-msgstr ""
-
 #: src/annotations/layers-tree.tsx
 msgid "Open the comments on it"
 msgstr ""
@@ -22203,4 +22194,20 @@ msgstr ""
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "You have not handed out any review tasks yet"
+msgstr ""
+
+#: src/screens/review/threads-tab.tsx
+msgid "All comments"
+msgstr ""
+
+#: src/annotations/pin-layer.tsx
+msgid "Comment on {currentResult}"
+msgstr ""
+
+#: src/annotations/reference-picker.tsx
+msgid "Objects, layers and slides"
+msgstr ""
+
+#: ../../packages/ui/src/components/notifications-panel.tsx
+msgid "on"
 msgstr ""

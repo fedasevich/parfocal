@@ -209,13 +209,13 @@ test("the minimap falls back to the slide's smallest level while the thumbnail i
   await expect(minimap.locator("image")).toHaveAttribute("href", /^data:image\/jpeg/);
 });
 
-test("New comment and the C key arm the comment tool from the Comments tab in annotate", async ({
+test("Comment on the slide and the C key arm the comment tool from the Comments tab in annotate", async ({
   page,
 }) => {
   await page.goto(`/projects/${p07}/slides/${tumor044}?task=${rt14}&mode=annotate`);
   const stage = await ready(page);
   await page.getByRole("tab", { name: "Comments" }).click();
-  await page.getByRole("button", { name: /New comment/ }).click();
+  await page.getByRole("button", { name: /Comment on the slide/ }).click();
   await expect(stage).toHaveAttribute("data-tool", "comment");
   await page.keyboard.press("Escape");
   await expect(stage).not.toHaveAttribute("data-tool", "comment");

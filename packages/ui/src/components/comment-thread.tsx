@@ -2,40 +2,13 @@ import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { LinkedText } from "@parfocal/ui/components/linked-text";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
-import { useCommentLinker } from "@parfocal/ui/lib/comment-links";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 const mentionPattern = /(@\p{Lu}\p{Ll}+ \p{Lu}\p{Ll}+)/u;
-
-export function LinkedText({ text }: { text: string }) {
-  const linker = useCommentLinker();
-  if (linker === null) return <>{text}</>;
-  return (
-    <>
-      {linker(text).map((part, index) =>
-        typeof part === "string" ? (
-          part
-        ) : (
-          <button
-            key={`${index}-${part.text}`}
-            type="button"
-            data-slot="comment-link"
-            onClick={(event) => {
-              event.stopPropagation();
-              part.reach();
-            }}
-            className="inline cursor-pointer border-0 bg-transparent p-0 font-mono font-semibold text-accent underline decoration-dotted underline-offset-2 hover:decoration-solid"
-          >
-            {part.text}
-          </button>
-        ),
-      )}
-    </>
-  );
-}
 
 function MentionText({ text, className }: { text: string; className?: string }) {
   const parts = text.split(mentionPattern);

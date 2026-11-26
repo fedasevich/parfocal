@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { slideToScreen } from "../viewer/viewer-engine.ts";
 import { anchorWords } from "./anchor-words.ts";
 import { ContextExtra, contextChip } from "./context-extras.tsx";
+import { spacedMarks } from "./mark-spacing.ts";
 import type { Point } from "./polygon-draft.ts";
 import type { StageRect } from "./stage-size.ts";
 
@@ -32,8 +33,9 @@ export function AnchorMarks({
   const { t } = useLingui();
   return (
     <>
-      {marks.map(({ thread, point }) => {
-        const at = slideToScreen(camera, rect, point);
+      {spacedMarks(
+        marks.map(({ thread, point }) => ({ thread, at: slideToScreen(camera, rect, point) })),
+      ).map(({ thread, at }) => {
         const words = anchorWords(thread.anchor, layerName);
         const mark = initials(thread);
         return (
@@ -46,7 +48,7 @@ export function AnchorMarks({
             data-anchor={words.label}
             aria-label={t`${mark}, comment on ${words.label}: ${thread.title}`}
             title={`${words.label} · ${thread.title}`}
-            className={`${selecting ? "pointer-events-none" : "pointer-events-auto"} absolute grid h-6 min-w-6 -translate-y-full cursor-pointer place-items-center rounded-full rounded-bl-none border-2 border-accent-fill bg-chrome px-1 font-semibold text-caption text-accent shadow-md`}
+            className={`${selecting ? "pointer-events-none" : "pointer-events-auto"} absolute z-10 grid h-6 min-w-6 -translate-y-full cursor-pointer place-items-center rounded-full rounded-bl-none border-2 border-accent-fill bg-chrome px-1 font-semibold text-caption text-accent shadow-md`}
             style={{ left: at.x, top: at.y }}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={() => onOpen(thread.id)}
@@ -92,10 +94,12 @@ export function AnchorOutline({
 export function SelectionComment({
   stage,
   count,
+  label,
   onComment,
 }: {
   stage: HTMLElement;
   count: number;
+  label?: string | undefined;
   onComment: () => void;
 }) {
   const { t } = useLingui();
@@ -125,7 +129,8 @@ export function SelectionComment({
     return () => window.removeEventListener("pointerdown", away, true);
   }, [menu]);
   if (count === 0) return null;
-  const words = count === 1 ? t`Comment on the selected object` : t`Comment on ${count} objects`;
+  const words =
+    label ?? (count === 1 ? t`Comment on the selected object` : t`Comment on ${count} objects`);
   return (
     <>
       <ContextExtra>

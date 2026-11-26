@@ -5,6 +5,7 @@ import { onReach, type Reach } from "../annotations/comment-bus.ts";
 import type { AnnotationDocument } from "../annotations/document.ts";
 import { useSavedCodes } from "../annotations/drawn-object-ids.ts";
 import type { PinRegistry } from "../annotations/pin-registry.ts";
+import { useResultObjects } from "../annotations/result-objects.ts";
 import type { Extent, ShapeId } from "../annotations/shapes.ts";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -17,12 +18,21 @@ export type ThreadFocusRequest = {
 
 type Pick = (ids: readonly ShapeId[], bounds: Extent | null) => void;
 
-const anchorOfReach = (target: Reach): Thread["anchor"] =>
-  target.kind === "layer"
-    ? { kind: "layer", layer: target.key }
-    : { kind: "object", object_id: target.id };
+const anchorOfReach = (target: Reach): Thread["anchor"] | null => {
+  switch (target.kind) {
+    case "layer":
+      return { kind: "layer", layer: target.key };
+    case "object":
+      return { kind: "object", object_id: target.id };
+    case "anchor":
+      return target.anchor;
+    case "slide":
+      return null;
+  }
+};
 
 export function ThreadFocus({
+  slideId,
   engine,
   areas,
   request,
@@ -30,6 +40,7 @@ export function ThreadFocus({
   document: doc,
   onPick,
 }: {
+  slideId: string;
   engine: ViewerEngine;
   areas: readonly SlideAreaEntry[];
   request: ThreadFocusRequest | null;
@@ -38,7 +49,8 @@ export function ThreadFocus({
   onPick: Pick;
 }) {
   const codes = useSavedCodes();
-  const now = { place: { doc, codes, areas }, onPick, engine };
+  const results = useResultObjects(slideId);
+  const now = { place: { doc, codes, areas, results }, onPick, engine };
   const latest = useRef<{ place: AnchorPlace; onPick: Pick; engine: ViewerEngine }>(now);
   latest.current = now;
   const reach = useRef((anchor: Thread["anchor"]) => {
@@ -55,6 +67,13 @@ export function ThreadFocus({
     reach.current(request.anchor);
     if (request.openThreadId !== undefined) pinRegistry?.open(request.openThreadId);
   }, [request, pinRegistry]);
-  useEffect(() => onReach((target) => reach.current(anchorOfReach(target))), []);
+  useEffect(
+    () =>
+      onReach(slideId, (target) => {
+        const anchor = anchorOfReach(target);
+        if (anchor !== null) reach.current(anchor);
+      }),
+    [slideId],
+  );
   return null;
 }

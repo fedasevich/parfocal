@@ -1,8 +1,9 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { type Thread, useListThreads, useListThreadsOnSlide } from "@parfocal/api-client";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
+import { sameObjectId } from "@parfocal/ui/lib/object-id";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { markTried } from "../screens/home/getting-started.ts";
@@ -22,6 +23,7 @@ import {
   publishThreadCounts,
   useLayerNames,
 } from "./comment-bus.ts";
+import { publishReferences } from "./comment-references.ts";
 import {
   areaOfExtent,
   type CommentDraft,
@@ -34,11 +36,20 @@ import {
 import type { AnnotationDocument } from "./document.ts";
 import { useSavedCodes } from "./drawn-object-ids.ts";
 import { pickShape } from "./hit-test.ts";
+import { anchorReferences, drawnReferences } from "./pin-references.ts";
 import type { PinRegistry } from "./pin-registry.ts";
 import { removalDetail, removalTitle } from "./pin-removal.ts";
 import { PinThread } from "./pin-thread.tsx";
 import { dropPin, movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
 import type { Point } from "./polygon-draft.ts";
+import {
+  type ResultObject,
+  resultAt,
+  resultFor,
+  ringExtent,
+  useCurrentResult,
+  useResultObjects,
+} from "./result-objects.ts";
 import type { ShapeId } from "./shapes.ts";
 import { useStageRect } from "./stage-size.ts";
 import { TargetComposer } from "./target-composer.tsx";
@@ -46,8 +57,10 @@ import {
   homeOf,
   moveThreadPin,
   removeThread,
+  replyInThread,
   startThread,
   type ThreadHome,
+  threadKey,
   threadListKey,
 } from "./thread-home.ts";
 import { popoverSpot } from "./thread-popover.ts";
@@ -85,6 +98,21 @@ const noAreas: readonly SlideAreaEntry[] = [];
 const noSelection: readonly ShapeId[] = [];
 
 type Box = { from: Point; to: Point };
+
+const openThreadOn = (threads: readonly Thread[], objectId: string) =>
+  threads.find(
+    (thread) =>
+      thread.resolved_at === null &&
+      thread.anchor.object_id &&
+      sameObjectId(thread.anchor.object_id, objectId),
+  );
+
+const resultTarget = (item: ResultObject): CommentTarget => ({
+  kind: "object",
+  objectId: item.id,
+  shapes: [],
+  extent: ringExtent(item.ring) ?? undefined,
+});
 
 export function PinLayer({
   engine,
@@ -128,12 +156,27 @@ export function PinLayer({
   const codes = useSavedCodes();
   const names = useLayerNames();
   const layerName = (key: string) => names.find((item) => item.key === key)?.name;
-  const place: AnchorPlace = { doc, codes, areas };
+  const results = useResultObjects(slideId);
+  const currentResult = useCurrentResult(slideId);
+  const place: AnchorPlace = { doc, codes, areas, results };
+  const currentItem = currentResult === null ? undefined : resultFor(results, areas, currentResult);
   const [draft, setDraft] = useState<CommentDraft | null>(null);
   const [box, setBox] = useState<Box | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const now = { doc, engine, onDocumentChange, onCommit, draft, drag, openId, place, selected };
+  const now = {
+    doc,
+    engine,
+    onDocumentChange,
+    onCommit,
+    draft,
+    drag,
+    openId,
+    place,
+    selected,
+    threads,
+    currentResult,
+  };
   const latest = useRef(now);
   latest.current = now;
   const [removal, setRemoval] = useState<Removal | null>(null);
@@ -152,6 +195,10 @@ export function PinLayer({
     mutationFn: ({ home, data }: { home: ThreadHome; data: Parameters<typeof startThread>[1] }) =>
       startThread(home, data),
   });
+  const answer = useMutation({
+    mutationFn: ({ thread, body }: { thread: Thread; body: string }) =>
+      replyInThread(homeOf(thread), thread.id, { body }),
+  });
   const dragStart = useRef<{ from: Point; grab: Point } | null>(null);
 
   const openTarget = useCallback((target: CommentTarget, clicked?: Point) => {
@@ -166,11 +213,29 @@ export function PinLayer({
     setDraft({ target, at, clicked });
   }, []);
 
+  const commentOnResult = useCallback(
+    (item: ResultObject, clicked?: Point) => {
+      const existing = clicked ? undefined : openThreadOn(latest.current.threads, item.id);
+      if (existing !== undefined) {
+        setDraft(null);
+        setOpenId(existing.id);
+        return;
+      }
+      openTarget(resultTarget(item), clicked);
+    },
+    [openTarget],
+  );
+
   const commentOnSelection = useCallback(() => {
-    const { doc: shown, selected: picked, place: where } = latest.current;
+    const { doc: shown, selected: picked, place: where, currentResult: chosen } = latest.current;
     const target = targetOfShapes(shown, where.codes, picked);
-    if (target !== null) openTarget(target);
-  }, [openTarget]);
+    if (target !== null) {
+      openTarget(target);
+      return;
+    }
+    const item = chosen === null ? undefined : resultFor(where.results ?? [], where.areas, chosen);
+    if (item !== undefined) commentOnResult(item);
+  }, [openTarget, commentOnResult]);
 
   useEffect(() => {
     if (!active) {
@@ -180,7 +245,9 @@ export function PinLayer({
       setBox(null);
       return;
     }
-    if (latest.current.selected.length > 0) commentOnSelection();
+    if (latest.current.selected.length > 0 || latest.current.currentResult !== null) {
+      commentOnSelection();
+    }
   }, [active, commentOnSelection]);
 
   useEffect(
@@ -221,9 +288,12 @@ export function PinLayer({
           event.clientY,
         );
         const { doc: shown, place: where } = latest.current;
-        const hit = pickShape(shown, at, pinHitScreenPixels / 2 ** current.zoom);
+        const reach = pinHitScreenPixels / 2 ** current.zoom;
+        const hit = pickShape(shown, at, reach);
         const target = hit === null ? null : targetOfShapes(shown, where.codes, [hit.id]);
+        const result = target === null ? resultAt(where.results ?? [], at, reach) : null;
         if (target !== null) openTarget(target, at);
+        else if (result !== null) commentOnResult(result, at);
         else setDraft({ target: { kind: "point", at }, at });
       },
       onDrag: (from, event, done) => {
@@ -240,7 +310,7 @@ export function PinLayer({
         openTarget(regionTarget(start, end));
       },
     });
-  }, [active, stage, openTarget]);
+  }, [active, stage, openTarget, commentOnResult]);
 
   const draftAt = draft ? slideToScreen(camera, rect, draft.at) : null;
   const toleranceNow = () => pinHitScreenPixels / 2 ** latest.current.engine.getCamera().zoom;
@@ -249,6 +319,28 @@ export function PinLayer({
     const current = latest.current.draft;
     const data = current === null ? null : targetThread(current.target, text, members);
     if (current === null || data === null || startHome === null) return;
+    const on = current.target;
+    const existing =
+      on.kind === "object" && on.shapes.length === 0
+        ? openThreadOn(threads, on.objectId)
+        : undefined;
+    if (existing !== undefined) {
+      answer.mutate(
+        { thread: existing, body: data.body },
+        {
+          onSuccess: (response) => {
+            if (response.status >= 300) return;
+            refreshList(homeOf(existing));
+            void queryClient.invalidateQueries({
+              queryKey: threadKey(homeOf(existing), existing.id),
+            });
+            setDraft(null);
+            setOpenId(existing.id);
+          },
+        },
+      );
+      return;
+    }
     const point = current.target.kind === "point" ? current.target.at : null;
     const home = startHome;
     create.mutate(
@@ -390,6 +482,10 @@ export function PinLayer({
   };
   useEffect(() => onRowThread((key) => rowThread.current(key)), []);
   useEffect(() => () => publishThreadCounts(new Map()), []);
+  const referenceSource = `pins:${slideId}`;
+  const drawn = useMemo(() => drawnReferences(doc, codes), [doc, codes]);
+  useEffect(() => publishReferences(referenceSource, [...drawn, ...anchorReferences(threads)]));
+  useEffect(() => () => publishReferences(referenceSource, []), [referenceSource]);
 
   const pinned = pins.find(({ thread }) => thread.id === openId);
   const unpinned =
@@ -486,7 +582,16 @@ export function PinLayer({
       />
       <AnchorOutline area={outlined} camera={camera} rect={rect} />
       {selecting ? (
-        <SelectionComment stage={stage} count={selected.length} onComment={commentOnSelection} />
+        <SelectionComment
+          stage={stage}
+          count={selected.length > 0 ? selected.length : currentItem === undefined ? 0 : 1}
+          label={
+            selected.length === 0 && currentItem !== undefined
+              ? t`Comment on ${currentResult}`
+              : undefined
+          }
+          onComment={commentOnSelection}
+        />
       ) : null}
       {opened && openedAt ? (
         <PinThread
@@ -532,11 +637,10 @@ export function PinLayer({
           <TargetComposer
             key={`${draft.target.kind}:${draft.at.x},${draft.at.y}`}
             target={draft.target}
-            doc={doc}
             at={draftAt}
             offReason={startHome === null ? noPlaceReason : undefined}
-            failed={create.isError}
-            busy={create.isPending}
+            failed={create.isError || answer.isError}
+            busy={create.isPending || answer.isPending}
             onSend={send}
             onCancel={() => setDraft(null)}
             onPinInstead={

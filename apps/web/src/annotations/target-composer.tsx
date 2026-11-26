@@ -1,43 +1,13 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
-import { cn } from "@parfocal/ui/lib/utils";
 import { useEffect, useRef, useState } from "react";
-import { useLayerNames } from "./comment-bus.ts";
 import { type CommentTarget, targetLabel } from "./comment-target.ts";
-import type { AnnotationDocument } from "./document.ts";
-import { drawnObjectIds, useSavedCodes } from "./drawn-object-ids.ts";
 import type { Point } from "./polygon-draft.ts";
-
-type Reference = { readonly id: string; readonly text: string; readonly sub: string };
-
-const referenceQuery = (text: string) => text.match(/(^|\s)#([^\s#]{0,40})$/)?.[2];
-
-function useReferences(doc: AnnotationDocument, text: string): Reference[] {
-  const names = useLayerNames();
-  const codes = useSavedCodes();
-  const query = referenceQuery(text);
-  if (query === undefined) return [];
-  const wanted = query.toLowerCase();
-  const layers = names.map((item) => ({
-    id: item.key,
-    text: `#${item.name}`,
-    sub: item.key.startsWith("g:") ? "Group" : "Class layer",
-  }));
-  const objects =
-    codes === undefined
-      ? []
-      : [...drawnObjectIds(doc, codes).values()]
-          .filter((item) => item.number !== null)
-          .map((item) => ({ id: item.shown, text: item.shown, sub: "Object" }));
-  return [...layers, ...objects]
-    .filter((item) => item.text.toLowerCase().replace("#", "").includes(wanted))
-    .slice(0, 8);
-}
+import { useReferencePicking } from "./reference-picker.tsx";
 
 export function TargetComposer({
   target,
-  doc,
   at,
   offReason,
   failed,
@@ -47,7 +17,6 @@ export function TargetComposer({
   onPinInstead,
 }: {
   target: CommentTarget;
-  doc: AnnotationDocument;
   at: Point;
   offReason: string | undefined;
   failed: boolean;
@@ -58,19 +27,13 @@ export function TargetComposer({
 }) {
   const { t } = useLingui();
   const [text, setText] = useState("");
-  const [active, setActive] = useState(0);
   const section = useRef<HTMLElement | null>(null);
-  const references = useReferences(doc, text);
+  const picking = useReferencePicking(text, setText);
   const label = targetLabel(target);
   const point = target.kind === "point";
   useEffect(() => {
     section.current?.querySelector("textarea")?.focus();
   }, []);
-  const pick = (reference: Reference | undefined) => {
-    if (reference === undefined) return;
-    setText(text.replace(/#[^\s#]{0,40}$/, `${reference.text} `));
-    setActive(0);
-  };
   return (
     <section
       ref={section}
@@ -115,48 +78,8 @@ export function TargetComposer({
         }}
         label={point ? t`Comment at the pin` : t`Comment on ${label}`}
         offReason={offReason}
-        onPickerKey={(key) => {
-          if (key === "Escape") {
-            setText(`${text} `);
-            return;
-          }
-          if (key === "ArrowDown" || key === "ArrowUp") {
-            const step = key === "ArrowDown" ? 1 : references.length - 1;
-            setActive((active + step) % Math.max(1, references.length));
-            return;
-          }
-          pick(references[Math.min(active, references.length - 1)]);
-        }}
-        picker={
-          references.length === 0 ? undefined : (
-            <div
-              role="listbox"
-              aria-label={t`Objects and layers`}
-              data-testid="reference-picker"
-              className="grid gap-0.5 rounded-ctl border border-line bg-chrome p-1 shadow-pop"
-            >
-              {references.map((reference, index) => (
-                <div
-                  key={reference.id}
-                  role="option"
-                  aria-selected={index === active}
-                  tabIndex={-1}
-                  onPointerDown={(event) => {
-                    event.preventDefault();
-                    pick(reference);
-                  }}
-                  className={cn(
-                    "flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1 text-body-sm",
-                    index === active && "bg-accent-soft",
-                  )}
-                >
-                  <span className="truncate font-mono">{reference.text}</span>
-                  <small className="text-caption text-fg-dim">{reference.sub}</small>
-                </div>
-              ))}
-            </div>
-          )
-        }
+        onPickerKey={picking?.onPickerKey}
+        picker={picking?.picker}
       />
       {failed ? (
         <p role="alert" className="m-0 text-body-sm text-bad">

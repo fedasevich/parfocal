@@ -8,6 +8,7 @@ import {
   useGetReviewTaskStates,
   useListReviewObjects,
 } from "@parfocal/api-client";
+import { shownObjectId } from "@parfocal/ui/lib/object-id";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { annotateTaskOf, layerKnownOf, withLookOnly } from "../annotations/annotate-task.ts";
@@ -21,6 +22,7 @@ import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePeekKey } from "../screens/viewer-tools/slide-peek.tsx";
 import { usePageTitleDetail } from "../shell/page-title.ts";
+import { ReviewCommentObjects, SlideReferences } from "./comment-reach.tsx";
 import { useCompare } from "./compare-panes.tsx";
 import { FirstReadGuard } from "./first-read-guard.tsx";
 import { LiveTopBar } from "./live-top-bar.tsx";
@@ -317,7 +319,12 @@ function GuardedViewer({
       },
     }));
   const goToThread = (thread: Thread) => focusThread(thread, false);
-  const openThread = (thread: Thread) => focusThread(thread, true);
+  const openThread = (thread: Thread) => {
+    focusThread(thread, true);
+    if (reviewTask === null || !thread.anchor.object_id) return;
+    setNoteRequest(null);
+    setNoteObject(shownObjectId(thread.anchor.object_id));
+  };
   const [jumpRequest, setJumpRequest] = useState<{ id: string; count: number } | null>(null);
   const toolLink = useRef<ArmTool | null>(null);
   const [currentObject, setCurrentObject] = useState<string | null>(object ?? null);
@@ -380,6 +387,22 @@ function GuardedViewer({
         retype={retype}
         reviewTaskId={reviewTask ?? undefined}
         focusObject={task === undefined ? object : undefined}
+      />
+      {reviewTask === null ? null : (
+        <ReviewCommentObjects
+          taskId={reviewTask}
+          slideId={slideId}
+          current={currentObject}
+          onReachObject={(id) =>
+            setJumpRequest((before) => ({ id, count: (before?.count ?? 0) + 1 }))
+          }
+        />
+      )}
+      <SlideReferences
+        projectId={projectId}
+        slideId={slideId}
+        within={task === undefined ? null : taskSlideIds}
+        onOpenSlide={onOpenSlide}
       />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       <SlideNoticeList

@@ -21,6 +21,7 @@ import { defaultIdleLockMinutes } from "../session/lock-rules.ts";
 import { detailOf, inFilter, kindIcons, payloadText, titleOf } from "./activity.ts";
 import { destinations } from "./destinations.ts";
 import { chimeUnlessHeld, playChime, readStatNotice, shownInBell } from "./notification-gate.ts";
+import { notificationLinker } from "./notification-links.ts";
 import { useOverlay } from "./overlays.ts";
 import { readingHold } from "./reading-hold.ts";
 import { useGoTo } from "./router-link.tsx";
@@ -45,7 +46,10 @@ const groupOf = (item: InboxItem): NotificationItem["group"] => {
   return "other";
 };
 
-export const toNotification = (item: InboxItem): NotificationItem => {
+export const toNotification = (
+  item: InboxItem,
+  openLink?: (link: string) => void,
+): NotificationItem => {
   const quote = payloadText(item, "quote");
   const objectId = payloadText(item, "object_id");
   return {
@@ -56,7 +60,12 @@ export const toNotification = (item: InboxItem): NotificationItem => {
     detail: detailOf(item),
     quote:
       quote && objectId
-        ? { text: quote, objectId, slide: payloadText(item, "slide_label") }
+        ? {
+            text: quote,
+            objectId,
+            slide: payloadText(item, "slide_label"),
+            linker: openLink ? notificationLinker(item.link, openLink) : undefined,
+          }
         : undefined,
     time: relativeTime(new Date(item.created_at), now()),
     read: item.read,
@@ -113,7 +122,12 @@ function InboxPanel({ onClose }: { onClose: () => void }) {
   };
   return (
     <NotificationsPanel
-      items={inbox.map(toNotification)}
+      items={inbox.map((item) =>
+        toNotification(item, (link) => {
+          onClose();
+          void goTo(link);
+        }),
+      )}
       onOpen={(item) => void open(item)}
       onMarkAllRead={() => void markAll()}
       onSeeAll={() => {

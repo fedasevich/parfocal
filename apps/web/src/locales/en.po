@@ -1912,11 +1912,6 @@ msgstr "{0}. No case numbers in these names, so the slides stay loose."
 msgid "{0}. Nothing was changed."
 msgstr "{0}. Nothing was changed."
 
-#. placeholder {0}: item.quote.text
-#: ../../packages/ui/src/components/notifications-panel.tsx
-msgid "{0}\" on"
-msgstr "{0}\" on"
-
 #. placeholder {0}: report.project.code
 #. placeholder {1}: report.task_code
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -22001,10 +21996,6 @@ msgstr "Comment on this layer"
 msgid "New thread on {label}"
 msgstr "New thread on {label}"
 
-#: src/annotations/target-composer.tsx
-msgid "Objects and layers"
-msgstr "Objects and layers"
-
 #: src/annotations/layers-tree.tsx
 msgid "Open the comments on it"
 msgstr "Open the comments on it"
@@ -22214,3 +22205,19 @@ msgstr "Take a filter off to see more slides."
 #: src/screens/my-work/assigned-tab.tsx
 msgid "You have not handed out any review tasks yet"
 msgstr "You have not handed out any review tasks yet"
+
+#: src/screens/review/threads-tab.tsx
+msgid "All comments"
+msgstr "All comments"
+
+#: src/annotations/pin-layer.tsx
+msgid "Comment on {currentResult}"
+msgstr "Comment on {currentResult}"
+
+#: src/annotations/reference-picker.tsx
+msgid "Objects, layers and slides"
+msgstr "Objects, layers and slides"
+
+#: ../../packages/ui/src/components/notifications-panel.tsx
+msgid "on"
+msgstr "on"
