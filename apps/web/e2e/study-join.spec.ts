@@ -55,3 +55,30 @@ test("a remote participant opens one link in a fresh browser, reaches task 1 and
   );
   await remote.close();
 });
+
+test("a joined participant seat shows no New project and no Admin anywhere", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/study/console");
+  await page.getByRole("textbox", { name: "Code to prepare" }).fill("p-seat");
+  await page.getByRole("button", { name: "Make a join link" }).click();
+  await expect(page.getByTestId("study-prepare-status")).toContainText("Study P-SEAT is ready.");
+  await expect(page.getByRole("link", { name: "New project" })).toBeVisible();
+  const url = await page.getByTestId("study-join-link").inputValue();
+
+  const remote = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const participant = await remote.newPage();
+  await participant.goto(url);
+  await expect(participant).toHaveURL(/\/study$/);
+  await participant.goto("/");
+  await expect(participant.getByRole("link", { name: "Team" })).toBeVisible();
+  await expect(participant.getByText("New project", { exact: true })).toHaveCount(0);
+  await expect(participant.getByRole("link", { name: "Admin" })).toHaveCount(0);
+  await participant.goto("/my-work");
+  await expect(participant.getByRole("link", { name: "Team" })).toBeVisible();
+  await expect(participant.getByText("New project", { exact: true })).toHaveCount(0);
+  await expect(participant.getByRole("link", { name: "Admin" })).toHaveCount(0);
+  await remote.close();
+});

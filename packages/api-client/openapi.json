@@ -1819,7 +1819,8 @@
               }
             }
           }
-        }
+        },
+        "x-not-for-study-participants": true
       }
     },
     "/api/auth/passkeys/registration": {
@@ -1928,7 +1929,8 @@
               }
             }
           }
-        }
+        },
+        "x-not-for-study-participants": true
       }
     },
     "/api/auth/passkeys/{passkey_id}": {
@@ -2940,7 +2942,8 @@
           }
         },
         "x-permission": "create-cases",
-        "x-permission-write": true
+        "x-permission-write": true,
+        "x-not-for-study-participants": true
       },
       "get": {
         "tags": [
@@ -3556,7 +3559,8 @@
           }
         },
         "x-permission": "create-cases",
-        "x-permission-write": true
+        "x-permission-write": true,
+        "x-not-for-study-participants": true
       }
     },
     "/api/projects/{project_id}/privacy-mode": {
@@ -5063,7 +5067,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "see-slides"
+        "x-permission": "see-slides",
+        "x-not-for-study-participants": true
       }
     },
     "/api/projects/{project_id}/imports": {
@@ -5421,7 +5426,8 @@
           }
         },
         "x-permission": "create-cases",
-        "x-permission-write": true
+        "x-permission-write": true,
+        "x-not-for-study-participants": true
       }
     },
     "/api/sample-project": {
@@ -51603,7 +51609,8 @@
             }
           }
         },
-        "x-permission": "report-templates"
+        "x-permission": "report-templates",
+        "x-not-for-study-participants": true
       }
     },
     "/api/template-offers/{offer_id}/acceptance": {
@@ -54892,7 +54899,8 @@
               }
             }
           }
-        }
+        },
+        "x-not-for-study-participants": true
       }
     },
     "/api/me/joinable-workspaces": {
@@ -55126,7 +55134,8 @@
             },
             "description": "Something went wrong"
           }
-        }
+        },
+        "x-not-for-study-participants": true
       }
     },
     "/api/me/joinable-workspaces/{tenant_id}/access-requests": {
@@ -55247,7 +55256,8 @@
             },
             "description": "Something went wrong"
           }
-        }
+        },
+        "x-not-for-study-participants": true
       }
     },
     "/api/tenant/access-requests": {
@@ -58969,7 +58979,8 @@
               }
             }
           }
-        }
+        },
+        "x-not-for-study-participants": true
       }
     },
     "/api/review-tasks/{task_id}/invitations": {
@@ -59102,7 +59113,8 @@
           }
         },
         "x-permission": "create-cases",
-        "x-permission-write": true
+        "x-permission-write": true,
+        "x-not-for-study-participants": true
       }
     },
     "/api/me/setting-layers": {
@@ -84054,7 +84066,8 @@
         "type": "string",
         "enum": [
           "researcher",
-          "reviewer"
+          "reviewer",
+          "study-participant"
         ],
         "title": "Role"
       },

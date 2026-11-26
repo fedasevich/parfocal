@@ -85,6 +85,7 @@ type TopBarProps = React.ComponentProps<"header"> & {
   workspaceSlot?: React.ReactNode;
   onSearch?: (() => void) | undefined;
   onNewProject?: (() => void) | undefined;
+  newProject?: boolean | undefined;
   onUpload?: (() => void) | undefined;
   jobsSlot?: React.ReactNode;
   bellSlot?: React.ReactNode;
@@ -103,6 +104,7 @@ function TopBar({
   workspaceSlot,
   onSearch,
   onNewProject,
+  newProject,
   onUpload,
   jobsSlot,
   bellSlot,
@@ -142,10 +144,12 @@ function TopBar({
         <Keycap keys="⌘K" />
       </button>
       <span className="flex-1" />
-      <Button variant="ghost" data-tour="top-new-project" onClick={onNewProject}>
-        <Icon name="folder" />
-        <Trans>New project</Trans>
-      </Button>
+      {newProject === false ? null : (
+        <Button variant="ghost" data-tour="top-new-project" onClick={onNewProject}>
+          <Icon name="folder" />
+          <Trans>New project</Trans>
+        </Button>
+      )}
       <Button variant="ghost" data-tour="top-upload" onClick={onUpload}>
         <Icon name="upload" />
         <Trans>Upload</Trans>

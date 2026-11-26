@@ -12,6 +12,7 @@ const contextOf = (
   onSlide: true,
   developerMode,
   developerAllowed,
+  canCreateProjects: true,
   openDeveloper: (section) => {
     opened.push(section);
   },
@@ -53,4 +54,11 @@ test("the drawer opens over slide pages only", () => {
   assert.ok(isSlidePath("/projects/p1/slides/s1/annotate"));
   assert.ok(!isSlidePath("/projects/p1"));
   assert.ok(!isSlidePath("/developer"));
+});
+
+test("a study participant gets no New project command", () => {
+  const allowed = paletteEntries(contextOf(false, false)).map((entry) => entry.id);
+  assert.ok(allowed.includes("new-project"));
+  const refused = paletteEntries({ ...contextOf(false, false), canCreateProjects: false });
+  assert.ok(!refused.some((entry) => entry.id === "new-project"));
 });

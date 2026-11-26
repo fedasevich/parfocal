@@ -11,10 +11,9 @@ from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.permissions import Permission, member_of, require
-from parfocal_api.principals import MemberPrincipal, Principal
+from parfocal_api.permissions import Permission, is_study_participant, member_of, require
+from parfocal_api.principals import Principal
 from parfocal_api.problems import BadRequestError, ForbiddenError, NotFoundError
-from parfocal_api.study_projects import is_study_seat
 from parfocal_api.tables import study_sessions, study_trace_parts
 
 PART_LIMIT = 2 * 1024 * 1024
@@ -84,7 +83,7 @@ class StudySeatRefusedError(ForbiddenError):
 
 
 def refuse_study_seats(principal: Principal) -> None:
-    if isinstance(principal, MemberPrincipal) and is_study_seat(principal.subject):
+    if is_study_participant(principal):
         raise StudySeatRefusedError
 
 

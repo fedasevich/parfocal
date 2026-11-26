@@ -1,7 +1,7 @@
-import type { Me, ProjectRole, TaskKind } from "@parfocal/api-client";
+import type { Me, ProjectRole, Role, TaskKind } from "@parfocal/api-client";
 import { permissionMatrix } from "../screens/admin/permission-matrix.generated.ts";
 
-export type WorkspaceRole = "researcher" | "reviewer";
+export type WorkspaceRole = Role;
 
 export type ReadOnlyReason = "no-review-right" | "withdrawn" | "not-assigned" | "signed-off";
 
@@ -24,8 +24,11 @@ const readOnly = (reason: ReadOnlyReason): ViewerAccess => ({ kind: "read-only",
 
 const reviewGrants = permissionMatrix.find((row) => row.key === "review");
 
+export const matrixKeyOf = (role: WorkspaceRole) =>
+  role === "study-participant" ? "studyParticipant" : role;
+
 export function holdsReviewRight(role: WorkspaceRole): boolean {
-  const grant = reviewGrants?.[role];
+  const grant = reviewGrants?.[matrixKeyOf(role)];
   return grant === "y" || grant === "o";
 }
 

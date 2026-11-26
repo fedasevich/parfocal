@@ -14,6 +14,7 @@ import {
   uuid,
 } from "./scenario.ts";
 import { toProject } from "./scenario-handlers.ts";
+import { fakeStudySeat } from "./study-seat.ts";
 import { fakeView } from "./view.ts";
 
 const seededProjects = projects.length;
@@ -75,6 +76,13 @@ export const createdRecordHandlers = (): RequestHandler[] => [
   ),
   http.post("*/api/projects", async ({ request }) => {
     const draft = (await request.json()) as ProjectDraft;
+    if (fakeStudySeat() !== undefined) {
+      return problem(
+        403,
+        "A study participant works only in the project prepared for them",
+        "study-participant-refused",
+      );
+    }
     if (draft.privacy_mode === "clinical" && liveSecurityContact() === null) {
       return problem(
         409,

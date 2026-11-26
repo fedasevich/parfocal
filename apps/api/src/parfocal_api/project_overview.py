@@ -592,7 +592,7 @@ async def get_project_access(
 @router.post(
     "/access-requests",
     operation_id="requestProjectAccess",
-    **require(Permission.SEE_SLIDES),
+    **require(Permission.SEE_SLIDES, study_participants=False),
 )
 async def request_project_access(
     project_id: uuid.UUID,

@@ -26,6 +26,7 @@ from parfocal_api.tables.base import (
     ADMIN_RIGHTS_CHECK,
     AVAILABILITY_CHECK,
     DEFAULT_EMERGENCY_HOURS,
+    INVITATION_ROLE_CHECK,
     LOGO_COLOUR_PATTERN,
     LOGO_PATTERN,
     MEMBER_ROLE_CHECK,
@@ -457,7 +458,7 @@ invitations = Table(
         server_default=func.now(),
         info=OPERATIONAL,
     ),
-    CheckConstraint(MEMBER_ROLE_CHECK, name="role"),
+    CheckConstraint(INVITATION_ROLE_CHECK, name="role"),
     CheckConstraint(ADMIN_RIGHTS_CHECK, name="admin_rights"),
 )
 

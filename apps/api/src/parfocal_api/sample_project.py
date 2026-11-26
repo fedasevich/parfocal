@@ -308,7 +308,7 @@ async def get_sample_outline() -> SampleOutline:
     operation_id="createSampleProject",
     status_code=201,
     responses={200: {"description": "The workspace already has a sample project"}},
-    **require(Permission.CREATE_CASES, write=True),
+    **require(Permission.CREATE_CASES, write=True, study_participants=False),
 )
 async def create_sample_project(
     response: Response,

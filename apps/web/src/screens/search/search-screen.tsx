@@ -16,6 +16,7 @@ import {
   type SearchPageScope,
   searchScopes,
 } from "../../shell/search-hits.ts";
+import { useCanCreateProjects } from "../../shell/use-can-create-projects.ts";
 import { plural } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 
@@ -65,6 +66,7 @@ export function SearchScreen({
   const overlay = useOverlay();
   const [draft, setDraft] = useState(state.q);
   const developerMode = useDeveloperMode();
+  const mayCreateProjects = useCanCreateProjects();
   const hints = useHintsSeen();
   const paletteEntries = useActionSource();
   const projects = okData(useListProjects().data) ?? [];
@@ -83,6 +85,7 @@ export function SearchScreen({
           onSlide: false,
           developerMode,
           developerAllowed: false,
+          canCreateProjects: mayCreateProjects,
           openDeveloper: () => {},
           go: (href) => void goTo(href),
           measure: () => {},

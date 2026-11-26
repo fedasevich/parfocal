@@ -24,7 +24,6 @@ from parfocal_api.sample_files import stored_facts
 from parfocal_api.showcase import (
     FORMAT_GALLERY,
     PEOPLE,
-    PLACEHOLDER_PREFIX,
     Workspace,
     add_slide,
     join,
@@ -50,6 +49,7 @@ from parfocal_api.showcase_reviews import (
     submit,
 )
 from parfocal_api.showcase_samples import PoolSlide, SamplePool, sample_pool
+from parfocal_api.study_seats import STUDY_SEAT_DOMAIN, STUDY_SEAT_PREFIX
 from parfocal_api.tables import (
     BuiltInTemplate,
     DecisionReason,
@@ -61,6 +61,7 @@ from parfocal_api.tables import (
     Role,
     TaskKind,
     TaskScope,
+    memberships,
     projects,
     review_tasks,
     tenants,
@@ -92,8 +93,6 @@ PARTICIPANT_SEAT = SeededAccount(
     "Study participant", "SP", Role.RESEARCHER, True, ProjectRole.OWNER
 )
 MODERATOR = SeededAccount("Study moderator", "SM", Role.RESEARCHER, True, ProjectRole.OWNER)
-STUDY_SEAT_PREFIX = f"{PLACEHOLDER_PREFIX}study-"
-STUDY_SEAT_DOMAIN = "@showcase.invalid"
 
 
 class BadParticipantCodeError(ValueError):
@@ -145,10 +144,6 @@ def seat_subject(code: str) -> str:
     return f"{STUDY_SEAT_PREFIX}{checked_code(code).lower()}{STUDY_SEAT_DOMAIN}"
 
 
-def is_study_seat(subject: str) -> bool:
-    return subject.startswith(STUDY_SEAT_PREFIX) and subject.endswith(STUDY_SEAT_DOMAIN)
-
-
 async def study_lock(connection: AsyncConnection) -> None:
     await connection.execute(
         select(func.pg_advisory_xact_lock(func.hashtextextended(STUDY_LOCK, 0)))
@@ -181,15 +176,21 @@ async def add_seat(
 ) -> uuid.UUID:
     if seat_email:
         return await add_account(connection, tenant_id, seat_email, PARTICIPANT_SEAT)
-    return await add_member(
+    seat_id = await add_member(
         connection,
         tenant_id,
         seat_subject(code),
         f"Participant {checked_code(code)}",
         "PT",
-        PARTICIPANT_SEAT.role,
+        Role.STUDY_PARTICIPANT,
         admin_rights=False,
     )
+    await connection.execute(
+        update(memberships)
+        .where(memberships.c.tenant_id == tenant_id, memberships.c.user_id == seat_id)
+        .values(role=Role.STUDY_PARTICIPANT, admin_rights=False)
+    )
+    return seat_id
 
 
 async def people_in(connection: AsyncConnection) -> dict[str, uuid.UUID]:

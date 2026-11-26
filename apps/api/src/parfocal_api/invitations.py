@@ -14,7 +14,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import AUTH_SCOPE, SESSION_COOKIE, auth_state, digest
 from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantConnection
 from parfocal_api.email_templates import TASK_INVITATION_TEMPLATE, render
-from parfocal_api.permissions import Permission, require
+from parfocal_api.permissions import Permission, not_for_study_participants, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import (
     ConflictError,
@@ -354,7 +354,7 @@ async def invite_platform_member(
     "/{task_id}/invitations",
     operation_id="inviteTaskReviewer",
     status_code=201,
-    **require(Permission.CREATE_CASES, write=True),
+    **require(Permission.CREATE_CASES, write=True, study_participants=False),
 )
 async def invite_task_reviewer(
     task_id: uuid.UUID,
@@ -459,7 +459,7 @@ async def join_task(
     return TaskLanding(project_id=row.project_id, task_id=task_id, slide_id=slide_ids[0])
 
 
-@public_router.post("/accept", operation_id="acceptInvitation")
+@public_router.post("/accept", operation_id="acceptInvitation", **not_for_study_participants())
 async def accept_invitation(
     body: InvitationToken, request: Request, principal: CurrentPrincipal
 ) -> AcceptedInvitation:

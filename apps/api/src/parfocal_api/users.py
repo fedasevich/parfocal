@@ -4,7 +4,7 @@ from datetime import date, datetime
 from typing import Annotated, Any, Self
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import AfterValidator, BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import exists, func, insert, literal_column, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -29,6 +29,7 @@ from parfocal_api.problems import (
 from parfocal_api.projects import code_of
 from parfocal_api.second_factor import check_second_factor
 from parfocal_api.tables import (
+    ASSIGNABLE_ROLES,
     AVATAR_COLOURS,
     ActorKind,
     ProjectRole,
@@ -130,8 +131,17 @@ class WorkspaceChoice(BaseModel):
     tenant_id: uuid.UUID
 
 
+def only_assignable(role: Role) -> Role:
+    if role not in ASSIGNABLE_ROLES:
+        raise ValueError("A study participant seat is made only by a study join link")
+    return role
+
+
+AssignableRole = Annotated[Role, AfterValidator(only_assignable)]
+
+
 class RoleDraft(BaseModel):
-    role: Role
+    role: AssignableRole
     admin_rights: bool = False
 
     @model_validator(mode="after")
@@ -146,7 +156,7 @@ class MembershipDraft(RoleDraft):
 
 
 class RoleChange(BaseModel):
-    role: Role
+    role: AssignableRole
 
 
 class AdminRightsChange(BaseModel):

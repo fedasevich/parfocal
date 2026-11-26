@@ -17,6 +17,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
+import { canCreateProjects } from "../../shell/project-creation.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDue } from "../format.ts";
 import { personProp, usePeople } from "../people.ts";
@@ -501,10 +502,12 @@ export function AllSlidesTab({
                 data-testid="all-slides-empty"
                 title={t`No slides yet`}
                 action={
-                  <Button variant="primary" onClick={() => void goTo(destinations.newProject())}>
-                    <Icon name="folder" />
-                    <Trans>New project</Trans>
-                  </Button>
+                  canCreateProjects(me) ? (
+                    <Button variant="primary" onClick={() => void goTo(destinations.newProject())}>
+                      <Icon name="folder" />
+                      <Trans>New project</Trans>
+                    </Button>
+                  ) : undefined
                 }
               >
                 <Trans>Slides you upload to a project, or that you review, show here.</Trans>

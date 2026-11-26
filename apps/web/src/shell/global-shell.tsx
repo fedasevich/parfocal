@@ -23,6 +23,7 @@ import { destinations, uploadProjectId } from "./destinations.ts";
 import { JobsTrayProvider } from "./jobs-tray.tsx";
 import { MaintenanceBanner } from "./maintenance-banner.tsx";
 import { useOverlay } from "./overlays.ts";
+import { canCreateProjects } from "./project-creation.ts";
 import { useRoutePending } from "./route-progress.tsx";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
@@ -110,12 +111,16 @@ export function GlobalShell({ children }: { children: ReactNode }) {
             ...(slides === undefined ? {} : { count: slides }),
           };
         }),
-        {
-          id: "new-project",
-          href: destinations.newProject(),
-          label: t`New project`,
-          icon: "folder",
-        },
+        ...(canCreateProjects(me)
+          ? [
+              {
+                id: "new-project",
+                href: destinations.newProject(),
+                label: t`New project`,
+                icon: "folder" as const,
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -149,6 +154,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
               }
               onSearch={() => void overlay.set("palette")}
               onNewProject={() => void goTo(destinations.newProject())}
+              newProject={canCreateProjects(me)}
               onUpload={() =>
                 void goTo(destinations.upload(uploadProjectId(openProjectId, firstProject)))
               }

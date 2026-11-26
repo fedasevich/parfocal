@@ -9,6 +9,7 @@ Edit the matrix there, never this page. [ADR 0096](../adr/0096-researcher-and-re
 |---|---|---|
 | `researcher` | Researcher | Runs studies. Creates projects and owns them, uploads slides and AI result files, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements, signs off and exports the evaluation report. Reviews when a task names them. Opens a clinical project without a project role only through emergency access |
 | `reviewer` | Reviewer | Reviews and annotates the slides of their tasks. Gives decisions with reasons and notes, fixes outlines and types, adds missed objects, fills the opinion form and submits each slide. Decides queued objects when a researcher makes them adjudicator. Never uploads, runs models, creates projects or tasks, signs off or holds admin rights |
+| `study-participant` | Study participant | Does the study tasks in the one project prepared for them, as its owner. Seated only by a study join link, never invited or given admin rights. Never creates or deletes a project, runs models, invites anyone, opens or asks for another project, offers a template, reads workspace settings, integrations, the study console, the study results or the admin pages, asks for emergency access, makes API tokens, adds a passkey, or makes or joins another workspace |
 
 Platform operators sit outside the matrix and only reach `/api/platform/*`.
 
@@ -56,22 +57,22 @@ Can sign out. Signs out the clinical report of a case. Exists only in a project 
 
 An empty cell means no. A researcher with admin rights gets the researcher's column and yes wherever the admin rights column says yes.
 
-| Action | Key | Researcher | Reviewer | Added by admin rights |
-|---|---|---|---|---|
-| See projects, cases and slides | `see-slides` | Yes | In their tasks |  |
-| See slide label and macro images, only in clinical projects | `see-labels` | Yes | View only |  |
-| Open a clinical project they are not in | `emergency-access` | Emergency, with reason |  |  |
-| Create projects and cases, edit their details | `create-cases` | Yes |  |  |
-| Change the privacy mode of a project they own, with a reason | `privacy-mode` |  |  | Yes |
-| Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  |  |
-| Move a slide between cases | `move-slides` | Yes |  |  |
-| Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |
-| Give decisions, annotate, fix results, comment | `review` | Yes | In their tasks |  |
-| Set their own status | `set-own-status` | Yes | Yes |  |
-| See the workspace's people and their status | `see-people` | Yes | View only |  |
-| Invite people, change roles and admin rights | `manage-people` |  |  | Yes |
-| Workspace settings and session security | `workspace-settings` | View only |  | Yes |
-| Storage, sources, API and webhooks | `integrations` | View only |  | Yes |
-| Use report templates, edit the library | `report-templates` | View only |  | Yes |
-| Audit log | `audit-log` |  |  | Yes |
-| Developer mode and API tokens | `developer-mode` | Yes |  |  |
+| Action | Key | Researcher | Reviewer | Study participant | Added by admin rights |
+|---|---|---|---|---|---|
+| See projects, cases and slides | `see-slides` | Yes | In their tasks | Yes |  |
+| See slide label and macro images, only in clinical projects | `see-labels` | Yes | View only | Yes |  |
+| Open a clinical project they are not in | `emergency-access` | Emergency, with reason |  |  |  |
+| Create projects and cases, edit their details | `create-cases` | Yes |  | Yes |  |
+| Change the privacy mode of a project they own, with a reason | `privacy-mode` |  |  |  | Yes |
+| Upload slides and AI results, fix unmatched files | `upload-slides` | Yes |  | Yes |  |
+| Move a slide between cases | `move-slides` | Yes |  | Yes |  |
+| Run AI models on slides, cancel, resume and retry the runs | `run-models` | Yes |  |  |  |
+| Give decisions, annotate, fix results, comment | `review` | Yes | In their tasks | Yes |  |
+| Set their own status | `set-own-status` | Yes | Yes | Yes |  |
+| See the workspace's people and their status | `see-people` | Yes | View only | View only |  |
+| Invite people, change roles and admin rights | `manage-people` |  |  |  | Yes |
+| Workspace settings and session security | `workspace-settings` | View only |  |  | Yes |
+| Storage, sources, API and webhooks | `integrations` | View only |  |  | Yes |
+| Use report templates, edit the library | `report-templates` | View only |  | View only | Yes |
+| Audit log | `audit-log` |  |  |  | Yes |
+| Developer mode and API tokens | `developer-mode` | Yes |  |  |  |

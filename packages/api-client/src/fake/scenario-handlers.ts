@@ -54,6 +54,7 @@ import {
 } from "./scenario.ts";
 import { adminRightsHolders, workspaceBrands } from "./scenario-admin.ts";
 import { withParticipantProjectName } from "./study-participant.ts";
+import { fakeStudySeat } from "./study-seat.ts";
 import { submittedThisSession } from "./submitted-slides.ts";
 import { fakeView } from "./view.ts";
 import { toReviewTaskDetail } from "./work-handlers.ts";
@@ -67,8 +68,8 @@ const me = () => people[fakeView().viewer];
 
 const toWorkspace = (workspace: (typeof workspaces)[number], index: number): Workspace => ({
   tenant_id: workspace.id,
-  role: me().role,
-  admin_rights: adminRightsHolders.includes(me().key),
+  role: fakeStudySeat() === undefined ? me().role : "study-participant",
+  admin_rights: fakeStudySeat() === undefined && adminRightsHolders.includes(me().key),
   slug: workspace.slug,
   name: workspace.name,
   kind: workspace.kind,

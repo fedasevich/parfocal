@@ -61,7 +61,14 @@ import { RolePermissionsZone } from "./role-permissions.tsx";
 
 type Filter = PeopleFilter;
 
-const roleText = lazyText(() => ({ researcher: t`Researcher`, reviewer: t`Reviewer` }) as const);
+const roleText = lazyText(
+  () =>
+    ({
+      researcher: t`Researcher`,
+      reviewer: t`Reviewer`,
+      "study-participant": t`Study participant`,
+    }) as const,
+);
 
 const roleDefinitions = lazyText(
   () =>
