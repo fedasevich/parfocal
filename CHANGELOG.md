@@ -2,6 +2,31 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.65.0 (2026-11-26)
+
+### Features
+
+- ONB-013: Leave the Joined line out of setup's Done list when no workspace was joined
+
+### Fixes
+
+- ci: Probe the sample outline in the isolation suite and count only the sample's model runs
+- ci: Step the guided cell spec with a type key, since X now opens the reasons
+- PROTO-184: Keep a 64 px name column in layer rows so a long measure cannot take the row
+
+### Docs
+
+- FOUND-002: Consolidate the docs
+- EXP-023: Log the v0.64.0 deploy
+- ci: Log the third CI fixes
+- ci: Log the guided cell spec fix
+- ONB-013: Log and tick after merge
+- PROTO-184: Log and tick after merge
+
+### Other
+
+- ONB-013: Claim ONB-013 on the ONB-012 in review
+
 ## v0.64.0 (2026-11-26)
 
 ### Features
