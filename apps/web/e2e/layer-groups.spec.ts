@@ -40,6 +40,10 @@ async function savedGroups(page: Page) {
   return page.evaluate((key) => sessionStorage.getItem(key) ?? "", groupsKey);
 }
 
+async function savedMembers(page: Page) {
+  return (await savedGroups(page)).split('"group_id"').length - 1;
+}
+
 async function reloaded(page: Page) {
   await page.reload();
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-annotations", "loaded", {
@@ -85,7 +89,18 @@ test("groups are saved, renamed, recoloured, filled, ungrouped, deleted and rest
   );
 
   await page.keyboard.press("Escape");
-  await page.mouse.click(box.x + 300, box.y + 430);
+  const third = page.getByTestId("polygon-shape").nth(2);
+  let settled = "";
+  await expect
+    .poll(async () => {
+      const now = JSON.stringify(await third.boundingBox());
+      const still = now === settled;
+      settled = now;
+      return still;
+    })
+    .toBe(true);
+  const shown = (await third.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  await page.mouse.click(shown.x + shown.width / 2, shown.y + shown.height / 2);
   await expect(selected(page)).toHaveAttribute("data-selected", /^\d+$/);
   await page.getByTestId("layers-move").click();
   await page.getByRole("menuitem", { name: "Margin cells" }).click();
@@ -94,6 +109,7 @@ test("groups are saved, renamed, recoloured, filled, ungrouped, deleted and rest
 
   await expect.poll(() => savedGroups(page)).toContain("Margin cells");
   await expect.poll(() => savedGroups(page)).toContain("[0,255,0]");
+  await expect.poll(() => savedMembers(page)).toBe(3);
   await reloaded(page);
   await expect(rowOf(page, "Margin cells")).toContainText("3");
   await expect(loose(page)).toHaveCount(0);
@@ -119,6 +135,7 @@ test("groups are saved, renamed, recoloured, filled, ungrouped, deleted and rest
   await expect(page.getByTestId("polygon-shape")).toHaveCount(3);
 
   await expect.poll(() => savedGroups(page)).toContain("Margin cells");
+  await expect.poll(() => savedMembers(page)).toBe(3);
   await reloaded(page);
   await expect(rowOf(page, "Margin cells")).toContainText("3");
   await expect(page.getByTestId("polygon-shape")).toHaveCount(3);

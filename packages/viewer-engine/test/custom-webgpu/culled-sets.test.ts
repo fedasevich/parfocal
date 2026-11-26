@@ -68,13 +68,14 @@ describe("shape instance starts", () => {
     assert.ok((starts.triangles[1] ?? 0) > 0);
   });
 
-  it("counts the split first edge and no repeats for dashed rings", () => {
+  it("counts the split first edge and one seam repeat per ring started mid first edge", () => {
     const options = { ringsFromMidFirstEdge: true };
     const { counts } = buildVectorInstances({ polygons }, options);
     const starts = shapeInstanceStarts(polygons, options);
     assert.deepEqual([...starts.segments], [0, 9, 13]);
     assert.equal(starts.segments[2], counts.segments);
-    assert.deepEqual([...starts.repeats], [0, 0, 0]);
+    assert.deepEqual([...starts.repeats], [0, 2, 3]);
+    assert.equal(starts.repeats[2], counts.repeats);
   });
 });
 

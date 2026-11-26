@@ -2,6 +2,33 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.62.0 (2026-11-26)
+
+### Features
+
+- PROTO-197: Make the Display tab opacity the person's opacity in every view
+
+### Fixes
+
+- PROTO-199: Give the slide picker room before the progress text on narrow top bars
+- ci: Draw each custom WebGPU ring seam twice as deck does since its rings start mid edge
+- ci: Click the moved shape where the group click left the camera and wait for its save
+- ci: Approve the UI baselines tonight's tasks changed on purpose
+
+### Docs
+
+- PROTO-182: Log the v0.61.1 deploy
+- PROTO-197: Add the follow-up tasks from the walkthrough fix run
+- PROTO-197: Write the follow-up tasks the last commit logged
+- PROTO-197: Log and tick after merge
+- PROTO-199: Log and tick after merge
+- ci: Log the second CI fixes
+
+### Other
+
+- PROTO-197: Claim PROTO-197 PROTO-199 for the parallel run
+- EXP-023: Claim EXP-023 PROTO-198 on merged dependencies
+
 ## v0.61.1 (2026-11-26)
 
 ### Fixes

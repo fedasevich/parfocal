@@ -6018,6 +6018,11 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on nothing.
   Size: M.
 
+- [ ] ONB-013 · Setup's Done step says nothing about a workspace when that step was skipped
+  The second walkthrough skipped the workspace step in setup and found that Done still lists a bare Joined line with no workspace name, although nothing was joined. Leave the line out when no workspace was joined or asked for.
+  Done when a unit test of the Done list covers joined, asked and skipped, a browser spec skips the step and finds no Joined line, and the deployed setup does the same.
+  Depends on ONB-012. Size: S.
+
 ---
 
 ## 50 ADMIN · Admin page
@@ -6112,7 +6117,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on nothing.
   Size: S.
 
-- [ ] ADMIN-015 · The templates table shows each action once
+- [x] ADMIN-015 · The templates table shows each action once
   The owner found on 2026-11-25 that each row of the templates table in Admin (apps/web/src/screens/admin/templates.tsx) shows Preview and Duplicate as buttons, and its three dots menu repeats them as "Preview the PDF" and "Duplicate and edit" next to "Use for new projects" and "Retire". The menu is also so narrow that every item wraps onto two lines. Keep each action in one place, the frequent ones as row buttons and the rest in the menu, and size the menu so its items fit on one line.
   Done when a browser spec on the fake API opens a row's menu and finds no action that the row already shows as a button, and Storybook or a screenshot shows the menu items on one line each.
   Depends on nothing.
@@ -7350,7 +7355,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec compares skeleton and loaded layout boxes on the report page and the forms the sweep fixed, and the log lists every skeleton the sweep checked.
   Depends on nothing. Size: M.
 
-- [ ] PROTO-170 · The page header takes less height
+- [x] PROTO-170 · The page header takes less height
   The owner found on 2026-11-25 that the page header takes too much of the screen, and confirmed it is the page header and not the global top bar. On the Clinical report page the header block (breadcrumb, title, subtitle and the locked line) fills about 220 of 1011 screen pixels below the global top bar before the content starts. Make the shared page header compact, for example by joining the breadcrumb and title and folding the locked line into the subtitle, on every page that uses it, and leave the global top bar as it is.
   Done when a browser spec measures the content start on the report page and two other pages below a target recorded in the log, and Storybook shows the header in its new height.
   Depends on nothing. Size: M.
@@ -7359,7 +7364,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner found on 2026-11-25 that Download PDF on the signed Showcase case report gives a different document from the one on screen. The screen shows a surgical pathology report with the laboratory heading, accession and reported date, specimen, final diagnosis and the synoptic block with its ICCR, CAP and TNM standards. The PDF shows a plain "Clinical report" list of specimen, category, suggested pN, nodes examined, extranodal extension "na", final diagnosis and deposits "Not stated", with raw values and no heading or signature. Render the PDF from the same report model and layout as the preview, so it carries the same sections, labels and values, as REPORT-009 (idea: PDF rendering) describes, without taking on all of that idea.
   Done when a test renders the PDF of a signed report and finds the preview's headings, labels and values in its text and no raw codes such as "na", and the deployed Showcase case downloads a PDF that matches its preview.
   Depends on nothing. Size: M.
-- [ ] PROTO-172 · Report PDFs from the templates are laid out like a designed report
+- [x] PROTO-172 · Report PDFs from the templates are laid out like a designed report
   The owner found on 2026-11-25 that the reports in the templates are broken too. The sample evaluation report Cell_typing_study_sample.pdf, opened in the PDF preview, prints as unstyled HTML: a default serif font, heavy boxed tables, "Project:" and "Checksum: sha256:sample" lines in body text, and pages whose thumbnails show the content crowded into the top corner of an empty sheet. The sample comes from apps/api/src/parfocal_api/report_template.py and the preview is apps/web/src/screens/evaluation/pdf-overlay.tsx. Give every report a template can produce, sample or real, the app's report layout and type: a heading block, a metadata table, styled tables and A4 margins that fill the page, from the same model as the on-screen report. Do it together with PROTO-171 (the downloaded report PDF matches the on-screen report) if they share the renderer.
   Done when a test renders each template's sample PDF and checks its fonts, margins and table styling against the on-screen report, the PDF preview spec still passes, and the deployed templates page shows a laid out sample report.
   Depends on nothing. Size: M.
@@ -7424,7 +7429,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API clicks a row and sees its object selected on the slide, drags two cells into a new group made with Cmd+G, collapses and renames it, reloads and finds the tree kept, scrolls a list of 5000 cells without a long frame, and the deployed Annotate does the same.
   Depends on nothing. Size: L.
 
-- [ ] PROTO-185 · The region picked for Auto region stays on screen, animated, while it is processed
+- [x] PROTO-185 · The region picked for Auto region stays on screen, animated, while it is processed
   The owner found on 2026-11-25 that the region drawn for Auto region (apps/web/src/annotations/auto-layer.tsx) disappears as soon as it is drawn and nothing shows where the model is working until results arrive. Keep the drawn region on the slide while it is processed with a calm animated outline, such as marching ants or a slow pulse, and light up each tile as it is done, so the reviewer sees what is being processed and how far it got. Stop the animation when results arrive, on Discard and on failure, where the outline turns to the error color with the message in a toast, and respect reduced motion with a still dashed outline. Use the same treatment for a Smart select box while its request runs.
   Done when a browser spec on the fake API with a slow model draws a region, finds the animated outline and the done tiles while it runs and no outline after the results, a reduced motion run shows the still outline, and the deployed Auto region shows the same.
   Depends on nothing. Size: S.
@@ -7439,12 +7444,12 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API with a long slide name finds the whole switch inside the panel at the narrowest panel width, a Storybook story shows the tab with a long name, and the deployed Comments tab shows the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-188 · Comment boxes drop the Enter posts hint
+- [x] PROTO-188 · Comment boxes drop the Enter posts hint
   The owner asked on 2026-11-25 to remove the line "Enter posts, Shift+Enter adds a line" under the comment box. It is shown in apps/web/src/annotations/pin-layer.tsx (the box of a new pinned thread) and packages/ui/src/components/thread-popover.tsx (a reply in a thread popover). Remove the hint from both and from any other comment box that shows it, keep Enter posting and Shift+Enter adding a line, and drop the unused strings from the locale files.
   Done when a browser spec on the fake API opens a new pin and a thread reply and finds no hint line, and still posts with Enter and adds a line with Shift+Enter.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-189 · Comment on objects, selections, regions and layers, and reach what a comment mentions
+- [x] PROTO-189 · Comment on objects, selections, regions and layers, and reach what a comment mentions
   The owner found on 2026-11-25 that with a cell or object selected on the slide there is no way to comment on it there, and that regions and selections cannot be commented on at all. Today an object comment is written only in a side panel ("Comments on this object" in review, guided review and the cells panel), and the comment tool (C, apps/web/src/annotations/pin-layer.tsx) drops only point pins. The threads table already accepts object, roi and shape anchors (apps/api/src/parfocal_api/tables/threads.py). With one or more cells, objects or drawn shapes selected, C, the context bar and the right click menu open a comment box beside the selection on the slide, anchored to the object ID for a result object, to the shape for a drawn one, and to the selection's outline for several. With nothing selected, a click with the comment tool pins a point as now and a drag draws a box anchored as a region. Every such thread shows its anchor on the slide, lists in the Comments tab with its kind and flies to its anchor, and appears in that object's side panel thread too. Rename "New comment on an ID" in the Comments tab to say what it does. The owner also found on 2026-11-25 that a pin dropped on a drawn cell opens a thread headed by the cell's card ("T170⁺ · Unknown class", area and perimeter), yet the thread is saved as a point pin and listed in the Comments tab as "Pin" twice, so it is unclear what is commented on. A click with the comment tool on an object or shape anchors to that object or shape, the box says before posting what it will attach to ("Comment on T170⁺") with a way to pin the point instead, and the Comments tab lists the thread by its object ID and kind, never "Pin Pin". The owner added on 2026-11-25 that the same must work for layers and groups and that everything a comment mentions must be reachable. A row of the layers panel, or of the tree PROTO-184 (drawn objects live in a Figma style layers tree) builds, opens a comment on that layer or group from its right click menu and with C, anchored by a new layer anchor kind added to the threads table by an additive migration, and the thread shows on the row. Object IDs, layer and group names, region and selection anchors and slide names written in a comment, picked from an @ or # suggestion list while typing or typed as an ID such as T2·C145, become links that fly to the thing and select it, and the Comments tab and notifications use the same links.
   Done when a browser spec on the fake API comments on a selected cell, on a selection of three cells, on a layer from its row and on a dragged region from the slide, follows a mentioned object ID and a mentioned layer from a comment to their place on the slide, drops the comment tool on a drawn cell and finds the thread listed under that cell's ID, finds each thread in the Comments tab with the right kind, flies back to each, finds the cell's thread in its side panel, and the deployed viewer does the same.
   Depends on nothing. Size: L.
@@ -7454,7 +7459,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API opens the switcher with a long slide name and finds every row control and footer button inside the popover at the narrow and wide viewport sizes, and the deployed viewer shows the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-191 · Adding a result set from the viewer is designed with Fable and matches the import
+- [x] PROTO-191 · Adding a result set from the viewer is designed with Fable and matches the import
   The owner found on 2026-11-25 that Add a result set in the viewer's Result sets panel (apps/web/src/results/add-result-set.tsx, from RSET-006, add a result set from the viewer) looks broken: it opens a bare card with "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved" over the browser's own unstyled "Choose File No file chosen" input. It also accepts GeoJSON only, while the import reads GeoJSON, CSV, masks and heatmaps (RSET-003, readers for GeoJSON, CSV and masks, RSET-011, cells from imported files, RSET-014, imported heatmaps on the slide, and RSET-015, masks import as result sets) with its checks and fixes (RSET-005) and the "What files work?" help (RSET-010). Consult Fable on what to do with all of it before building, and record Fable's advice and the choices made in the log: whether the viewer reuses the upload flow's import with its checks, class mapping and pairing (apps/web/src/screens/upload/viewer-flow.tsx), which formats it takes, how the preview on the slide looks and how it is accepted or cancelled, and where Add a result set lives. Then build that design with a styled drop zone and file picker in the app's look, every supported format, the import's checks and fixes, the preview and a clear Save and Cancel.
   Done when Fable's advice is in the log, a browser spec on the fake API drops a GeoJSON and a CSV of cells onto the viewer, previews each on the slide, sees a failed check explained, saves one and cancels the other, and the deployed viewer adds a result set the same way.
   Depends on nothing. Size: M.
@@ -7464,7 +7469,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec on the fake API hides the bar with its key, decides a cell by key while hidden, reloads and finds it still hidden, and measures the shown bar clear of the current cell's box plus margin on cells near each screen edge, and the deployed cell review does the same.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-193 · The What is wrong reasons show the state that was saved
+- [x] PROTO-193 · The What is wrong reasons show the state that was saved
   The owner found on 2026-11-25 that in cell review the "What is wrong" chips under "You disagree with the AI on C1595" (apps/web/src/screens/review/object-card.tsx) send a request on each click but do not update or show an old state, and the screenshot shows "Not a cell" and "It is an immune cell" both ticked, which contradict each other. Make a chip show its new state at once, keep it after the save returns or roll it back with a toast when the save fails, read the saved reasons when the object is shown again, and decide with the reason list whether contradicting reasons such as not a cell and a cell type may be ticked together, making them exclusive if not.
   Done when a browser spec on the fake API ticks and unticks reasons on a cell, steps away and back and finds the saved set, sees a failed save rolled back with a toast, cannot tick Not a cell together with a cell type if they are exclusive, and the deployed cell review does the same.
   Depends on nothing. Size: S.
@@ -7499,6 +7504,21 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser spec opens the slide switcher at 640 and 768 px and every top bar control stays clickable, and the deployed viewer does the same.
   Depends on PROTO-190. Size: S.
 
+- [ ] PROTO-200 · Auto region finishes under reduced motion and a second drag does not fail at once
+  The second walkthrough of the 2026-11-25 fixes found on CMU-1.tiff with Good that a 280 px Auto region drag under reduced motion stayed working and ended Not done with no proposals by 300 s, while the same drag without reduced motion gave 30 proposals. A second 200 px drag in both runs ended at once with a failed outline, and under reduced motion the bar said Too large. Find why the reduced motion path never takes the results and why the second request fails, and fix both.
+  Done when a browser spec on the fake API with a slow model draws two regions one after the other with and without reduced motion and gets proposals for each, and the deployed Auto region does the same.
+  Depends on PROTO-185. Size: S.
+
+- [ ] PROTO-201 · A sample review opened from its link with no mode makes its first cell current
+  The second walkthrough opened the sample review RT-1 on CMU-1.tiff from its link in the Review tasks tab, which carries no mode. No cell was current, J did not step to one and Show the cells changed nothing in the panel, while with mode=guided the first cell is current at once. A review task opened without a mode should land in its task's default mode, so every link to a review behaves the same.
+  Done when a browser spec opens the sample review from the Review tasks link, finds the first cell current and steps with J, and the deployed sample review does the same.
+  Depends on ONB-012. Size: S.
+
+- [ ] PROTO-202 · The jobs tray refreshes a job it already shows
+  The second walkthrough read the jobs tray every 10 s during the sample run and saw Running, Waiting for a GPU unchanged for 18 minutes, while /api/me/jobs said the job finished 116 s after it started. Check with the tray open whether it stops polling a job it already shows, and make it follow the job to done or failed.
+  Done when a browser spec on the fake API opens the tray on a queued job, moves the job to running and then done, and finds each state in the tray within its poll time, and the deployed tray does the same on a sample run.
+  Depends on JOBS-003. Size: S.
+
 - [x] EXP-018 · The moderator prepares a participant project from the console for the code the page shows
   The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
   Done when an API test seeds and removes a participant project through the new route, a Playwright spec on the fake API prepares a participant and starts task 1, and a deployed dry run as one code goes from Prepare to the thank-you page, recorded in a result file.
@@ -7512,7 +7532,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when an API test prepares a participant, redeems the link once and is refused a second time and after expiry, a browser spec on the fake API opens the link in a fresh context and reaches task 1 with no sign-in, the console shows that participant's progress, and a deployed dry run with one code goes from the link to the thank-you page, recorded in a result file.
   Depends on EXP-018. Size: M.
 
-- [ ] EXP-021 · A moderator new to the study workspace joins it as an admin
+- [x] EXP-021 · A moderator new to the study workspace joins it as an admin
   Decision 178 (who may remove a prepared study participant), option B, answered on 2026-11-25. EXP-018 (the moderator prepares a participant project from the console) seeds the participant project with the moderator's own account as its seat, and a moderator new to the study workspace joins it as a researcher without admin rights, so they cannot remove the project there. Make that new seat join with admin rights, so the moderator prepares and removes participants from the study workspace itself, and drop the command line remove the dry run prints.
   Done when an API test prepares a participant as a moderator new to the study workspace, finds the seat an admin, and removes the project from that workspace, and the deployed dry run removes it from the console.
   Depends on EXP-018. Size: S.
