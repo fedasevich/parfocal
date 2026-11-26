@@ -329,7 +329,7 @@ async def owners_left(connection: AsyncConnection, project_id: uuid.UUID) -> int
     "",
     operation_id="createProject",
     status_code=201,
-    **require(Permission.CREATE_CASES, write=True),
+    **require(Permission.CREATE_CASES, write=True, study_participants=False),
 )
 async def create_project(
     draft: ProjectDraft, principal: CurrentPrincipal, connection: TenantConnection
@@ -596,7 +596,7 @@ async def kept_row_of(
     operation_id="deleteProject",
     status_code=204,
     response_class=Response,
-    **require(Permission.CREATE_CASES, write=True),
+    **require(Permission.CREATE_CASES, write=True, study_participants=False),
 )
 async def delete_project(
     project_id: uuid.UUID,

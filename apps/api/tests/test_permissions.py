@@ -29,12 +29,15 @@ from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images
 from parfocal_api import study_links, study_participants, tour_switch
 from parfocal_api.dataset_versions import dataset_version_key
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
+from parfocal_api.invitations import InvitationDraft
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.permissions import (
     ADMIN_RIGHTS,
     COLUMNS,
     MATRIX,
+    NARROWING,
+    NOT_FOR_STUDY_PARTICIPANTS_MARK,
     Grant,
     Permission,
     grant_for,
@@ -102,6 +105,7 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
+from parfocal_api.users import RoleChange
 from parfocal_common.cell_crops import crop_key
 from parfocal_common.chunk_store import Cell, build_cells, packed, write_cells
 from parfocal_common.db import async_database_url, metadata
@@ -1888,11 +1892,59 @@ def test_admin_rights_gate_every_admin_read() -> None:
 
 
 def test_the_matrix_covers_every_permission_for_every_role() -> None:
-    assert set(COLUMNS) == set(Role) == {Role.RESEARCHER, Role.REVIEWER}
+    assert set(COLUMNS) == set(Role) == {Role.RESEARCHER, Role.REVIEWER, Role.STUDY_PARTICIPANT}
     assert set(MATRIX) == set(Permission)
     for grants in MATRIX.values():
         assert set(grants) == set(Role)
     assert set(Grant) == {Grant.ALL, Grant.ASSIGNED, Grant.VIEW_ONLY, Grant.EMERGENCY, Grant.NONE}
+
+
+STUDY_PARTICIPANT_CLOSED = {
+    "createProject",
+    "deleteProject",
+    "inviteTaskReviewer",
+    "acceptInvitation",
+    "joinWorkspace",
+    "askToJoinWorkspace",
+    "createMyWorkspace",
+    "startPasskeyRegistration",
+    "savePasskey",
+}
+
+
+def test_a_study_participant_never_holds_more_than_a_researcher() -> None:
+    for permission in Permission:
+        participant = grant_for(Role.STUDY_PARTICIPANT, permission)
+        assert grant_for(Role.STUDY_PARTICIPANT, permission, admin_rights=True) is participant
+        researcher = grant_for(Role.RESEARCHER, permission)
+        if researcher in NARROWING:
+            assert NARROWING.index(participant) <= NARROWING.index(researcher), permission
+        else:
+            assert participant is Grant.NONE, permission
+    refused = {p for p in Permission if grant_for(Role.STUDY_PARTICIPANT, p) is Grant.NONE}
+    assert refused == {
+        Permission.EMERGENCY_ACCESS,
+        Permission.PRIVACY_MODE,
+        Permission.MANAGE_PEOPLE,
+        Permission.AUDIT_LOG,
+        Permission.DEVELOPER_MODE,
+    }
+
+
+def test_the_routes_closed_to_study_participants_are_marked() -> None:
+    marked = {
+        name
+        for name, operation in operations().items()
+        if operation.get(NOT_FOR_STUDY_PARTICIPANTS_MARK)
+    }
+    assert marked == STUDY_PARTICIPANT_CLOSED
+
+
+def test_no_draft_assigns_the_study_participant_role() -> None:
+    with pytest.raises(ValueError, match="study join link"):
+        RoleChange(role=Role.STUDY_PARTICIPANT)
+    with pytest.raises(ValueError, match="study join link"):
+        InvitationDraft(email="someone@example.org", role=Role.STUDY_PARTICIPANT)
 
 
 def test_retention_and_legal_holds_check_one_permission() -> None:
@@ -3233,6 +3285,31 @@ def test_every_member_endpoint_is_open_to_every_member_role(
     api: ApiAs, workspace: Workspace, operation: str, seat: Seat
 ) -> None:
     assert send(api, principal_for(workspace, seat), MEMBER_CALLS[operation](workspace)) == 200
+
+
+def closed_to_study_participants(operation: str) -> bool:
+    grant = grant_for(Role.STUDY_PARTICIPANT, guarded_operations()[operation])
+    return (
+        grant is Grant.NONE
+        or (operation in WRITES | ADMIN_READS and grant is Grant.VIEW_ONLY)
+        or operation in STUDY_PARTICIPANT_CLOSED
+    )
+
+
+@pytest.mark.db
+@pytest.mark.parametrize("operation", sorted(GUARDED_CALLS), ids=str)
+def test_every_guarded_endpoint_refuses_a_study_participant_where_its_column_says_so(
+    api: ApiAs, workspace: Workspace, operation: str
+) -> None:
+    if not closed_to_study_participants(operation):
+        pytest.skip("open to a study participant in their own project")
+    participant = MemberPrincipal(
+        f"{workspace.slug}-study-participant",
+        workspace.tenant_id,
+        workspace.users[RESEARCHER],
+        Role.STUDY_PARTICIPANT,
+    )
+    assert send(api, participant, GUARDED_CALLS[operation](workspace)) == 403
 
 
 @pytest.mark.db

@@ -25,9 +25,12 @@ class Plan(StrEnum):
 class Role(StrEnum):
     RESEARCHER = "researcher"
     REVIEWER = "reviewer"
+    STUDY_PARTICIPANT = "study-participant"
 
 
-MEMBER_ROLE_CHECK = "role IN ('researcher', 'reviewer')"
+ASSIGNABLE_ROLES = frozenset({Role.RESEARCHER, Role.REVIEWER})
+MEMBER_ROLE_CHECK = "role IN ('researcher', 'reviewer', 'study-participant')"
+INVITATION_ROLE_CHECK = "role IN ('researcher', 'reviewer')"
 ADMIN_RIGHTS_CHECK = "NOT admin_rights OR role = 'researcher'"
 
 

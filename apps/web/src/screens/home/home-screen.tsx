@@ -30,7 +30,9 @@ import { now } from "../../clock.ts";
 import { setTourOfferSlot } from "../../help/tour-state.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
+import { canCreateProjects } from "../../shell/project-creation.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
+import { useCanCreateProjects } from "../../shell/use-can-create-projects.ts";
 import { useWorklistLive } from "../../worklist-live/use-worklist-live.ts";
 import {
   dotJoin,
@@ -176,6 +178,7 @@ function QuickActions({
 
   const goTo = useGoTo();
   const overlay = useOverlay();
+  const mayCreateProjects = useCanCreateProjects();
   const actions: QuickAction[] = [
     {
       icon: "upload",
@@ -204,12 +207,16 @@ function QuickActions({
       text: t`A slide, a case or an ID like T2·C145`,
       run: () => void overlay.set("palette"),
     },
-    {
-      icon: "folder",
-      title: t`New project`,
-      text: t`Privacy, classes and a template`,
-      run: () => void goTo(destinations.newProject()),
-    },
+    ...(mayCreateProjects
+      ? [
+          {
+            icon: "folder" as const,
+            title: t`New project`,
+            text: t`Privacy, classes and a template`,
+            run: () => void goTo(destinations.newProject()),
+          },
+        ]
+      : []),
   ];
   return (
     <div className="grid grid-cols-5 gap-2.5">
@@ -658,9 +665,11 @@ export function HomeScreen() {
           <Section>
             <Trans>Projects</Trans>
           </Section>
-          <Button variant="link" onClick={() => void goTo(destinations.newProject())}>
-            <Trans>New project</Trans>
-          </Button>
+          {canCreateProjects(me) ? (
+            <Button variant="link" onClick={() => void goTo(destinations.newProject())}>
+              <Trans>New project</Trans>
+            </Button>
+          ) : null}
         </div>
         <div className="grid grid-cols-2 gap-3">
           {home.projects.map((project) => (

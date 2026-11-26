@@ -12,7 +12,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import SESSION_COOKIE, digest
 from parfocal_api.context import CurrentPrincipal, TenantConnection, engine_of
 from parfocal_api.notifications import deliver_after_commit, notify
-from parfocal_api.permissions import Permission, require
+from parfocal_api.permissions import Permission, not_for_study_participants, require
 from parfocal_api.principals import MemberPrincipal, SignedInUser, database_scope
 from parfocal_api.problems import (
     BadRequestError,
@@ -318,6 +318,7 @@ async def list_joinable_workspaces(
     "/joinable-workspaces/{tenant_id}/membership",
     operation_id="joinWorkspace",
     status_code=201,
+    **not_for_study_participants(),
 )
 async def join_workspace(
     tenant_id: uuid.UUID, request: Request, principal: CurrentPrincipal
@@ -399,6 +400,7 @@ async def join_workspace(
     "/joinable-workspaces/{tenant_id}/access-requests",
     operation_id="askToJoinWorkspace",
     status_code=201,
+    **not_for_study_participants(),
 )
 async def ask_to_join_workspace(
     tenant_id: uuid.UUID,

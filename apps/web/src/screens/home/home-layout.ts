@@ -1,4 +1,4 @@
-import type { SettingValues } from "@parfocal/api-client";
+import type { Role, SettingValues } from "@parfocal/api-client";
 
 export type HomeLayoutChoice = SettingValues["home_layout"];
 export type HomeLayout = Exclude<HomeLayoutChoice, "role">;
@@ -14,10 +14,10 @@ export const homeLayoutOfSetup: Record<SetupRole, HomeLayout> = {
 
 export const homeLayoutFor = (
   choice: HomeLayoutChoice,
-  workspaceRole: "researcher" | "reviewer" | undefined,
+  workspaceRole: Role | undefined,
 ): HomeLayout => {
   if (choice !== "role") return choice;
-  return workspaceRole === "researcher" ? "research" : "review";
+  return workspaceRole === "reviewer" || workspaceRole === undefined ? "review" : "research";
 };
 
 export const homeBlocks: Record<HomeLayout, readonly HomeBlock[]> = {

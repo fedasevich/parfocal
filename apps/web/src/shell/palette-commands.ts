@@ -31,6 +31,7 @@ export type PaletteContext = {
   onSlide: boolean;
   developerMode: boolean;
   developerAllowed: boolean;
+  canCreateProjects: boolean;
   openDeveloper: (section?: string) => void;
   go: (href: string) => void;
   measure: () => void;
@@ -157,14 +158,18 @@ function actionEntries(ctx: PaletteContext): PaletteEntry[] {
       keywords: ["assign", "reviewers", "hand out"],
       run: () => ctx.go(destinations.newReviewTask(projectId)),
     },
-    {
-      id: "new-project",
-      group: "Actions",
-      icon: "folder",
-      label: "New project",
-      keywords: ["create"],
-      run: () => ctx.go(destinations.newProject()),
-    },
+    ...(ctx.canCreateProjects
+      ? [
+          {
+            id: "new-project",
+            group: "Actions" as const,
+            icon: "folder" as const,
+            label: "New project",
+            keywords: ["create"],
+            run: () => ctx.go(destinations.newProject()),
+          },
+        ]
+      : []),
     {
       id: "my-work",
       group: "Actions",

@@ -14,7 +14,7 @@ from parfocal_api.scim_provisioning import (
 )
 from parfocal_api.sso_domains import DnsOverHttps, DomainProof, prove_sso_domains
 from parfocal_api.sso_provisioning import SamlAttributes, SamlConnectionRequest, connect_saml
-from parfocal_api.tables import Plan, Region, Role, TenantKind
+from parfocal_api.tables import ASSIGNABLE_ROLES, Plan, Region, Role, TenantKind
 from parfocal_api.tenant_provisioning import TenantRequest, deprovision, provision
 from parfocal_api.zitadel_directory import DirectoryError, ZitadelDirectory
 from parfocal_common.db import create_engine
@@ -57,7 +57,7 @@ def parser() -> argparse.ArgumentParser:
     saml.add_argument("--email-domain", required=True, action="append", dest="email_domains")
     saml.add_argument("--project-organisation-id", required=True)
     saml.add_argument("--project-id", required=True)
-    saml.add_argument("--default-role", choices=[role.value for role in Role])
+    saml.add_argument("--default-role", choices=sorted(role.value for role in ASSIGNABLE_ROLES))
     saml.add_argument("--group-role", action="append", default=[], metavar="GROUP=ROLE")
     saml.add_argument("--email-attribute", default="email")
     saml.add_argument("--groups-attribute", default="groups")
@@ -89,8 +89,9 @@ def group_roles(pairs: list[str]) -> dict[str, Role]:
     mapped: dict[str, Role] = {}
     for pair in pairs:
         group, separator, role = pair.rpartition("=")
-        if not separator or not group or role not in set(Role):
-            raise LookupError(f"--group-role takes GROUP=ROLE with a role of {', '.join(Role)}")
+        if not separator or not group or role not in ASSIGNABLE_ROLES:
+            roles = ", ".join(sorted(ASSIGNABLE_ROLES))
+            raise LookupError(f"--group-role takes GROUP=ROLE with a role of {roles}")
         mapped[group] = Role(role)
     return mapped
 

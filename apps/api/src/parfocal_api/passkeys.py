@@ -16,6 +16,7 @@ from parfocal_api.password_login import (
     login_of,
     throttle,
 )
+from parfocal_api.permissions import not_for_study_participants
 from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.users import signed_in
 from parfocal_api.zitadel_login import (
@@ -123,7 +124,11 @@ async def list_passkeys(request: Request, principal: CurrentPrincipal) -> list[S
     return [SavedPasskeySummary(id=item.passkey_id, name=item.name) for item in saved]
 
 
-@router.post("/passkeys/registration", operation_id="startPasskeyRegistration")
+@router.post(
+    "/passkeys/registration",
+    operation_id="startPasskeyRegistration",
+    **not_for_study_participants(),
+)
 async def start_passkey_registration(
     request: Request, principal: CurrentPrincipal
 ) -> PasskeyCreation:
@@ -135,7 +140,7 @@ async def start_passkey_registration(
     return PasskeyCreation(passkey=registration.passkey_id, options=registration.options)
 
 
-@router.post("/passkeys", operation_id="savePasskey")
+@router.post("/passkeys", operation_id="savePasskey", **not_for_study_participants())
 async def save_passkey(
     passkey: NewPasskey, request: Request, principal: CurrentPrincipal
 ) -> SavedPasskeySummary:

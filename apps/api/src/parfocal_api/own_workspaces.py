@@ -9,6 +9,7 @@ from sqlalchemy import exists, insert, select, update
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import SESSION_COOKIE, digest
 from parfocal_api.context import CurrentPrincipal, engine_of
+from parfocal_api.permissions import not_for_study_participants
 from parfocal_api.problems import ConflictError, UnauthenticatedError
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
@@ -58,7 +59,12 @@ def slug_of(name: str) -> str:
     return f"{stem}-{uuid.uuid4().hex[:8]}"
 
 
-@router.post("/workspaces", operation_id="createMyWorkspace", status_code=201)
+@router.post(
+    "/workspaces",
+    operation_id="createMyWorkspace",
+    status_code=201,
+    **not_for_study_participants(),
+)
 async def create_my_workspace(
     draft: WorkspaceDraft, request: Request, principal: CurrentPrincipal
 ) -> Workspace:

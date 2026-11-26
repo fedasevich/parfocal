@@ -10,6 +10,7 @@ import {
   fakeStudyWorkspaceName,
   prepareFakeParticipant,
 } from "./study-participant.ts";
+import { takeFakeStudySeat } from "./study-seat.ts";
 import { activeFakeWorkspace } from "./workspace-scene.ts";
 
 export const fakeStudyLinksKey = "parfocal.fake.study-links";
@@ -40,6 +41,7 @@ export function redeemFakeStudyLink(token: string): string | undefined {
   if (code === undefined || used.includes(token)) return undefined;
   writeJson(usedTokensKey, [...used, token]);
   prepareFakeParticipant(code);
+  takeFakeStudySeat(code);
   const links = readJson<StudyLinkRow[]>(fakeStudyLinksKey, []);
   const at = new Date().toISOString();
   writeJson(

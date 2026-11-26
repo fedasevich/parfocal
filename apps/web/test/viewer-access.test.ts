@@ -6,13 +6,14 @@ import {
   assignedTo,
   holdsReviewRight,
   lookOnlyLayer,
+  matrixKeyOf,
   type ViewerAccessFacts,
   viewerAccessOf,
   type WorkspaceRole,
   workspaceRoleOf,
 } from "../src/viewer/viewer-access.ts";
 
-const roles: readonly WorkspaceRole[] = ["researcher", "reviewer"];
+const roles: readonly WorkspaceRole[] = ["researcher", "reviewer", "study-participant"];
 
 const reviewRow = permissionMatrix.find((row) => row.key === "review");
 
@@ -28,7 +29,7 @@ const open: ViewerAccessFacts = {
 test("the review right follows the review row of the permissions matrix", () => {
   assert.ok(reviewRow !== undefined);
   for (const role of roles) {
-    const grant: string = reviewRow[role];
+    const grant: string = reviewRow[matrixKeyOf(role)];
     assert.equal(holdsReviewRight(role), grant === "y" || grant === "o", role);
   }
 });

@@ -18,6 +18,7 @@ import { matchCommand, matchText } from "./palette-match.ts";
 import { useGoTo } from "./router-link.tsx";
 import { searchHandoff } from "./search-handoff.ts";
 import { hitHref, hitIcons } from "./search-hits.ts";
+import { useCanCreateProjects } from "./use-can-create-projects.ts";
 
 type Row = PaletteCommand & { group: PaletteGroup; score: number };
 
@@ -141,6 +142,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const developerMode = useDeveloperMode();
   const developerAllowed = useDeveloperAllowed();
+  const mayCreateProjects = useCanCreateProjects();
   const hints = useHintsSeen();
   const projects = okData(useListProjects().data) ?? [];
   const trimmed = query.trim();
@@ -159,6 +161,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
     onSlide: /^\/projects\/[^/]+\/slides\/[^/]+$/.test(pathname),
     developerMode,
     developerAllowed,
+    canCreateProjects: mayCreateProjects,
     openDeveloper: (section) => {
       close();
       if (isSlidePath(pathname)) openDeveloperDrawer(section);

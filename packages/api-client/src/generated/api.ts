@@ -41,6 +41,7 @@ export type Role = (typeof Role)[keyof typeof Role];
 export const Role = {
   researcher: "researcher",
   reviewer: "reviewer",
+  "study-participant": "study-participant",
 } as const;
 
 export type TenantKind = (typeof TenantKind)[keyof typeof TenantKind];

@@ -4,13 +4,15 @@ from typing import Any
 from fastapi import Depends
 
 from parfocal_api.context import CurrentPrincipal
-from parfocal_api.principals import MemberPrincipal, ServicePrincipal
+from parfocal_api.principals import MemberPrincipal, ServicePrincipal, SignedInUser
 from parfocal_api.problems import ForbiddenError
+from parfocal_api.study_seats import is_study_seat
 from parfocal_api.tables import PrivacyMode, ProjectRole, Role, SignOutRight
 
 ROLE_NAMES = {
     Role.RESEARCHER: "Researcher",
     Role.REVIEWER: "Reviewer",
+    Role.STUDY_PARTICIPANT: "Study participant",
 }
 
 ROLE_DUTIES = {
@@ -26,6 +28,13 @@ ROLE_DUTIES = {
         "notes, fixes outlines and types, adds missed objects, fills the opinion form and "
         "submits each slide. Decides queued objects when a researcher makes them adjudicator. "
         "Never uploads, runs models, creates projects or tasks, signs off or holds admin rights"
+    ),
+    Role.STUDY_PARTICIPANT: (
+        "Does the study tasks in the one project prepared for them, as its owner. Seated only "
+        "by a study join link, never invited or given admin rights. Never creates or deletes a "
+        "project, invites anyone, opens another project, the study console, the study results "
+        "or the admin pages, asks for emergency access, makes API tokens, adds a passkey, or "
+        "makes or joins another workspace"
     ),
 }
 
@@ -104,26 +113,26 @@ PERMISSION_NAMES = {
     Permission.DEVELOPER_MODE: "Developer mode and API tokens",
 }
 
-COLUMNS = (Role.RESEARCHER, Role.REVIEWER)
+COLUMNS = (Role.RESEARCHER, Role.REVIEWER, Role.STUDY_PARTICIPANT)
 
 ROWS = {
-    Permission.SEE_SLIDES: "yo",
-    Permission.SEE_LABELS: "yr",
-    Permission.EMERGENCY_ACCESS: "bn",
-    Permission.CREATE_CASES: "yn",
-    Permission.PRIVACY_MODE: "nn",
-    Permission.UPLOAD_SLIDES: "yn",
-    Permission.MOVE_SLIDES: "yn",
-    Permission.RUN_MODELS: "yn",
-    Permission.REVIEW: "yo",
-    Permission.SET_OWN_STATUS: "yy",
-    Permission.SEE_PEOPLE: "yr",
-    Permission.MANAGE_PEOPLE: "nn",
-    Permission.WORKSPACE_SETTINGS: "rn",
-    Permission.INTEGRATIONS: "rn",
-    Permission.REPORT_TEMPLATES: "rn",
-    Permission.AUDIT_LOG: "nn",
-    Permission.DEVELOPER_MODE: "yn",
+    Permission.SEE_SLIDES: "yoy",
+    Permission.SEE_LABELS: "yry",
+    Permission.EMERGENCY_ACCESS: "bnn",
+    Permission.CREATE_CASES: "yny",
+    Permission.PRIVACY_MODE: "nnn",
+    Permission.UPLOAD_SLIDES: "yny",
+    Permission.MOVE_SLIDES: "yny",
+    Permission.RUN_MODELS: "yny",
+    Permission.REVIEW: "yoy",
+    Permission.SET_OWN_STATUS: "yyy",
+    Permission.SEE_PEOPLE: "yrr",
+    Permission.MANAGE_PEOPLE: "nnn",
+    Permission.WORKSPACE_SETTINGS: "rnr",
+    Permission.INTEGRATIONS: "rnr",
+    Permission.REPORT_TEMPLATES: "rnr",
+    Permission.AUDIT_LOG: "nnn",
+    Permission.DEVELOPER_MODE: "ynn",
 }
 
 ADMIN_RIGHTS = frozenset(
@@ -211,6 +220,39 @@ def grant_for(role: Role, permission: Permission, *, admin_rights: bool = False)
     return MATRIX[permission][role]
 
 
+class StudyParticipantRefusedError(ForbiddenError):
+    code = "study-participant-refused"
+    title = "A study participant works only in the project prepared for them"
+
+
+def is_study_participant(principal: object) -> bool:
+    if isinstance(principal, MemberPrincipal):
+        return principal.role is Role.STUDY_PARTICIPANT or is_study_seat(principal.subject)
+    if isinstance(principal, SignedInUser):
+        return is_study_seat(principal.subject)
+    return False
+
+
+def refuse_study_participants(principal: object) -> None:
+    if is_study_participant(principal):
+        raise StudyParticipantRefusedError
+
+
+async def not_a_study_participant(principal: CurrentPrincipal) -> None:
+    refuse_study_participants(principal)
+
+
+NOT_FOR_STUDY_PARTICIPANTS = Depends(not_a_study_participant)
+NOT_FOR_STUDY_PARTICIPANTS_MARK = "x-not-for-study-participants"
+
+
+def not_for_study_participants() -> dict[str, Any]:
+    return {
+        "dependencies": [NOT_FOR_STUDY_PARTICIPANTS],
+        "openapi_extra": {NOT_FOR_STUDY_PARTICIPANTS_MARK: True},
+    }
+
+
 def member_of(principal: object) -> MemberPrincipal:
     if isinstance(principal, MemberPrincipal):
         return principal
@@ -249,7 +291,12 @@ def may_ask_for_emergency_access(principal: object) -> bool:
 
 
 def require(
-    permission: Permission, *, write: bool = False, emergency: bool = False, admin: bool = False
+    permission: Permission,
+    *,
+    write: bool = False,
+    emergency: bool = False,
+    admin: bool = False,
+    study_participants: bool = True,
 ) -> dict[str, Any]:
     async def check(principal: CurrentPrincipal) -> Grant:
         grant = grant_of(principal, permission)
@@ -266,4 +313,8 @@ def require(
         extra["x-permission-admin"] = True
     if emergency:
         extra["x-permission-emergency"] = True
-    return {"dependencies": [Depends(check)], "openapi_extra": extra}
+    dependencies = [Depends(check)]
+    if not study_participants:
+        extra[NOT_FOR_STUDY_PARTICIPANTS_MARK] = True
+        dependencies.append(NOT_FOR_STUDY_PARTICIPANTS)
+    return {"dependencies": dependencies, "openapi_extra": extra}

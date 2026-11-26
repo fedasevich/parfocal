@@ -22,6 +22,7 @@ from parfocal_api.permissions import (
     SIGN_OUT_NAMES,
     Grant,
 )
+from parfocal_api.tables import Role
 from parfocal_common.repository import repository_root
 
 DOC_PATH = repository_root(__file__) / "docs" / "reference" / "permissions.md"
@@ -137,10 +138,15 @@ def render() -> str:
     )
 
 
+def web_key(role: Role) -> str:
+    first, *rest = role.value.split("-")
+    return first + "".join(part.capitalize() for part in rest)
+
+
 def render_web_matrix() -> str:
     rows = [
         f'  {{ key: "{permission.value}", '
-        + ", ".join(f'{role.value}: "{grants[role].value}"' for role in COLUMNS)
+        + ", ".join(f'{web_key(role)}: "{grants[role].value}"' for role in COLUMNS)
         + f", adminRights: {'true' if permission in ADMIN_RIGHTS else 'false'} }},"
         for permission, grants in MATRIX.items()
     ]
