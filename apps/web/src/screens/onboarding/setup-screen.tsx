@@ -2,10 +2,12 @@ import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
+  type SampleOutline,
   useAskToJoinWorkspace,
   useCreateMyWorkspace,
   useCreateSampleProject,
   useGetMe,
+  useGetSampleOutline,
   useJoinWorkspace,
   useListJoinableWorkspaces,
   useSetMySettingLayers,
@@ -90,7 +92,7 @@ const firsts: Record<First, { icon: IconName; title: string; detail: string; not
     sample: {
       icon: "slides",
       title: t`Open the sample project`,
-      detail: t`4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely`,
+      detail: t`Sample slides with AI results and a short review task for you, to try everything safely`,
       note: t`The sample project stays in your workspace as Sample · sentinel nodes and can be deleted at any time.`,
     },
     create: {
@@ -106,6 +108,15 @@ const firsts: Record<First, { icon: IconName; title: string; detail: string; not
       note: t`Invites show on your home and in the bell. The sample project is there meanwhile if you want to try things.`,
     },
   }));
+
+const sampleDetail = (outline: SampleOutline | undefined): string => {
+  if (outline === undefined) return firsts.sample.detail;
+  const slides = outline.slides;
+  const reviewed = outline.review_slides;
+  return outline.run_slide === null
+    ? t`${slides} slides with AI results and a review of ${reviewed} of them, regions and typed cells`
+    : t`${slides} slides with AI results, a review of ${reviewed} of them with regions and typed cells, and one slide to run a model on`;
+};
 
 const devices: { key: Device; label: string; keys: [string, string][] }[] = lazyText(() => [
   {
@@ -230,6 +241,7 @@ export function SetupScreen({ step, change }: Props) {
   const askToJoin = useAskToJoinWorkspace();
   const createWorkspace = useCreateMyWorkspace();
   const createSample = useCreateSampleProject();
+  const outline = okData(useGetSampleOutline().data);
   const router = useRouter();
   const [failed, setFailed] = useState("");
   const [moved, setMoved] = useState("");
@@ -489,7 +501,7 @@ export function SetupScreen({ step, change }: Props) {
             tall
             icon={firsts[key].icon}
             title={firsts[key].title}
-            detail={firsts[key].detail}
+            detail={key === "sample" ? sampleDetail(outline) : firsts[key].detail}
             selected={u.first === key}
             onClick={() => set({ first: key })}
             badge={
@@ -571,6 +583,7 @@ export function SetupScreen({ step, change }: Props) {
       first={u.first}
       ws={ws === "new" ? "new" : asking ? "asked" : "joined"}
       wsName={wsName ?? ""}
+      outline={outline}
     />,
   ];
 
@@ -713,12 +726,14 @@ function DoneStep({
   first,
   ws,
   wsName,
+  outline,
 }: {
   firstName: string;
   role: Role;
   first: First;
   ws: "joined" | "asked" | "new";
   wsName: string;
+  outline: SampleOutline | undefined;
 }) {
   const { t } = useLingui();
 
@@ -728,9 +743,18 @@ function DoneStep({
       : ws === "asked"
         ? ["mail", t`Asked to join ${wsName}`, false, t`waiting for its admin`]
         : ["check", `Created ${wsName}`, true];
+  const slides = outline?.slides ?? 0;
+  const reviewed = outline?.review_slides ?? 0;
+  const runSlide = outline?.run_slide ?? null;
   const projectRow: [IconName, string, boolean, string?] =
     first === "sample"
-      ? ["check", t`Sample project ready: 4 slides, 2 result sets`, true]
+      ? [
+          "check",
+          outline === undefined
+            ? t`Sample project ready`
+            : t`Sample project ready: ${slides} slides, a review of ${reviewed}`,
+          true,
+        ]
       : first === "create"
         ? ["folder", t`Create your first project`, false, t`next, after this`]
         : ["bell", t`Wait for an invite from a researcher`, false, t`on your home`];
@@ -752,10 +776,15 @@ function DoneStep({
             ["upload", t`Upload slides and their AI results`],
             ["users", t`Hand slides to reviewers as a review task`],
           ];
+  const runRow: [IconName, string, boolean, string][] =
+    first === "sample" && runSlide !== null
+      ? [["smart", t`Run a model on ${runSlide}`, false, t`in the sample project`]]
+      : [];
   const rows: [IconName, string, boolean, string?][] = [
     ["check", t`Account and email confirmed`, true],
     workspaceRow,
     projectRow,
+    ...runRow,
     ...todo.map(([icon, text]): [IconName, string, boolean, string] => [
       icon,
       text,

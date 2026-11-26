@@ -7,6 +7,26 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: cs\n"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "in the sample project"
+msgstr ""
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Run a model on {runSlide}"
+msgstr ""
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample project ready"
+msgstr ""
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample project ready: {slides} slides, a review of {reviewed}"
+msgstr ""
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample slides with AI results and a short review task for you, to try everything safely"
+msgstr ""
+
 #. placeholder {0}: batch.storage.needed_gb
 #. placeholder {0}: batch.storage.trimmed_gb
 #. placeholder {1}: batch.storage.left_gb
@@ -251,6 +271,14 @@ msgstr ""
 
 #: src/screens/upload/files-step.tsx
 msgid ". Skip it, or replace the existing slide and keep its reviews."
+msgstr ""
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "{slides} slides with AI results and a review of {reviewed} of them, regions and typed cells"
+msgstr ""
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "{slides} slides with AI results, a review of {reviewed} of them with regions and typed cells, and one slide to run a model on"
 msgstr ""
 
 #: src/flow-map/prototype-bar.tsx
@@ -2843,10 +2871,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "3D mouse"
-msgstr ""
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
 msgstr ""
 
 #: src/screens/upload/progress-step.tsx
@@ -15715,10 +15739,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Sample project · sample numbers"
-msgstr ""
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Sample project ready: 4 slides, 2 result sets"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx

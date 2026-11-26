@@ -5424,6 +5424,116 @@
         "x-permission-write": true
       }
     },
+    "/api/sample-project": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Sample Outline",
+        "operationId": "getSampleOutline",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SampleOutline"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "create-cases"
+      }
+    },
     "/api/projects/{project_id}/members/{user_id}/sign-out": {
       "put": {
         "tags": [
@@ -84415,6 +84525,51 @@
           "text"
         ],
         "title": "RunningStep"
+      },
+      "SampleOutline": {
+        "properties": {
+          "slides": {
+            "type": "integer",
+            "title": "Slides"
+          },
+          "review_slides": {
+            "type": "integer",
+            "title": "Review Slides"
+          },
+          "cell_review_slides": {
+            "type": "integer",
+            "title": "Cell Review Slides"
+          },
+          "result_sets": {
+            "type": "integer",
+            "title": "Result Sets"
+          },
+          "cells": {
+            "type": "integer",
+            "title": "Cells"
+          },
+          "run_slide": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Slide"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slides",
+          "review_slides",
+          "cell_review_slides",
+          "result_sets",
+          "cells",
+          "run_slide"
+        ],
+        "title": "SampleOutline"
       },
       "SampleProject": {
         "properties": {

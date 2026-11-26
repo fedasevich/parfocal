@@ -192,6 +192,7 @@ import type {
   ReviewTaskDetail,
   RoomAccess,
   RunAreas,
+  SampleOutline,
   SavedEventTarget,
   SavedPasskeySummary,
   ScaleQuestion,
@@ -1378,6 +1379,21 @@ export const getCreateSampleProjectResponseMock = (
       ]),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getGetSampleOutlineResponseMock = (
+  overrideResponse: Partial<Extract<SampleOutline, object>> = {},
+): SampleOutline => ({
+  slides: faker.number.int(),
+  review_slides: faker.number.int(),
+  cell_review_slides: faker.number.int(),
+  result_sets: faker.number.int(),
+  cells: faker.number.int(),
+  run_slide: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -22158,6 +22174,30 @@ export const getCreateSampleProjectMockHandler = (
   );
 };
 
+export const getGetSampleOutlineMockHandler = (
+  overrideResponse?:
+    | SampleOutline
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SampleOutline> | SampleOutline),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/sample-project",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSampleOutlineResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSetProjectMemberSignOutMockHandler = (
   overrideResponse?:
     | SignOutSet
@@ -31860,6 +31900,7 @@ export const getParfocalAPIMock = () => [
   getGetProjectImportsMockHandler(),
   getGetUploadBatchMockHandler(),
   getCreateSampleProjectMockHandler(),
+  getGetSampleOutlineMockHandler(),
   getSetProjectMemberSignOutMockHandler(),
   getSwitchToTourRoleMockHandler(),
   getReturnFromTourRoleMockHandler(),

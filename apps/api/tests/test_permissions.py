@@ -1024,6 +1024,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "archiveProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/archive"),
     "restoreProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/restore"),
     "createSampleProject": lambda _: Call("POST", "/api/projects/sample"),
+    "getSampleOutline": lambda _: Call("GET", "/api/sample-project"),
     "deleteProject": lambda w: Call(
         "DELETE", f"/api/projects/{w.sample_project}", {"name": SAMPLE_NAME}
     ),

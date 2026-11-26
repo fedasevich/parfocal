@@ -7156,6 +7156,15 @@ export interface RunningStep {
   text: string;
 }
 
+export interface SampleOutline {
+  slides: number;
+  review_slides: number;
+  cell_review_slides: number;
+  result_sets: number;
+  cells: number;
+  run_slide: string | null;
+}
+
 export interface SavedEventTarget {
   id: string;
   project_id: string;
@@ -16822,6 +16831,184 @@ export const useCreateSampleProject = <TError = Problem, TContext = unknown>(
 ): UseMutationResult<Awaited<ReturnType<typeof createSampleProject>>, TError, void, TContext> => {
   return useMutation(getCreateSampleProjectMutationOptions(options), queryClient);
 };
+
+export type getSampleOutlineResponse200 = {
+  data: SampleOutline;
+  status: 200;
+};
+
+export type getSampleOutlineResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSampleOutlineResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSampleOutlineResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSampleOutlineResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSampleOutlineResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSampleOutlineResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSampleOutlineResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSampleOutlineResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSampleOutlineResponseSuccess = getSampleOutlineResponse200 & {
+  headers: Headers;
+};
+export type getSampleOutlineResponseError = (
+  | getSampleOutlineResponse400
+  | getSampleOutlineResponse401
+  | getSampleOutlineResponse403
+  | getSampleOutlineResponse404
+  | getSampleOutlineResponse409
+  | getSampleOutlineResponse422
+  | getSampleOutlineResponse429
+  | getSampleOutlineResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSampleOutlineResponse =
+  | getSampleOutlineResponseSuccess
+  | getSampleOutlineResponseError;
+
+export const getGetSampleOutlineUrl = () => {
+  return `/api/sample-project`;
+};
+
+/**
+ * @summary Get Sample Outline
+ */
+export const getSampleOutline = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSampleOutlineResponse> => {
+  return apiFetch<getSampleOutlineResponse>(getGetSampleOutlineUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSampleOutlineQueryKey = () => {
+  return [`/api/sample-project`] as const;
+};
+
+export const getGetSampleOutlineQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSampleOutline>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSampleOutline>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSampleOutlineQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSampleOutline>>> = ({ signal }) =>
+    getSampleOutline({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSampleOutline>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSampleOutlineQueryResult = NonNullable<Awaited<ReturnType<typeof getSampleOutline>>>;
+export type GetSampleOutlineQueryError = Problem;
+
+export function useGetSampleOutline<
+  TData = Awaited<ReturnType<typeof getSampleOutline>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSampleOutline>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSampleOutline>>,
+          TError,
+          Awaited<ReturnType<typeof getSampleOutline>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSampleOutline<
+  TData = Awaited<ReturnType<typeof getSampleOutline>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSampleOutline>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSampleOutline>>,
+          TError,
+          Awaited<ReturnType<typeof getSampleOutline>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSampleOutline<
+  TData = Awaited<ReturnType<typeof getSampleOutline>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSampleOutline>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Sample Outline
+ */
+
+export function useGetSampleOutline<
+  TData = Awaited<ReturnType<typeof getSampleOutline>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSampleOutline>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSampleOutlineQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type setProjectMemberSignOutResponse200 = {
   data: SignOutSet;

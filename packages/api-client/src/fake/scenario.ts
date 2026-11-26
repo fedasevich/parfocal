@@ -818,13 +818,27 @@ export const checklist = [
   { key: "opinion", label: "Submit your first opinion form", done: false },
 ] as const;
 
+export const sampleOutline = {
+  slides: 12,
+  review_slides: 4,
+  cell_review_slides: 1,
+  result_sets: 12,
+  cells: 40,
+  run_slide: "CMU-1-Small-Region.svs",
+};
+
 export const sampleProject = {
   id: uuid(3, 1),
   code: "S01",
   name: "Sample · sentinel nodes",
   colour: 4,
   members: ["LM"] as PersonKey[],
-  counts: { cases: 1, slides: 4, resultSets: 2, reviewedPercent: 0 },
+  counts: {
+    cases: 1,
+    slides: sampleOutline.slides,
+    resultSets: sampleOutline.result_sets,
+    reviewedPercent: 0,
+  },
 };
 
 export const sampleSlides = ["tumor_001", "tumor_002", "tumor_003", "normal_001"].map(
