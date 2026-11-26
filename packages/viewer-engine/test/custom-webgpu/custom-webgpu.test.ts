@@ -172,13 +172,13 @@ describe("vector instances", () => {
     assert.deepEqual([...new Uint8Array(data, pointOffset + 8, 4)], [9, 8, 7, 6]);
   });
 
-  it("starts a dashed ring at the middle of its first edge, as the Viv route does", () => {
+  it("starts a ring at the middle of its first edge and draws its seam twice, as the Viv route does", () => {
     const { data, counts } = buildVectorInstances(
       { polygons: polygonBatchFromRings([{ ring: [0, 0, 10, 0, 10, 10], color: [1, 2, 3, 4] }]) },
       { ringsFromMidFirstEdge: true },
     );
     assert.equal(counts.segments, 4);
-    assert.equal(counts.repeats, 0);
+    assert.equal(counts.repeats, 1);
     const offset = counts.triangles * triangleInstanceBytes;
     const segment = (index: number) => [
       ...new Float32Array(data, offset + index * segmentInstanceBytes, 5),
@@ -186,6 +186,7 @@ describe("vector instances", () => {
     assert.deepEqual(segment(0), [5, 0, 10, 0, 0]);
     assert.deepEqual(segment(1), [10, 0, 10, 10, 5]);
     assert.deepEqual(segment(3).slice(0, 4), [0, 0, 5, 0]);
+    assert.deepEqual(segment(4), [5, 0, 5, 0, 0]);
   });
 
   it("leaves a path open and ends it with a zero length segment for the end cap", () => {
