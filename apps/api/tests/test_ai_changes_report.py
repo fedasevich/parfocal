@@ -77,12 +77,14 @@ def changes() -> ReportData:
 
 def test_the_block_shows_hand_counted_changes_per_class_and_slide_with_letters() -> None:
     source = render_report(changes()).source
-    assert '[#"Tumour"], [#"3"], [#"1"], [#"1"], [#"0"], [#"1"], [#"1"], [#"A 1, B 2"],' in source
-    assert '[#"Stroma"], [#"2"], [#"0"], [#"0"], [#"1"], [#"1"], [#"1"], [#"B 2"],' in source
-    assert '[#"Immune"], [#"0"], [#"0"], [#"0"], [#"0"], [#"0"], [#"2"], [#"A 2"],' in source
-    assert '[#"All"], [#"5"], [#"1"], [#"1"], [#"1"], [#"2"], [#"5"], [#"A 4, B 4"],' in source
-    assert '[#"S-2"], [#"0"], [#"0"], [#"0"], [#"0"], [#"0"], [#"4"],' in source
-    assert '[#"All"], [#"5"], [#"1"], [#"1"], [#"1"], [#"2"], [#"5"],\n' in source
+    assert (
+        '[#"Tumour"], [#"3"], [#"1"], [#"1"], [#"0"], [#"1"], [#"1"], [#"A 1, B 2"], ),' in source
+    )
+    assert '[#"Stroma"], [#"2"], [#"0"], [#"0"], [#"1"], [#"1"], [#"1"], [#"B 2"], ),' in source
+    assert '[#"Immune"], [#"0"], [#"0"], [#"0"], [#"0"], [#"0"], [#"2"], [#"A 2"], ),' in source
+    assert '[#"All"], [#"5"], [#"1"], [#"1"], [#"1"], [#"2"], [#"5"], [#"A 4, B 4"], ),' in source
+    assert '[#"S-2"], [#"0"], [#"0"], [#"0"], [#"0"], [#"0"], [#"4"], ),' in source
+    assert '[#"All"], [#"5"], [#"1"], [#"1"], [#"1"], [#"2"], [#"5"], ),\n' in source
     assert str(FIRST) not in source
     assert str(SECOND) not in source
 

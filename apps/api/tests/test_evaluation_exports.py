@@ -67,8 +67,8 @@ def test_the_pdf_follows_the_block_order_and_carries_the_checksum() -> None:
     for expected in (
         "Evaluation report",
         "PROJECT-SENTINEL",
-        "Checksum: sha256:0123abcd",
-        "Signed off: 03/11/2026",
+        "Checksum sha256:0123abcd",
+        "Signed off 03/11/2026",
         "Two pathologists read.",
         "Dice 0.60",
         "Agree 7",

@@ -6,6 +6,7 @@ from datetime import date
 
 from parfocal_api.evaluation import Evaluation
 from parfocal_api.locales import DEFAULT_LOCALE, Locale, day, decimal, translated
+from parfocal_api.report_style import LAYOUT
 from parfocal_api.tables.review import REASON_TEXT
 from parfocal_common.report_blocks import (
     Comparison,
@@ -433,11 +434,12 @@ def page_setup(data: ReportData, messages: Mapping[str, str]) -> list[str]:
         else "none"
     )
     return [
+        LAYOUT,
         f'#set page(paper: "{"us-letter" if shape.paper == "letter" else "a4"}", '
         f"flipped: {'true' if shape.orientation == 'landscape' else 'false'}, "
-        f"margin: 2cm, numbering: {numbering}, header: {header}, background: {watermark})",
+        f"margin: report-margin, numbering: {numbering}, header: {header}, "
+        f"background: {watermark})",
         f"#set text(size: {TEXT_SIZES[shape.text_size]})",
-        "#set table(inset: 3pt)",
         "",
     ]
 
@@ -449,8 +451,11 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
     def share(value: float | None) -> str:
         return messages["report.missing"] if value is None else number(value)
 
-    def row(*cells: str) -> str:
-        return "  " + ", ".join(f"[{typst_text(cell)}]" for cell in cells) + ","
+    def cells_of(cells: Sequence[str]) -> str:
+        return "(" + "".join(f"[{typst_text(cell)}], " for cell in cells) + ")"
+
+    def section(title: str) -> str:
+        return f"#report-section([{typst_text(title)}], capitals: false)"
 
     def said(key: str) -> list[str]:
         return [typst_text(messages[key])]
@@ -458,7 +463,11 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
     def table(header: tuple[str, ...], rows: list[tuple[str, ...]], empty: str) -> list[str]:
         if not rows:
             return said(empty)
-        return [f"#table(columns: {len(header)},", row(*header), *(row(*r) for r in rows), ")"]
+        return [
+            f"#report-table({cells_of(header)}, (",
+            *(f"  {cells_of(cells)}," for cells in rows),
+            "))",
+        ]
 
     def classes(kind: str, columns: list[str], empty: str, keep: Sequence[str] | None) -> list[str]:
         wanted = {name.casefold() for name in keep} if keep else None
@@ -690,7 +699,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
                 return ai_changes(block)
 
     def block_lines(block: ReportBlock) -> list[str]:
-        title = [f"== {typst_text(block.title)}"] if block.show_title else []
+        title = [section(block.title)] if block.show_title else []
         return [*title, *body_of(block), ""]
 
     def row_lines(indices: tuple[int, ...]) -> list[str]:
@@ -702,7 +711,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
     def closing() -> list[str]:
         lines = (
             [
-                f"== {typst_text(messages['report.decisions'])}",
+                section(messages["report.decisions"]),
                 *table(
                     (messages["report.decisions"], messages["report.count"]),
                     [
@@ -718,7 +727,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         )
         if data.changes:
             lines += [
-                f"== {typst_text(messages['report.changes'])}",
+                section(messages["report.changes"]),
                 *table(
                     (
                         messages["report.object"],
@@ -746,7 +755,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         if data.format.signature:
             signer = data.signed_by or "_" * 24
             lines += [
-                f"== {typst_text(messages['report.signature'])}",
+                section(messages["report.signature"]),
                 f"{typst_text(messages['report.signed_by'])}: {typst_text(signer)} \\",
                 signed,
                 "",
@@ -754,7 +763,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         return lines
 
     def appendix(name: str) -> list[str]:
-        lines = [f"== {typst_text(messages[f'report.appendix.{name}'])}"]
+        lines = [section(messages[f"report.appendix.{name}"])]
         if name == "objects":
             lines += table(
                 object_header,
@@ -795,6 +804,18 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
     title = (
         messages["report.title"] if data.format.title == ReportFormat().title else data.format.title
     )
+    status = (
+        f"{messages['report.signed_off']} {day_text(data, data.signed_off_on, locale)}"
+        if data.signed_off_on
+        else messages["report.draft"]
+    )
+    version_line = f"{messages['report.version']} {data.version}"
+    meta = [
+        (messages["report.project"], data.project_name),
+        (messages["report.task"], data.task_name),
+        *([(messages["report.signed_by"], data.signed_by)] if data.signed_by else []),
+        (messages["report.checksum"], data.checksum),
+    ]
     pages = tuple(report_pages(data.blocks, data.format))
     body: list[str] = []
     for at, page in enumerate(pages):
@@ -803,13 +824,11 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         body += page_lines(page)
     lines = [
         *page_setup(data, messages),
-        f"= {typst_text(title)}",
-        "",
-        f"{typst_text(messages['report.project'])}: {typst_text(data.project_name)} \\",
-        f"{typst_text(messages['report.task'])}: {typst_text(data.task_name)} \\",
-        f"{typst_text(messages['report.version'])}: {typst_text(str(data.version))} \\",
-        f"{typst_text(messages['report.checksum'])}: {typst_text(data.checksum)} \\",
-        signed,
+        f"#report-head([{typst_text(title)}], (), "
+        f"[{typst_text(status)}], [{typst_text(version_line)}])",
+        "#report-meta((",
+        *(f"  ([{typst_text(label)}], [{typst_text(value)}])," for label, value in meta),
+        "))",
         *(["", typst_text(messages["report.changes.flag"])] if data.changes else []),
         *(["", typst_text(messages["report.sample"])] if data.sample else []),
         "",

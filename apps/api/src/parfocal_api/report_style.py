@@ -67,7 +67,7 @@ LAYOUT = f"""
   )).flatten(),
 )
 #let report-table(header, rows) = table(
-  columns: (2fr, ..range(header.len() - 1).map(_ => 1fr)),
+  columns: (if header.len() > 3 {{ 1fr }} else {{ 2fr }}, ..range(header.len() - 1).map(_ => 1fr)),
   stroke: (x, y) => (
     bottom: if y == 0 {{ 0.75pt + report-strong-rule }} else {{ 0.5pt + report-rule }},
   ),

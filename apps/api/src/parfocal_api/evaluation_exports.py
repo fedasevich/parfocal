@@ -32,6 +32,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import ProblemError
 from parfocal_api.report_cache import ReportCache, ReportKey
+from parfocal_api.report_style import compile_options
 from parfocal_api.report_template import (
     RenderedReport,
     ReportChange,
@@ -608,8 +609,8 @@ def typst_options(report: RenderedReport, version: Version) -> dict[str, Any]:
     )
     return {
         "sys_inputs": report.inputs,
-        "ignore_system_fonts": True,
         "timestamp": stamp,
+        **compile_options(),
     }
 
 
