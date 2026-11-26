@@ -20,7 +20,25 @@ const seeded: Record<string, { name: string; settings: DisplaySettings }[]> = {
 
 type Choice = { preset_id: string | null; settings: DisplaySettings };
 
-const choices = new Map<string, Choice>();
+const storageKey = "parfocal.fake.my-display";
+
+const remembered = (): [string, Choice][] => {
+  try {
+    return JSON.parse(globalThis.sessionStorage?.getItem(storageKey) ?? "[]") as [string, Choice][];
+  } catch {
+    return [];
+  }
+};
+
+const choices = new Map<string, Choice>(remembered());
+
+const remember = () => {
+  try {
+    globalThis.sessionStorage?.setItem(storageKey, JSON.stringify([...choices]));
+  } catch {
+    return;
+  }
+};
 const presets = new Map<string, DisplayPreset>();
 const seededTasks = new Set<string>();
 let counter = 0;
@@ -118,6 +136,7 @@ export function displayChoiceHandlers(codeOf: (taskId: string) => string): Reque
           return problem(409, "display-setting-locked", `The task locks ${changed.join(", ")}`);
         }
         choices.set(params.taskId, { preset_id: body.preset_id ?? null, settings: body.settings });
+        remember();
         return HttpResponse.json(myDisplay(params.taskId, code));
       },
     ),

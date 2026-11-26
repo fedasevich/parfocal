@@ -90,7 +90,7 @@ import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import type { CompareToggle } from "./stage-compare.tsx";
-import { OutlineModeCard, StageDisplay } from "./stage-display.tsx";
+import { OutlineModeCard, StageDisplay, useStageDisplay } from "./stage-display.tsx";
 import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
 import { StageMeasurementCard } from "./stage-measurement-card.tsx";
 import { StageDockProvider, useStageMeasurementsValue } from "./stage-measurements.tsx";
@@ -379,6 +379,7 @@ function OpenedSlide({
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
   const [outlineMode, setOutlineMode] = useSavedOutlineMode();
   const sharedTaskId = annotateTask?.taskId ?? null;
+  const shapeOpacity = useStageDisplay(taskId ?? sharedTaskId ?? undefined).opacity / 100;
   const snapshot = annotateTask?.classes ?? null;
   const liveGuard = useRef<LiveGuard>(idleGuard);
   const [selectedIds, setSelectedIds] = useState<readonly ShapeId[]>([]);
@@ -823,6 +824,7 @@ function OpenedSlide({
                         onClose={closeShape}
                         draftControl={draftControl}
                         classColour={cellTyping.classColour}
+                        opacity={shapeOpacity}
                       />
                       <FreehandLayer
                         engine={session.engine}

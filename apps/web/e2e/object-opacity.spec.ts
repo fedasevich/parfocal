@@ -3,6 +3,7 @@ import { expect, type Page, test } from "./a11y.ts";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 const p07 = "00000000-0000-4000-8003-000000000007";
+const rt14 = "00000000-0000-4000-8007-000000000014";
 const rt16 = "00000000-0000-4000-8043-000000000016";
 const cellsSlide = "00000000-0000-4000-8005-000000000008";
 
@@ -31,7 +32,7 @@ async function setOpacity(page: Page, percent: number) {
   await slider.focus();
   await page.keyboard.press("End");
   for (let step = 100; step > percent; step -= 10) await page.keyboard.press("ArrowLeft");
-  await expect(outlines(page)).toHaveAttribute("data-opacity", String(percent));
+  await expect(slider).toHaveAttribute("aria-valuenow", String(percent));
 }
 
 async function drawAs(page: Page, mode: string) {
@@ -68,4 +69,44 @@ test("at 10% opacity the outline, fill and dots draw at a tenth and the current 
   await setOpacity(page, 100);
   await expect.poll(async () => part(await shown(page), "main")?.dot ?? null).toBeCloseTo(1, 5);
   expect(part(await shown(page), "current")?.outline).toBeCloseTo(1, 5);
+});
+
+test("the opacity stays chosen for this person after a reload", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openGuided(page);
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PUT" &&
+      response.url().includes("/my-display") &&
+      (response.request().postData() ?? "").includes("30"),
+  );
+  await setOpacity(page, 30);
+  await saved;
+  await openGuided(page);
+  await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-opacity", "30");
+});
+
+test("drawn shapes in Annotate fade with the same opacity", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.addInitScript(() => {
+    localStorage.setItem("parfocal.device-settings", JSON.stringify({ "display.fillOpacity": 10 }));
+  });
+  await page.goto(`/projects/${p07}?tab=slides`);
+  await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 25_000 });
+  const url = new URL(page.url());
+  await page.goto(`${url.pathname}?task=${rt14}&mode=annotate`);
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 25_000 });
+  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await page.keyboard.press("r");
+  await page.mouse.move(box.x + 300, box.y + 250);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 460, box.y + 330, { steps: 5 });
+  await page.mouse.up();
+  const shape = page.getByTestId("polygon-shape");
+  await expect(shape).toHaveCount(1);
+  await expect(shape).toHaveAttribute("data-opacity", "0.1");
+  await expect(shape).toHaveCSS("opacity", "0.1");
 });
