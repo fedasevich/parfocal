@@ -7,26 +7,6 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
-#: src/screens/onboarding/setup-screen.tsx
-msgid "in the sample project"
-msgstr "in the sample project"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Run a model on {runSlide}"
-msgstr "Run a model on {runSlide}"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Sample project ready"
-msgstr "Sample project ready"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Sample project ready: {slides} slides, a review of {reviewed}"
-msgstr "Sample project ready: {slides} slides, a review of {reviewed}"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Sample slides with AI results and a short review task for you, to try everything safely"
-msgstr "Sample slides with AI results and a short review task for you, to try everything safely"
-
 #. placeholder {0}: batch.storage.needed_gb
 #. placeholder {0}: batch.storage.trimmed_gb
 #. placeholder {1}: batch.storage.left_gb
@@ -159,6 +139,10 @@ msgstr " Keep with the reviewer's type keeps the settled outline, or else the on
 msgid " or $1"
 msgstr " or $1"
 
+#: src/results/add-result-set.tsx
+msgid " or drop it on the slide. GeoJSON, Parfocal JSON, CSV, masks and heatmaps. You see it on the slide before anything is saved."
+msgstr " or drop it on the slide. GeoJSON, Parfocal JSON, CSV, masks and heatmaps. You see it on the slide before anything is saved."
+
 #. placeholder {0}: people.byId(owner.user_id).name
 #: src/screens/project/settings-zones.tsx
 msgid " Set by {0}, the owner."
@@ -274,14 +258,6 @@ msgstr ". Large files upload in parts, so a lost connection or a closed tab does
 #: src/screens/upload/files-step.tsx
 msgid ". Skip it, or replace the existing slide and keep its reviews."
 msgstr ". Skip it, or replace the existing slide and keep its reviews."
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "{slides} slides with AI results and a review of {reviewed} of them, regions and typed cells"
-msgstr "{slides} slides with AI results and a review of {reviewed} of them, regions and typed cells"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "{slides} slides with AI results, a review of {reviewed} of them with regions and typed cells, and one slide to run a model on"
-msgstr "{slides} slides with AI results, a review of {reviewed} of them with regions and typed cells, and one slide to run a model on"
 
 #: src/flow-map/prototype-bar.tsx
 msgid "· mock control, not in the app"
@@ -1149,6 +1125,11 @@ msgstr "{0} object{1} still open."
 msgid "{0} objects with an ID"
 msgstr "{0} objects with an ID"
 
+#. placeholder {0}: preview.results.objects
+#: src/results/add-result-set.tsx
+msgid "{0} objects, shown in cyan and not saved yet."
+msgstr "{0} objects, shown in cyan and not saved yet."
+
 #. placeholder {0}: progress.decided
 #. placeholder {1}: progress.total
 #: src/screens/my-work/parts.tsx
@@ -2013,6 +1994,10 @@ msgstr "{code} saved as your own object."
 msgid "{code} when created"
 msgstr "{code} when created"
 
+#: src/annotations/layers-tree.tsx
+msgid "{comments, plural, one {# comment on it} other {# comments on it}}"
+msgstr "{comments, plural, one {# comment on it} other {# comments on it}}"
+
 #: src/screens/viewer/viewer-canvas-parts.tsx
 msgid "{comments} comments on {object}"
 msgstr "{comments} comments on {object}"
@@ -2197,9 +2182,19 @@ msgstr "{lockedCount} settings"
 msgid "{loose, plural, one {Group # loose shape by {0}} other {Group # loose shapes by {1}}}"
 msgstr "{loose, plural, one {Group # loose shape by {0}} other {Group # loose shapes by {1}}}"
 
+#. placeholder {0}: words.label
+#. placeholder {1}: thread.title
+#: src/annotations/comment-anchors.tsx
+msgid "{mark}, comment on {0}: {1}"
+msgstr "{mark}, comment on {0}: {1}"
+
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "{more, plural, one {# more conflict follows this one.} other {# more conflicts follow this one.}}"
 msgstr "{more, plural, one {# more conflict follows this one.} other {# more conflicts follow this one.}}"
+
+#: src/results/stage-result-adding.tsx
+msgid "{name} added"
+msgstr "{name} added"
 
 #. placeholder {0}: fate.into
 #: src/viewer/stage-review-objects.tsx
@@ -2317,6 +2312,10 @@ msgstr "{projectName} is a clinical project"
 msgid "{proposals} found"
 msgstr "{proposals} found"
 
+#: src/annotations/smart-layer.tsx
+msgid "{queuedCount} queued"
+msgstr "{queuedCount} queued"
+
 #: src/screens/review/object-card.tsx
 msgid "{redrawPoints, plural, one {# point} other {# points}}"
 msgstr "{redrawPoints, plural, one {# point} other {# points}}"
@@ -2324,10 +2323,6 @@ msgstr "{redrawPoints, plural, one {# point} other {# points}}"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "{resultName} · {count} objects"
 msgstr "{resultName} · {count} objects"
-
-#: src/annotations/smart-layer.tsx
-msgid "{queuedCount} queued"
-msgstr "{queuedCount} queued"
 
 #. placeholder {0}: nucleiCount.toLocaleString("en-US")
 #: src/screens/developer/developer-screen.tsx
@@ -2398,6 +2393,14 @@ msgstr "{slides, plural, one {{counted} on # slide} other {{counted} on # slides
 #: ../../packages/ui/src/components/drop-overlay.tsx
 msgid "{slides} slides and {results} result files."
 msgstr "{slides} slides and {results} result files."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "{slides} slides with AI results and a review of {reviewed} of them, regions and typed cells"
+msgstr "{slides} slides with AI results and a review of {reviewed} of them, regions and typed cells"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "{slides} slides with AI results, a review of {reviewed} of them with regions and typed cells, and one slide to run a model on"
+msgstr "{slides} slides with AI results, a review of {reviewed} of them with regions and typed cells, and one slide to run a model on"
 
 #: src/screens/review/guided-parts.tsx
 msgid "{slideShort} could not be read at 20x and 40x."
@@ -3044,6 +3047,10 @@ msgstr "A person drew {code} as tumor."
 msgid "A person drew this. It is outlined in white."
 msgstr "A person drew this. It is outlined in white."
 
+#: src/screens/admin/api-section.tsx
+msgid "A pipeline needs one to send slides or results."
+msgstr "A pipeline needs one to send slides or results."
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "A preset only fills in the options. You can change each of them on the next step."
 msgstr "A preset only fills in the options. You can change each of them on the next step."
@@ -3055,6 +3062,10 @@ msgstr "A project holds slides, AI results and review tasks. Cases and patient d
 #: src/app-tour/tour-chapters.ts
 msgid "A project page has three tabs, Slides, Review tasks and Settings. The numbers on the tabs count what is inside."
 msgstr "A project page has three tabs, Slides, Review tasks and Settings. The numbers on the tabs count what is inside."
+
+#: src/screens/admin/sections.tsx
+msgid "A project you archive waits here, still readable, until you unarchive it."
+msgstr "A project you archive waits here, still readable, until you unarchive it."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "A random sample is checked, the rest stays unchecked and out of the export."
@@ -3106,9 +3117,17 @@ msgstr "A result sits next to its slide with the same name, or in a folder named
 msgid "A review task goes in once it is signed off, through its final layer. Only objects a person checked go in: added, agreed and edited. Unsure and open objects are left out and counted. Freeze a version to name exactly which data trained a model."
 msgstr "A review task goes in once it is signed off, through its final layer. Only objects a person checked go in: added, agreed and edited. Unsure and open objects are left out and counted. Freeze a version to name exactly which data trained a model."
 
+#: src/screens/project/tasks-tab.tsx
+msgid "A review task hands slides to the people who check the AI results."
+msgstr "A review task hands slides to the people who check the AI results."
+
 #: src/screens/admin/template-editor.tsx
 msgid "A review task made from this template starts with these. The researcher can change each one in the task, and the report keeps the template."
 msgstr "A review task made from this template starts with these. The researcher can change each one in the task, and the report keeps the template."
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "A review task you start in a project shows here with each reviewer's progress."
+msgstr "A review task you start in a project shows here with each reviewer's progress."
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "a reviewer"
@@ -3207,6 +3226,10 @@ msgid "A task is given to me"
 msgstr "A task is given to me"
 
 #: src/screens/admin/templates.tsx
+msgid "A template lays out the evaluation report and fills in what a new review task checks."
+msgstr "A template lays out the evaluation report and fills in what a new review task checks."
+
+#: src/screens/admin/templates.tsx
 msgid "A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."
 msgstr "A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."
 
@@ -3217,6 +3240,10 @@ msgstr "A text or list is too short or too long."
 #: src/screens/upload/formats-drawer.tsx
 msgid "A text, such as an ID, does not match the expected pattern."
 msgstr "A text, such as an ID, does not match the expected pattern."
+
+#: src/results/add-result-set.tsx
+msgid "A TIFF has no preview here. It is checked after Save."
+msgstr "A TIFF has no preview here. It is checked after Save."
 
 #: ../../packages/ui/src/components/auth.tsx
 msgid "A tissue sample with model outlines"
@@ -3503,6 +3530,10 @@ msgstr "Add classes in the project settings"
 #: src/screens/admin/connect-model.tsx
 msgid "Add model"
 msgstr "Add model"
+
+#: src/results/add-result-set.tsx
+msgid "Add one result file at a time here."
+msgstr "Add one result file at a time here."
 
 #: src/screens/refusals.ts
 msgid "Add only a finished result set of the same slide."
@@ -3890,6 +3921,10 @@ msgstr "All actions"
 #: src/flow-map/walk-bar.tsx
 msgid "All chapters"
 msgstr "All chapters"
+
+#: src/screens/review/threads-tab.tsx
+msgid "All comments"
+msgstr "All comments"
 
 #: src/viewer/stage-object-notes.tsx
 msgid "All comments on this slide"
@@ -5423,6 +5458,10 @@ msgstr "Changes after sign-off are logged, and the report marks them."
 msgid "Changes belong to this task. The template itself stays as it is."
 msgstr "Changes belong to this task. The template itself stays as it is."
 
+#: src/screens/admin/audit.tsx
+msgid "Changes to people, projects and settings show up here as they happen."
+msgstr "Changes to people, projects and settings show up here as they happen."
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Channels"
 msgstr "Channels"
@@ -5509,6 +5548,10 @@ msgstr "Check the code from your email, then enter a new password."
 msgid "Check the line"
 msgstr "Check the line"
 
+#: src/screens/admin/people.tsx
+msgid "Check the spelling, or search by email."
+msgstr "Check the spelling, or search by email."
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Check, fix and comment on AI results, give your opinion"
 msgstr "Check, fix and comment on AI results, give your opinion"
@@ -5526,6 +5569,10 @@ msgstr "Checked"
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Checked by you"
 msgstr "Checked by you"
+
+#: src/results/add-result-set.tsx
+msgid "Checking the file and adding it to the slide"
+msgstr "Checking the file and adding it to the slide"
 
 #: src/screens/admin/admin-screen.tsx
 msgid "Checking your access"
@@ -5607,6 +5654,7 @@ msgstr "Choose file"
 msgid "choose files"
 msgstr "choose files"
 
+#: src/screens/project/slides-empty.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose files"
 msgstr "Choose files"
@@ -5623,6 +5671,7 @@ msgstr "Choose per slide"
 msgid "Choose slide files"
 msgstr "Choose slide files"
 
+#: src/screens/project/slides-empty.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose slides or result files"
 msgstr "Choose slides or result files"
@@ -5732,7 +5781,9 @@ msgid "Clear all"
 msgstr "Clear all"
 
 #: ../../packages/ui/src/components/team.tsx
+#: src/screens/admin/audit.tsx
 #: src/screens/my-work/all-slides-tab.tsx
+#: src/screens/project/slides-empty.tsx
 #: src/screens/team/team-screen.tsx
 msgid "Clear filters"
 msgstr "Clear filters"
@@ -5742,6 +5793,7 @@ msgid "Clear the key"
 msgstr "Clear the key"
 
 #: ../../packages/ui/src/components/settings-dialog.tsx
+#: src/screens/admin/people.tsx
 msgid "Clear the search"
 msgstr "Clear the search"
 
@@ -6033,6 +6085,7 @@ msgid "Command palette"
 msgstr "Command palette"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/annotations/comment-anchors.tsx
 #: src/screens/clinical-report/steps.tsx
 msgid "Comment"
 msgstr "Comment"
@@ -6045,14 +6098,42 @@ msgstr "Comment added on {currentId}. It shows in the full viewer too, and the p
 msgid "Comment added on {currentId}. It shows in the full viewer too."
 msgstr "Comment added on {currentId}. It shows in the full viewer too."
 
-#: src/annotations/pin-layer.tsx
+#: src/annotations/target-composer.tsx
 #: src/screens/review/pinned-thread.tsx
 msgid "Comment at the pin"
 msgstr "Comment at the pin"
 
+#: src/annotations/target-composer.tsx
+msgid "Comment on"
+msgstr "Comment on"
+
+#: src/annotations/comment-anchors.tsx
+msgid "Comment on {count} objects"
+msgstr "Comment on {count} objects"
+
+#: src/annotations/pin-layer.tsx
+msgid "Comment on {currentResult}"
+msgstr "Comment on {currentResult}"
+
+#: src/annotations/target-composer.tsx
+msgid "Comment on {label}"
+msgstr "Comment on {label}"
+
 #: src/screens/review/object-comments.tsx
 msgid "Comment on {object}"
 msgstr "Comment on {object}"
+
+#: src/annotations/comment-anchors.tsx
+msgid "Comment on the selected object"
+msgstr "Comment on the selected object"
+
+#: ../../packages/ui/src/components/comments-tab.tsx
+msgid "Comment on the slide <0/>"
+msgstr "Comment on the slide <0/>"
+
+#: src/annotations/layers-tree.tsx
+msgid "Comment on this layer"
+msgstr "Comment on this layer"
 
 #: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
@@ -6210,12 +6291,17 @@ msgstr "conflict"
 msgid "Connect a model"
 msgstr "Connect a model"
 
+#: src/screens/admin/sections.tsx
+msgid "Connect a model your lab runs on its own server and it shows in every model list."
+msgstr "Connect a model your lab runs on its own server and it shows in every model list."
+
 #: src/screens/admin/connect-model.tsx
 msgid "Connect and test"
 msgstr "Connect and test"
 
 #: src/screens/admin/admin-screen.tsx
 #: src/screens/admin/connect-model.tsx
+#: src/screens/admin/sections.tsx
 #: src/screens/jobs/run-model-window.tsx
 msgid "Connect your own model"
 msgstr "Connect your own model"
@@ -6364,6 +6450,7 @@ msgstr "Could not check the code."
 msgid "Could not create the account."
 msgstr "Could not create the account."
 
+#: src/screens/flow-query-state.tsx
 #: src/screens/placeholder.tsx
 msgid "Could not load {label}."
 msgstr "Could not load {label}."
@@ -6472,6 +6559,10 @@ msgstr "Create a new workspace"
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Create a project"
 msgstr "Create a project"
+
+#: src/screens/admin/sections.tsx
+msgid "Create a project to start evaluating slides."
+msgstr "Create a project to start evaluating slides."
 
 #: src/app-tour/tour-chapters.ts
 #: src/screens/upload/upload-page.tsx
@@ -7283,6 +7374,10 @@ msgstr "Drawn outline"
 msgid "Drawn outlines"
 msgstr "Drawn outlines"
 
+#: src/results/add-result-set.tsx
+msgid "Drawn over the slide at half strength in the preview, not saved yet."
+msgstr "Drawn over the slide at half strength in the preview, not saved yet."
+
 #: src/measure/measurement-list.tsx
 msgid "Drawn shapes and measurements"
 msgstr "Drawn shapes and measurements"
@@ -7313,6 +7408,10 @@ msgstr "Drawn, edited"
 msgid "Drop a result file"
 msgstr "Drop a result file"
 
+#: src/results/stage-result-adding.tsx
+msgid "Drop a result file to preview it on this slide"
+msgstr "Drop a result file to preview it on this slide"
+
 #. placeholder {0}: project.code
 #: src/screens/project/slides-tab.tsx
 msgid "Drop files anywhere here to upload into {0}"
@@ -7339,6 +7438,10 @@ msgstr "Drop slides, AI results or a whole folder here, or press Choose files. T
 #: src/screens/upload/live-wizard.tsx
 msgid "Drop slides, results or a whole folder"
 msgstr "Drop slides, results or a whole folder"
+
+#: src/screens/project/slides-empty.tsx
+msgid "Drop slides, results or a whole folder here"
+msgstr "Drop slides, results or a whole folder here"
 
 #: ../../packages/ui/src/components/drop-overlay.tsx
 msgid "Drop to upload into {projectCode}"
@@ -7369,10 +7472,6 @@ msgstr "Due date"
 #: src/screens/admin/templates.tsx
 msgid "Duplicate"
 msgstr "Duplicate"
-
-#: src/screens/admin/templates.tsx
-msgid "Duplicate and edit"
-msgstr "Duplicate and edit"
 
 #: src/screens/upload/files-step.tsx
 msgid "Duplicate slide"
@@ -7835,6 +7934,7 @@ msgid "Every slide across projects"
 msgstr "Every slide across projects"
 
 #: src/screens/home/home-screen.tsx
+#: src/screens/project/slides-empty.tsx
 msgid "Every slide has results"
 msgstr "Every slide has results"
 
@@ -7915,6 +8015,7 @@ msgid "Example: {0}"
 msgstr "Example: {0}"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/disagreements/queue-screen.tsx
 msgid "Expand"
 msgstr "Expand"
 
@@ -8102,6 +8203,10 @@ msgstr "File slide"
 #: src/screens/upload/upload-page.tsx
 msgid "Files"
 msgstr "Files"
+
+#: src/screens/upload/overlays.tsx
+msgid "Files that land in the watched folder or come in by webhook show here."
+msgstr "Files that land in the watched folder or come in by webhook show here."
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
@@ -9072,17 +9177,18 @@ msgstr "Hotkey status"
 msgid "Hotkeys spike"
 msgstr "Hotkeys spike"
 
+#: src/annotations/smart-layer.tsx
+msgid "Hover off"
+msgstr "Hover off"
+
+#: src/annotations/smart-layer.tsx
+msgid "Hover on"
+msgstr "Hover on"
+
+#: src/annotations/smart-layer.tsx
 #: src/screens/developer/developer-screen.tsx
 msgid "Hover preview"
 msgstr "Hover preview"
-
-#: src/annotations/smart-layer.tsx
-msgid "Hover preview off"
-msgstr "Hover preview off"
-
-#: src/annotations/smart-layer.tsx
-msgid "Hover preview on"
-msgstr "Hover preview on"
 
 #: src/routes/prototype.tsx
 msgid "How a review works"
@@ -9378,6 +9484,10 @@ msgstr "In the card"
 msgid "In the file"
 msgstr "In the file"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "in the sample project"
+msgstr "in the sample project"
+
 #: ../../packages/ui/src/components/connect-model.tsx
 msgid "In the test"
 msgstr "In the test"
@@ -9528,6 +9638,10 @@ msgstr "Invite expired"
 #: src/screens/project/settings-zones.tsx
 msgid "Invite people"
 msgstr "Invite people"
+
+#: src/screens/admin/people.tsx
+msgid "Invite people and they appear here once they accept."
+msgstr "Invite people and they appear here once they accept."
 
 #: src/screens/admin/role-permissions.tsx
 msgid "Invite people, change roles and admin rights"
@@ -10091,13 +10205,13 @@ msgstr "Leave them"
 msgid "Leave them out"
 msgstr "Leave them out"
 
-#: ../../packages/ui/src/components/viewer-tools.tsx
-msgid "Left"
-msgstr "Left"
 #: src/screens/admin/people.tsx
 msgid "Leaves {leaves}"
 msgstr "Leaves {leaves}"
 
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Left"
+msgstr "Left"
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "Left open"
@@ -10253,6 +10367,10 @@ msgstr "Lines the right pane up with the left. The two bottom panes keep their o
 msgid "Link"
 msgstr "Link"
 
+#: src/screens/project/slides-empty.tsx
+msgid "Link a remote source"
+msgstr "Link a remote source"
+
 #: src/study/remote-progress.tsx
 msgid "Link expired or replaced before it was opened"
 msgstr "Link expired or replaced before it was opened"
@@ -10303,6 +10421,7 @@ msgstr "Loaded {0}. Left out {1}: {2}"
 msgid "Loading"
 msgstr "Loading"
 
+#: src/screens/flow-query-state.tsx
 #: src/screens/placeholder.tsx
 msgid "Loading {label}"
 msgstr "Loading {label}"
@@ -10679,10 +10798,6 @@ msgstr "Make a join link"
 msgid "Make a link"
 msgstr "Make a link"
 
-#: src/screens/admin/sections.tsx
-msgid "Makes"
-msgstr "Makes"
-
 #: src/screens/admin/people-menu.tsx
 msgid "Make a researcher"
 msgstr "Make a researcher"
@@ -10690,6 +10805,10 @@ msgstr "Make a researcher"
 #: src/screens/admin/people-menu.tsx
 msgid "Make a reviewer"
 msgstr "Make a reviewer"
+
+#: src/screens/admin/sections.tsx
+msgid "Makes"
+msgstr "Makes"
 
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Making the preview"
@@ -11050,7 +11169,6 @@ msgstr "MONAI server"
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/annotations/layers-tree.tsx
-#: src/screens/admin/common.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/project-page.tsx
@@ -11068,12 +11186,11 @@ msgstr "More actions for {0}"
 msgid "More actions for {name}"
 msgstr "More actions for {name}"
 
+#. placeholder {0}: invitation.email
 #. placeholder {0}: member.display_name
-#. placeholder {0}: model.name
 #. placeholder {0}: set.name
 #: ../../packages/ui/src/components/visualize.tsx
-#: src/screens/admin/people.tsx
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/people-menu.tsx
 #: src/screens/admin/templates.tsx
 msgid "More for {0}"
 msgstr "More for {0}"
@@ -11382,7 +11499,7 @@ msgstr "New outline settled for {0}"
 msgid "New password"
 msgstr "New password"
 
-#: src/annotations/pin-layer.tsx
+#: src/annotations/target-composer.tsx
 #: src/screens/review/pinned-thread.tsx
 msgid "New pinned thread"
 msgstr "New pinned thread"
@@ -11390,7 +11507,9 @@ msgstr "New pinned thread"
 #: ../../packages/ui/src/components/app-shell.tsx
 #: ../../packages/ui/src/components/new-forms.tsx
 #: src/screens/admin/admin-screen.tsx
+#: src/screens/admin/sections.tsx
 #: src/screens/home/home-screen.tsx
+#: src/screens/my-work/all-slides-tab.tsx
 #: src/shell/global-shell.tsx
 #: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
@@ -11420,6 +11539,7 @@ msgstr "New projects start as"
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/project/project-page.tsx
+#: src/screens/project/tasks-tab.tsx
 #: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 msgid "New review task"
@@ -11449,12 +11569,17 @@ msgid "New study template"
 msgstr "New study template"
 
 #: src/screens/admin/admin-screen.tsx
+#: src/screens/admin/templates.tsx
 msgid "New template"
 msgstr "New template"
 
 #: src/screens/review/pinned-thread.tsx
 msgid "New thread at the pin"
 msgstr "New thread at the pin"
+
+#: src/annotations/target-composer.tsx
+msgid "New thread on {label}"
+msgstr "New thread on {label}"
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "New to Parfocal?"
@@ -11560,6 +11685,10 @@ msgstr "No access to {projectName}"
 msgid "No access to this project"
 msgstr "No access to this project"
 
+#: src/screens/admin/sections.tsx
+msgid "No active projects"
+msgstr "No active projects"
+
 #: src/screens/kpi/corrections-card.tsx
 msgid "No AI nuclei have been reviewed yet."
 msgstr "No AI nuclei have been reviewed yet."
@@ -11593,6 +11722,10 @@ msgstr "No answers yet"
 #: ../../packages/ui/src/components/counts-as.tsx
 msgid "No answers yet. The split fills in as reviews come in."
 msgstr "No answers yet. The split fills in as reviews come in."
+
+#: src/screens/admin/sections.tsx
+msgid "No archived projects"
+msgstr "No archived projects"
 
 #: src/screens/project/case-slides-editor.tsx
 msgid "No block"
@@ -11640,6 +11773,10 @@ msgstr "no connection"
 msgid "No decisions yet."
 msgstr "No decisions yet."
 
+#: src/screens/admin/deleted-projects.tsx
+msgid "No deleted projects"
+msgstr "No deleted projects"
+
 #: src/screens/clinical-report/steps.tsx
 msgid "No deposit is listed, so the node is negative. Add a deposit if there is tumor."
 msgstr "No deposit is listed, so the node is negative. Add a deposit if there is tumor."
@@ -11660,9 +11797,17 @@ msgstr "No due date"
 msgid "No earlier run on this slide"
 msgstr "No earlier run on this slide"
 
+#: src/screens/admin/api-section.tsx
+msgid "No event targets"
+msgstr "No event targets"
+
 #: src/screens/admin/audit.tsx
-msgid "No events match these filters."
-msgstr "No events match these filters."
+msgid "No events match these filters"
+msgstr "No events match these filters"
+
+#: src/screens/admin/audit.tsx
+msgid "No events recorded yet"
+msgstr "No events recorded yet"
 
 #: src/screens/input-traces/input-traces.tsx
 msgid "no events, run it again"
@@ -11679,6 +11824,10 @@ msgstr "No final layer is built yet."
 #: src/annotations/smart-layer.tsx
 msgid "No GPU answered Best in 90 seconds, Good outlined this view. Click again to ask Best again"
 msgstr "No GPU answered Best in 90 seconds, Good outlined this view. Click again to ask Best again"
+
+#: src/screens/admin/api-section.tsx
+msgid "No incoming webhooks"
+msgstr "No incoming webhooks"
 
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "no key"
@@ -11708,9 +11857,21 @@ msgstr "No objects counted"
 msgid "No one called that. Type an email to invite them."
 msgstr "No one called that. Type an email to invite them."
 
+#: src/screens/admin/people.tsx
+msgid "No one has admin rights"
+msgstr "No one has admin rights"
+
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "No one in this lab can be asked yet."
 msgstr "No one in this lab can be asked yet."
+
+#: src/screens/admin/people.tsx
+msgid "No one is in this workspace yet"
+msgstr "No one is in this workspace yet"
+
+#: src/screens/admin/people.tsx
+msgid "No one matches this search"
+msgstr "No one matches this search"
 
 #: src/screens/team/team-screen.tsx
 msgid "No open task matches these filters."
@@ -11731,6 +11892,10 @@ msgstr "No other device is signed in."
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "No other task to compare"
 msgstr "No other task to compare"
+
+#: src/screens/admin/sections.tsx
+msgid "No Parfocal models are available"
+msgstr "No Parfocal models are available"
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
@@ -11761,6 +11926,10 @@ msgstr "No project sends events to a pipeline yet."
 msgid "No projects yet."
 msgstr "No projects yet."
 
+#: src/screens/admin/people.tsx
+msgid "No researchers"
+msgstr "No researchers"
+
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "No result set"
 msgstr "No result set"
@@ -11785,6 +11954,10 @@ msgstr "No results yet"
 msgid "No review task asks about {slideLabel}. Look at it here, and write what you find in the clinical report."
 msgstr "No review task asks about {slideLabel}. Look at it here, and write what you find in the clinical report."
 
+#: src/screens/project/tasks-tab.tsx
+msgid "No review tasks in this project yet"
+msgstr "No review tasks in this project yet"
+
 #: src/screens/new-task/reviewers-step.tsx
 msgid "no reviewer"
 msgstr "no reviewer"
@@ -11797,13 +11970,17 @@ msgstr "No reviewer answered the opinion form."
 msgid "No reviewer gave a reason for disagreeing."
 msgstr "No reviewer gave a reason for disagreeing."
 
+#: src/screens/admin/people.tsx
+msgid "No reviewers"
+msgstr "No reviewers"
+
 #: src/screens/developer/bench-section.tsx
 msgid "No runs yet on {route}. Open a slide and run the pan sweep."
 msgstr "No runs yet on {route}. Open a slide and run the pan sweep."
 
 #: src/screens/admin/storage.tsx
-msgid "No saved sources yet. Save one when you import slides from a link or a bucket."
-msgstr "No saved sources yet. Save one when you import slides from a link or a bucket."
+msgid "No saved sources yet"
+msgstr "No saved sources yet"
 
 #: src/screens/viewer/object-table.tsx
 msgid "no score"
@@ -11821,13 +11998,23 @@ msgstr "No signed-off task matches these filters."
 msgid "No size yet"
 msgstr "No size yet"
 
+#. placeholder {0}: match.name
+#: src/screens/project/slides-empty.tsx
+msgid "No slide has results from {0}"
+msgstr "No slide has results from {0}"
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "No slide in this task has objects to review."
 msgstr "No slide in this task has objects to review."
 
+#. placeholder {0}: match.query
+#: src/screens/project/slides-empty.tsx
+msgid "No slide matches \"{0}\""
+msgstr "No slide matches \"{0}\""
+
 #: src/screens/my-work/all-slides-tab.tsx
-msgid "No slide matches these filters."
-msgstr "No slide matches these filters."
+msgid "No slide matches these filters"
+msgstr "No slide matches these filters"
 
 #: src/annotations/task-export.ts
 msgid "No slide of this task is signed off yet. Sign off at least one slide, then export again. Only signed off slides go into the training data."
@@ -11842,6 +12029,14 @@ msgstr "No slide yet"
 msgid "No slides at this link."
 msgstr "No slides at this link."
 
+#: src/screens/project/slides-empty.tsx
+msgid "No slides in case {caseLabel} yet"
+msgstr "No slides in case {caseLabel} yet"
+
+#: src/screens/project/slides-empty.tsx
+msgid "No slides in this project yet"
+msgstr "No slides in this project yet"
+
 #: src/screens/upload/live-wizard.tsx
 msgid "No slides in this upload yet. Drop slides below, or go back to the project."
 msgstr "No slides in this upload yet. Drop slides below, or go back to the project."
@@ -11850,17 +12045,25 @@ msgstr "No slides in this upload yet. Drop slides below, or go back to the proje
 msgid "No slides left in this upload. Drop slides below, or go back to the project."
 msgstr "No slides left in this upload. Drop slides below, or go back to the project."
 
-#: src/screens/project/slides-tab.tsx
-msgid "No slides match these filters."
-msgstr "No slides match these filters."
+#: src/screens/project/slides-empty.tsx
+msgid "No slides match these filters"
+msgstr "No slides match these filters"
+
+#: src/screens/project/slides-empty.tsx
+msgid "No slides need review"
+msgstr "No slides need review"
 
 #: src/screens/jobs/run-model-window.tsx
 msgid "No slides picked yet"
 msgstr "No slides picked yet"
 
 #: src/screens/my-work/all-slides-tab.tsx
-msgid "No slides yet."
-msgstr "No slides yet."
+msgid "No slides yet"
+msgstr "No slides yet"
+
+#: src/screens/admin/templates.tsx
+msgid "No study templates"
+msgstr "No study templates"
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "No template"
@@ -11879,8 +12082,8 @@ msgid "No title"
 msgstr "No title"
 
 #: src/screens/admin/api-section.tsx
-msgid "No tokens yet. A pipeline needs one to send slides or results."
-msgstr "No tokens yet. A pipeline needs one to send slides or results."
+msgid "No tokens yet"
+msgstr "No tokens yet"
 
 #: ../../packages/ui/src/components/systematic-scan.tsx
 msgid "No tumor flagged"
@@ -12241,6 +12444,10 @@ msgstr "Nothing drawn yet. Select shapes and press ⌘G to group them."
 msgid "Nothing due. New tasks show here."
 msgstr "Nothing due. New tasks show here."
 
+#: src/screens/upload/overlays.tsx
+msgid "Nothing has arrived yet"
+msgstr "Nothing has arrived yet"
+
 #: src/screens/home/home-screen.tsx
 msgid "Nothing here counts in a real evaluation"
 msgstr "Nothing here counts in a real evaluation"
@@ -12415,14 +12622,14 @@ msgstr "Notifications, {unread} unread"
 msgid "Notifications: {unread} unread. Mentions, replies, tasks and jobs"
 msgstr "Notifications: {unread} unread. Mentions, replies, tasks and jobs"
 
-#: src/screens/developer/bench-section.tsx
-#: src/screens/developer/developer-screen.tsx
-msgid "Nuclei"
-msgstr "Nuclei"
 #: src/screens/admin/people-menu.tsx
 msgid "Now"
 msgstr "Now"
 
+#: src/screens/developer/bench-section.tsx
+#: src/screens/developer/developer-screen.tsx
+msgid "Nuclei"
+msgstr "Nuclei"
 
 #. placeholder {0}: scaleText(proposals.micronsPerPixel)
 #: src/annotations/context-bar.tsx
@@ -12557,6 +12764,10 @@ msgstr "objects you checked"
 msgid "Objects you found"
 msgstr "Objects you found"
 
+#: src/annotations/reference-picker.tsx
+msgid "Objects, layers and slides"
+msgstr "Objects, layers and slides"
+
 #. placeholder {0}: tb(totalTb)
 #: ../../packages/ui/src/components/admin.tsx
 msgid "of {0} used"
@@ -12572,6 +12783,7 @@ msgid "Of {version}, started by {who} on {started}, finished on {0}"
 msgstr "Of {version}, started by {who} on {started}, finished on {0}"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
+#: src/screens/new-task/send-step.tsx
 msgid "Off"
 msgstr "Off"
 
@@ -12634,7 +12846,12 @@ msgstr "offline"
 msgid "Offline. Its server is not answering."
 msgstr "Offline. Its server is not answering."
 
+#: ../../packages/ui/src/components/notifications-panel.tsx
+msgid "on"
+msgstr "on"
+
 #: src/screens/annotate-task/new-annotate-task.tsx
+#: src/screens/new-task/send-step.tsx
 msgid "On"
 msgstr "On"
 
@@ -12676,6 +12893,10 @@ msgstr "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes
 #: src/viewer/patch-export-dialog.tsx
 msgid "One class mask per tile."
 msgstr "One class mask per tile."
+
+#: src/results/add-result-set.tsx
+msgid "One file at a time: .geojson, .json, .csv, .tsv, .png, .tif or .tiff. Parfocal checks it after Save."
+msgstr "One file at a time: .geojson, .json, .csv, .tsv, .png, .tif or .tiff. Parfocal checks it after Save."
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "One finger"
@@ -12856,6 +13077,7 @@ msgid "Open a clinical project they are not in"
 msgstr "Open a clinical project they are not in"
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/my-work/assigned-tab.tsx
 msgid "Open a project"
 msgstr "Open a project"
 
@@ -12951,6 +13173,10 @@ msgstr "Open the case"
 msgid "Open the clinical report of this case"
 msgstr "Open the clinical report of this case"
 
+#: src/annotations/layers-tree.tsx
+msgid "Open the comments on it"
+msgstr "Open the comments on it"
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Open the evaluation report"
 msgstr "Open the evaluation report"
@@ -13024,16 +13250,16 @@ msgstr "Open this window from the viewer."
 msgid "Open v1"
 msgstr "Open v1"
 
+#: src/screens/admin/people-menu.tsx
+msgid "Open work that goes back"
+msgstr "Open work that goes back"
+
 #: src/screens/onboarding/invite-screen.tsx
 msgid "Open. You see other reviewers as you go."
 msgstr "Open. You see other reviewers as you go."
 
 #. placeholder {0}: times(link.opened_count)
 #: src/screens/evaluation/share-links.tsx
-#: src/screens/admin/people-menu.tsx
-msgid "Open work that goes back"
-msgstr "Open work that goes back"
-
 msgid "Opened {0}"
 msgstr "Opened {0}"
 
@@ -13215,14 +13441,14 @@ msgstr "outline differs"
 msgid "Outline display"
 msgstr "Outline display"
 
-#: src/annotations/smart-layer.tsx
-msgid "Outline found"
-msgstr "Outline found"
-
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Outline model tier"
 msgstr "Outline model tier"
+
+#: src/annotations/model-tier-choice.tsx
+msgid "Outline models"
+msgstr "Outline models"
 
 #. placeholder {0}: nameOf(userId) ?? ""
 #. placeholder {1}: rowLabel(row)
@@ -13426,13 +13652,25 @@ msgstr "Parfocal"
 msgid "Parfocal · research output"
 msgstr "Parfocal · research output"
 
+#: src/screens/admin/sections.tsx
+msgid "Parfocal adds its models here as they are released."
+msgstr "Parfocal adds its models here as they are released."
+
 #: src/screens/upload/overlays.tsx
 msgid "Parfocal calls your URL when something happens, so a pipeline can react."
 msgstr "Parfocal calls your URL when something happens, so a pipeline can react."
 
+#: src/results/add-result-set.tsx
+msgid "Parfocal cannot draw this file here. It is checked after Save."
+msgstr "Parfocal cannot draw this file here. It is checked after Save."
+
 #: src/screens/upload/result-problems.tsx
 msgid "Parfocal cannot keep heatmaps yet"
 msgstr "Parfocal cannot keep heatmaps yet"
+
+#: src/results/add-result-set.tsx
+msgid "Parfocal cannot read that kind of file as results."
+msgstr "Parfocal cannot read that kind of file as results."
 
 #: src/screens/upload/result-problems.tsx
 msgid "Parfocal checked this heatmap against its slide but cannot keep heatmaps yet."
@@ -13860,6 +14098,10 @@ msgstr "Picks {0} from this computer"
 msgid "Pin"
 msgstr "Pin"
 
+#: src/annotations/target-composer.tsx
+msgid "Pin the point instead"
+msgstr "Pin the point instead"
+
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Pinch"
@@ -14103,7 +14345,6 @@ msgid "Preview the page"
 msgstr "Preview the page"
 
 #: src/screens/admin/template-editor.tsx
-#: src/screens/admin/templates.tsx
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "Preview the PDF"
 msgstr "Preview the PDF"
@@ -14639,19 +14880,22 @@ msgstr "Remove"
 msgid "Remove {0}"
 msgstr "Remove {0}"
 
-#: src/screens/upload/files-step.tsx
+#. placeholder {0}: member.display_name
 #: src/screens/admin/people-menu.tsx
+msgid "Remove {0} from the workspace"
+msgstr "Remove {object}"
+
+#: src/screens/upload/files-step.tsx
 msgid "Remove {name}"
 msgstr "Remove {name}"
 
 #: src/screens/viewer/objects-panel.tsx
 msgid "Remove {object}"
-#. placeholder {0}: member.display_name
-#: src/screens/admin/people-menu.tsx
-msgid "Remove {0} from the workspace"
-msgstr "Remove {0} from the workspace"
+msgstr ""
 
-msgstr "Remove {object}"
+#: src/screens/admin/people-menu.tsx
+msgid "Remove admin rights"
+msgstr "Remove deleted items after"
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Remove all"
@@ -14659,27 +14903,17 @@ msgstr "Remove all"
 
 #: src/screens/admin/retention.tsx
 msgid "Remove deleted items after"
-#: src/screens/admin/people-menu.tsx
-msgid "Remove admin rights"
-msgstr "Remove admin rights"
+msgstr ""
 
-msgstr "Remove deleted items after"
+#: src/screens/admin/people-menu.tsx
+msgid "Remove from the workspace"
+msgstr "Remove from the workspace"
 
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Remove from this upload"
 msgstr "Remove from this upload"
 
-#: src/screens/upload/check-step.tsx
-#: src/screens/admin/people-menu.tsx
-msgid "Remove from the workspace"
-msgstr "Remove from the workspace"
-
-msgid "Remove the 4 largest slides from this upload"
-msgstr "Remove the 4 largest slides from this upload"
-
-#. placeholder {0}: item.name
-#: src/screens/settings/settings-screen.tsx
 #: src/screens/admin/people-menu.tsx
 msgid "Remove on"
 msgstr "Remove on"
@@ -14688,6 +14922,12 @@ msgstr "Remove on"
 msgid "Remove on, optional"
 msgstr "Remove on, optional"
 
+#: src/screens/upload/check-step.tsx
+msgid "Remove the 4 largest slides from this upload"
+msgstr "Remove the 4 largest slides from this upload"
+
+#. placeholder {0}: item.name
+#: src/screens/settings/settings-screen.tsx
 msgid "Remove the passkey {0}"
 msgstr "Remove the passkey {0}"
 
@@ -14695,16 +14935,16 @@ msgstr "Remove the passkey {0}"
 msgid "Remove the project"
 msgstr "Remove the project"
 
+#: src/screens/admin/people.tsx
+msgid "Removed"
+msgstr "Removed"
+
 #: src/study/prepare-participant.tsx
 msgid "Removing the project of {typed}."
 msgstr "Removing the project of {typed}."
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/annotations/layers-tree.tsx
-#: src/screens/admin/people.tsx
-msgid "Removed"
-msgstr "Removed"
-
 msgid "Rename"
 msgstr "Rename"
 
@@ -14893,16 +15133,16 @@ msgstr "Resend in {0}"
 msgid "Resend the code"
 msgstr "Resend the code"
 
+#: src/screens/admin/people-menu.tsx
+msgid "Resend the invite"
+msgstr "Resend the invite"
+
 #. placeholder {0}: invitation.email
 #: src/screens/admin/people.tsx
 msgid "Resend the invite to {0}"
 msgstr "Resend the invite to {0}"
 
 #: src/screens/settings/shortcuts-section.tsx
-#: src/screens/admin/people-menu.tsx
-msgid "Resend the invite"
-msgstr "Resend the invite"
-
 msgid "Reset"
 msgstr "Reset"
 
@@ -15404,12 +15644,6 @@ msgstr "Reviews this task"
 msgid "Revoke"
 msgstr "Revoke"
 
-#. placeholder {0}: account.name
-#: src/screens/admin/api-section.tsx
-msgid "Revoke the token for {0}"
-msgstr "Revoke the token for {0}"
-
-#: src/screens/evaluation/share-links.tsx
 #: src/screens/admin/people-menu.tsx
 msgid "Revoke invite"
 msgstr "Revoke invite"
@@ -15423,6 +15657,12 @@ msgstr "Revoke the invite"
 msgid "Revoke the invite to {0}"
 msgstr "Revoke the invite to {0}"
 
+#. placeholder {0}: account.name
+#: src/screens/admin/api-section.tsx
+msgid "Revoke the token for {0}"
+msgstr "Revoke the token for {0}"
+
+#: src/screens/evaluation/share-links.tsx
 msgid "Revoked"
 msgstr "Revoked"
 
@@ -15584,6 +15824,10 @@ msgstr "Run a model"
 msgid "Run a model asks for the model, the slides and the area. It shows what the run will cost in time before it starts."
 msgstr "Run a model asks for the model, the slides and the area. It shows what the run will cost in time before it starts."
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Run a model on {runSlide}"
+msgstr "Run a model on {runSlide}"
+
 #: src/screens/upload/live-wizard.tsx
 msgid "Run a model on them now, or leave them and add results later."
 msgstr "Run a model on them now, or leave them and add results later."
@@ -15735,6 +15979,14 @@ msgstr "Sample or your own"
 msgid "Sample project · sample numbers"
 msgstr "Sample project · sample numbers"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample project ready"
+msgstr "Sample project ready"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample project ready: {slides} slides, a review of {reviewed}"
+msgstr "Sample project ready: {slides} slides, a review of {reviewed}"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Sample size"
 msgstr "Sample size"
@@ -15742,6 +15994,10 @@ msgstr "Sample size"
 #: src/screens/developer/developer-screen.tsx
 msgid "Sample slides"
 msgstr "Sample slides"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample slides with AI results and a short review task for you, to try everything safely"
+msgstr "Sample slides with AI results and a short review task for you, to try everything safely"
 
 #. placeholder {0}: test.sample_slide
 #: src/screens/admin/connect-model.tsx
@@ -15804,6 +16060,10 @@ msgstr "Save for this task"
 #: src/screens/developer/developer-screen.tsx
 msgid "Save JSON"
 msgstr "Save JSON"
+
+#: src/screens/admin/storage.tsx
+msgid "Save one when you import slides from a link or a bucket."
+msgstr "Save one when you import slides from a link or a bucket."
 
 #: src/screens/project/task-settings-drawer.tsx
 msgid "Save Outline overlap"
@@ -16541,6 +16801,14 @@ msgstr "Show changes"
 msgid "Show every step"
 msgstr "Show every step"
 
+#: src/screens/admin/people.tsx
+msgid "Show everyone"
+msgstr "Show everyone"
+
+#: src/screens/admin/people.tsx
+msgid "Show everyone to see the rest of the workspace."
+msgstr "Show everyone to see the rest of the workspace."
+
 #: src/screens/viewer/layer-views.tsx
 msgid "Show from"
 msgstr "Show from"
@@ -16667,6 +16935,11 @@ msgstr "Show what you typed"
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Show, hide, compare and style the result sets of this slide"
 msgstr "Show, hide, compare and style the result sets of this slide"
+
+#. placeholder {0}: total.toLocaleString("en")
+#: src/results/add-result-set.tsx
+msgid "Showing {cap} of {0} shapes in cyan, not saved yet."
+msgstr "Showing {cap} of {0} shapes in cyan, not saved yet."
 
 #: src/viewer/compare-panes.tsx
 msgid "Showing here"
@@ -17198,16 +17471,16 @@ msgstr "Slides and their AI results"
 msgid "Slides and their results"
 msgstr "Slides and their results"
 
+#: src/screens/admin/people-menu.tsx
+msgid "Slides go back to the pool, tasks to the project owners, adjudications to the queue, and open threads are resolved."
+msgstr "Slides go back to the pool, tasks to the project owners, adjudications to the queue, and open threads are resolved."
+
 #: src/screens/project/case-slides-editor.tsx
 msgid "Slides in order"
 msgstr "Slides in order"
 
 #. placeholder {0}: list.scope
 #: src/viewer/live-top-bar.tsx
-#: src/screens/admin/people-menu.tsx
-msgid "Slides go back to the pool, tasks to the project owners, adjudications to the queue, and open threads are resolved."
-msgstr "Slides go back to the pool, tasks to the project owners, adjudications to the queue, and open threads are resolved."
-
 msgid "Slides in this {0}"
 msgstr "Slides in this {0}"
 
@@ -17250,6 +17523,14 @@ msgstr "Slides with objects for you"
 #: src/screens/disagreements/adjudicator-view.tsx
 msgid "Slides with objects queued for you"
 msgstr "Slides with objects queued for you"
+
+#: src/screens/project/slides-empty.tsx
+msgid "Slides you upload show here, grouped by case. AI results are optional."
+msgstr "Slides you upload show here, grouped by case. AI results are optional."
+
+#: src/screens/my-work/all-slides-tab.tsx
+msgid "Slides you upload to a project, or that you review, show here."
+msgstr "Slides you upload to a project, or that you review, show here."
 
 #: ../../packages/ui/src/components/drop-overlay.tsx
 msgid "Slides, result files or a whole folder."
@@ -18002,6 +18283,14 @@ msgstr "Tablet and pen"
 msgid "Take a break"
 msgstr "Take a break"
 
+#: src/screens/my-work/all-slides-tab.tsx
+msgid "Take a filter off or search for something else."
+msgstr "Take a filter off or search for something else."
+
+#: src/screens/project/slides-empty.tsx
+msgid "Take a filter off to see more slides."
+msgstr "Take a filter off to see more slides."
+
 #: src/help/help-dialog.tsx
 #: src/help/tour-host.tsx
 msgid "Take the tour"
@@ -18248,12 +18537,16 @@ msgstr "That did not work, try again"
 msgid "That did not work. Try again in a moment."
 msgstr "That did not work. Try again in a moment."
 
-#: src/screens/admin/people.tsx
+#: src/screens/admin/people-menu.tsx
 #: src/screens/admin/template-offers.tsx
 #: src/screens/admin/templates.tsx
 #: src/screens/home/announcements.tsx
 msgid "That did not work. Try again."
 msgstr "That did not work. Try again."
+
+#: src/results/add-result-set.tsx
+msgid "That is a slide, not a result file."
+msgstr "That is a slide, not a result file."
 
 #: src/annotations/layers-panel.tsx
 msgid "that layer is hidden or locked"
@@ -18650,18 +18943,18 @@ msgstr "The invite"
 msgid "The invite expires on {0}"
 msgstr "The invite expires on {0}"
 
+#. placeholder {0}: invitation.email
+#: src/screens/admin/people.tsx
+msgid "The invite to {0} was revoked."
+msgstr "The jobs button counts what runs in the background, such as uploads and model runs. Press it for each job and its progress."
+
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The invite to {email} could not be sent. Try again."
 msgstr "The invite to {email} could not be sent. Try again."
 
 #: src/app-tour/tour-chapters.ts
 msgid "The jobs button counts what runs in the background, such as uploads and model runs. Press it for each job and its progress."
-#. placeholder {0}: invitation.email
-#: src/screens/admin/people.tsx
-msgid "The invite to {0} was revoked."
-msgstr "The invite to {0} was revoked."
-
-msgstr "The jobs button counts what runs in the background, such as uploads and model runs. Press it for each job and its progress."
+msgstr ""
 
 #: src/screens/clinical-report/steps.tsx
 msgid "The largest deposit sets the suggested category. A category against it needs your confirmation."
@@ -18677,17 +18970,17 @@ msgstr "The largest deposit, {0} mm on {1}, suggests"
 msgid "The link could not be changed. Try again."
 msgstr "The link could not be changed. Try again."
 
+#: src/screens/admin/people-menu.tsx
+msgid "The link in their email stops working. You can invite them again later."
+msgstr "The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
+
 #: src/screens/developer/developer-screen.tsx
 msgid "The live numbers show in the HUD over the open slide."
 msgstr "The live numbers show in the HUD over the open slide."
 
 #: src/screens/admin/join-settings.tsx
 msgid "The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
-#: src/screens/admin/people-menu.tsx
-msgid "The link in their email stops working. You can invite them again later."
-msgstr "The link in their email stops working. You can invite them again later."
-
-msgstr "The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
+msgstr ""
 
 #: src/app-tour/tour-chapters.ts
 msgid "The magnification bar zooms the slide. Whole slide fits it to the window and the numbers jump to a power such as 10x or 40x."
@@ -18923,6 +19216,10 @@ msgstr "The reason goes into the history of the layer."
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "The reason goes into the report."
 msgstr "The reason goes into the report."
+
+#: src/screens/review/use-decision-saves.ts
+msgid "The reasons for {objectId} were not saved. They are back as they were."
+msgstr "The reasons for {objectId} were not saved. They are back as they were."
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "The report as {senderFirst} sent it"
@@ -19291,7 +19588,7 @@ msgstr "The test answer does not follow the contract yet. Fix it and test again.
 msgid "The test fills this in."
 msgstr "The test fills this in."
 
-#: src/annotations/pin-layer.tsx
+#: src/annotations/target-composer.tsx
 #: src/screens/review/pinned-thread.tsx
 msgid "The thread did not save. Try again."
 msgstr "The thread did not save. Try again."
@@ -19331,6 +19628,11 @@ msgstr "The two factor setting did not save. Try again."
 #: src/viewer/picked-cell-retype.tsx
 msgid "The type was not saved. Try again."
 msgstr "The type was not saved. Try again."
+
+#. placeholder {0}: outcome.count
+#: src/annotations/use-proposals.ts
+msgid "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
+msgstr "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
 
 #. placeholder {0}: learnerView.corrections
 #: src/screens/viewer/use-viewer-state.tsx
@@ -19439,6 +19741,10 @@ msgstr "They ask, and someone with admin rights answers in Join requests on Peop
 msgid "They asked for access. They join as a reviewer and see this project from then on."
 msgstr "They asked for access. They join as a reviewer and see this project from then on."
 
+#: src/screens/admin/people-menu.tsx
+msgid "They can no longer sign in here. Their decisions, sign-offs and audit entries stay as they are."
+msgstr "They can no longer sign in here. Their decisions, sign-offs and audit entries stay as they are."
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "They do not block signing and stay out of the training data"
 msgstr "They do not block signing and stay out of the training data"
@@ -19454,14 +19760,14 @@ msgstr "They get a one-step sign-up, then the task"
 #: src/screens/admin/people.tsx
 msgid "They get a one-step sign-up."
 msgstr "They get a one-step sign-up."
-#: src/screens/admin/people-menu.tsx
-msgid "They can no longer sign in here. Their decisions, sign-offs and audit entries stay as they are."
-msgstr "They can no longer sign in here. Their decisions, sign-offs and audit entries stay as they are."
-
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "They get every slide of the task and an email."
 msgstr "They get every slide of the task and an email."
+
+#: src/screens/admin/people-menu.tsx
+msgid "They have no open work."
+msgstr "They have no open work."
 
 #: src/screens/admin/join-settings.tsx
 msgid "They join as reviewers without anyone saying yes."
@@ -19478,10 +19784,6 @@ msgstr "They stay in this tab and save when the connection returns."
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "They stay open after the sign-off."
 msgstr "They stay open after the sign-off."
-#: src/screens/admin/people-menu.tsx
-msgid "They have no open work."
-msgstr "They have no open work."
-
 
 #: src/study/study-copy.ts
 msgid "Think about the whole app. Write as much or as little as you want, or leave it empty."
@@ -19814,10 +20116,9 @@ msgstr "Tight"
 
 #. placeholder {0}: Math.min(progress.done + 1, progress.total)
 #. placeholder {1}: progress.total
-#. placeholder {2}: progress.found
 #: src/annotations/auto-layer.tsx
-msgid "Tile {0} of {1} · {2} found"
-msgstr "Tile {0} of {1} · {2} found"
+msgid "Tile {0} of {1}"
+msgstr "Tile {0} of {1}"
 
 #: src/screens/admin/connect-model.tsx
 msgid "Tile size"
@@ -19934,11 +20235,20 @@ msgstr "to return"
 msgid "To review"
 msgstr "To review"
 
+#. placeholder {0}: slide.label
+#: src/results/add-result-set.tsx
+msgid "To slide {0}"
+msgstr "To slide {0}"
+
 #. placeholder {0}: preview.slide_label
 #. placeholder {1}: preview.case_label
 #: src/screens/upload/viewer-flow.tsx
 msgid "To slide {0} in case <0>{1}</0>"
 msgstr "To slide {0} in case <0>{1}</0>"
+
+#: src/results/add-result-set.tsx
+msgid "To this slide"
+msgstr "To this slide"
 
 #: src/screens/admin/api-section.tsx
 msgid "Today"
@@ -19972,6 +20282,10 @@ msgstr "Tokens and webhooks for pipelines"
 #: src/screens/new-task/send-step.tsx
 msgid "Told just now"
 msgstr "Told just now"
+
+#: src/results/add-result-set.tsx
+msgid "Too large to preview, it is checked after Save."
+msgstr "Too large to preview, it is checked after Save."
 
 #: src/help/tool-hints-section.tsx
 msgid "Tool hints"
@@ -20247,6 +20561,10 @@ msgstr "Type an object ID or a slide, for example T4 or A2."
 msgid "Type at least two letters to search."
 msgstr "Type at least two letters to search."
 
+#: src/annotations/smart-typing.tsx
+msgid "Type each cell as soon as it is accepted"
+msgstr "Type each cell as soon as it is accepted"
+
 #: src/screens/review/type-bar.tsx
 msgid "Type for {object}"
 msgstr "Type for {object}"
@@ -20262,6 +20580,35 @@ msgstr "Type or accept the code the participant page shows. Preparing seeds a fr
 #: src/screens/developer/developer-screen.tsx
 msgid "Typer"
 msgstr "Typer"
+
+#. placeholder {0}: typed.percent
+#: src/annotations/smart-typing.tsx
+msgid "typer {0}%"
+msgstr "typer {0}%"
+
+#. placeholder {0}: typed.type
+#. placeholder {1}: typed.percent
+#: src/annotations/smart-typing.tsx
+msgid "typer said {0} {1}%"
+msgstr "typer said {0} {1}%"
+
+#. placeholder {0}: typing.count
+#: src/annotations/smart-typing.tsx
+msgid "Typing {0} cells"
+msgstr "Typing {0} cells"
+
+#. placeholder {0}: typing.count
+#: src/annotations/smart-typing.tsx
+msgid "Typing failed, {0} untyped"
+msgstr "Typing failed, {0} untyped"
+
+#: src/annotations/smart-typing.tsx
+msgid "Typing off"
+msgstr "Typing off"
+
+#: src/annotations/smart-typing.tsx
+msgid "Typing on"
+msgstr "Typing on"
 
 #: ../../packages/ui/src/components/person.tsx
 msgid "Unassigned"
@@ -20461,6 +20808,10 @@ msgstr "Upload is a page with three steps, Files, Check and Upload. Files come f
 msgid "Upload of {0}"
 msgstr "Upload of {0}"
 
+#: src/results/add-result-set.tsx
+msgid "Upload of {name}"
+msgstr "Upload of {name}"
+
 #: src/screens/project/slides-tab.tsx
 #: src/screens/upload/case-upload-drawer.tsx
 msgid "Upload slides"
@@ -20596,6 +20947,10 @@ msgstr "Use my password instead"
 #: src/screens/admin/role-permissions.tsx
 msgid "Use report templates, edit the library"
 msgstr "Use report templates, edit the library"
+
+#: src/results/add-result-set.tsx
+msgid "Use the full upload"
+msgstr "Use the full upload"
 
 #: src/screens/upload/result-problems.tsx
 msgid "Use this choice"
@@ -21318,6 +21673,10 @@ msgstr "Why you decided this"
 msgid "Wide"
 msgstr "Wide"
 
+#: src/screens/admin/audit.tsx
+msgid "Widen the time range or clear a filter to see more."
+msgstr "Widen the time range or clear a filter to see more."
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: ../../packages/ui/src/components/report-editor.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
@@ -21337,6 +21696,10 @@ msgstr "With {0} and your note"
 #: src/screens/upload/progress-step.tsx
 msgid "with {withText}"
 msgstr "with {withText}"
+
+#: src/screens/admin/people-menu.tsx
+msgid "With a date they keep access until then, and you can cancel before it comes."
+msgstr "With a date they keep access until then, and you can cancel before it comes."
 
 #: src/screens/admin/overview.tsx
 #: src/screens/admin/people.tsx
@@ -21385,10 +21748,6 @@ msgid "Worklist"
 msgstr "Worklist"
 
 #: src/screens/worklist-spike/worklist-spike.tsx
-#: src/screens/admin/people-menu.tsx
-msgid "With a date they keep access until then, and you can cancel before it comes."
-msgstr "With a date they keep access until then, and you can cancel before it comes."
-
 msgid "Worklist rows"
 msgstr "Worklist rows"
 
@@ -21602,8 +21961,8 @@ msgid "You have not changed any key."
 msgstr "You have not changed any key."
 
 #: src/screens/my-work/assigned-tab.tsx
-msgid "You have not handed out any review tasks yet. New review task starts one."
-msgstr "You have not handed out any review tasks yet. New review task starts one."
+msgid "You have not handed out any review tasks yet"
+msgstr "You have not handed out any review tasks yet"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "You join at once"
@@ -21749,6 +22108,10 @@ msgstr "Your home keeps a short checklist until each part has been tried once. {
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Your institution checks who you are, so Parfocal never sees your password."
 msgstr "Your institution checks who you are, so Parfocal never sees your password."
+
+#: src/screens/admin/sections.tsx
+msgid "Your lab has no model connected"
+msgstr "Your lab has no model connected"
 
 #: src/screens/admin/sections.tsx
 msgid "Your lab's models"
@@ -21927,380 +22290,3 @@ msgstr "µm and mm"
 #: src/screens/settings/settings-screen.tsx
 msgid "µm per pixel"
 msgstr "µm per pixel"
-
-#. placeholder {0}: outcome.count
-#: src/annotations/use-proposals.ts
-msgid "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
-msgstr "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
-
-#: src/annotations/smart-typing.tsx
-msgid "Type each cell as soon as it is accepted"
-msgstr "Type each cell as soon as it is accepted"
-
-#. placeholder {0}: typed.percent
-#: src/annotations/smart-typing.tsx
-msgid "typer {0}%"
-msgstr "typer {0}%"
-
-#. placeholder {0}: typed.type
-#. placeholder {1}: typed.percent
-#: src/annotations/smart-typing.tsx
-msgid "typer said {0} {1}%"
-msgstr "typer said {0} {1}%"
-
-#. placeholder {0}: typing.count
-#: src/annotations/smart-typing.tsx
-msgid "Typing {0} cells"
-msgstr "Typing {0} cells"
-
-#. placeholder {0}: typing.count
-#: src/annotations/smart-typing.tsx
-msgid "Typing failed, {0} untyped"
-msgstr "Typing failed, {0} untyped"
-
-#: src/annotations/smart-typing.tsx
-msgid "Typing off"
-msgstr "Typing off"
-
-#: src/annotations/smart-typing.tsx
-msgid "Typing on"
-msgstr "Typing on"
-
-#: src/annotations/layers-tree.tsx
-msgid "{comments, plural, one {# comment on it} other {# comments on it}}"
-msgstr "{comments, plural, one {# comment on it} other {# comments on it}}"
-
-#. placeholder {0}: words.label
-#. placeholder {1}: thread.title
-#: src/annotations/comment-anchors.tsx
-msgid "{mark}, comment on {0}: {1}"
-msgstr "{mark}, comment on {0}: {1}"
-
-#: src/annotations/target-composer.tsx
-msgid "Comment on"
-msgstr "Comment on"
-
-#: src/annotations/comment-anchors.tsx
-msgid "Comment on {count} objects"
-msgstr "Comment on {count} objects"
-
-#: src/annotations/target-composer.tsx
-msgid "Comment on {label}"
-msgstr "Comment on {label}"
-
-#: src/annotations/comment-anchors.tsx
-msgid "Comment on the selected object"
-msgstr "Comment on the selected object"
-
-#: ../../packages/ui/src/components/comments-tab.tsx
-msgid "Comment on the slide <0/>"
-msgstr "Comment on the slide <0/>"
-
-#: src/annotations/layers-tree.tsx
-msgid "Comment on this layer"
-msgstr "Comment on this layer"
-
-#: src/annotations/target-composer.tsx
-msgid "New thread on {label}"
-msgstr "New thread on {label}"
-
-#: src/annotations/layers-tree.tsx
-msgid "Open the comments on it"
-msgstr "Open the comments on it"
-
-#: src/annotations/target-composer.tsx
-msgid "Pin the point instead"
-msgstr "Pin the point instead"
-
-#: src/screens/admin/api-section.tsx
-msgid "A pipeline needs one to send slides or results."
-msgstr "A pipeline needs one to send slides or results."
-
-#: src/screens/admin/sections.tsx
-msgid "A project you archive waits here, still readable, until you unarchive it."
-msgstr "A project you archive waits here, still readable, until you unarchive it."
-
-#: src/screens/admin/templates.tsx
-msgid "A template lays out the evaluation report and fills in what a new review task checks."
-msgstr "A template lays out the evaluation report and fills in what a new review task checks."
-
-#: src/screens/admin/audit.tsx
-msgid "Changes to people, projects and settings show up here as they happen."
-msgstr "Changes to people, projects and settings show up here as they happen."
-
-#: src/screens/admin/people.tsx
-msgid "Check the spelling, or search by email."
-msgstr "Check the spelling, or search by email."
-
-#: src/screens/admin/sections.tsx
-msgid "Connect a model your lab runs on its own server and it shows in every model list."
-msgstr "Connect a model your lab runs on its own server and it shows in every model list."
-
-#: src/screens/admin/sections.tsx
-msgid "Create a project to start evaluating slides."
-msgstr "Create a project to start evaluating slides."
-
-#: src/screens/admin/people.tsx
-msgid "Invite people and they appear here once they accept."
-msgstr "Invite people and they appear here once they accept."
-
-#: src/screens/admin/sections.tsx
-msgid "No active projects"
-msgstr "No active projects"
-
-#: src/screens/admin/sections.tsx
-msgid "No archived projects"
-msgstr "No archived projects"
-
-#: src/screens/admin/deleted-projects.tsx
-msgid "No deleted projects"
-msgstr "No deleted projects"
-
-#: src/screens/admin/api-section.tsx
-msgid "No event targets"
-msgstr "No event targets"
-
-#: src/screens/admin/audit.tsx
-msgid "No events match these filters"
-msgstr "No events match these filters"
-
-#: src/screens/admin/audit.tsx
-msgid "No events recorded yet"
-msgstr "No events recorded yet"
-
-#: src/screens/admin/api-section.tsx
-msgid "No incoming webhooks"
-msgstr "No incoming webhooks"
-
-#: src/screens/admin/people.tsx
-msgid "No one has admin rights"
-msgstr "No one has admin rights"
-
-#: src/screens/admin/people.tsx
-msgid "No one is in this workspace yet"
-msgstr "No one is in this workspace yet"
-
-#: src/screens/admin/people.tsx
-msgid "No one matches this search"
-msgstr "No one matches this search"
-
-#: src/screens/admin/sections.tsx
-msgid "No Parfocal models are available"
-msgstr "No Parfocal models are available"
-
-#: src/screens/admin/people.tsx
-msgid "No researchers"
-msgstr "No researchers"
-
-#: src/screens/admin/people.tsx
-msgid "No reviewers"
-msgstr "No reviewers"
-
-#: src/screens/admin/storage.tsx
-msgid "No saved sources yet"
-msgstr "No saved sources yet"
-
-#: src/screens/admin/templates.tsx
-msgid "No study templates"
-msgstr "No study templates"
-
-#: src/screens/admin/api-section.tsx
-msgid "No tokens yet"
-msgstr "No tokens yet"
-
-#: src/screens/admin/sections.tsx
-msgid "Parfocal adds its models here as they are released."
-msgstr "Parfocal adds its models here as they are released."
-
-#: src/screens/admin/storage.tsx
-msgid "Save one when you import slides from a link or a bucket."
-msgstr "Save one when you import slides from a link or a bucket."
-
-#: src/screens/admin/people.tsx
-msgid "Show everyone"
-msgstr "Show everyone"
-
-#: src/screens/admin/people.tsx
-msgid "Show everyone to see the rest of the workspace."
-msgstr "Show everyone to see the rest of the workspace."
-
-#: src/screens/admin/audit.tsx
-msgid "Widen the time range or clear a filter to see more."
-msgstr "Widen the time range or clear a filter to see more."
-
-#: src/screens/admin/sections.tsx
-msgid "Your lab has no model connected"
-msgstr "Your lab has no model connected"
-
-#: src/screens/project/tasks-tab.tsx
-msgid "A review task hands slides to the people who check the AI results."
-msgstr "A review task hands slides to the people who check the AI results."
-
-#: src/screens/my-work/assigned-tab.tsx
-msgid "A review task you start in a project shows here with each reviewer's progress."
-msgstr "A review task you start in a project shows here with each reviewer's progress."
-
-#: src/screens/project/slides-empty.tsx
-msgid "Drop slides, results or a whole folder here"
-msgstr "Drop slides, results or a whole folder here"
-
-#: src/screens/upload/overlays.tsx
-msgid "Files that land in the watched folder or come in by webhook show here."
-msgstr "Files that land in the watched folder or come in by webhook show here."
-
-#: src/screens/project/slides-empty.tsx
-msgid "Link a remote source"
-msgstr "Link a remote source"
-
-#: src/screens/project/tasks-tab.tsx
-msgid "No review tasks in this project yet"
-msgstr "No review tasks in this project yet"
-
-#. placeholder {0}: match.name
-#: src/screens/project/slides-empty.tsx
-msgid "No slide has results from {0}"
-msgstr "No slide has results from {0}"
-
-#. placeholder {0}: match.query
-#: src/screens/project/slides-empty.tsx
-msgid "No slide matches \"{0}\""
-msgstr "No slide matches \"{0}\""
-
-#: src/screens/my-work/all-slides-tab.tsx
-msgid "No slide matches these filters"
-msgstr "No slide matches these filters"
-
-#: src/screens/project/slides-empty.tsx
-msgid "No slides in case {caseLabel} yet"
-msgstr "No slides in case {caseLabel} yet"
-
-#: src/screens/project/slides-empty.tsx
-msgid "No slides in this project yet"
-msgstr "No slides in this project yet"
-
-#: src/screens/project/slides-empty.tsx
-msgid "No slides match these filters"
-msgstr "No slides match these filters"
-
-#: src/screens/project/slides-empty.tsx
-msgid "No slides need review"
-msgstr "No slides need review"
-
-#: src/screens/my-work/all-slides-tab.tsx
-msgid "No slides yet"
-msgstr "No slides yet"
-
-#: src/screens/upload/overlays.tsx
-msgid "Nothing has arrived yet"
-msgstr "Nothing has arrived yet"
-
-#: src/screens/project/slides-empty.tsx
-msgid "Slides you upload show here, grouped by case. AI results are optional."
-msgstr "Slides you upload show here, grouped by case. AI results are optional."
-
-#: src/screens/my-work/all-slides-tab.tsx
-msgid "Slides you upload to a project, or that you review, show here."
-msgstr "Slides you upload to a project, or that you review, show here."
-
-#: src/screens/my-work/all-slides-tab.tsx
-msgid "Take a filter off or search for something else."
-msgstr "Take a filter off or search for something else."
-
-#: src/screens/project/slides-empty.tsx
-msgid "Take a filter off to see more slides."
-msgstr "Take a filter off to see more slides."
-
-#: src/screens/my-work/assigned-tab.tsx
-msgid "You have not handed out any review tasks yet"
-msgstr "You have not handed out any review tasks yet"
-
-#: src/screens/review/threads-tab.tsx
-msgid "All comments"
-msgstr "All comments"
-
-#: src/annotations/pin-layer.tsx
-msgid "Comment on {currentResult}"
-msgstr "Comment on {currentResult}"
-
-#: src/annotations/reference-picker.tsx
-msgid "Objects, layers and slides"
-msgstr "Objects, layers and slides"
-
-#: ../../packages/ui/src/components/notifications-panel.tsx
-msgid "on"
-msgstr "on"
-
-#: src/results/add-result-set.tsx
-msgid " or drop it on the slide. GeoJSON, Parfocal JSON, CSV, masks and heatmaps. You see it on the slide before anything is saved."
-msgstr " or drop it on the slide. GeoJSON, Parfocal JSON, CSV, masks and heatmaps. You see it on the slide before anything is saved."
-
-#. placeholder {0}: preview.results.objects
-#: src/results/add-result-set.tsx
-msgid "{0} objects, shown in cyan and not saved yet."
-msgstr "{0} objects, shown in cyan and not saved yet."
-
-#: src/results/stage-result-adding.tsx
-msgid "{name} added"
-msgstr "{name} added"
-
-#: src/results/add-result-set.tsx
-msgid "A TIFF has no preview here. It is checked after Save."
-msgstr "A TIFF has no preview here. It is checked after Save."
-
-#: src/results/add-result-set.tsx
-msgid "Add one result file at a time here."
-msgstr "Add one result file at a time here."
-
-#: src/results/add-result-set.tsx
-msgid "Checking the file and adding it to the slide"
-msgstr "Checking the file and adding it to the slide"
-
-#: src/results/add-result-set.tsx
-msgid "Drawn over the slide at half strength in the preview, not saved yet."
-msgstr "Drawn over the slide at half strength in the preview, not saved yet."
-
-#: src/results/stage-result-adding.tsx
-msgid "Drop a result file to preview it on this slide"
-msgstr "Drop a result file to preview it on this slide"
-
-#: src/results/add-result-set.tsx
-msgid "One file at a time: .geojson, .json, .csv, .tsv, .png, .tif or .tiff. Parfocal checks it after Save."
-msgstr "One file at a time: .geojson, .json, .csv, .tsv, .png, .tif or .tiff. Parfocal checks it after Save."
-
-#: src/results/add-result-set.tsx
-msgid "Parfocal cannot draw this file here. It is checked after Save."
-msgstr "Parfocal cannot draw this file here. It is checked after Save."
-
-#: src/results/add-result-set.tsx
-msgid "Parfocal cannot read that kind of file as results."
-msgstr "Parfocal cannot read that kind of file as results."
-
-#. placeholder {0}: total.toLocaleString("en")
-#: src/results/add-result-set.tsx
-msgid "Showing {cap} of {0} shapes in cyan, not saved yet."
-msgstr "Showing {cap} of {0} shapes in cyan, not saved yet."
-
-#: src/results/add-result-set.tsx
-msgid "That is a slide, not a result file."
-msgstr "That is a slide, not a result file."
-
-#. placeholder {0}: slide.label
-#: src/results/add-result-set.tsx
-msgid "To slide {0}"
-msgstr "To slide {0}"
-
-#: src/results/add-result-set.tsx
-msgid "To this slide"
-msgstr "To this slide"
-
-#: src/results/add-result-set.tsx
-msgid "Too large to preview, it is checked after Save."
-msgstr "Too large to preview, it is checked after Save."
-
-#: src/results/add-result-set.tsx
-msgid "Upload of {name}"
-msgstr "Upload of {name}"
-
-#: src/results/add-result-set.tsx
-msgid "Use the full upload"
-msgstr "Use the full upload"
