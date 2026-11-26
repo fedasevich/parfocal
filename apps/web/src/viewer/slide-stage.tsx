@@ -100,6 +100,7 @@ import { StageDockTools, StageSideRail } from "./stage-rail.tsx";
 import type { StageTabCounts } from "./stage-tab-counts.ts";
 import { StageTips } from "./stage-tips.tsx";
 import { stageToolOf } from "./stage-tools.ts";
+import { ViewerKeys } from "./stage-viewer-keys.tsx";
 import { ThreadFocus } from "./thread-focus.tsx";
 import { threadAnchorPoint } from "./thread-target.ts";
 import { firstGrant, type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
@@ -112,7 +113,6 @@ import { useStageDevices } from "./use-stage-devices.ts";
 import { useStageWheel } from "./use-stage-wheel.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
 import { useUndoKeys } from "./use-undo-keys.ts";
-import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
 import { type SelectionArea, selectionArea, zoomTargetArea } from "./viewer-keys.ts";
@@ -135,17 +135,6 @@ type Session = {
   readonly route: VivRoute | null;
   readonly shownRoute: EngineRouteId;
 };
-
-function ViewerKeys({
-  session,
-  selection,
-}: {
-  session: Session;
-  selection: () => SelectionArea | null;
-}) {
-  useViewerKeys(session.engine, session.module, selection);
-  return null;
-}
 
 export type ViewedLink = {
   peek: boolean;
