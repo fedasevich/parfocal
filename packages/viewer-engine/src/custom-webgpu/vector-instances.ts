@@ -22,6 +22,13 @@ const smallestRing = 3;
 
 const repeatSegments = 2;
 
+const seamSegments = 1;
+
+function ringRepeats(vertices: number, fromMiddle: boolean): number {
+  if (vertices < smallestRing) return 0;
+  return fromMiddle ? seamSegments : repeatSegments;
+}
+
 function ringEnds(starts: Uint32Array, holeStarts: Uint32Array): number[] {
   const ends = new Set<number>();
   for (let index = 1; index < starts.length; index++) ends.add(starts[index] ?? 0);
@@ -65,7 +72,7 @@ export function shapeInstanceStarts(
     while (ring < ends.length && (ends[ring] ?? 0) <= end) {
       const to = ends[ring] ?? 0;
       segmentTotal += ringSegments(to - from, fromMiddle);
-      if (!fromMiddle && to - from >= smallestRing) repeatTotal += repeatSegments;
+      repeatTotal += ringRepeats(to - from, fromMiddle);
       from = to;
       ring += 1;
     }
@@ -77,11 +84,11 @@ export function shapeInstanceStarts(
 }
 
 function repeatCount(shapes: ShapeData, fromMiddle: boolean): number {
-  if (fromMiddle || !shapes.polygons) return 0;
+  if (!shapes.polygons) return 0;
   let count = 0;
   let from = 0;
   for (const to of ringEnds(shapes.polygons.starts, shapes.polygons.holeStarts)) {
-    if (to - from >= smallestRing) count += repeatSegments;
+    count += ringRepeats(to - from, fromMiddle);
     from = to;
   }
   return count;
@@ -220,7 +227,13 @@ export function buildVectorInstances(
     const owners = ownerOfVertex(starts);
     let from = 0;
     for (const to of ringEnds(starts, holeStarts)) {
-      if (to - from >= smallestRing) {
+      if (to - from >= smallestRing && fromMiddle) {
+        travelled = 0;
+        const middleX = ((positions[from * 2] ?? 0) + (positions[from * 2 + 2] ?? 0)) / 2;
+        const middleY = ((positions[from * 2 + 1] ?? 0) + (positions[from * 2 + 3] ?? 0)) / 2;
+        putSegment(middleX, middleY, middleX, middleY, colors, owners[from] ?? 0);
+        ring += 1;
+      } else if (to - from >= smallestRing) {
         travelled = 0;
         putSegment(
           positions[from * 2] ?? 0,
