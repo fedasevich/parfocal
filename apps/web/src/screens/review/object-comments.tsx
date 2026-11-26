@@ -15,6 +15,7 @@ import {
   MentionPicker,
 } from "@parfocal/ui/components/comment-thread";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
+import { sameObjectId } from "@parfocal/ui/lib/object-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
@@ -213,7 +214,7 @@ export function ObjectComments({
   ...props
 }: ObjectCommentsProps) {
   const { t } = useLingui();
-  const thread = threads.find((item) => item.anchor === object);
+  const thread = threads.find((item) => sameObjectId(item.anchor, object));
   return (
     <div className="grid gap-4">
       <div className="flex items-center justify-between gap-3">

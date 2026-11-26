@@ -84,7 +84,7 @@ PERSON_KINDS = {
 }
 OBJECT_ANCHORS = frozenset({AnchorKind.OBJECT, AnchorKind.ROI})
 GEOMETRY_ANCHORS = frozenset({AnchorKind.POINT, AnchorKind.SHAPE})
-type LayerKey = Annotated[str, StringConstraints(pattern=r"^(g:[1-9]\d{0,8}|c:[^\s]{0,96})$")]
+type LayerKey = Annotated[str, StringConstraints(pattern=r"^(g:[1-9]\d{0,8}|c:[^\n]{0,96})$")]
 SHAPES = (PolygonGeometry, MultiPolygonGeometry, LineStringGeometry)
 
 

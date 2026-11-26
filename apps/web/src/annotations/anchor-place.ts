@@ -1,5 +1,5 @@
 import type { Thread } from "@parfocal/api-client";
-import { asciiObjectId } from "@parfocal/ui/lib/object-id";
+import { sameObjectId } from "@parfocal/ui/lib/object-id";
 import type { SlideArea } from "@parfocal/viewer-engine";
 import type { SlideAreaEntry } from "../viewer/slide-areas.ts";
 import { threadTarget } from "../viewer/thread-target.ts";
@@ -16,9 +16,6 @@ export type AnchorPlace = {
 };
 
 type Anchor = Thread["anchor"];
-
-export const sameObjectId = (a: string, b: string) =>
-  asciiObjectId(a).toUpperCase() === asciiObjectId(b).toUpperCase();
 
 export function shapeOfObject(place: AnchorPlace, objectId: string): ShapeId | null {
   for (const [shapeId, code] of place.codes ?? []) {

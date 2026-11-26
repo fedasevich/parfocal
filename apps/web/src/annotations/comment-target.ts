@@ -26,13 +26,19 @@ export type CommentDraft = {
   readonly clicked?: Point | undefined;
 };
 
-const ring = ([minX, minY, maxX, maxY]: Extent): [number, number][] => [
-  [minX, minY],
-  [maxX, minY],
-  [maxX, maxY],
-  [minX, maxY],
-  [minX, minY],
-];
+const leastSide = 1;
+
+const ring = ([minX, minY, maxX, maxY]: Extent): [number, number][] => {
+  const right = Math.max(maxX, minX + leastSide);
+  const bottom = Math.max(maxY, minY + leastSide);
+  return [
+    [minX, minY],
+    [right, minY],
+    [right, bottom],
+    [minX, bottom],
+    [minX, minY],
+  ];
+};
 
 export function targetOfShapes(
   doc: AnnotationDocument,

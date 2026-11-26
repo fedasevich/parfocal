@@ -700,7 +700,7 @@ export const AnchorKind = {
 } as const;
 
 /**
- * @pattern ^(g:[1-9]\d{0,8}|c:[^\s]{0,96})$
+ * @pattern ^(g:[1-9]\d{0,8}|c:[^\n]{0,96})$
  */
 export type LayerKey = string;
 

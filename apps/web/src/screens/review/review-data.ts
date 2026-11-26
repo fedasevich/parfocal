@@ -18,7 +18,6 @@ import {
   useListThreads,
 } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
-import { shownObjectId } from "@parfocal/ui/lib/object-id";
 import { useState } from "react";
 import { formatDue } from "../format.ts";
 import { usePeople } from "../people.ts";
@@ -50,7 +49,7 @@ export const toSlideThreads = (threads: Thread[]): SlideThread[] =>
             id: thread.id,
             slide_id: thread.slide_id,
             task_id: thread.task_id,
-            anchor: shownObjectId(thread.anchor.object_id),
+            anchor: thread.anchor.object_id,
             replies: Math.max(0, thread.message_count - 1),
             resolved: thread.resolved_at !== null,
           },

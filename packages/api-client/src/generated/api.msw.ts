@@ -11854,7 +11854,7 @@ export const getListThreadsResponseMock = (): Thread[] =>
       ]),
       result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       layer: faker.helpers.arrayElement([
-        faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+        faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
         null,
       ]),
     },
@@ -11963,7 +11963,7 @@ export const getCreateThreadResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -12092,7 +12092,7 @@ export const getGetThreadResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -12226,7 +12226,7 @@ export const getResolveThreadResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -12347,7 +12347,7 @@ export const getReopenThreadResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -12468,7 +12468,7 @@ export const getMoveThreadResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -12588,7 +12588,7 @@ export const getListThreadsOnSlideResponseMock = (): Thread[] =>
       ]),
       result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       layer: faker.helpers.arrayElement([
-        faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+        faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
         null,
       ]),
     },
@@ -12697,7 +12697,7 @@ export const getCreateThreadOnSlideResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -12826,7 +12826,7 @@ export const getGetThreadOnSlideResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -12960,7 +12960,7 @@ export const getResolveThreadOnSlideResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -13081,7 +13081,7 @@ export const getReopenThreadOnSlideResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
@@ -13202,7 +13202,7 @@ export const getMoveThreadOnSlideResponseMock = (
     ]),
     result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     layer: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\s]{0,96})$"),
+      faker.helpers.fromRegExp("^(g:[1-9]\\d{0,8}|c:[^\\n]{0,96})$"),
       null,
     ]),
   },
