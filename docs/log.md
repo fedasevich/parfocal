@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- Production touch: release v0.62.0 (PROTO-197, PROTO-199 and the second CI fixes) deployed by run 45753858345, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - CI fix part two merged: the custom WebGPU route draws ring seams twice as deck does, bringing the translucent outlines golden from 193 px to within 0.1% with no tolerance change, the layer-groups recolour test clicks the settled shape and waits for its save, and 40 changed and 28 new UI baselines from update_goldens run 45749949725 on v0.61.0 were published for the stories tonight's tasks changed on purpose. The viewer axe contrast specs did not fail alone.
 - PROTO-199: in live-top-bar.tsx the slide picker shrinks to at least 8 rem with a truncating label, and in live-progress.tsx the Slide n of m text becomes screen reader only below 960 px, so the ring and its popover stay and nothing covers the picker, checked at 640 and 768 px on a plain slide and at 768 px on review and annotate tasks, where the annotate task overlapped before.
 - PROTO-197: a Display tab slider change also sets the person's object opacity, the one Settings, Display, Object opacity sets on this device, and the plain viewer, review, guided review and Annotate read it, with Annotate AI outlines fading too and a selected one never below 50%. An old opacity saved on a task's display still wins in that task, and the setting is per device, not per account.
