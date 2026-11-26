@@ -46,7 +46,7 @@ export interface SlideViewport {
   readonly liveRoute: () => RendererRoute<PixelSlide> | null;
   readonly availableRoutes: () => readonly RendererRouteId[];
   readonly switchRoute: (id: RendererRouteId) => Promise<RendererSwitchOutcome>;
-  readonly overview: (signal?: AbortSignal) => Promise<SlideOverview | null>;
+  readonly overview: (signal?: AbortSignal, wantedWidth?: number) => Promise<SlideOverview | null>;
   readonly dispose: () => void;
 }
 
@@ -101,9 +101,11 @@ export function mountSlideViewport(options: SlideViewportOptions): SlideViewport
     liveRoute: () => live,
     availableRoutes: switcher.available,
     switchRoute: switcher.switchTo,
-    overview: async (signal) => {
+    overview: async (signal, wantedWidth) => {
       await ready;
-      return opened === null ? null : readSlideOverview(opened.source, signal);
+      return opened === null
+        ? null
+        : readSlideOverview(opened.source, signal, undefined, wantedWidth);
     },
     dispose: () => {
       input.dispose();
