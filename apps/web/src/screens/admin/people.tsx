@@ -6,6 +6,7 @@ import {
   useChangeMemberRole,
   useCreateInvitation,
   useGetAdminOverview,
+  useGetMe,
   useListInvitations,
   useListMemberActivity,
   useListProjects,
@@ -42,11 +43,19 @@ import { TokenField } from "@parfocal/ui/components/token-field";
 import { Zone } from "@parfocal/ui/components/zone";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useState } from "react";
+import { formatDue } from "../format.ts";
 import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { lastActive, MoreButton, type Notify, tableClass } from "./common.tsx";
+import { lastActive, type Notify, tableClass } from "./common.tsx";
 import { JoinRequestsZone } from "./join-requests.tsx";
-import { adminSwitchOf, type PeopleFilter, shownInvitations, takenEmails } from "./people-rules.ts";
+import { InviteMenu, MemberMenu, problemText } from "./people-menu.tsx";
+import {
+  adminSwitchOf,
+  memberActionsOf,
+  type PeopleFilter,
+  shownInvitations,
+  takenEmails,
+} from "./people-rules.ts";
 import { RolePermissionsZone } from "./role-permissions.tsx";
 
 type Filter = PeopleFilter;
@@ -97,7 +106,9 @@ export function PeopleSection({
   const { t } = useLingui();
 
   const members = okData(useListTenantMembers().data) ?? [];
-  const activity = okData(useListMemberActivity().data) ?? [];
+  const activityList = useListMemberActivity();
+  const activity = okData(activityList.data) ?? [];
+  const viewerId = okData(useGetMe().data)?.user_id;
   const invitationList = useListInvitations();
   const invitations = okData(invitationList.data) ?? [];
   const overview = okData(useGetAdminOverview().data);
@@ -184,6 +195,21 @@ export function PeopleSection({
       { invitationId: invitation.id },
       { onSuccess: () => void invitationList.refetch() },
     );
+  const revokeInvite = (invitation: Invitation, done: () => void) =>
+    revoke.mutate(
+      { invitationId: invitation.id },
+      {
+        onSuccess: (response) => {
+          void invitationList.refetch();
+          if (response.status !== 204) {
+            notify(problemText(response.data));
+            return;
+          }
+          notify(t`The invite to ${invitation.email} was revoked.`);
+          done();
+        },
+      },
+    );
   const shownInvites = shownInvitations(invitations, find, filter);
   const waiting = invitations.length;
   const signOutIds = overview?.can_sign_out_user_ids ?? [];
@@ -260,6 +286,7 @@ export function PeopleSection({
             {rows.map((member) => {
               const row = activityOf(member);
               const role = roleOf(member);
+              const leaves = row?.deactivates_on ? formatDue(row.deactivates_on) : "";
               return (
                 <TableRow key={member.user_id}>
                   <TableCell>
@@ -300,13 +327,37 @@ export function PeopleSection({
                   <TableCell className="font-mono">{row?.project_codes.join(", ")}</TableCell>
                   <TableCell>{lastActive(row?.last_active_at ?? null)}</TableCell>
                   <TableCell>
-                    <StatusTag tone="ok">
-                      <Trans>Active</Trans>
-                    </StatusTag>
+                    {row?.deactivated_at ? (
+                      <StatusTag>
+                        <Trans>Removed</Trans>
+                      </StatusTag>
+                    ) : row?.deactivates_on ? (
+                      <StatusTag tone="warn">
+                        <Trans>Leaves {leaves}</Trans>
+                      </StatusTag>
+                    ) : (
+                      <StatusTag tone="ok">
+                        <Trans>Active</Trans>
+                      </StatusTag>
+                    )}
                   </TableCell>
                   <TableCell>
                     <span className="flex items-center justify-end gap-1.5">
-                      <MoreButton label={t`More for ${member.display_name}`} />
+                      <MemberMenu
+                        member={{ ...member, role, admin_rights: rightOf(member) }}
+                        actions={memberActionsOf({
+                          role,
+                          holdsRight: rightOf(member),
+                          holders: holders.length,
+                          isViewer: member.user_id === viewerId,
+                          deactivated: Boolean(row?.deactivated_at),
+                          scheduled: Boolean(row?.deactivates_on),
+                        })}
+                        onRole={(next) => changeRoleOf(member, next)}
+                        onToggleRight={() => toggleRight(member)}
+                        notify={notify}
+                        onChanged={() => void activityList.refetch()}
+                      />
                     </span>
                   </TableCell>
                 </TableRow>
@@ -358,6 +409,12 @@ export function PeopleSection({
                     >
                       <Trans>Resend</Trans>
                     </Button>
+                    <InviteMenu
+                      invitation={invitation}
+                      onResend={() => resendTo(invitation)}
+                      onRevoke={(done) => revokeInvite(invitation, done)}
+                      revoking={revoke.isPending}
+                    />
                   </span>
                 </TableCell>
               </TableRow>
@@ -427,11 +484,6 @@ export function PeopleSection({
       />
     </>
   );
-}
-
-function problemText(body: unknown): string {
-  const title = (body as { title?: unknown } | null)?.title;
-  return typeof title === "string" ? title : t`That did not work. Try again.`;
 }
 
 const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
