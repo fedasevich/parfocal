@@ -34,9 +34,9 @@ test("a card selects its thread and Go to moves to its location", async ({ page 
   await expect(page.getByTestId("went")).toHaveText("Went to T1·C145");
 });
 
-test("New comment asks for a comment", async ({ page }) => {
+test("Comment on the slide asks for a comment", async ({ page }) => {
   await page.goto(story("components-comments-tab--open-threads"));
-  await page.getByRole("button", { name: /New comment/ }).click();
+  await page.getByRole("button", { name: /Comment on the slide/ }).click();
   await expect(page.getByTestId("created")).toHaveText("1 new comment requests");
 });
 
