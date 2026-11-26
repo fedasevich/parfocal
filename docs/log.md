@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-198 Server renders no reference tokens, because no server path (emails, notification payloads, exports) shows a comment body and the app already shows #[name|...] tokens as their names, so a server renderer would have no caller (lead chose option a)
 - PROTO-199: in live-top-bar.tsx the slide picker shrinks to at least 8 rem with a truncating label, and in live-progress.tsx the Slide n of m text becomes screen reader only below 960 px, so the ring and its popover stay and nothing covers the picker, checked at 640 and 768 px on a plain slide and at 768 px on review and annotate tasks, where the annotate task overlapped before.
 - PROTO-197: a Display tab slider change also sets the person's object opacity, the one Settings, Display, Object opacity sets on this device, and the plain viewer, review, guided review and Annotate read it, with Annotate AI outlines fading too and a selected one never below 50%. An old opacity saved on a task's display still wins in that task, and the setting is per device, not per account.
 - Added PROTO-197 (object opacity follows the person into every view), PROTO-198 (comment on annotate task AI objects and plain viewer cells, with stable region names), PROTO-199 (the top bar's progress ring leaves the slide picker free on narrow windows) and EXP-023 (a remote study participant holds a study only role) from tonight's hand-backs and the first walkthrough pass.
