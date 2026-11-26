@@ -13,6 +13,7 @@
       "!packages/api-client/openapi.json",
       "!apps/web/src/routeTree.gen.ts",
       "!packages/api-client/src/settings/catalogue.generated.ts",
+      "!apps/web/src/screens/admin/permission-matrix.generated.ts",
       "!docs/design",
       "!packages/test-fixtures/model-results"
     ]
