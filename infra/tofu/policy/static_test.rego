@@ -31,14 +31,19 @@ zone := {"locals": [
 	}},
 ]}
 
-tier_rule := {
-	"id": "tier-old-tenant-objects",
+abort_rule := {
+	"id": "abort-incomplete-uploads",
 	"conditions": {"prefix": "t/"},
+	"abort_multipart_uploads_transition": {"condition": {"type": "Age", "max_age": 86400}},
+}
+
+tier_rule := object.union(abort_rule, {
+	"id": "tier-old-tenant-objects",
 	"storage_class_transitions": [{
-		"condition": {"type": "Age", "max_age": "${var.tier_after_days * 86400}"},
+		"condition": {"type": "Age", "max_age": 7776000},
 		"storage_class": "InfrequentAccess",
 	}],
-}
+})
 
 bucket_only := {"resource": {"cloudflare_r2_bucket": {"slides": [{"lifecycle": [{"prevent_destroy": true}]}]}}}
 
@@ -61,7 +66,7 @@ locked(contents, rule) := json.patch(contents, [{
 	"value": {"recovery": [{"rules": [rule]}]},
 }])
 
-bucket := locked(lifecycle(tier_rule), lock_rule)
+bucket := locked(lifecycle(abort_rule), lock_rule)
 
 good := [
 	{"path": "global/versions.tf", "contents": backend("global")},
@@ -162,50 +167,50 @@ test_hsts_without_subdomains_fails if {
 
 in_module(contents) := with_file("modules/environment/main.tf", contents)
 
-test_missing_tier_rule_fails if {
-	denied(in_module(bucket_only), "moves old tenant objects to Infrequent Access")
+test_storage_class_transition_fails if {
+	denied(in_module(locked(lifecycle(tier_rule), lock_rule)), "moves objects to another storage class")
+}
+
+test_infrequent_access_bucket_fails if {
+	contents := json.patch(bucket, [{"op": "add", "path": "/resource/cloudflare_r2_bucket/slides/0/storage_class", "value": "InfrequentAccess"}])
+	denied(in_module(contents), "must keep the Standard storage class")
+}
+
+test_standard_bucket_passes if {
+	contents := json.patch(bucket, [{"op": "add", "path": "/resource/cloudflare_r2_bucket/slides/0/storage_class", "value": "Standard"}])
+	count(static.deny) == 0 with input as in_module(contents)
 }
 
 test_delete_transition_fails if {
-	rule := object.union(tier_rule, {"delete_objects_transition": {"condition": {"type": "Age", "max_age": 86400}}})
+	rule := object.union(abort_rule, {"delete_objects_transition": {"condition": {"type": "Age", "max_age": 86400}}})
 	denied(in_module(lifecycle(rule)), "deletes objects")
 }
 
 test_empty_lifecycle_prefix_fails if {
-	rule := object.union(tier_rule, {"conditions": {"prefix": ""}})
+	rule := object.union(abort_rule, {"conditions": {"prefix": ""}})
 	denied(in_module(lifecycle(rule)), "must keep the prefix t/")
 }
 
 test_fixtures_lifecycle_prefix_fails if {
-	rule := object.union(tier_rule, {"conditions": {"prefix": "fixtures/"}})
+	rule := object.union(abort_rule, {"conditions": {"prefix": "fixtures/"}})
 	denied(in_module(lifecycle(rule)), "must keep the prefix t/")
 }
 
-test_unknown_storage_class_fails if {
-	rule := json.patch(tier_rule, [{"op": "replace", "path": "/storage_class_transitions/0/storage_class", "value": "Glacier"}])
-	denied(in_module(lifecycle(rule)), "unknown storage class")
-}
-
 test_missing_bucket_lock_fails if {
-	denied(in_module(lifecycle(tier_rule)), "must keep an enabled R2 bucket lock")
+	denied(in_module(lifecycle(abort_rule)), "must keep an enabled R2 bucket lock")
 }
 
 test_bucket_lock_switched_by_its_variable_passes if {
 	rule := object.union(lock_rule, {"enabled": "${var.lock_tenant_objects}"})
-	not denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
+	not denied(in_module(locked(lifecycle(abort_rule), rule)), "must keep an enabled R2 bucket lock")
 }
 
 test_disabled_bucket_lock_fails if {
 	rule := object.union(lock_rule, {"enabled": false})
-	denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
+	denied(in_module(locked(lifecycle(abort_rule), rule)), "must keep an enabled R2 bucket lock")
 }
 
 test_bucket_lock_on_another_prefix_fails if {
 	rule := object.union(lock_rule, {"prefix": "fixtures/"})
-	denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
-}
-
-test_tier_age_below_minimum_fails if {
-	rule := json.patch(tier_rule, [{"op": "replace", "path": "/storage_class_transitions/0/condition/max_age", "value": 86400}])
-	denied(in_module(lifecycle(rule)), "30 day minimum storage duration")
+	denied(in_module(locked(lifecycle(abort_rule), rule)), "must keep an enabled R2 bucket lock")
 }

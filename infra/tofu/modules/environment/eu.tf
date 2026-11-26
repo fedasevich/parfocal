@@ -45,19 +45,6 @@ resource "cloudflare_r2_bucket_lifecycle" "uploads_eu" {
         max_age = 86400
       }
     }
-    }, {
-    id      = "tier-old-tenant-objects"
-    enabled = true
-    conditions = {
-      prefix = "t/"
-    }
-    storage_class_transitions = [{
-      condition = {
-        type    = "Age"
-        max_age = var.tier_after_days * 86400
-      }
-      storage_class = "InfrequentAccess"
-    }]
   }]
 }
 

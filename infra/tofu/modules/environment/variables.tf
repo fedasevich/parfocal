@@ -45,16 +45,6 @@ variable "eu_bucket" {
   default = false
 }
 
-variable "tier_after_days" {
-  type    = number
-  default = 90
-
-  validation {
-    condition     = var.tier_after_days >= 30 && floor(var.tier_after_days) == var.tier_after_days
-    error_message = "Tenant objects move to Infrequent Access after at least 30 whole days, its minimum storage duration."
-  }
-}
-
 variable "lock_tenant_objects" {
   type    = bool
   default = false

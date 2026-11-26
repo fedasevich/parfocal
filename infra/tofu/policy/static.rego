@@ -156,22 +156,16 @@ deny contains msg if {
 
 deny contains msg if {
 	some [path, rule] in lifecycle_rules
-	some transition in rule.storage_class_transitions
-	not transition.storage_class in allowed.storage_classes
-	msg := sprintf("%s lifecycle rule %s moves objects to an unknown storage class", [path, rule.id])
+	count(object.get(rule, "storage_class_transitions", [])) > 0
+	msg := sprintf("%s lifecycle rule %s moves objects to another storage class, and Infrequent Access bills at least 9 dollars a month for one move", [path, rule.id])
 }
 
 deny contains msg if {
-	some [path, rule] in lifecycle_rules
-	some transition in rule.storage_class_transitions
-	is_number(transition.condition.max_age)
-	transition.condition.max_age < allowed.minimum_tier_age_seconds
-	msg := sprintf("%s lifecycle rule %s tiers objects younger than the 30 day minimum storage duration", [path, rule.id])
-}
-
-deny contains msg if {
-	not tiers_old_objects
-	msg := "the environment module must keep a lifecycle rule that moves old tenant objects to Infrequent Access"
+	some file in input
+	some name, blocks in file.contents.resource.cloudflare_r2_bucket
+	some block in blocks
+	object.get(block, "storage_class", "Standard") != "Standard"
+	msg := sprintf("%s bucket %s must keep the Standard storage class, because Infrequent Access has no free tier", [file.path, name])
 }
 
 deny contains msg if {
@@ -192,9 +186,3 @@ locks_tenant_objects if {
 switchable(enabled) if enabled == true
 
 switchable(enabled) if enabled == "${var.lock_tenant_objects}"
-
-tiers_old_objects if {
-	some [path, rule] in lifecycle_rules
-	startswith(path, "modules/environment/")
-	count(rule.storage_class_transitions) > 0
-}

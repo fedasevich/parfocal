@@ -305,7 +305,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0338](0338-layout-experiments-split-only-unchosen-production-users.md) | Layout experiments split only production users who have not chosen, and pinned means bottom right | Accepted | 2026-11-15 |
 | [0339](0339-container-images-install-from-uv-lock.md) | Container images install from uv.lock, through exported lock files for Modal | Accepted | 2026-11-15 |
 | [0340](0340-slos-and-alerts-as-code-routed-by-email.md) | SLOs and alert rules live in code, burn by two windows and reach on-call by email | Accepted | 2026-11-15 |
-| [0341](0341-old-tenant-objects-tier-to-infrequent-access-and-budgets-live-in-a-cost-report.md) | Old tenant objects move to Infrequent Access after 90 days, and budgets per environment live in a cost report | Accepted | 2026-11-15 |
+| [0341](0341-old-tenant-objects-tier-to-infrequent-access-and-budgets-live-in-a-cost-report.md) | Old tenant objects move to Infrequent Access after 90 days, and budgets per environment live in a cost report | Accepted, tiering withdrawn by 0446 | 2026-11-15 |
 | [0342](0342-make-dev-signs-in-through-the-local-zitadel.md) | make dev signs in through the local Zitadel by default | Accepted | 2026-11-15 |
 | [0343](0343-sli-counts-in-the-slide-bucket-and-otlp-logs-over-http.md) | SLI counts and alert state live in the slide bucket, and telemetry leaves as OTLP logs over plain HTTP | Accepted | 2026-11-15 |
 | [0344](0344-workers-and-realtime-write-their-own-sli-counts.md) | Workers and realtime write their own SLI counts, and only automatic whole-slide runs are pre-reads | Accepted | 2026-11-15 |
@@ -398,3 +398,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0443](0443-one-typst-report-layout-for-every-pdf.md) | Every report PDF uses one Typst layout with the app's font, and a signed clinical report is drawn from a server model pinned to the screen model | Accepted | 2026-11-26 |
 | [0444](0444-a-result-file-is-previewed-in-the-browser-and-checked-only-by-the-import.md) | A result file is checked only by the import job, and a screen may draw a capped preview of it first | Accepted | 2026-11-26 |
 | [0445](0445-a-remote-study-participant-holds-a-study-only-role.md) | A remote study participant holds a study only role that reaches only their own prepared project | Accepted | 2026-11-26 |
+| [0446](0446-r2-never-uses-infrequent-access.md) | R2 never uses Infrequent Access, every bucket stays Standard and no lifecycle rule changes a storage class | Accepted | 2026-11-26 |
