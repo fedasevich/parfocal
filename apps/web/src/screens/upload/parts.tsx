@@ -2,7 +2,8 @@ import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useRouter } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, type RefObject, useRef, useState } from "react";
+import { type DroppedItem, fromFileList, readDropped } from "../../upload/drop.ts";
 
 export function useCrumbLink(): LinkRenderer {
   const router = useRouter();
@@ -101,6 +102,87 @@ export function TextLink({
     >
       {children}
     </button>
+  );
+}
+
+export function FileDropZone({
+  title,
+  label,
+  lead,
+  pick,
+  detail,
+  inputLabel,
+  accept,
+  multiple = false,
+  testId = "drop-zone",
+  inputTestId = "file-input",
+  compact = false,
+  pickerRef,
+  onFiles,
+}: {
+  title: ReactNode;
+  label: string;
+  lead?: ReactNode;
+  pick: ReactNode;
+  detail: ReactNode;
+  inputLabel: string;
+  accept?: string;
+  multiple?: boolean;
+  testId?: string;
+  inputTestId?: string;
+  compact?: boolean;
+  pickerRef?: RefObject<HTMLInputElement | null>;
+  onFiles: (items: DroppedItem[]) => void;
+}) {
+  const ownPicker = useRef<HTMLInputElement>(null);
+  const picker = pickerRef ?? ownPicker;
+  const [dragging, setDragging] = useState(false);
+  return (
+    <section
+      data-testid={testId}
+      aria-label={label}
+      onDragOver={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setDragging(false);
+        void readDropped(event.dataTransfer).then((items) => {
+          if (items.length > 0) onFiles(items);
+        });
+      }}
+      className={cn(
+        "grid justify-items-center gap-2 rounded-xl border-2 border-dashed text-center",
+        compact ? "px-4 py-5" : "px-6 py-8",
+        dragging ? "border-accent bg-chrome-2" : "border-line-strong",
+      )}
+    >
+      <Icon name="upload" size={compact ? "md" : "lg"} className="text-accent" />
+      <b className="text-body text-fg">{title}</b>
+      <span className="text-body-sm text-fg-dim">
+        {lead}
+        <TextLink onClick={() => picker.current?.click()}>{pick}</TextLink>
+        {detail}
+      </span>
+      <input
+        ref={picker}
+        type="file"
+        multiple={multiple}
+        accept={accept}
+        data-testid={inputTestId}
+        aria-label={inputLabel}
+        className="sr-only"
+        onChange={(event) => {
+          const items = fromFileList(event.currentTarget.files);
+          event.currentTarget.value = "";
+          if (items.length > 0) onFiles(items);
+        }}
+      />
+    </section>
   );
 }
 

@@ -53,12 +53,10 @@ import { DeveloperDrawerSlot } from "../lab/developer-drawer-slot.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
-import { AddResultSet } from "../results/add-result-set.tsx";
-import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
 import { HeatmapLayers, useHeatmapChoices } from "../results/heatmap-layer.tsx";
 import { PaintedMapLayer } from "../results/painted-map-layer.tsx";
-import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
+import { StageResultAdding, useResultAdding } from "../results/stage-result-adding.tsx";
 import { ViewMapLayer } from "../results/view-map-layer.tsx";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import { annotateRailActions, annotateToolOfAction } from "../screens/viewer-tools/rails.ts";
@@ -306,13 +304,11 @@ function OpenedSlide({
   const setup = setupOf(workspace, readOnly);
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
-  const [addingResults, setAddingResults] = useState(false);
   const heatmapChoices = useHeatmapChoices();
-  const [resultPreview, setResultPreview] = useState<{
-    results: ParsedResults;
-    placement: Placement;
-  } | null>(null);
-  const closeAddResults = useCallback(() => setAddingResults(false), []);
+  const resultAdding = useResultAdding(
+    hostNode?.parentElement ?? null,
+    projectId !== undefined && workspace === "annotate",
+  );
   useEffect(() => setTool(restingTool), [restingTool]);
   const toolBindings = useBindings(["annotate"], annotateRailActions);
   const onToolKey = useCallback(
@@ -964,24 +960,13 @@ function OpenedSlide({
                           startShown={tool !== "smart" && annotateTask?.readOnly !== true}
                         />
                       ) : null}
-                      {resultPreview === null ? null : (
-                        <PreviewLayer
-                          engine={session.engine}
-                          stage={hostNode}
-                          results={resultPreview.results}
-                          placement={resultPreview.placement}
-                        />
-                      )}
-                      {addingResults && projectId !== undefined ? (
-                        <DockCard section="display" order={4}>
-                          <AddResultSet
-                            projectId={projectId}
-                            slideId={slideId}
-                            onClose={closeAddResults}
-                            onPreview={setResultPreview}
-                          />
-                        </DockCard>
-                      ) : null}
+                      <StageResultAdding
+                        engine={session.engine}
+                        stage={hostNode}
+                        projectId={projectId}
+                        slideId={slideId}
+                        adding={resultAdding}
+                      />
                       {annotateTask ? (
                         <AnnotateTaskPanel
                           engine={session.engine}
@@ -1015,8 +1000,8 @@ function OpenedSlide({
                               projectId === undefined ? undefined : (
                                 <ResultSetLayers
                                   slideId={slideId}
-                                  adding={addingResults}
-                                  onAdd={() => setAddingResults(true)}
+                                  adding={resultAdding.adding}
+                                  onAdd={resultAdding.open}
                                   heatmaps={heatmapChoices}
                                 />
                               )

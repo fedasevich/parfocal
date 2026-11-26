@@ -2,18 +2,28 @@ import { useSyncExternalStore } from "react";
 import { useStageRect } from "../annotations/stage-size.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { slideToScreen } from "../viewer/viewer-engine.ts";
+import type { StagePreview } from "./file-preview.ts";
 import { type ParsedResults, type Placement, placePoint } from "./geojson-placement.ts";
 
 type PreviewLayerProps = {
   engine: ViewerEngine;
   stage: HTMLElement;
-  results: ParsedResults;
-  placement: Placement;
+  preview: StagePreview;
 };
 
 const cyan = "#22d3ee";
 
-export function PreviewLayer({ engine, stage, results, placement }: PreviewLayerProps) {
+function PreviewShapes({
+  engine,
+  stage,
+  results,
+  placement,
+}: {
+  engine: ViewerEngine;
+  stage: HTMLElement;
+  results: ParsedResults;
+  placement: Placement;
+}) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const screenOf = (x: number, y: number) => {
@@ -24,6 +34,7 @@ export function PreviewLayer({ engine, stage, results, placement }: PreviewLayer
     <svg
       data-testid="result-preview-layer"
       data-objects={results.objects}
+      data-shapes={results.shapes.length}
       data-shift={`${placement.dx},${placement.dy}`}
       data-scale={placement.scale}
       aria-hidden="true"
@@ -36,6 +47,7 @@ export function PreviewLayer({ engine, stage, results, placement }: PreviewLayer
             <circle
               key={shape.id}
               data-testid="result-preview-shape"
+              data-kind="point"
               cx={where.x}
               cy={where.y}
               r={4}
@@ -55,6 +67,7 @@ export function PreviewLayer({ engine, stage, results, placement }: PreviewLayer
           <polygon
             key={shape.id}
             data-testid="result-preview-shape"
+            data-kind="ring"
             points={points.join(" ")}
             fill={cyan}
             fillOpacity={0.18}
@@ -65,5 +78,54 @@ export function PreviewLayer({ engine, stage, results, placement }: PreviewLayer
         );
       })}
     </svg>
+  );
+}
+
+function PreviewImage({
+  engine,
+  stage,
+  url,
+}: {
+  engine: ViewerEngine;
+  stage: HTMLElement;
+  url: string;
+}) {
+  const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
+  const slide = engine.getSlide();
+  if (slide === null) return null;
+  const from = slideToScreen(camera, rect, { x: 0, y: 0 });
+  const to = slideToScreen(camera, rect, { x: slide.width, y: slide.height });
+  return (
+    <svg
+      data-testid="result-preview-layer"
+      data-image=""
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 size-full overflow-visible"
+    >
+      <image
+        data-testid="result-preview-image"
+        href={url}
+        x={from.x}
+        y={from.y}
+        width={Math.max(0, to.x - from.x)}
+        height={Math.max(0, to.y - from.y)}
+        preserveAspectRatio="none"
+        opacity={0.5}
+      />
+    </svg>
+  );
+}
+
+export function PreviewLayer({ engine, stage, preview }: PreviewLayerProps) {
+  return preview.kind === "image" ? (
+    <PreviewImage engine={engine} stage={stage} url={preview.url} />
+  ) : (
+    <PreviewShapes
+      engine={engine}
+      stage={stage}
+      results={preview.results}
+      placement={preview.placement}
+    />
   );
 }
