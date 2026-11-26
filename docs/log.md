@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-198: annotate task AI cells and plain viewer cells take comments by their IDs, region, selection and slide mentions are saved as tokens so every reader reaches the same thing, and notification links open their object; waits for the deployed check
 - PROTO-198 Server renders no reference tokens, because no server path (emails, notification payloads, exports) shows a comment body and the app already shows #[name|...] tokens as their names, so a server renderer would have no caller (lead chose option a)
 - PROTO-189 Merged the second walkthrough pass on v0.61.1: ticked PROTO-193, PROTO-189, PROTO-191, PROTO-185, PROTO-170, PROTO-172, PROTO-188, ADMIN-015 and EXP-021, reopened PROTO-182 (the typer fails on a slide with no scale), PROTO-184 (0 px row names), PROTO-171 (the PDF time in UTC), PROTO-178 (the cut magnification bar) and EXP-020 (the change-type task never finishes), left ONB-012 in review for the new workspace check, and added PROTO-200 (Auto region under reduced motion), PROTO-201 (a review opened with no mode), PROTO-202 (the jobs tray refresh) and ONB-013 (no Joined line when skipped)
 - Production touch: release v0.62.0 (PROTO-197, PROTO-199 and the second CI fixes) deployed by run 45753858345, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
