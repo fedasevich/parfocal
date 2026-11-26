@@ -43,17 +43,19 @@ const detailClass = "mt-0.5 block text-body-sm text-fg-dim leading-[1.45]";
 
 function NotificationDetail({ item }: { item: NotificationItem }) {
   if (item.quote) {
+    const { linker } = item.quote;
+    const linked = (text: string) =>
+      linker ? (
+        <CommentLinksProvider value={linker}>
+          <LinkedText text={text} />
+        </CommentLinksProvider>
+      ) : (
+        text
+      );
     return (
       <small className={detailClass}>
-        "
-        {item.quote.linker ? (
-          <CommentLinksProvider value={item.quote.linker}>
-            <LinkedText text={item.quote.text} />
-          </CommentLinksProvider>
-        ) : (
-          item.quote.text
-        )}
-        " <Trans>on</Trans> <ObjectIdTag>{item.quote.objectId}</ObjectIdTag>
+        "{linked(item.quote.text)}" <Trans>on</Trans>{" "}
+        <ObjectIdTag data-testid="notification-object">{linked(item.quote.objectId)}</ObjectIdTag>
         {item.quote.slide ? ` · ${item.quote.slide}` : ""}
       </small>
     );

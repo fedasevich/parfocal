@@ -14,6 +14,7 @@ import { NotificationsSkeleton } from "@parfocal/ui/components/notifications-ske
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
+import { plainReferenceText } from "../annotations/reference-tokens.ts";
 import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -61,7 +62,7 @@ export const toNotification = (
     quote:
       quote && objectId
         ? {
-            text: quote,
+            text: openLink ? quote : plainReferenceText(quote),
             objectId,
             slide: payloadText(item, "slide_label"),
             linker: openLink ? notificationLinker(item.link, openLink) : undefined,

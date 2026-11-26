@@ -731,7 +731,7 @@ export const notifications: ScenarioNotification[] = [
     onDecision: true,
     title: "Simona Marková mentioned you in a note",
     detail: "on her decision on T5 on A1: runs past the fold",
-    quote: "Runs past the fold, worth a look",
+    quote: "Runs past the fold like T4, worth a look",
     objectId: "T5",
     slideLabel: "A1",
     action: "Open the note",

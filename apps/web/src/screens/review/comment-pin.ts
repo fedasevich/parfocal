@@ -1,5 +1,6 @@
 import type { ThreadCreate } from "@parfocal/api-client";
-import { type Mentionable, toMentionTokens } from "./mention-picking.ts";
+import { commentBody } from "../../annotations/reference-tokens.ts";
+import type { Mentionable } from "./mention-picking.ts";
 import type { Camera } from "./slide-still.tsx";
 
 export type Pin = { x: number; y: number };
@@ -42,7 +43,7 @@ export function pinThread(
   if (!body) return null;
   return {
     title: pinTitle(body),
-    body: toMentionTokens(body, members),
+    body: commentBody(body, members),
     anchor: {
       kind: "point",
       object_id: null,

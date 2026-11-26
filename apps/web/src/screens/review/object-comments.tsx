@@ -20,17 +20,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { objectAnchor } from "../../annotations/comment-target.ts";
 import { useReferencePicking } from "../../annotations/reference-picker.tsx";
+import { commentBody } from "../../annotations/reference-tokens.ts";
 import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { pinTitle } from "./comment-pin.ts";
-import {
-  fromMentionTokens,
-  mentionOptions,
-  mentionQuery,
-  toMentionTokens,
-  withMention,
-} from "./mention-picking.ts";
+import { fromMentionTokens, mentionOptions, mentionQuery, withMention } from "./mention-picking.ts";
 import type { SlideThread } from "./review-data.ts";
 import { useMentionable } from "./use-mentionable.ts";
 
@@ -130,7 +125,7 @@ export function ObjectThread({
   const send = () => {
     const text = draft.trim();
     if (!text || meId === undefined || pending) return;
-    const body = toMentionTokens(text, members);
+    const body = commentBody(text, members);
     if (thread) {
       reply.mutate({ taskId, slideId, threadId: thread.id, data: { body } });
       return;

@@ -5,12 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { now } from "../clock.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
-import { toMentionTokens } from "../screens/review/mention-picking.ts";
 import { useMentionable } from "../screens/review/use-mentionable.ts";
 import { shapeOfObject } from "./anchor-place.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { useSavedCodes } from "./drawn-object-ids.ts";
 import { useReferencePicking } from "./reference-picker.tsx";
+import { commentBody } from "./reference-tokens.ts";
 import {
   homeOf,
   markResolved,
@@ -75,7 +75,7 @@ export function PinThread({
   };
   const replying = useMutation({
     mutationFn: (body: string) =>
-      replyInThread(home, threadId, { body: toMentionTokens(body, members) }),
+      replyInThread(home, threadId, { body: commentBody(body, members) }),
     onSuccess: (response) => {
       if (response.status >= 300) return;
       setReply("");

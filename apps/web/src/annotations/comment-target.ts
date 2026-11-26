@@ -1,11 +1,12 @@
 import type { ThreadCreate } from "@parfocal/api-client";
 import { asciiObjectId } from "@parfocal/ui/lib/object-id";
 import { pinTitle } from "../screens/review/comment-pin.ts";
-import { type Mentionable, toMentionTokens } from "../screens/review/mention-picking.ts";
+import type { Mentionable } from "../screens/review/mention-picking.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { drawnObjectIds, type SavedCodes } from "./drawn-object-ids.ts";
 import { unionBounds } from "./layers-tree.ts";
 import type { Point } from "./polygon-draft.ts";
+import { commentBody } from "./reference-tokens.ts";
 import type { Extent, ShapeId } from "./shapes.ts";
 
 export type CommentTarget =
@@ -161,5 +162,5 @@ export function targetThread(
 ): ThreadCreate | null {
   const body = text.trim();
   if (!body) return null;
-  return { title: pinTitle(body), body: toMentionTokens(body, members), anchor: anchorOf(target) };
+  return { title: pinTitle(body), body: commentBody(body, members), anchor: anchorOf(target) };
 }

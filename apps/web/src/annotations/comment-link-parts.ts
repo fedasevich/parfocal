@@ -1,6 +1,7 @@
 import type { CommentLinkPart } from "@parfocal/ui/lib/comment-links";
 import type { LayerName, Reach } from "./comment-bus.ts";
 import type { Reference } from "./comment-references.ts";
+import { reachOfToken, referenceToken } from "./reference-tokens.ts";
 
 const objectId = "[TCRZMAN]\\d+(?:[·.][TCRZMAN]?\\d+)*[⁺+]?";
 
@@ -11,6 +12,26 @@ export function linkParts(
   names: readonly LayerName[],
   reach: (target: Reach) => void,
   extra: readonly Pick<Reference, "text" | "reach">[] = [],
+): CommentLinkPart[] {
+  const parts: CommentLinkPart[] = [];
+  let last = 0;
+  for (const match of text.matchAll(referenceToken)) {
+    const at = match.index ?? 0;
+    const [whole, name = "", kind = "", payload = ""] = match;
+    const found = reachOfToken(kind, payload);
+    if (at > last) parts.push(...plainParts(text.slice(last, at), names, reach, extra));
+    parts.push(found === null ? name : { text: name, reach: () => reach(found) });
+    last = at + whole.length;
+  }
+  if (last < text.length) parts.push(...plainParts(text.slice(last), names, reach, extra));
+  return parts;
+}
+
+function plainParts(
+  text: string,
+  names: readonly LayerName[],
+  reach: (target: Reach) => void,
+  extra: readonly Pick<Reference, "text" | "reach">[],
 ): CommentLinkPart[] {
   const named = new Map<string, Reach>();
   for (const item of extra) {
