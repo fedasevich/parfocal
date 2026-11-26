@@ -2,6 +2,49 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.59.0 (2026-11-26)
+
+### Features
+
+- ADMIN-014: Show an empty state in every Admin table, with a way to connect a model
+- PROTO-179: Empty states for the project Slides and Review tasks tabs and My work tables
+- PROTO-189: Comment on objects, selections, regions and layers, and link what comments name
+
+### Fixes
+
+- PROTO-183: Give tooltips the popover surface so rail hints pass 4.5 to 1 contrast
+- ADMIN-013: Open a row menu in Admin People that changes roles, removes people, revokes invites
+- ADMIN-015: Show each template action once and widen the row menu to one line per item
+- PROTO-186: Show the whole slide map from a pyramid level sized to the dialog
+- PROTO-189: Match object IDs in either form and accept class keys with spaces
+- PROTO-190: Fit the viewer's slide switcher rows and footer inside its popover
+
+### Docs
+
+- PROTO-171: Log the v0.58.0 deploy
+- PROTO-183: Log and tick after merge
+- ADMIN-013: Log and tick after merge
+- ADMIN-015: Log and tick after merge
+- PROTO-186: Log and tick after merge
+- ADMIN-014: Log and tick after merge
+- PROTO-189: Log part one and keep it in progress
+- PROTO-190: Log and tick after merge
+- PROTO-179: Log and tick after merge
+
+### Other
+
+- PROTO-189: Claim PROTO-189 PROTO-183 for the parallel run
+- ADMIN-013: Claim ADMIN-013 for the parallel run
+- PROTO-186: Claim PROTO-186 for the parallel run
+- ADMIN-015: Claim ADMIN-015 for the parallel run
+- ADMIN-014: Claim ADMIN-014 for the parallel run
+- PROTO-190: Claim PROTO-190 PROTO-191 for the parallel run
+- PROTO-179: Claim PROTO-179 for the parallel run
+- PROTO-189: Merge main
+- PROTO-189: Rebaseline the all code budget after the walkthrough fixes
+- PROTO-179: Merge main
+- ONB-012: Claim ONB-012 for the parallel run
+
 ## v0.58.0 (2026-11-26)
 
 ### Features
