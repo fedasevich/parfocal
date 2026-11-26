@@ -2,6 +2,42 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.58.0 (2026-11-26)
+
+### Features
+
+- PROTO-169: Give skeletons the shape of the pages they stand for
+- PROTO-178: Open the adjudication slide bigger and fit the magnification bar
+- PROTO-171: Draw the signed report PDF from the on-screen report model and layout
+- PROTO-172: Lay out every template report PDF with the shared report layout
+
+### Fixes
+
+- PROTO-188: Drop the Enter posts hint from the pin and thread comment boxes
+- PROTO-187: Put the Comments tab switch under a truncated title so it fits the panel
+- PROTO-194: Make object opacity fade outline, casing, fill and dots to the chosen share
+- PROTO-194: Fade Annotate shapes with object opacity and keep fake display choices on reload
+- PROTO-194: Move the viewer keys out of slide-stage.tsx to keep it under the length limit
+
+### Docs
+
+- PROTO-169: Log and tick after merge
+- PROTO-182: Log the v0.57.0 deploy
+- PROTO-178: Log and tick after merge
+- PROTO-188: Log and tick after merge
+- PROTO-171: Number the ADR from the merge
+- PROTO-171: Log and tick after merge
+- PROTO-172: Log and move to review after merge
+- PROTO-187: Log and tick after merge
+- PROTO-194: Log and move to review after merge
+
+### Other
+
+- PROTO-171: Claim PROTO-171 for the parallel run
+- PROTO-172: Claim PROTO-172 for the parallel run
+- PROTO-188: Claim PROTO-188 for the parallel run
+- PROTO-187: Claim PROTO-187 for the parallel run
+
 ## v0.57.0 (2026-11-25)
 
 ### Features
