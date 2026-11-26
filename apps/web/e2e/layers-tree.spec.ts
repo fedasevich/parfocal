@@ -184,3 +184,43 @@ test("a list of 5000 cells scrolls without a long frame", async ({ page }) => {
   expect(watch.longest).toBeLessThanOrEqual(longFrameMs);
   expect(watch.longFrames).toBe(0);
 });
+
+for (const width of [340, 280]) {
+  test(`a shape row with a long measure keeps a clickable name at a ${width} px panel`, async ({
+    page,
+  }) => {
+    const { box, stage } = await openSlide(page);
+    await drawRectangle(page, box, [100, 100], [700, 500]);
+    await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+    await classRow(page)
+      .getByRole("button", { name: /^Expand / })
+      .click();
+    await expect(shapeRows(page)).toHaveCount(1);
+
+    const panel = page.getByRole("complementary", { name: "Side panel" });
+    const handle = page.getByRole("separator", { name: "Resize the side panel" });
+    const handleBox = await handle.boundingBox();
+    if (handleBox === null) throw new Error("no resize handle");
+    const viewport = page.viewportSize()?.width ?? 1280;
+    const y = handleBox.y + handleBox.height / 2;
+    await page.mouse.move(handleBox.x + handleBox.width / 2, y);
+    await page.mouse.down();
+    await page.mouse.move(viewport - width, y, { steps: 6 });
+    await page.mouse.up();
+    await expect.poll(async () => Math.round((await panel.boundingBox())?.width ?? 0)).toBe(width);
+
+    const shapeRow = shapeRows(page).first();
+    const measure = (await shapeRow.getByTestId("layers-row-measure").textContent()) ?? "";
+    expect(measure.length).toBeGreaterThan(12);
+    const name = shapeRow.getByTestId("layers-row-name");
+    const nameBox = await name.boundingBox();
+    expect(nameBox?.width ?? 0).toBeGreaterThanOrEqual(48);
+    await expect(name).toContainText(/\S/);
+    await name.click();
+    await expect(page.getByTestId("select-layer")).toHaveAttribute(
+      "data-selected",
+      (await shapeRow.getAttribute("data-key"))?.slice(2) ?? "",
+    );
+    await expect(stage).toHaveAttribute("data-tool", "select");
+  });
+}

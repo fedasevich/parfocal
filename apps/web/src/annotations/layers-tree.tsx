@@ -202,7 +202,7 @@ const Row = memo(function Row({
         }
       }}
       className={cn(
-        "absolute inset-x-0 grid grid-cols-[16px_10px_minmax(0,1fr)_minmax(0,max-content)_24px_24px_24px] items-center gap-1.5 rounded-md pr-1 text-body-sm text-fg-dim select-none",
+        "absolute inset-x-0 grid grid-cols-[16px_10px_minmax(64px,1fr)_minmax(0,max-content)_24px_24px_24px] items-center gap-1.5 rounded-md pr-1 text-body-sm text-fg-dim select-none",
         (selected || picked) && "bg-accent-soft text-fg",
         aimed && "ring-1 ring-accent ring-inset",
         (row.hiddenAbove || off) && "italic",
