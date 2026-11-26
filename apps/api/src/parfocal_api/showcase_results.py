@@ -1,6 +1,6 @@
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -151,21 +151,71 @@ def model_cells(label: str, root: Path = MODEL_RESULTS) -> ModelCells | None:
     return ModelCells(classes, cells)
 
 
-def sample_bundle(labels: Sequence[str], facts: Mapping[str, SampleFile]) -> dict[str, Any]:
-    slides: list[dict[str, Any]] = []
-    for label in labels:
-        found = model_regions(label)
-        if found is None:
-            continue
-        slides.append(
+SAMPLE_TOUR = ("test_065", "JP2K-33003-1.svs", "OS-1.bif", "CMU-1.tiff")
+SAMPLE_CELL_SLIDE = "CMU-1.tiff"
+SAMPLE_CELL_CENTRE = (29610.0, 3590.0)
+SAMPLE_CELL_COUNT = 40
+SAMPLE_RUN_SLIDE = "CMU-1-Small-Region.svs"
+
+
+def centre_of(cell: Cell) -> tuple[float, float]:
+    xs = cell.ring[0::2]
+    ys = cell.ring[1::2]
+    return sum(xs) / len(xs), sum(ys) / len(ys)
+
+
+def cells_near(found: ModelCells, centre: tuple[float, float], count: int) -> list[Cell]:
+    def distance(cell: Cell) -> float:
+        x, y = centre_of(cell)
+        return (x - centre[0]) ** 2 + (y - centre[1]) ** 2
+
+    near = sorted(sorted(found.cells, key=distance)[:count], key=lambda cell: cell.number)
+    return [replace(cell, number=number) for number, cell in enumerate(near, start=1)]
+
+
+def bundled_cells(label: str) -> dict[str, Any]:
+    found = model_cells(label)
+    if found is None:
+        return {}
+    return {
+        "cell_classes": found.classes,
+        "cells": [
             {
-                "label": label,
-                "facts": facts[label].model_dump() if label in facts else None,
-                "classes": found.classes,
-                "regions": [
-                    {"wkt": row.wkt, "class_position": row.class_position, "score": row.score}
-                    for row in found.rows
-                ],
+                "ring": list(cell.ring),
+                "class_index": cell.class_index,
+                "score": cell.score,
+                "probs": None if cell.probs is None else list(cell.probs),
             }
-        )
-    return {"model": REGIONS_MODEL, "slides": slides}
+            for cell in cells_near(found, SAMPLE_CELL_CENTRE, SAMPLE_CELL_COUNT)
+        ],
+    }
+
+
+def bundled_slide(label: str, facts: Mapping[str, SampleFile]) -> dict[str, Any] | None:
+    found = model_regions(label)
+    if found is None:
+        return None
+    slide: dict[str, Any] = {
+        "label": label,
+        "facts": facts[label].model_dump() if label in facts else None,
+        "reviewed": label in SAMPLE_TOUR,
+    }
+    if label == SAMPLE_RUN_SLIDE:
+        return slide
+    slide["classes"] = found.classes
+    slide["regions"] = [
+        {"wkt": row.wkt, "class_position": row.class_position, "score": row.score}
+        for row in found.rows
+    ]
+    if label == SAMPLE_CELL_SLIDE:
+        slide.update(bundled_cells(label))
+    return slide
+
+
+def sample_bundle(labels: Sequence[str], facts: Mapping[str, SampleFile]) -> dict[str, Any]:
+    ordered = [
+        *(label for label in SAMPLE_TOUR if label in labels),
+        *(label for label in labels if label not in SAMPLE_TOUR),
+    ]
+    slides = [slide for label in ordered if (slide := bundled_slide(label, facts)) is not None]
+    return {"model": REGIONS_MODEL, "cell_model": CELLS_MODEL, "slides": slides}

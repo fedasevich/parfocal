@@ -11,9 +11,25 @@ from workspace_support import owner
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.sample_files import SampleFile
-from parfocal_api.sample_project import SAMPLE_MODEL, SAMPLE_RESULTS, sample_results
+from parfocal_api.sample_project import (
+    SAMPLE_CELL_SET,
+    SAMPLE_CELLS_CHECKED,
+    SAMPLE_MODEL,
+    SAMPLE_RESULTS,
+    sample_outline,
+    sample_results,
+)
 from parfocal_api.showcase import FORMAT_GALLERY, VIEWER_SAMPLE, fixture_facts, viewer_sample_facts
-from parfocal_api.showcase_results import REGIONS_MODEL, folder_of, model_regions, sample_bundle
+from parfocal_api.showcase_results import (
+    CELLS_MODEL,
+    REGIONS_MODEL,
+    SAMPLE_CELL_COUNT,
+    SAMPLE_CELL_SLIDE,
+    SAMPLE_RUN_SLIDE,
+    folder_of,
+    model_regions,
+    sample_bundle,
+)
 from parfocal_common.ingest import SAMPLE_FACTS_NAME, fixture_folder, fixture_original_key
 from parfocal_common.object_store import ObjectStore, StorageLocation
 
@@ -41,6 +57,8 @@ def week(api: ApiAs, who: MemberPrincipal) -> tuple[int, int]:
 
 
 SAMPLE_LABELS = [slide.label for slide in sample_results().slides]
+TOUR = [slide.label for slide in sample_results().slides if slide.reviewed]
+WITH_RESULTS = [label for label in SAMPLE_LABELS if label != SAMPLE_RUN_SLIDE]
 
 
 def points_of(wkt: str) -> tuple[tuple[float, float], ...]:
@@ -66,16 +84,19 @@ def test_a_workspace_gets_one_sample_with_a_real_set_on_each_slide_and_a_task(
     )
     assert sorted(str(row[0]) for row in labels) == sorted(SAMPLE_LABELS)
     sets = api(person).get(f"/api/projects/{project}/result-sets").json()
-    assert len(sets) == len(SAMPLE_LABELS)
-    assert {(item["name"], item["status"]) for item in sets} == {(SAMPLE_MODEL, "ready")}
-    assert all(item["region_count"] > 0 for item in sets)
+    assert len(sets) == sample_outline().result_sets == len(WITH_RESULTS) + 1
+    assert {(item["name"], item["status"]) for item in sets} == {
+        (SAMPLE_MODEL, "ready"),
+        (SAMPLE_CELL_SET, "ready"),
+    }
+    assert all(item["region_count"] > 0 for item in sets if item["name"] == SAMPLE_MODEL)
     task = sample_task(api, person, project)
     assignments = owner(
         database,
         f"SELECT user_id FROM review_assignments WHERE task_id = '{task['id']}'",
     )
     assert {row[0] for row in assignments} == {person.user_id}
-    assert len(assignments) == len(SAMPLE_LABELS)
+    assert len(assignments) == len(TOUR)
     again = create_sample(api, person, status=200)
     assert again["id"] == project
     assert api(r.people["first"]).post("/api/projects/sample").status_code == 403
@@ -215,7 +236,7 @@ def test_every_sample_region_comes_from_a_model_run(api: ApiAs, database: str) -
     found: dict[str, set[tuple[tuple[float, float], ...]]] = {}
     for label, _, wkt in made:
         found.setdefault(str(label), set()).add(points_of(str(wkt)))
-    for label in SAMPLE_LABELS:
+    for label in WITH_RESULTS:
         real = model_regions(label)
         assert real is not None, folder_of(label)
         assert found[label] == {points_of(row.wkt) for row in real.rows}
@@ -230,3 +251,60 @@ def test_the_bundled_sample_results_match_the_model_run_files() -> None:
     }
     expected = sample_bundle(labels, {VIEWER_SAMPLE: SampleFile.model_validate(facts)})
     assert json.loads(SAMPLE_RESULTS.read_text()) == expected
+
+
+def test_the_sample_review_is_a_short_tour_with_cells_and_a_slide_left_to_run(
+    api: ApiAs, database: str
+) -> None:
+    person = review(api, database).people["owner"]
+    outline = api(person).get("/api/sample-project")
+    assert outline.status_code == 200, outline.text
+    assert outline.json() == {
+        "slides": len(SAMPLE_LABELS),
+        "review_slides": len(TOUR),
+        "cell_review_slides": 1,
+        "result_sets": len(WITH_RESULTS) + 1,
+        "cells": SAMPLE_CELL_COUNT,
+        "run_slide": SAMPLE_RUN_SLIDE,
+    }
+    project = create_sample(api, person)["id"]
+    task = sample_task(api, person, project)
+    rows = owner(
+        database,
+        "SELECT s.label, s.id FROM review_task_slides t JOIN slides s ON s.id = t.slide_id "
+        f"WHERE t.task_id = '{task['id']}' ORDER BY t.position",
+    )
+    assert [str(row[0]) for row in rows] == TOUR
+    assert 1 < len(TOUR) <= 4
+    in_project = owner(database, f"SELECT label FROM slides WHERE project_id = '{project}'")
+    assert set(TOUR) < {str(row[0]) for row in in_project} == set(SAMPLE_LABELS)
+    sets = owner(
+        database,
+        "SELECT s.label, r.name, r.model_version FROM result_sets r "
+        f"JOIN slides s ON s.id = r.slide_id WHERE r.project_id = '{project}'",
+    )
+    assert SAMPLE_RUN_SLIDE not in {str(row[0]) for row in sets}
+    assert (SAMPLE_CELL_SLIDE, SAMPLE_CELL_SET, CELLS_MODEL) in {
+        (str(label), str(name), str(model)) for label, name, model in sets
+    }
+    assert owner(database, "SELECT count(*) FROM model_runs")[0][0] == 0
+    cell_slide = next(row[1] for row in rows if row[0] == SAMPLE_CELL_SLIDE)
+    counter = owner(
+        database,
+        f"SELECT last FROM slide_counters WHERE slide_id = '{cell_slide}' AND letter = 'C'",
+    )
+    assert [row[0] for row in counter] == [SAMPLE_CELL_COUNT]
+    base = f"/api/review-tasks/{task['id']}/slides"
+    listed = api(person).get(f"{base}/{cell_slide}/objects")
+    assert listed.status_code == 200, listed.text
+    objects = listed.json()["objects"]
+    assert len(objects) == SAMPLE_CELLS_CHECKED
+    assert {item["kind"] for item in objects} == {"cell"}
+    assert len({item["class_name"] for item in objects}) > 1
+    decided = api(person).put(
+        f"{base}/{cell_slide}/decisions/{objects[0]['object']}", json={"answer": "5"}
+    )
+    assert decided.status_code == 200, decided.text
+    regions = api(person).get(f"{base}/{rows[0][1]}/objects").json()["objects"]
+    assert regions
+    assert {item["kind"] for item in regions} == {"region"}
