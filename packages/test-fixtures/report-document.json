@@ -1,0 +1,372 @@
+{
+  "cases": [
+    {
+      "name": "signed sentinel node with two deposits",
+      "lab": "Synthetic pathology lab",
+      "names": {
+        "00000000-0000-4000-8000-0000000000a1": "Dr Lead",
+        "00000000-0000-4000-8000-0000000000a2": "Dr Junior"
+      },
+      "project": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "code": "P01",
+        "name": "Synthetic nodes",
+        "members": []
+      },
+      "case": {
+        "label": "SYN-0001",
+        "specimens": [
+          {
+            "site": "Left axilla",
+            "received_at": "2026-10-14T08:05:00Z"
+          }
+        ],
+        "slides": [
+          {
+            "id": "00000000-0000-4000-8000-0000000000b1",
+            "label": "A1",
+            "stain": "H&E",
+            "block_id": "00000000-0000-4000-8000-0000000000c1"
+          },
+          {
+            "id": "00000000-0000-4000-8000-0000000000b2",
+            "label": "A2",
+            "stain": "H&E",
+            "block_id": "00000000-0000-4000-8000-0000000000c2"
+          },
+          {
+            "id": "00000000-0000-4000-8000-0000000000b3",
+            "label": "A1",
+            "stain": "CK",
+            "block_id": "00000000-0000-4000-8000-0000000000c1"
+          }
+        ]
+      },
+      "report": {
+        "id": "00000000-0000-4000-8000-0000000000d1",
+        "state": "signed",
+        "template": {
+          "key": "sentinel-node",
+          "name": "Sentinel node report",
+          "version": 1,
+          "steps": ["findings", "staging", "text", "sign"]
+        },
+        "findings": {
+          "decisions": [
+            {
+              "slide_id": "00000000-0000-4000-8000-0000000000b1",
+              "object_id": "T1",
+              "decision": "agree"
+            },
+            {
+              "slide_id": "00000000-0000-4000-8000-0000000000b1",
+              "object_id": "T2",
+              "decision": "disagree"
+            },
+            {
+              "slide_id": "00000000-0000-4000-8000-0000000000b2",
+              "object_id": "T3",
+              "decision": "agree"
+            }
+          ],
+          "measurements": []
+        },
+        "signers": [],
+        "cosigner_user_id": null,
+        "sent_at": null,
+        "staging": null,
+        "nodes_examined": 3,
+        "specimen": "Sentinel lymph node, left axilla",
+        "category": "macro",
+        "extranodal": "na",
+        "diagnosis": "Metastatic carcinoma in two of three nodes",
+        "microscopic": "Cohesive tumour cells in the subcapsular sinus",
+        "comment": null,
+        "deposits": [
+          {
+            "id": "00000000-0000-4000-8000-0000000000e1",
+            "slide_id": "00000000-0000-4000-8000-0000000000b1",
+            "object_id": "T1",
+            "size_mm": 2.5,
+            "note": null,
+            "largest": true
+          },
+          {
+            "id": "00000000-0000-4000-8000-0000000000e2",
+            "slide_id": "00000000-0000-4000-8000-0000000000b2",
+            "object_id": null,
+            "size_mm": 0.4,
+            "note": "Measured on the deeper level",
+            "largest": false
+          }
+        ],
+        "versions": [
+          {
+            "number": 1,
+            "signed_by_user_id": "00000000-0000-4000-8000-0000000000a1",
+            "reported_by_user_id": "00000000-0000-4000-8000-0000000000a2",
+            "signed_at": "2026-10-15T11:42:00Z",
+            "reason": null
+          }
+        ]
+      },
+      "versions": [
+        {
+          "number": 1,
+          "signed_by_user_id": "00000000-0000-4000-8000-0000000000a1",
+          "reported_by_user_id": "00000000-0000-4000-8000-0000000000a2",
+          "signed_at": "2026-10-15T11:42:00Z",
+          "reason": null,
+          "staging": null,
+          "values": {
+            "specimen": "Sentinel lymph node, left axilla",
+            "category": "macro",
+            "nodes_examined": 3,
+            "extranodal": "na",
+            "diagnosis": "Metastatic carcinoma in two of three nodes",
+            "microscopic": "Cohesive tumour cells in the subcapsular sinus",
+            "comment": null,
+            "deposits": [
+              {
+                "id": "00000000-0000-4000-8000-0000000000e1",
+                "slide_id": "00000000-0000-4000-8000-0000000000b1",
+                "object_id": "T1",
+                "size_mm": 2.5,
+                "note": null,
+                "largest": true
+              },
+              {
+                "id": "00000000-0000-4000-8000-0000000000e2",
+                "slide_id": "00000000-0000-4000-8000-0000000000b2",
+                "object_id": null,
+                "size_mm": 0.4,
+                "note": "Measured on the deeper level",
+                "largest": false
+              }
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "status": "final",
+        "lab": {
+          "name": "Synthetic pathology lab",
+          "department": "",
+          "address": "",
+          "footer": ""
+        },
+        "head": [
+          ["Accession", "SYN-0001"],
+          ["Received", "14 Oct"],
+          ["Reported", "15 Oct 2026, 11:42"]
+        ],
+        "sections": [
+          {
+            "title": "Specimen",
+            "body": "Sentinel lymph node, left axilla"
+          },
+          {
+            "title": "Final diagnosis",
+            "body": "Metastatic carcinoma in two of three nodes",
+            "diagnosis": true
+          }
+        ],
+        "synopticTitle": "Synoptic report · Surgically removed lymph nodes for breast tumors",
+        "standards": [
+          ["ICCR", "Surgically removed lymph nodes for breast tumours, 1st ed. v1.2"],
+          ["CAP", "Synoptic format and element names, Breast Invasive Resection 4.11"],
+          ["TNM", "UICC and AJCC 8th edition, pN with (sn) and (i+)"]
+        ],
+        "rows": [
+          ["Total number of sentinel lymph nodes examined", "3"],
+          ["Number of lymph nodes with metastatic carcinoma", "2"],
+          ["Number of metastatic deposits", "2"],
+          ["Deposit D1", "2.5 mm, node 1, slide A1 · H&E, object T1"],
+          [
+            "Deposit D2",
+            "0.40 mm, node 2, slide A2 · H&E, measured by hand. Measured on the deeper level"
+          ],
+          ["Size of largest metastatic deposit", "2.5 mm"],
+          ["Category", "Macrometastasis"],
+          ["Extranodal extension", "Not assessed"],
+          ["Regional lymph nodes, pN (UICC and AJCC TNM 8)", "pN1a(sn)"],
+          [
+            "AI-assisted analysis",
+            "The AI model flagged 3 regions. The pathologist confirmed 2 and rejected 1."
+          ]
+        ],
+        "after": [
+          {
+            "title": "Microscopic description",
+            "body": "Cohesive tumour cells in the subcapsular sinus"
+          }
+        ],
+        "sign": {
+          "by": "Reported by Dr Junior, verified and signed by Dr Lead",
+          "at": "15 October 2026 at 11:42"
+        }
+      }
+    },
+    {
+      "name": "amended excision report",
+      "lab": "Synthetic pathology lab",
+      "names": {
+        "00000000-0000-4000-8000-0000000000a1": "Dr Lead"
+      },
+      "project": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "code": "P01",
+        "name": "Synthetic nodes",
+        "members": []
+      },
+      "case": {
+        "label": "SYN-0002",
+        "specimens": [
+          {
+            "site": null,
+            "received_at": null
+          }
+        ],
+        "slides": [
+          {
+            "id": "00000000-0000-4000-8000-0000000000b4",
+            "label": "B1",
+            "stain": "H&E",
+            "block_id": null
+          }
+        ]
+      },
+      "report": {
+        "id": "00000000-0000-4000-8000-0000000000d2",
+        "state": "amended",
+        "template": {
+          "key": "lymph-node-excision",
+          "name": "Lymph node excision report",
+          "version": 1,
+          "steps": ["findings", "text", "sign"]
+        },
+        "findings": {
+          "decisions": [
+            {
+              "slide_id": "00000000-0000-4000-8000-0000000000b4",
+              "object_id": "T1",
+              "decision": "disagree"
+            }
+          ],
+          "measurements": []
+        },
+        "signers": [],
+        "cosigner_user_id": null,
+        "sent_at": null,
+        "staging": null,
+        "nodes_examined": null,
+        "specimen": "Lymph node, right neck",
+        "category": null,
+        "extranodal": null,
+        "diagnosis": "Reactive follicular hyperplasia, revised",
+        "microscopic": null,
+        "comment": "Discussed at the tumour board",
+        "deposits": [],
+        "versions": [
+          {
+            "number": 1,
+            "signed_by_user_id": "00000000-0000-4000-8000-0000000000a1",
+            "reported_by_user_id": null,
+            "signed_at": "2026-10-20T09:15:00Z",
+            "reason": null
+          },
+          {
+            "number": 2,
+            "signed_by_user_id": "00000000-0000-4000-8000-0000000000a1",
+            "reported_by_user_id": null,
+            "signed_at": "2026-10-22T16:30:00Z",
+            "reason": "Corrected the diagnosis wording"
+          }
+        ]
+      },
+      "versions": [
+        {
+          "number": 1,
+          "signed_by_user_id": "00000000-0000-4000-8000-0000000000a1",
+          "reported_by_user_id": null,
+          "signed_at": "2026-10-20T09:15:00Z",
+          "reason": null,
+          "staging": null,
+          "values": {
+            "specimen": "Lymph node, right neck",
+            "category": null,
+            "nodes_examined": null,
+            "extranodal": null,
+            "diagnosis": "Reactive follicular hyperplasia",
+            "microscopic": null,
+            "comment": null,
+            "deposits": []
+          }
+        },
+        {
+          "number": 2,
+          "signed_by_user_id": "00000000-0000-4000-8000-0000000000a1",
+          "reported_by_user_id": null,
+          "signed_at": "2026-10-22T16:30:00Z",
+          "reason": "Corrected the diagnosis wording",
+          "staging": null,
+          "values": {
+            "specimen": "Lymph node, right neck",
+            "category": null,
+            "nodes_examined": null,
+            "extranodal": null,
+            "diagnosis": "Reactive follicular hyperplasia, revised",
+            "microscopic": null,
+            "comment": "Discussed at the tumour board",
+            "deposits": []
+          }
+        }
+      ],
+      "expected": {
+        "status": "amended",
+        "lab": {
+          "name": "Synthetic pathology lab",
+          "department": "",
+          "address": "",
+          "footer": ""
+        },
+        "head": [["Accession", "SYN-0002"], ["Reported", "22 Oct 2026, amended"]],
+        "amendment": {
+          "title": "Amendment, 22 Oct 2026, by Dr Lead",
+          "reason": "Corrected the diagnosis wording",
+          "changes": [["Final diagnosis", null, null], ["Comment", null, null]],
+          "note": "Version 1 of 20 Oct 2026, 09:15 stays readable in Parfocal."
+        },
+        "sections": [
+          {
+            "title": "Specimen",
+            "body": "Lymph node, right neck"
+          },
+          {
+            "title": "Final diagnosis",
+            "body": "Reactive follicular hyperplasia, revised",
+            "diagnosis": true
+          }
+        ],
+        "synopticTitle": "Report elements",
+        "standards": [],
+        "rows": [
+          [
+            "AI-assisted analysis",
+            "The AI model flagged 1 region. The pathologist confirmed 0 and rejected 1."
+          ]
+        ],
+        "after": [
+          {
+            "title": "Comment",
+            "body": "Discussed at the tumour board"
+          }
+        ],
+        "sign": {
+          "by": "Electronically signed by Dr Lead",
+          "at": "22 October 2026, signed again"
+        }
+      }
+    }
+  ]
+}

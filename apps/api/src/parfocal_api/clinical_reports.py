@@ -13,7 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import SignedInAt, require_fresh_sign_in
-from parfocal_api.clinical_report_pdf import facts_of, pdf_of
+from parfocal_api.cases import CASE_SLIDE_ORDER
+from parfocal_api.clinical_document import CaseSlide, SignedVersion, document_of, pdf_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation_versions import ConfirmedWith
 from parfocal_api.my_work import ProjectRef, project_ref
@@ -43,6 +44,8 @@ from parfocal_api.tables import (
     projects,
     review_decisions,
     slides,
+    specimens,
+    tenants,
     users,
 )
 from parfocal_common.node_staging import STAGES, Category, category_of
@@ -1123,44 +1126,81 @@ async def download_clinical_report_pdf(
 ) -> Response:
     await clinical_case(connection, principal, project_id, case_id)
     row = await report_row(connection, case_id)
-    version = (
+    versions = (
         await connection.execute(
-            select(clinical_report_versions).where(
+            select(clinical_report_versions)
+            .where(
                 clinical_report_versions.c.report_id == row.id,
-                clinical_report_versions.c.number == number,
+                clinical_report_versions.c.number <= number,
             )
+            .order_by(clinical_report_versions.c.number)
         )
-    ).one_or_none()
-    if version is None:
+    ).all()
+    if not versions or versions[-1].number != number:
         raise NotFoundError("Report version not found")
-    names = dict(
-        (
+    people = {
+        user
+        for version in versions
+        for user in (version.signed_by_user_id, version.reported_by_user_id)
+        if user is not None
+    }
+    names = {
+        str(user): name
+        for user, name in (
             await connection.execute(
-                select(users.c.id, users.c.display_name).where(
-                    users.c.id.in_(
-                        [
-                            user
-                            for user in (version.signed_by_user_id, version.reported_by_user_id)
-                            if user is not None
-                        ]
-                    )
-                )
+                select(users.c.id, users.c.display_name).where(users.c.id.in_(people))
             )
         ).all()
-    )
+    }
     label = str(await connection.scalar(select(cases.c.label).where(cases.c.id == case_id)))
-    facts = facts_of(
-        label,
-        TEMPLATES[ClinicalTemplate(row.template)].name,
-        number,
-        version.content,
-        names.get(version.signed_by_user_id, "an unknown member"),
-        version.signed_at,
-        names.get(version.reported_by_user_id),
-        version.reason,
+    received = await connection.scalar(
+        select(specimens.c.received_at)
+        .where(specimens.c.case_id == case_id, specimens.c.deleted_at.is_(None))
+        .order_by(specimens.c.letter)
+        .limit(1)
+    )
+    case_slides = (
+        await connection.execute(
+            select(slides.c.id, slides.c.label, slides.c.stain, slides.c.block_id)
+            .where(slides.c.case_id == case_id, slides.c.deleted_at.is_(None))
+            .order_by(*CASE_SLIDE_ORDER)
+        )
+    ).all()
+    findings = await findings_of(connection, case_id)
+    lab = await connection.scalar(select(tenants.c.name).where(tenants.c.id == row.tenant_id))
+    document = document_of(
+        lab=str(lab or ""),
+        accession=label,
+        received_at=received,
+        template=str(row.template),
+        slides=[
+            CaseSlide(
+                id=str(slide.id),
+                label=slide.label,
+                stain=slide.stain,
+                block_id=str(slide.block_id) if slide.block_id else None,
+            )
+            for slide in case_slides
+        ],
+        decisions=[str(decision.decision) for decision in findings.decisions],
+        versions=[
+            SignedVersion(
+                number=version.number,
+                values=version.content["values"],
+                signed_at=version.signed_at,
+                signed_by=str(version.signed_by_user_id) if version.signed_by_user_id else None,
+                reported_by=str(version.reported_by_user_id)
+                if version.reported_by_user_id
+                else None,
+                reason=version.reason,
+            )
+            for version in versions
+        ],
+        number=number,
+        names=names,
     )
     return Response(
-        pdf_of(facts, version.signed_at),
+        pdf_of(document, number, versions[-1].signed_at),
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="{safe_name(label)}_report_v{number}.pdf"'
