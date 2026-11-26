@@ -7484,6 +7484,21 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when an API test runs the store step on a slide with seeded cells and no counter row and keeps every cell with numbers above the old ones, the seed writes the counter, the error is logged, and a deployed rerun on CMU-1-Small-Region.svs in P03 stores its cells, recorded with its time and cost.
   Depends on PROTO-195. Size: S.
 
+- [ ] PROTO-197 · Object opacity follows the person into every view
+  The walkthrough of 2026-11-26 (docs/results/2026-11-26-walkthrough-of-the-2026-11-25-fixes.md, finding 3) set object opacity to 10% in a review task's Display tab and found a drawn rectangle in the plain viewer of the same slide still at full opacity. PROTO-194 (object opacity fades the outlines too) keeps the setting per task display. Make one object opacity per person apply in the plain viewer, review, guided review and Annotate, with a task's own display only overriding it when the task owner set one.
+  Done when a browser spec on the fake API sets 10% in a review task, opens the plain viewer and Annotate of the same slide and reads the drawn and AI outlines at 10%, and the deployed app does the same.
+  Depends on PROTO-194. Size: S.
+
+- [ ] PROTO-198 · Comment on annotate task AI objects and cells in the plain viewer, with stable region names
+  PROTO-189 (comment on objects, selections, regions and layers) left three gaps: AI objects in an annotate task and a cell clicked in the plain viewer cannot be commented on, and #Region names in a comment are numbered from the threads the reader can see, so in a blind task the same text can point at another region for the researcher. Extend the object anchors to those two places and store a mentioned region, selection or slide as a saved token in the comment body, as @ mentions are, so every reader reaches the same thing. Notification links are unit tested only, so add a browser check for them.
+  Done when a browser spec on the fake API comments on an annotate task AI object and on a plain viewer cell and finds each thread under the object's ID, a blind reader and the researcher follow the same #Region mention to the same region, a notification link opens its object, and the deployed viewer does the same.
+  Depends on PROTO-189. Size: M.
+
+- [ ] PROTO-199 · The top bar's slide progress ring leaves the slide picker free on narrow windows
+  PROTO-190 (the viewer's slide switcher fits its popover) found that at 640 px wide the slide progress ring in the viewer's top bar covers the slide picker, so the switcher cannot be opened there. Let the top bar give the picker room first at narrow widths, folding the ring into the picker or hiding it below a width.
+  Done when a browser spec opens the slide switcher at 640 and 768 px and every top bar control stays clickable, and the deployed viewer does the same.
+  Depends on PROTO-190. Size: S.
+
 - [x] EXP-018 · The moderator prepares a participant project from the console for the code the page shows
   The deployed walk of v0.46.0 found that the participant page makes a random code, while EXP-016 seeds a project for a code given on the command line, so no project matches and Start task stays disabled with no reason while the page calls /api/projects//review-tasks. The local seed command also needs a Neon key, and the one in ~/.config/parfocal is scoped to a deleted project. Let the moderator type or accept the code in the console and press Prepare the participant, which seeds the project on the server, in the Modal seed function as OPS-039 does, and needs admin rights, so nobody needs local database keys. The participant page finds its project by code, and Start task says why it is off when there is none.
   Done when an API test seeds and removes a participant project through the new route, a Playwright spec on the fake API prepares a participant and starts task 1, and a deployed dry run as one code goes from Prepare to the thank-you page, recorded in a result file.
@@ -7506,6 +7521,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Decision 180 (how long study recordings are kept), option A with a backup, answered on 2026-11-25 as "a, back up them somewhere, r2 maybe". EXP-015 (study sessions and traces reach the server) keeps each participant's raw traces and answers in the database. Back them up as an export to a `study/` prefix of the R2 bucket `parfocal-prod` after each session and nightly, with no PHI and no names, and add a delete step that, on a date set in config, removes the raw traces from the database and from R2 and keeps only the anonymous tables and notes that went into the thesis. The defence date is TODO until the owner sets it. Log the bucket writes as production touches with their cost.
   Done when a test writes a backup of a fake session and reads it back, a test of the delete step on a past date leaves only the anonymous tables, and the first real backup to R2 is listed in the log with its size and cost.
   Depends on EXP-015. Size: S.
+
+- [ ] EXP-023 · A remote study participant holds a study only role
+  EXP-020 (a prepared participant joins a remote moderated session by one link) seats each remote participant as a researcher in the study workspace, so the participant could create a project there, and its ADR leaves a narrower role as a TODO. Add a study participant role that reaches only that participant's own prepared project and the study page, with no project creation, no other project and no console, and seat join link participants with it.
+  Done when an API test seats a participant by a join link and is refused creating a project, listing other projects and the console, a browser spec on the fake API finds no New project or Admin for that seat, and the deployed join dry run still reaches the thank-you page.
+  Depends on EXP-020. Size: S.
 
 ---
 
