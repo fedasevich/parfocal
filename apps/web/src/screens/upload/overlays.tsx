@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dial
 import { Icon } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
+import { TableEmpty } from "@parfocal/ui/components/table";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
@@ -242,6 +243,17 @@ export function ImportsModal({
             >
               <table className="w-full border-collapse text-body-sm">
                 <tbody>
+                  {imports.arrivals.length === 0 ? (
+                    <TableEmpty
+                      colSpan={5}
+                      data-testid="arrivals-empty"
+                      title={t`Nothing has arrived yet`}
+                    >
+                      <Trans>
+                        Files that land in the watched folder or come in by webhook show here.
+                      </Trans>
+                    </TableEmpty>
+                  ) : null}
                   {imports.arrivals.map((arrival) => (
                     <tr
                       key={arrival.at}

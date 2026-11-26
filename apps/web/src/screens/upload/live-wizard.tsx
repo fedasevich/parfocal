@@ -98,7 +98,15 @@ function goingUp(
 
 const ServerCheck = lazy(() => import("./server-check.tsx"));
 
-export function LiveWizard({ project, scene }: { project: Project; scene: LiveScene }) {
+export function LiveWizard({
+  project,
+  scene,
+  source,
+}: {
+  project: Project;
+  scene: LiveScene;
+  source?: "link" | undefined;
+}) {
   const { t } = useLingui();
 
   const navigate = useNavigate();
@@ -315,6 +323,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             scene={shown}
             dragging={dragging}
             take={take}
+            source={source}
           />
         ) : step === 1 ? (
           <CheckStep
@@ -478,6 +487,7 @@ function FilesStep({
   scene,
   dragging,
   take,
+  source: startSource,
 }: {
   model: LiveModel<DroppedItem>;
   state: LiveState;
@@ -487,13 +497,14 @@ function FilesStep({
   scene: LiveScene;
   dragging: boolean;
   take: (items: DroppedItem[]) => void;
+  source?: "link" | undefined;
 }) {
   const { t } = useLingui();
 
   const navigate = useNavigate();
   const adding = useRef<HTMLInputElement>(null);
   const [addingTo, setAddingTo] = useState<DropRecord | null>(null);
-  const [source, setSource] = useState<"computer" | "link">("computer");
+  const [source, setSource] = useState<"computer" | "link">(startSource ?? "computer");
   const formats = (
     <button
       type="button"

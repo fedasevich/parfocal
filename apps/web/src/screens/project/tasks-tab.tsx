@@ -16,6 +16,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -75,6 +76,30 @@ export function TasksTab({
           </TableHeader>
           <TableBody>
             {loading ? <SkeletonTableRows label={t`Loading tasks`} rows={4} columns={5} /> : null}
+            {!loading && tasks.length === 0 ? (
+              <TableEmpty
+                colSpan={5}
+                data-testid="tasks-empty"
+                title={t`No review tasks in this project yet`}
+                action={
+                  <Button
+                    variant="primary"
+                    nativeButton={false}
+                    render={
+                      <Link
+                        to="/projects/$projectId/tasks/new"
+                        params={{ projectId: project.id }}
+                      />
+                    }
+                  >
+                    <Icon name="users" />
+                    <Trans>New review task</Trans>
+                  </Button>
+                }
+              >
+                <Trans>A review task hands slides to the people who check the AI results.</Trans>
+              </TableEmpty>
+            ) : null}
             {tasks.map((task) => (
               <TaskRow
                 key={task.id}

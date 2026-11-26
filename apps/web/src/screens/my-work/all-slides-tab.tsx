@@ -8,13 +8,14 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
 } from "@parfocal/ui/components/table";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDue } from "../format.ts";
@@ -272,6 +273,7 @@ function SlideTable({
   onSelect,
   onOpen,
   hrefOf,
+  empty,
 }: {
   rows: SlideRow[];
   selected: string | undefined;
@@ -280,6 +282,7 @@ function SlideTable({
   onSelect: (key: string) => void;
   onOpen: (row: SlideRow) => void;
   hrefOf: (row: SlideRow) => string;
+  empty: (colSpan: number) => ReactNode;
 }) {
   const { t } = useLingui();
 
@@ -331,6 +334,7 @@ function SlideTable({
         </TableRow>
       </TableHeader>
       <TableBody ref={bodyRef}>
+        {rows.length === 0 ? empty(headings.length) : null}
         {before > 0 ? (
           <tr data-slot="spacer" style={{ height: before }}>
             <td colSpan={headings.length} className="p-0" />
@@ -471,12 +475,43 @@ export function AllSlidesTab({
           onSelect={onSelect}
           onOpen={(row) => void goTo(slideOpenPath(row, me?.user_id))}
           hrefOf={(row) => slideOpenPath(row, me?.user_id)}
+          empty={(colSpan) =>
+            active > 0 || query ? (
+              <TableEmpty
+                colSpan={colSpan}
+                data-testid="all-slides-no-match"
+                title={t`No slide matches these filters`}
+                action={
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onFilters(noSlideFilters);
+                      onQuery("");
+                    }}
+                  >
+                    <Trans>Clear filters</Trans>
+                  </Button>
+                }
+              >
+                <Trans>Take a filter off or search for something else.</Trans>
+              </TableEmpty>
+            ) : (
+              <TableEmpty
+                colSpan={colSpan}
+                data-testid="all-slides-empty"
+                title={t`No slides yet`}
+                action={
+                  <Button variant="primary" onClick={() => void goTo(destinations.newProject())}>
+                    <Icon name="folder" />
+                    <Trans>New project</Trans>
+                  </Button>
+                }
+              >
+                <Trans>Slides you upload to a project, or that you review, show here.</Trans>
+              </TableEmpty>
+            )
+          }
         />
-        {rows.length === 0 ? (
-          <p className="m-0 py-6 text-center text-body-sm text-fg-dim">
-            {active > 0 || query ? t`No slide matches these filters.` : t`No slides yet.`}
-          </p>
-        ) : null}
         {preview ? (
           <SlidePreview row={preview} tasks={tasks} onClose={() => onSelect(undefined)} />
         ) : null}

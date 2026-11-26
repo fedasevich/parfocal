@@ -13,9 +13,11 @@ const liveScenes: UploadScene[] = ["empty", "files", "check", "progress", "done"
 export function LivePage({
   projectId,
   scene,
+  source,
 }: {
   projectId: string;
   scene: UploadScene | undefined;
+  source?: "link" | undefined;
 }) {
   const { t } = useLingui();
 
@@ -35,5 +37,5 @@ export function LivePage({
   }
   const live: LiveScene =
     scene !== undefined && liveScenes.includes(scene) ? (scene as LiveScene) : "empty";
-  return <LiveWizard project={project} scene={live} />;
+  return <LiveWizard project={project} scene={live} source={source} />;
 }

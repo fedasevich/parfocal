@@ -171,7 +171,7 @@ test("the search, result set and chips narrow the slide rows", async ({ page }) 
   const all = await rows.count();
   await page.getByLabel("Filter by slide, file or case").fill("zzz-no-such-slide");
   await expect(rows).toHaveCount(0);
-  await expect(page.getByText("No slides match these filters.")).toBeVisible();
+  await expect(page.getByText('No slide matches "zzz-no-such-slide"')).toBeVisible();
   await page.getByLabel("Filter by slide, file or case").fill("");
   await expect(rows).toHaveCount(all);
   await page.getByRole("button", { name: /^No results/ }).click();

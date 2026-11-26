@@ -22077,3 +22077,85 @@ msgstr ""
 #: src/screens/admin/sections.tsx
 msgid "Your lab has no model connected"
 msgstr ""
+
+#: src/screens/project/tasks-tab.tsx
+msgid "A review task hands slides to the people who check the AI results."
+msgstr ""
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "A review task you start in a project shows here with each reviewer's progress."
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "Drop slides, results or a whole folder here"
+msgstr ""
+
+#: src/screens/upload/overlays.tsx
+msgid "Files that land in the watched folder or come in by webhook show here."
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "Link a remote source"
+msgstr ""
+
+#: src/screens/project/tasks-tab.tsx
+msgid "No review tasks in this project yet"
+msgstr ""
+
+#. placeholder {0}: match.name
+#: src/screens/project/slides-empty.tsx
+msgid "No slide has results from {0}"
+msgstr ""
+
+#. placeholder {0}: match.query
+#: src/screens/project/slides-empty.tsx
+msgid "No slide matches \"{0}\""
+msgstr ""
+
+#: src/screens/my-work/all-slides-tab.tsx
+msgid "No slide matches these filters"
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "No slides in case {caseLabel} yet"
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "No slides in this project yet"
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "No slides match these filters"
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "No slides need review"
+msgstr ""
+
+#: src/screens/my-work/all-slides-tab.tsx
+msgid "No slides yet"
+msgstr ""
+
+#: src/screens/upload/overlays.tsx
+msgid "Nothing has arrived yet"
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "Slides you upload show here, grouped by case. AI results are optional."
+msgstr ""
+
+#: src/screens/my-work/all-slides-tab.tsx
+msgid "Slides you upload to a project, or that you review, show here."
+msgstr ""
+
+#: src/screens/my-work/all-slides-tab.tsx
+msgid "Take a filter off or search for something else."
+msgstr ""
+
+#: src/screens/project/slides-empty.tsx
+msgid "Take a filter off to see more slides."
+msgstr ""
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "You have not handed out any review tasks yet"
+msgstr ""

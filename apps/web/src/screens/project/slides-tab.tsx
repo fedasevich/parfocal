@@ -47,11 +47,18 @@ import { failureText } from "./new-forms-model.ts";
 import { usePeople } from "./people.ts";
 import { ResultSetDeleteDialog } from "./result-set-delete-dialog.tsx";
 import { summaryOf } from "./result-set-summary.ts";
-import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
+import {
+  isFiltering,
+  matchesFilters,
+  noFilters,
+  noMatchOf,
+  type SlideFilters,
+} from "./slide-filter-model.ts";
 import { type SlideToast, useSlideMove } from "./slide-move-action.ts";
 import { SlideMoveDialog } from "./slide-move-dialog.tsx";
 import { canDrop, dragReason, moveTitle, slideDragType } from "./slide-move-model.ts";
 import { reviewersOf } from "./slide-reviews.ts";
+import { CaseSlidesEmpty, ProjectSlidesEmpty, SlidesNoMatch } from "./slides-empty.tsx";
 
 type ProjectSlide = SlideRowData & {
   file: string;
@@ -224,6 +231,9 @@ export function SlidesTab({
       slides: [],
     });
   }
+  const noSlides = !loading && slides.length === 0;
+  const pickedSet = sets.find((set) => set.id === filters.resultSetId);
+  const noMatch = !loading && !noSlides && filtering && groups.length === 0;
   const isOpen = (group: Group, index: number) => {
     if (filtering) return true;
     if (shut[group.key] === undefined) return index === 0 || group.key === "loose";
@@ -309,12 +319,12 @@ export function SlidesTab({
           </TableHeader>
           <TableBody>
             {loading ? <SkeletonTableRows label={t`Loading slides`} rows={6} columns={4} /> : null}
-            {filtering && groups.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="px-4 py-6 text-center text-fg-dim">
-                  <Trans>No slides match these filters.</Trans>
-                </TableCell>
-              </TableRow>
+            {noSlides ? <ProjectSlidesEmpty project={project} /> : null}
+            {noMatch ? (
+              <SlidesNoMatch
+                match={noMatchOf(filters, pickedSet ? setName(pickedSet) : undefined)}
+                onClear={() => setFilters(noFilters)}
+              />
             ) : null}
             {(loading ? [] : groups).map((group, index) => {
               const expanded = isOpen(group, index);
@@ -404,6 +414,9 @@ export function SlidesTab({
                       </span>
                     </TableCell>
                   </TableRow>
+                  {expanded && group.slides.length === 0 && !noSlides && group.key !== "loose" ? (
+                    <CaseSlidesEmpty caseLabel={group.key} />
+                  ) : null}
                   {expanded
                     ? group.slides.map((slide) => (
                         <SlideRow

@@ -167,6 +167,7 @@ export const uploadSearch = lenientSearch({
   scene: sceneField(mockScenes.upload, ["empty", "files", "check", "progress", "done"]),
   flow: z.string().optional(),
   formats: z.enum(mockScenes.formats).optional(),
+  source: z.enum(["link"]).optional(),
 });
 
 export const setupSearch = lenientSearch({

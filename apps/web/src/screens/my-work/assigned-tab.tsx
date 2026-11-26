@@ -37,6 +37,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -400,6 +401,23 @@ export function AssignedTab({
           </TableRow>
         </TableHeader>
         <TableBody>
+          {tasks.length === 0 ? (
+            <TableEmpty
+              colSpan={6}
+              data-testid="assigned-empty"
+              title={t`You have not handed out any review tasks yet`}
+              action={
+                <Button variant="primary" onClick={() => void goTo(destinations.home())}>
+                  <Icon name="folder" />
+                  <Trans>Open a project</Trans>
+                </Button>
+              }
+            >
+              <Trans>
+                A review task you start in a project shows here with each reviewer's progress.
+              </Trans>
+            </TableEmpty>
+          ) : null}
           {tasks.map((task) => (
             <AssignedRow
               key={task.id}
@@ -411,11 +429,6 @@ export function AssignedTab({
           ))}
         </TableBody>
       </Table>
-      {tasks.length === 0 ? (
-        <p className="text-body-sm text-fg-dim">
-          <Trans>You have not handed out any review tasks yet. New review task starts one.</Trans>
-        </p>
-      ) : null}
       {nudged && nudgedRow ? (
         <NudgeModal
           open

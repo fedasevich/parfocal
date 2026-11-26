@@ -4,6 +4,7 @@ import {
   isFiltering,
   matchesFilters,
   noFilters,
+  noMatchOf,
 } from "../src/screens/project/slide-filter-model.ts";
 
 const base = {
@@ -45,4 +46,22 @@ test("no results keeps slides without a result set", () => {
   const filters = { ...noFilters, noResults: true };
   assert.ok(matchesFilters(bare, filters));
   assert.ok(!matchesFilters(base, filters));
+});
+
+test("one filter with no match names that filter and several filters share one message", () => {
+  assert.deepEqual(noMatchOf({ ...noFilters, needsReview: true }, undefined), {
+    kind: "needs-review",
+  });
+  assert.deepEqual(noMatchOf({ ...noFilters, noResults: true }, undefined), { kind: "no-results" });
+  assert.deepEqual(noMatchOf({ ...noFilters, query: "  zz " }, undefined), {
+    kind: "query",
+    query: "zz",
+  });
+  assert.deepEqual(noMatchOf({ ...noFilters, resultSetId: "rs1" }, "HoVer-Net 2.1"), {
+    kind: "result-set",
+    name: "HoVer-Net 2.1",
+  });
+  assert.deepEqual(noMatchOf({ ...noFilters, needsReview: true, noResults: true }, undefined), {
+    kind: "several",
+  });
 });

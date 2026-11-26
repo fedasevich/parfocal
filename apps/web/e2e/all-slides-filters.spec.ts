@@ -45,7 +45,7 @@ test("filters combine with each other and with the search", async ({ page }) => 
   await pick(page, "Status", "Ready");
   await expect.poll(() => labels(page)).toEqual(["tumor_090"]);
   await page.getByRole("textbox", { name: "Find a slide, case or ID" }).fill("A1");
-  await expect(page.getByText("No slide matches these filters.")).toBeVisible();
+  await expect(page.getByText("No slide matches these filters")).toBeVisible();
   await expect(page).toHaveURL(/q=A1/);
   await expect(page).toHaveURL(/status=ready/);
   await expect(page).toHaveURL(/set=CAMELYON/);

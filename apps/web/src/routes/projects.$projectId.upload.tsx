@@ -13,7 +13,7 @@ function UploadRoute() {
   const { projectId } = Route.useParams();
   const search = Route.useSearch();
   if (!sceneHarnessOn() || search.scene === undefined || search.flow === "live") {
-    return <LivePage projectId={projectId} scene={search.scene} />;
+    return <LivePage projectId={projectId} scene={search.scene} source={search.source} />;
   }
   const scene = search.scene;
   const flow = search.flow ?? scene;

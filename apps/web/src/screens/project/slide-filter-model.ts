@@ -48,3 +48,25 @@ export const isFiltering = (filters: SlideFilters) =>
   filters.resultSetId !== "any" ||
   filters.needsReview ||
   filters.noResults;
+
+export type NoMatch =
+  | { kind: "query"; query: string }
+  | { kind: "needs-review" }
+  | { kind: "no-results" }
+  | { kind: "result-set"; name: string }
+  | { kind: "several" };
+
+export function noMatchOf(filters: SlideFilters, setName: string | undefined): NoMatch {
+  const query = filters.query.trim();
+  const picked = [
+    query !== "",
+    filters.resultSetId !== "any",
+    filters.needsReview,
+    filters.noResults,
+  ].filter(Boolean).length;
+  if (picked !== 1) return { kind: "several" };
+  if (query !== "") return { kind: "query", query };
+  if (filters.needsReview) return { kind: "needs-review" };
+  if (filters.noResults) return { kind: "no-results" };
+  return { kind: "result-set", name: setName ?? filters.resultSetId };
+}
