@@ -287,7 +287,8 @@ def test_the_sample_review_is_a_short_tour_with_cells_and_a_slide_left_to_run(
     assert (SAMPLE_CELL_SLIDE, SAMPLE_CELL_SET, CELLS_MODEL) in {
         (str(label), str(name), str(model)) for label, name, model in sets
     }
-    assert owner(database, "SELECT count(*) FROM model_runs")[0][0] == 0
+    runs = f"SELECT count(*) FROM model_runs WHERE project_id = '{project}'"
+    assert owner(database, runs)[0][0] == 0
     cell_slide = next(row[1] for row in rows if row[0] == SAMPLE_CELL_SLIDE)
     counter = owner(
         database,

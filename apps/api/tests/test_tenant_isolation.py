@@ -2087,6 +2087,7 @@ GET_ROUTES = {
         Exposure.PUBLIC, lambda _: "/api/model-registry/camelyon-tumor/v1.0"
     ),
     "getOpinionFormTemplate": Route(Exposure.PUBLIC, lambda _: "/api/opinion-form-template"),
+    "getSampleOutline": Route(Exposure.PUBLIC, lambda _: "/api/sample-project"),
     "getResultsSchema": Route(
         Exposure.PUBLIC, lambda _: "/api/result-formats/parfocal-json/schema"
     ),
