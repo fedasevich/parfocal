@@ -43,6 +43,8 @@ import { PinThread } from "./pin-thread.tsx";
 import { dropPin, movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
 import type { Point } from "./polygon-draft.ts";
 import {
+  lookupResultAt,
+  publishWantedResults,
   type ResultObject,
   resultAt,
   resultFor,
@@ -99,12 +101,13 @@ const noSelection: readonly ShapeId[] = [];
 
 type Box = { from: Point; to: Point };
 
-const openThreadOn = (threads: readonly Thread[], objectId: string) =>
+const openThreadOn = (threads: readonly Thread[], objectId: string, set?: string) =>
   threads.find(
     (thread) =>
       thread.resolved_at === null &&
       thread.anchor.object_id &&
-      sameObjectId(thread.anchor.object_id, objectId),
+      sameObjectId(thread.anchor.object_id, objectId) &&
+      (set === undefined || !thread.anchor.result_set_id || thread.anchor.result_set_id === set),
   );
 
 const resultTarget = (item: ResultObject): CommentTarget => ({
@@ -112,7 +115,19 @@ const resultTarget = (item: ResultObject): CommentTarget => ({
   objectId: item.id,
   shapes: [],
   extent: ringExtent(item.ring) ?? undefined,
+  resultSet: item.set,
 });
+
+const unplacedObjects = (threads: readonly Thread[], results: readonly ResultObject[]) =>
+  [
+    ...new Set(
+      threads.flatMap((thread) => {
+        const id = thread.anchor.object_id;
+        if (thread.resolved_at !== null || thread.anchor.kind !== "object" || !id) return [];
+        return results.some((item) => sameObjectId(item.id, id)) ? [] : [id];
+      }),
+    ),
+  ].sort();
 
 export function PinLayer({
   engine,
@@ -215,7 +230,9 @@ export function PinLayer({
 
   const commentOnResult = useCallback(
     (item: ResultObject, clicked?: Point) => {
-      const existing = clicked ? undefined : openThreadOn(latest.current.threads, item.id);
+      const existing = clicked
+        ? undefined
+        : openThreadOn(latest.current.threads, item.id, item.set);
       if (existing !== undefined) {
         setDraft(null);
         setOpenId(existing.id);
@@ -291,7 +308,10 @@ export function PinLayer({
         const reach = pinHitScreenPixels / 2 ** current.zoom;
         const hit = pickShape(shown, at, reach);
         const target = hit === null ? null : targetOfShapes(shown, where.codes, [hit.id]);
-        const result = target === null ? resultAt(where.results ?? [], at, reach) : null;
+        const result =
+          target === null
+            ? (resultAt(where.results ?? [], at, reach) ?? lookupResultAt(slideId, at, reach))
+            : null;
         if (target !== null) openTarget(target, at);
         else if (result !== null) commentOnResult(result, at);
         else setDraft({ target: { kind: "point", at }, at });
@@ -310,7 +330,7 @@ export function PinLayer({
         openTarget(regionTarget(start, end));
       },
     });
-  }, [active, stage, openTarget, commentOnResult]);
+  }, [active, stage, slideId, openTarget, commentOnResult]);
 
   const draftAt = draft ? slideToScreen(camera, rect, draft.at) : null;
   const toleranceNow = () => pinHitScreenPixels / 2 ** latest.current.engine.getCamera().zoom;
@@ -322,7 +342,7 @@ export function PinLayer({
     const on = current.target;
     const existing =
       on.kind === "object" && on.shapes.length === 0
-        ? openThreadOn(threads, on.objectId)
+        ? openThreadOn(threads, on.objectId, on.resultSet)
         : undefined;
     if (existing !== undefined) {
       answer.mutate(
@@ -482,6 +502,12 @@ export function PinLayer({
   };
   useEffect(() => onRowThread((key) => rowThread.current(key)), []);
   useEffect(() => () => publishThreadCounts(new Map()), []);
+  const unplaced = unplacedObjects(threads, results).join(",");
+  useEffect(
+    () => publishWantedResults(slideId, unplaced === "" ? [] : unplaced.split(",")),
+    [slideId, unplaced],
+  );
+  useEffect(() => () => publishWantedResults(slideId, []), [slideId]);
   const referenceSource = `pins:${slideId}`;
   const drawn = useMemo(() => drawnReferences(doc, codes), [doc, codes]);
   useEffect(() => publishReferences(referenceSource, [...drawn, ...anchorReferences(threads)]));

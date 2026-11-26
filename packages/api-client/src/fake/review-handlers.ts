@@ -485,20 +485,22 @@ const tasklessThreadHandlers = () => [
 
 export const toThreads = (taskId: string, slideId: string, resolved: boolean | null): Thread[] => {
   const task = taskById(taskId);
-  if (task === undefined) return [];
-  const project = projectByCode(task.project);
   const posted = postedThreads
-    .filter((item) => item.task_id === task.id && item.slide_id === slideId)
+    .filter((item) => item.task_id === taskId && item.slide_id === slideId)
     .map((item) => ({
       ...item,
       message_count: postedComments.filter((comment) => comment.thread_id === item.id).length,
     }));
+  const project = projectByCode(task?.project ?? "P07");
   const seeded: Thread[] = threads
-    .filter((item) => item.task === task.code && slideByIndex(item.slide).id === slideId)
+    .filter(
+      (item) =>
+        task !== undefined && item.task === task.code && slideByIndex(item.slide).id === slideId,
+    )
     .map((item) => ({
       id: item.id,
       project_id: project.id,
-      task_id: task.id,
+      task_id: taskId,
       slide_id: slideId,
       title: item.title,
       anchor: {

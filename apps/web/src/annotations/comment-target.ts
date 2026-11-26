@@ -15,6 +15,7 @@ export type CommentTarget =
       readonly objectId: string;
       readonly shapes: readonly ShapeId[];
       readonly extent?: Extent | undefined;
+      readonly resultSet?: string | undefined;
     }
   | { readonly kind: "shape"; readonly extent: Extent; readonly shapes: readonly ShapeId[] }
   | {
@@ -122,9 +123,10 @@ export function targetLabel(target: CommentTarget): string {
   }
 }
 
-export const objectAnchor = (objectId: string): ThreadCreate["anchor"] => ({
+export const objectAnchor = (objectId: string, resultSet?: string): ThreadCreate["anchor"] => ({
   kind: objectId.startsWith("R") ? "roi" : "object",
   object_id: asciiObjectId(objectId),
+  ...(resultSet === undefined ? {} : { result_set_id: resultSet }),
 });
 
 function anchorOf(target: CommentTarget): ThreadCreate["anchor"] {
@@ -135,7 +137,7 @@ function anchorOf(target: CommentTarget): ThreadCreate["anchor"] {
         geometry: { type: "Point", coordinates: [target.at.x, target.at.y] },
       };
     case "object":
-      return objectAnchor(target.objectId);
+      return objectAnchor(target.objectId, target.resultSet);
     case "shape":
     case "region":
       return { kind: "shape", geometry: { type: "Polygon", coordinates: [ring(target.extent)] } };

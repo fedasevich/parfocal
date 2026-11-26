@@ -4,10 +4,17 @@ import type { SlideAreaEntry } from "../viewer/slide-areas.ts";
 import type { Point } from "./polygon-draft.ts";
 import type { Extent } from "./shapes.ts";
 
-export type ResultObject = { readonly id: string; readonly ring: readonly number[] };
+export type ResultObject = {
+  readonly id: string;
+  readonly ring: readonly number[];
+  readonly set?: string | undefined;
+};
 
-function keyed<T>(empty: T, same: (a: T, b: T) => boolean) {
-  const values = new Map<string, T>();
+type Lookup = (at: Point, reach: number) => ResultObject | null;
+
+function sourced<T>(empty: T, same: (a: T, b: T) => boolean, merge: (parts: T[]) => T) {
+  const parts = new Map<string, Map<string, T>>();
+  const merged = new Map<string, T>();
   const listeners = new Set<() => void>();
   const subscribe = (listener: () => void) => {
     listeners.add(listener);
@@ -15,13 +22,21 @@ function keyed<T>(empty: T, same: (a: T, b: T) => boolean) {
       listeners.delete(listener);
     };
   };
-  const get = (key: string) => values.get(key) ?? empty;
+  const get = (key: string) => merged.get(key) ?? empty;
   return {
     get,
-    set: (key: string, next: T) => {
-      if (same(get(key), next)) return;
-      if (same(empty, next)) values.delete(key);
-      else values.set(key, next);
+    set: (key: string, next: T, source: string) => {
+      const bySource = parts.get(key) ?? new Map<string, T>();
+      if (same(bySource.get(source) ?? empty, next)) return;
+      if (same(empty, next)) bySource.delete(source);
+      else bySource.set(source, next);
+      if (bySource.size === 0) {
+        parts.delete(key);
+        merged.delete(key);
+      } else {
+        parts.set(key, bySource);
+        merged.set(key, merge([...bySource.values()]));
+      }
       for (const listener of listeners) listener();
     },
     use: (key: string) => useSyncExternalStore(subscribe, () => get(key)),
@@ -29,25 +44,63 @@ function keyed<T>(empty: T, same: (a: T, b: T) => boolean) {
 }
 
 const noObjects: readonly ResultObject[] = [];
+const noIds: readonly string[] = [];
 
 const sameObjects = (a: readonly ResultObject[], b: readonly ResultObject[]) =>
   a.length === b.length &&
   a.every((item, index) => {
     const other = b[index];
-    return other !== undefined && item.id === other.id && item.ring.length === other.ring.length;
+    return (
+      other !== undefined &&
+      item.id === other.id &&
+      item.set === other.set &&
+      item.ring.length === other.ring.length
+    );
   });
 
-const objects = keyed<readonly ResultObject[]>(noObjects, sameObjects);
-const current = keyed<string | null>(null, (a, b) => a === b);
+const sameIds = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((item, index) => item === b[index]);
 
-export const publishResultObjects = (slideId: string, next: readonly ResultObject[]) =>
-  objects.set(slideId, next);
+const objects = sourced<readonly ResultObject[]>(noObjects, sameObjects, (parts) => parts.flat());
+const current = sourced<string | null>(
+  null,
+  (a, b) => a === b,
+  (parts) => parts.find((item) => item !== null) ?? null,
+);
+const wanted = sourced<readonly string[]>(noIds, sameIds, (parts) => [...new Set(parts.flat())]);
+const lookups = new Map<string, Map<string, Lookup>>();
+
+export const publishResultObjects = (
+  slideId: string,
+  next: readonly ResultObject[],
+  source = "review",
+) => objects.set(slideId, next, source);
 export const useResultObjects = objects.use;
 export const resultObjectsOf = objects.get;
 
-export const publishCurrentResult = (slideId: string, id: string | null) =>
-  current.set(slideId, id);
+export const publishCurrentResult = (slideId: string, id: string | null, source = "review") =>
+  current.set(slideId, id, source);
 export const useCurrentResult = current.use;
+
+export const publishWantedResults = (slideId: string, ids: readonly string[]) =>
+  wanted.set(slideId, ids, "pins");
+export const useWantedResults = wanted.use;
+
+export function publishResultLookup(slideId: string, source: string, lookup: Lookup | null) {
+  const bySource = lookups.get(slideId) ?? new Map<string, Lookup>();
+  if (lookup === null) bySource.delete(source);
+  else bySource.set(source, lookup);
+  if (bySource.size === 0) lookups.delete(slideId);
+  else lookups.set(slideId, bySource);
+}
+
+export function lookupResultAt(slideId: string, at: Point, reach: number): ResultObject | null {
+  for (const lookup of lookups.get(slideId)?.values() ?? []) {
+    const found = lookup(at, reach);
+    if (found !== null) return found;
+  }
+  return null;
+}
 
 export function ringExtent(ring: readonly number[]): Extent | null {
   if (ring.length < 2) return null;
@@ -106,8 +159,15 @@ export function resultAt(
   return best;
 }
 
-export const findResult = (list: readonly ResultObject[], id: string) =>
-  list.find((item) => sameObjectId(item.id, id));
+export function findResult(
+  list: readonly ResultObject[],
+  id: string,
+  set?: string | null,
+): ResultObject | undefined {
+  const matches = list.filter((item) => sameObjectId(item.id, id));
+  if (set === undefined || set === null) return matches[0];
+  return matches.find((item) => item.set === undefined || item.set === set);
+}
 
 export function resultFor(
   list: readonly ResultObject[],

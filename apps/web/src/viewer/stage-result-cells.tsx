@@ -19,6 +19,7 @@ import { shownSetsOf, taskDisplayView } from "../screens/review/display-model.ts
 import { useDisplayChoice } from "../screens/review/use-display-choice.ts";
 import { useMyDisplay } from "../screens/review/use-my-display.ts";
 import { useDisplayDefaults } from "../shell/display-defaults.ts";
+import { type CellComments, useCellCommentObjects } from "./cell-comment-objects.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
 import { cellNumberOf } from "./focus-object.ts";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
@@ -105,6 +106,7 @@ function SetCells({
   paints,
   retype,
   focus,
+  comments,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -113,6 +115,7 @@ function SetCells({
   paints: readonly ClassPaint[];
   retype: CellRetype | null;
   focus: CellFocus | null;
+  comments: CellComments | undefined;
 }) {
   const { paged, version } = usePagedCells(set.id);
   const { frame, size } = useStageSize();
@@ -131,6 +134,7 @@ function SetCells({
   }, [paged, outlines, left, top, width, height]);
   const [drawn, setDrawn] = useState({ cells: 0, as: "none" });
   const [picked, setPicked] = useState<PickedCell | null>(null);
+  useCellCommentObjects(comments, set.id, outlines ? paged : null, picked);
   useEffect(() => {
     if (paged === null || focus === null) return;
     let current = true;
@@ -415,6 +419,7 @@ function ResultSetLayer({
   shown,
   retype = null,
   focus = null,
+  commentSlide,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -423,6 +428,7 @@ function ResultSetLayer({
   shown: boolean;
   retype?: CellRetype | null;
   focus?: CellFocus | null;
+  commentSlide?: string | undefined;
 }) {
   const paints = useSetPaints(set.id);
   if (!shown) return null;
@@ -438,6 +444,9 @@ function ResultSetLayer({
           paints={paints}
           retype={retype}
           focus={focus}
+          comments={
+            commentSlide === undefined ? undefined : { slideId: commentSlide, anchorSet: !inTask }
+          }
         />
       ) : null}
       {!inTask && (set.region_count ?? 0) > 0 ? (
@@ -562,6 +571,7 @@ function SlideResultSets({
           shown={!hidden.has(set.id)}
           retype={retype}
           focus={focus}
+          commentSlide={slideId}
         />
       ))}
       <SetToggles sets={drawable} shown={(id) => !hidden.has(id)} onToggle={toggle} />

@@ -39,7 +39,9 @@ export function anchorArea(anchor: Anchor, place: AnchorPlace): SlideArea | null
   const shapes = anchorShapes(anchor, place);
   if (shapes.length > 0) return areaOfExtent(unionBounds(place.doc, shapes));
   if (anchor.kind === "layer") return null;
-  const result = anchor.object_id ? findResult(place.results ?? [], anchor.object_id) : undefined;
+  const result = anchor.object_id
+    ? findResult(place.results ?? [], anchor.object_id, anchor.result_set_id)
+    : undefined;
   const ring = result === undefined ? null : ringExtent(result.ring);
   if (ring !== null) return areaOfExtent(ring);
   return threadTarget(anchor, place.areas);
