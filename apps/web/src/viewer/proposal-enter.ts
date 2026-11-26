@@ -23,6 +23,21 @@ export function enterAcceptsProposals(target: unknown): boolean {
   return control === null || control.matches(toolSelector);
 }
 
+type Blurrable = Closest & Matches & { blur: () => void };
+
+const isBlurrable = (target: unknown): target is Blurrable =>
+  hasClosest(target) && typeof (target as { blur?: unknown }).blur === "function";
+
+export function controlToRelease(pressed: unknown, focused: unknown): Blurrable | null {
+  if (!enterAcceptsProposals(pressed) || hasControl(pressed)) return null;
+  if (!isBlurrable(focused) || focused.closest(typingSelector) !== null) return null;
+  return enterAcceptsProposals(focused) ? null : focused;
+}
+
+function hasControl(target: unknown): boolean {
+  return hasClosest(target) && target.closest(controlSelector) !== null;
+}
+
 export type ProposalKeys = {
   readonly proposalCount: number;
   readonly acceptProposals: () => void;
@@ -40,7 +55,14 @@ export function useProposalEnter(
       event.preventDefault();
       now.current.acceptProposals();
     };
+    const onPress = (event: PointerEvent) => {
+      controlToRelease(event.target, document.activeElement)?.blur();
+    };
     window.addEventListener("keydown", onEnter);
-    return () => window.removeEventListener("keydown", onEnter);
+    window.addEventListener("pointerdown", onPress, true);
+    return () => {
+      window.removeEventListener("keydown", onEnter);
+      window.removeEventListener("pointerdown", onPress, true);
+    };
   }, [now, draft]);
 }

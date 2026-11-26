@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
+import { pickOutlineModel } from "./outline-model.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const unclassed = "#a3a3a3";
@@ -120,6 +121,37 @@ test("three accepted cells are typed, drawn in three class colours, named on hov
   await expect(cells(page).first()).toHaveAttribute("data-colour", "#c084fc");
   await expect(typeTag(page)).toContainText(/Immune\s*typer said tumor \d+%/);
 });
+
+for (const tier of ["Best", "Good"] as const) {
+  test(`three ${tier} cells found after picking the model and accepted with Enter are typed`, async ({
+    page,
+  }) => {
+    test.slow();
+    const calls = typerCalls(page);
+    const { centre } = await openSmart(page, "&best=slow&typer=slow");
+    await pickOutlineModel(page, "Best");
+    if (tier === "Good") await pickOutlineModel(page, "Good");
+    await expect(page.getByTestId("model-tier")).toBeFocused();
+    await expect(toggle(page)).toHaveAttribute("aria-pressed", "true");
+    const spots = [0, 1, 2].map((step) => ({ x: centre.x + step * 60, y: centre.y }));
+    for (const spot of spots) {
+      await page.mouse.click(spot.x, spot.y);
+      await expect(layer(page)).toHaveAttribute("data-phase", "ready", { timeout: 15_000 });
+    }
+    if (tier === "Best") await expect(layer(page)).toHaveAttribute("data-encoder", "server");
+    await expect(page.getByTestId("proposal-layer")).toHaveAttribute("data-proposals", "3");
+    await expect(page.getByTestId("model-tier")).not.toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("listbox", { name: "Models" })).toHaveCount(0);
+    await expect(cells(page)).toHaveCount(3);
+    await expect(page.getByTestId("smart-typing")).toHaveText("Typing 3 cells");
+    await expect(page.getByTestId("smart-typing")).toHaveCount(0, { timeout: 10_000 });
+    expect(calls).toHaveLength(1);
+    for (const [index, type] of ["tumor", "stroma", "other"].entries()) {
+      await expect(cells(page).nth(index)).toHaveAttribute("data-type", type);
+    }
+  });
+}
 
 test("a typer failure shows a toast and leaves the cells untyped", async ({ page }) => {
   const { centre } = await openSmart(page, "&typer=down");

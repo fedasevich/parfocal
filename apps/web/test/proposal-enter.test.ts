@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { enterAcceptsProposals } from "../src/viewer/proposal-enter.ts";
+import { controlToRelease, enterAcceptsProposals } from "../src/viewer/proposal-enter.ts";
 
 type Node = {
   readonly tag: string;
@@ -49,5 +49,38 @@ describe("Enter accepts a proposal", () => {
     assert.equal(enterAcceptsProposals(element(field)), false);
     const discard: Node = { tag: "button", attrs: [], parent: stage };
     assert.equal(enterAcceptsProposals(element(discard)), false);
+  });
+});
+
+const focusable = (node: Node) => {
+  let blurred = 0;
+  return {
+    ...element(node),
+    matches: (selector: string) => matchesOne(node, selector),
+    blur: () => {
+      blurred += 1;
+    },
+    blurred: () => blurred,
+  };
+};
+
+describe("a press on the slide releases a focused bar button", () => {
+  const picker: Node = { tag: "button", attrs: [], parent: null };
+
+  it("releases the model picker when the slide is pressed, so Enter accepts next", () => {
+    const focused = focusable(picker);
+    controlToRelease(element(stage), focused)?.blur();
+    assert.equal(focused.blurred(), 1);
+  });
+
+  it("keeps focus when a control is pressed, a field is focused or a tool button is focused", () => {
+    const option: Node = { tag: "div", attrs: ["role"], parent: null };
+    assert.equal(controlToRelease(element(option), focusable(picker)), null);
+    assert.equal(controlToRelease(element(picker), focusable(picker)), null);
+    const field: Node = { tag: "input", attrs: [], parent: null };
+    assert.equal(controlToRelease(element(stage), focusable(field)), null);
+    const toggle: Node = { tag: "button", attrs: ["aria-pressed"], parent: null };
+    assert.equal(controlToRelease(element(stage), focusable(toggle)), null);
+    assert.equal(controlToRelease(element(stage), null), null);
   });
 });
