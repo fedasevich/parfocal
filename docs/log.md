@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-184 Production touch: release v0.65.0 (ONB-013 and the PROTO-184 row name fix) deployed by run 45763119046, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order; deploy and browser smoke green
 - PROTO-184: the layer row name column keeps 64 px, so a long area and perimeter measure truncates with its full value in a title instead of taking the row, with browser specs at 340 and 280 px; waits for the deployed check
 - ONB-013: setup's Done step lists a workspace only when a join, request or create went through, so a skipped step shows none and the summary says No workspace; waits for the deployed check
 - PROTO-193 CI fix part three: engine-viewer.spec.ts stepped to the next cell with X, which since PROTO-193 keeps the cell and opens What is wrong, so it now presses the type key 1, and guided-cell-disagree-reasons.spec.ts covers X
