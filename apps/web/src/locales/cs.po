@@ -8641,12 +8641,12 @@ msgstr ""
 msgid "Give a reason to change a signed-off slide."
 msgstr ""
 
-#: src/screens/admin/role-permissions.tsx
-msgid "Give decisions, annotate, fix results, comment"
 #: src/screens/admin/people-menu.tsx
 msgid "Give admin rights"
 msgstr ""
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Give decisions, annotate, fix results, comment"
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx

@@ -8646,12 +8646,12 @@ msgstr "Give a reason of at least 10 characters."
 msgid "Give a reason to change a signed-off slide."
 msgstr "Give a reason to change a signed-off slide."
 
-#: src/screens/admin/role-permissions.tsx
-msgid "Give decisions, annotate, fix results, comment"
 #: src/screens/admin/people-menu.tsx
 msgid "Give admin rights"
 msgstr "Give admin rights"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Give decisions, annotate, fix results, comment"
 msgstr "Give decisions, annotate, fix results, comment"
 
 #: src/screens/admin/connect-model.tsx
