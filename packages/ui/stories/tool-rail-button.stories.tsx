@@ -62,6 +62,20 @@ export const WithoutKey: Story = {
   ),
 };
 
+export const TooltipWithHint: Story = {
+  render: () => (
+    <div className="h-40 w-96 bg-chrome p-3">
+      <ToolRailButton
+        icon="select"
+        label="Select"
+        keyHint="M"
+        hint="Drag on empty tissue for a marquee. ⇧ adds to the selection. Double-click an edge to add a point"
+        tipOpen
+      />
+    </div>
+  ),
+};
+
 const tools = [
   { value: "select", icon: "select", label: "Select", keyHint: "V", ai: false },
   { value: "hand", icon: "hand", label: "Hand", keyHint: "H", ai: false },

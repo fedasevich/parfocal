@@ -15,6 +15,7 @@ type ToolRailButtonProps = Omit<TogglePrimitive.Props, "children"> & {
   ai?: boolean;
   state?: "hover";
   tipSide?: "right" | "top";
+  tipOpen?: boolean;
 };
 
 function ToolRailButton({
@@ -26,12 +27,13 @@ function ToolRailButton({
   ai = false,
   state,
   tipSide = "right",
+  tipOpen = false,
   className,
   ...props
 }: ToolRailButtonProps) {
   const keyHint = useKeyLabel(action, written);
   return (
-    <Tooltip>
+    <Tooltip defaultOpen={tipOpen}>
       <TooltipTrigger
         render={
           <TogglePrimitive
@@ -60,7 +62,7 @@ function ToolRailButton({
           </span>
         ) : null}
       </TooltipTrigger>
-      <TooltipContent side={tipSide}>
+      <TooltipContent side={tipSide} className="flex-col items-start gap-0">
         {label}
         {keyHint ? ` · ${keyHint}` : ""}
         {hint ? (
