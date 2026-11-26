@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-26
-note: part one merged, a fresh agent builds comments on AI result objects, the # list in replies and object panels, slide name, region and selection links, links in notifications, non object threads from the review Comments tab and a spec on a review task's object panel
+note: waits for the deployed check of comments on a review cell, a # link and a region thread
