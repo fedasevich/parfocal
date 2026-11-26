@@ -1,4 +1,4 @@
-# XXXX. A result file is checked only by the import job, and a screen may draw a capped preview of it first
+# 0444. A result file is checked only by the import job, and a screen may draw a capped preview of it first
 
 - Date: 2026-11-26
 - Status: Accepted
