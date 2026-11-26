@@ -69,6 +69,43 @@ describe("region and slide names saved as tokens", () => {
     assert.equal(plainReferenceText(body), `See A1 and A1x, @[${slideId}]`);
   });
 
+  test("a selection is saved as the box around its objects", () => {
+    const selection = region(
+      "c",
+      {
+        kind: "shape",
+        geometry: {
+          type: "MultiPolygon",
+          coordinates: [
+            [
+              [
+                [5, 5],
+                [9, 5],
+                [9, 9],
+                [5, 5],
+              ],
+            ],
+            [
+              [
+                [40, 30],
+                [60, 30],
+                [60, 70],
+                [40, 30],
+              ],
+            ],
+          ],
+        },
+      },
+      "2026-11-01T12:00:00Z",
+    );
+    const listed = anchorReferences([selection]);
+    assert.equal(listed[0]?.text, "#Selection 1");
+    assert.equal(
+      toReferenceTokens("Both of #Selection 1", listed),
+      "Both of #[#Selection 1|area:5,5,60,70]",
+    );
+  });
+
   test("a broken token shows its name without a link", () => {
     const { parts, got } = reached("Look at #[#Region 3|area:1,2] here");
     assert.deepEqual(parts, ["Look at ", "#Region 3", " here"]);

@@ -118,13 +118,12 @@ const resultTarget = (item: ResultObject): CommentTarget => ({
   resultSet: item.set,
 });
 
-const unplacedObjects = (threads: readonly Thread[], results: readonly ResultObject[]) =>
+const openObjectIds = (threads: readonly Thread[]) =>
   [
     ...new Set(
       threads.flatMap((thread) => {
         const id = thread.anchor.object_id;
-        if (thread.resolved_at !== null || thread.anchor.kind !== "object" || !id) return [];
-        return results.some((item) => sameObjectId(item.id, id)) ? [] : [id];
+        return thread.resolved_at === null && thread.anchor.kind === "object" && id ? [id] : [];
       }),
     ),
   ].sort();
@@ -502,10 +501,10 @@ export function PinLayer({
   };
   useEffect(() => onRowThread((key) => rowThread.current(key)), []);
   useEffect(() => () => publishThreadCounts(new Map()), []);
-  const unplaced = unplacedObjects(threads, results).join(",");
+  const wantedIds = openObjectIds(threads).join(",");
   useEffect(
-    () => publishWantedResults(slideId, unplaced === "" ? [] : unplaced.split(",")),
-    [slideId, unplaced],
+    () => publishWantedResults(slideId, wantedIds === "" ? [] : wantedIds.split(",")),
+    [slideId, wantedIds],
   );
   useEffect(() => () => publishWantedResults(slideId, []), [slideId]);
   const referenceSource = `pins:${slideId}`;

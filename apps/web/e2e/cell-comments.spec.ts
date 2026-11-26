@@ -52,16 +52,30 @@ test("a cell picked in the plain viewer takes a comment anchored to its ID", asy
   await expect(marks(page)).toHaveCount(1);
   await expect(marks(page).first()).toHaveAttribute("data-anchor", "C5");
 
-  await page.reload();
+  await page.goto(`/projects/${p07}/slides/${a1}?object=C7&as=DH`);
   await expect(stage(page)).toHaveAttribute("data-state", "ready", { timeout: 60_000 });
-  await expect(marks(page)).toHaveCount(1, { timeout: 20_000 });
+  expect(await pickedNumber(page)).toBe("7");
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  });
+  await page.keyboard.press("c");
+  await expect(page.getByTestId("comment-target")).toContainText("Comment on C7");
+  expect(await sendComment(page, "And this one?")).toMatchObject({ object_id: "C7" });
+
+  await page.goto(`/projects/${p07}/slides/${a1}?as=DH`);
+  await expect(stage(page)).toHaveAttribute("data-state", "ready", { timeout: 60_000 });
+  await expect(marks(page)).toHaveCount(2, { timeout: 20_000 });
+  await expect(page.locator('[data-slot="comment-anchor"][data-anchor="C5"]')).toHaveCount(1);
+  await expect(page.locator('[data-slot="comment-anchor"][data-anchor="C7"]')).toHaveCount(1);
   await page.getByRole("tab", { name: /Comments/ }).click();
   const card = cards(page).filter({ hasText: "Is this a lymphocyte?" });
   await expect(card).toContainText("C5");
   await expect(card).toContainText("Cell");
 });
 
-test("the comment tool on an annotate task AI cell anchors to the cell", async ({ page }) => {
+test("an annotate task AI cell picked and commented with C anchors to the cell", async ({
+  page,
+}) => {
   await page.goto(`/projects/${p07}/slides/${withResults}?task=${annotateTask}&tab=objects&as=DH`);
   await expect(stage(page)).toHaveAttribute("data-state", "ready", { timeout: 60_000 });
   const cells = page.locator(`[data-testid="result-set-cells"][data-set="${samSet}"]`);

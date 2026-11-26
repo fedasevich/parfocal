@@ -125,4 +125,10 @@ test("a notification opens its object from the bell", async ({ page }) => {
   await expect(page).toHaveURL(/[?&]object=T4/);
   await expect(notes).toContainText("T4", { timeout: 15_000 });
   await expect(notes).not.toContainText("T5");
+
+  await page.goto(`/projects/${p07}?as=DH`);
+  await page.getByRole("button", { name: /^Notifications/ }).click();
+  await row.getByRole("button", { name: "Open the note" }).click();
+  await expect(page).toHaveURL(/[?&]object=T5/);
+  await expect(notes).toContainText("T5", { timeout: 15_000 });
 });
