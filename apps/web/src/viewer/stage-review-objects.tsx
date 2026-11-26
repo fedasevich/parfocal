@@ -490,6 +490,11 @@ export function StageReviewObjects({
     if (next === null) setDone(true);
     else pick(next);
   };
+  const openReasons = (item: ReviewObject) => {
+    setCurrent(item.object);
+    setShaping(null);
+    setFixing({ object: item.object, step: "reasons" });
+  };
   const answer = (item: ReviewObject, raw: string) => {
     if (answersOff !== undefined) return;
     const value = answerCount(session.style, session.classes, item, raw);
@@ -503,9 +508,7 @@ export function StageReviewObjects({
       hold(item.object, value);
     }
     if (canFix && session.style.kind !== "blind" && value === "disagree") {
-      setCurrent(item.object);
-      setShaping(null);
-      setFixing({ object: item.object, step: "reasons" });
+      openReasons(item);
       return;
     }
     if (guided) advance(item.object);
@@ -693,8 +696,19 @@ export function StageReviewObjects({
       }
     } else {
       const choice = typeChoice(session.style, option, cell, session.classes);
-      saves.save(cell.object, choice.raw, choice.value, choice.draft);
-      hold(cell.object, choice.value);
+      const stored = session.decisions.get(cell.object);
+      const kept =
+        option.id === "notcell" &&
+        stored?.answer === choice.raw &&
+        stored.reasons.includes("not_a_cell");
+      if (!kept) {
+        saves.save(cell.object, choice.raw, choice.value, choice.draft);
+        hold(cell.object, choice.value);
+      }
+      if (canFix && option.id === "notcell") {
+        openReasons(cell);
+        return;
+      }
     }
     if (guided) advance(cell.object);
   };
