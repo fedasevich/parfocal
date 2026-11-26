@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-193 CI fix part three: engine-viewer.spec.ts stepped to the next cell with X, which since PROTO-193 keeps the cell and opens What is wrong, so it now presses the type key 1, and guided-cell-disagree-reasons.spec.ts covers X
 - ONB-012 CI fix part three: the tenant isolation suites now probe getSampleOutline, which ONB-012 added without a suite row, and the sample test counts model runs in its own project only, because under pytest-xdist loadfile another file's runs share its database; both files pass locally against the lead's compose database
 - EXP-023 Production touch: release v0.64.0 (EXP-023 with migration 0163, which widens the memberships role check and has no safety check findings) deployed by run 45758982693, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order; deploy and browser smoke green
 - FOUND-002 Consolidated the docs after the 2026-11-25 parallel run: README state, Where we are now and Next up rewritten, five lead lessons added to agent-workflow.md (push before briefing, never pipe merge.sh into push.sh, regenerate .po conflicts, no Docker quit or foreign scripts, generated files out of biome), the tag-only deploy and its required review written into deploy.md, risks R18 (fake API differences) and R21 (dev study seeding) and the M6 roadmap row updated, and the two study dry run results indexed
