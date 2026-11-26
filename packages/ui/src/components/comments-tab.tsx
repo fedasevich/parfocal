@@ -79,7 +79,11 @@ function ThreadCardRow({
       >
         <span className="flex items-center gap-2.5">
           <ObjectIdTag>{thread.anchor}</ObjectIdTag>
-          <b className="min-w-0 flex-1 truncate text-body-sm font-semibold">{thread.kind}</b>
+          {thread.kind === thread.anchor ? (
+            <span className="flex-1" />
+          ) : (
+            <b className="min-w-0 flex-1 truncate text-body-sm font-semibold">{thread.kind}</b>
+          )}
           {thread.scope ? (
             <span
               data-slot="thread-scope"
@@ -170,6 +174,7 @@ function CommentsTab({
   const filter = controlled ?? own;
   const counts = countThreads(threads);
   const shown = filterThreads(threads, filter);
+  const title = slideLabel ? t`Threads on ${slideLabel}` : t`Threads`;
   const change = (next: ThreadFilter) => {
     setOwn(next);
     onFilterChange?.(next);
@@ -180,11 +185,17 @@ function CommentsTab({
       className={cn("grid min-w-0 content-start gap-3", className)}
       {...props}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-body-sm font-semibold" data-phi="">
-          {slideLabel ? t`Threads on ${slideLabel}` : t`Threads`}
+      <div data-slot="comments-head" className="grid min-w-0 gap-2">
+        <span
+          data-slot="comments-title"
+          className="block min-w-0 truncate text-body-sm font-semibold"
+          title={title}
+          data-phi=""
+        >
+          {title}
         </span>
         <SegmentedControl
+          fill
           aria-label={t`Show threads`}
           value={filter}
           onValueChange={(next) => change(next === "resolved" ? "resolved" : "open")}

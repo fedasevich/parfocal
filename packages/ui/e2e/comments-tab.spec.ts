@@ -79,3 +79,29 @@ test("the button asks for a comment on an ID and the notes list shows each decis
   await expect(notes).toContainText("Runs past the fold");
   await expect(cards(page)).toHaveCount(3);
 });
+
+test("a long slide name keeps the whole switch inside a narrow panel", async ({ page }) => {
+  await page.goto(story("components-comments-tab--long-slide-name"));
+  const tab = page.locator('[data-slot="comments-tab"]');
+  const title = page.locator('[data-slot="comments-title"]');
+  await expect(title).toHaveAttribute("title", "Threads on CMU-1-JP2K-33005-v2.zip");
+  const panel = await tab.boundingBox();
+  const group = await page.getByRole("radiogroup", { name: "Show threads" }).boundingBox();
+  const titleBox = await title.boundingBox();
+  if (!panel || !group || !titleBox) throw new Error("the tab did not render");
+  expect(group.x).toBeGreaterThanOrEqual(panel.x);
+  expect(group.x + group.width).toBeLessThanOrEqual(panel.x + panel.width + 0.5);
+  expect(group.y).toBeGreaterThanOrEqual(titleBox.y + titleBox.height);
+  for (const name of ["Open 4", "Resolved 1"]) {
+    const box = await page.getByRole("radio", { name }).boundingBox();
+    if (!box) throw new Error(`${name} did not render`);
+    expect(box.x + box.width).toBeLessThanOrEqual(panel.x + panel.width + 0.5);
+  }
+  await expect(page.locator('[data-slot="comments-title"]')).toHaveCSS("white-space", "nowrap");
+});
+
+test("a pin thread shows its chip once and the title below it", async ({ page }) => {
+  await page.goto(story("components-comments-tab--long-slide-name"));
+  const pin = cards(page).filter({ hasText: "Is this the fold we saw last week?" });
+  await expect(pin.getByText("Pin", { exact: true })).toHaveCount(1);
+});

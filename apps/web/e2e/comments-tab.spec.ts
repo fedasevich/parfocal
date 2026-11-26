@@ -47,3 +47,31 @@ test("a resolved thread opens under the Resolved filter", async ({ page }) => {
   await expect(cards(page)).toHaveCount(1);
   await expect(cards(page).first()).toHaveAttribute("data-selected", "true");
 });
+
+test("the Open and Resolved switch fits the narrowest side panel under its title", async ({
+  page,
+}) => {
+  await page.goto(
+    `/projects/00000000-0000-4000-8003-000000000007/slides/${a1}?task=${rt14}&tab=comments`,
+  );
+  const comments = page.getByTestId("stage-comments");
+  await expect(comments).toBeVisible({ timeout: 20_000 });
+  const handle = page.getByRole("separator", { name: "Resize the side panel" });
+  await handle.focus();
+  for (let press = 0; press < 3; press++) await page.keyboard.press("ArrowRight");
+  const panel = page.getByRole("complementary", { name: "Side panel" });
+  await expect.poll(async () => Math.round((await panel.boundingBox())?.width ?? 0)).toBe(280);
+  const title = comments.locator('[data-slot="comments-title"]');
+  await expect(title).toHaveAttribute("title", /^Threads on /);
+  const group = comments.getByRole("radiogroup", { name: "Show threads" });
+  const [frame, switchBox, titleBox] = await Promise.all([
+    panel.boundingBox(),
+    group.boundingBox(),
+    title.boundingBox(),
+  ]);
+  if (!frame || !switchBox || !titleBox) throw new Error("the Comments tab did not render");
+  expect(switchBox.x).toBeGreaterThanOrEqual(frame.x);
+  expect(switchBox.x + switchBox.width).toBeLessThanOrEqual(frame.x + frame.width);
+  expect(switchBox.y).toBeGreaterThanOrEqual(titleBox.y + titleBox.height);
+  await expect(comments.getByRole("radio", { name: /^Resolved \d+$/ })).toBeVisible();
+});
