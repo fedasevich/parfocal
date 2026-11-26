@@ -49,7 +49,7 @@ test("a decision note is listed under Your decision notes and a thread opens at 
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("pin-thread")).toHaveCount(0);
   const comments = page.getByTestId("stage-comments");
-  await expect(comments.getByRole("button", { name: /New comment on an ID/ })).toBeVisible();
+  await expect(comments.getByRole("button", { name: /Comment on the slide/ })).toBeVisible();
   const notes = comments.locator('[data-slot="decision-notes"]');
   await expect(notes).toContainText("Your decision notes");
   await expect(notes).toContainText("T3");

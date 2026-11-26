@@ -22,6 +22,12 @@ import {
 import { useLengthUnits } from "../measure/length-units.ts";
 import { formatArea, formatPerimeter, measureShape } from "../measure/shape-measure.ts";
 import { useStageMicronsPerPixel } from "../viewer/stage-measurements.tsx";
+import {
+  publishLayerNames,
+  requestLayerComment,
+  requestRowThread,
+  useThreadCounts,
+} from "./comment-bus.ts";
 import { type AnnotationDocument, removeGroup, updateGroup } from "./document.ts";
 import { drawnObjectIds, useSavedCodes } from "./drawn-object-ids.ts";
 import {
@@ -89,6 +95,7 @@ type Actions = {
   remove: (row: TreeRow) => void;
   aim: (row: TreeRow) => void;
   press: (row: TreeRow, event: ReactPointerEvent) => void;
+  comment: (row: TreeRow) => void;
 };
 
 function readOpen(key: string): Set<string> {
@@ -135,9 +142,11 @@ const Row = memo(function Row({
   renaming,
   drop,
   measure,
+  comments,
   actions,
 }: {
   row: TreeRow;
+  comments: number;
   measure: string | null;
   top: number;
   selected: boolean;
@@ -153,6 +162,7 @@ const Row = memo(function Row({
   const saved = group && row.groupId !== null;
   const off = row.hidden;
   const [draft, setDraft] = useState(name);
+  const [menuOpen, setMenuOpen] = useState(false);
   const chooseAll = useCallback((node: HTMLInputElement | null) => {
     node?.focus();
     node?.select();
@@ -172,11 +182,23 @@ const Row = memo(function Row({
       data-locked={row.locked || undefined}
       data-expanded={group ? row.expanded : undefined}
       data-drop={drop ?? undefined}
+      data-comments={comments || undefined}
       onPointerDown={(event) => actions.press(row, event)}
+      onContextMenu={(event) => {
+        if (!group) return;
+        event.preventDefault();
+        setMenuOpen(true);
+      }}
       onKeyDown={(event) => {
         if (event.key === "F2" && !renaming) {
           event.preventDefault();
           actions.startRename(row);
+        }
+        const plain = !event.metaKey && !event.ctrlKey && !event.altKey;
+        if (group && !renaming && plain && event.key.toLowerCase() === "c") {
+          event.preventDefault();
+          event.stopPropagation();
+          actions.comment(row);
         }
       }}
       className={cn(
@@ -258,17 +280,33 @@ const Row = memo(function Row({
           )}
         </button>
       )}
-      {group ? (
-        <span className="font-mono text-caption text-fg-faint">{row.count}</span>
-      ) : (
-        <span
-          data-testid="layers-row-measure"
-          title={measure ?? undefined}
-          className="truncate font-mono text-caption text-fg-dim"
-        >
-          {measure ?? ""}
-        </span>
-      )}
+      <span className="flex min-w-0 items-center justify-end gap-1">
+        {comments > 0 ? (
+          <button
+            type="button"
+            data-testid="layers-row-comments"
+            aria-label={plural(comments, { one: "# comment on it", other: "# comments on it" })}
+            title={t`Open the comments on it`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => requestRowThread(row.key)}
+            className="inline-flex h-6 min-w-6 shrink-0 cursor-pointer items-center justify-center gap-0.5 rounded-full border-0 bg-accent-soft px-1.5 font-mono text-caption text-accent"
+          >
+            <Icon name="comment" size="xs" />
+            {comments}
+          </button>
+        ) : null}
+        {group ? (
+          <span className="font-mono text-caption text-fg-faint">{row.count}</span>
+        ) : (
+          <span
+            data-testid="layers-row-measure"
+            title={measure ?? undefined}
+            className="truncate font-mono text-caption text-fg-dim"
+          >
+            {measure ?? ""}
+          </span>
+        )}
+      </span>
       <button
         type="button"
         aria-pressed={!off}
@@ -289,8 +327,8 @@ const Row = memo(function Row({
       >
         <Icon name={row.locked ? "lock" : "unlock"} />
       </button>
-      {saved ? (
-        <DropdownMenu>
+      {group ? (
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger
             render={
               <button
@@ -305,22 +343,29 @@ const Row = memo(function Row({
             }
           />
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => actions.startRename(row)}>
-              <Trans>Rename</Trans>
+            <DropdownMenuItem onClick={() => actions.comment(row)}>
+              <Trans>Comment on this layer</Trans>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => actions.aim(row)}>
-              {aimed ? (
-                <Trans>Stop sending new shapes here</Trans>
-              ) : (
-                <Trans>New shapes go here</Trans>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => actions.ungroup(row)}>
-              <Trans>Ungroup</Trans>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => actions.remove(row)}>
-              <Trans>Delete group</Trans>
-            </DropdownMenuItem>
+            {saved ? (
+              <>
+                <DropdownMenuItem onClick={() => actions.startRename(row)}>
+                  <Trans>Rename</Trans>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => actions.aim(row)}>
+                  {aimed ? (
+                    <Trans>Stop sending new shapes here</Trans>
+                  ) : (
+                    <Trans>New shapes go here</Trans>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => actions.ungroup(row)}>
+                  <Trans>Ungroup</Trans>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => actions.remove(row)}>
+                  <Trans>Delete group</Trans>
+                </DropdownMenuItem>
+              </>
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
@@ -384,6 +429,17 @@ export function LayersTree({
   const tree = useMemo(() => treeRows(doc, context, open, labelOf), [doc, context, open, labelOf]);
   const { rows } = tree;
   const chosen = useMemo(() => new Set(selected), [selected]);
+  const commentCounts = useThreadCounts();
+  useEffect(() => {
+    const groups = [...doc.groups.values()].map((group) => ({
+      key: groupKey(group.id),
+      name: group.name,
+    }));
+    const classes = rows.flatMap((row) =>
+      row.kind === "group" && row.groupId === null ? [{ key: row.key, name: row.name }] : [],
+    );
+    publishLayerNames([...groups, ...classes]);
+  }, [doc.groups, rows]);
 
   const virtualizer = useVirtualizer({
     count: rows.length,
@@ -612,6 +668,9 @@ export function LayersTree({
             : [row.key];
         pending.current = { keys, x: event.clientX, y: event.clientY, active: false };
       },
+      comment: (row) => {
+        if (row.kind === "group") window.setTimeout(() => requestLayerComment(row.key), 0);
+      },
     }),
     [changeOpen, onClassGroup],
   );
@@ -656,6 +715,7 @@ export function LayersTree({
                 renaming={row.key === renaming}
                 drop={drop?.key === row.key ? drop.place : null}
                 measure={measureOf(row)}
+                comments={commentCounts.get(row.key) ?? 0}
                 actions={actions}
               />
             );

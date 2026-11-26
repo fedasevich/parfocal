@@ -7,21 +7,21 @@ import {
 } from "@parfocal/api-client";
 import { CommentsTab, type CommentThreadCard } from "@parfocal/ui/components/comments-tab";
 import type { ThreadFilter } from "@parfocal/ui/lib/comment-threads";
+import { anchorWords } from "../../annotations/anchor-words.ts";
 import { threadScope } from "../../annotations/thread-home.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { formatStamp } from "./object-comments.tsx";
 
-export const anchorLabel = (thread: Thread) =>
-  thread.anchor.object_id ?? (thread.anchor.kind === "point" ? "Pin" : "Shape");
+type LayerNameOf = (key: string) => string | undefined;
 
-export const anchorKind = (thread: Thread) => {
-  const { kind, object_id: object } = thread.anchor;
-  if (kind === "roi") return "Your ROI";
-  if (kind === "point") return "Pin";
-  if (kind === "shape") return "Shape";
-  return object?.includes("·") ? "Cell" : "Tumor region";
-};
+const noLayerName: LayerNameOf = () => undefined;
+
+export const anchorLabel = (thread: Thread, layerName: LayerNameOf = noLayerName) =>
+  anchorWords(thread.anchor, layerName).label;
+
+export const anchorKind = (thread: Thread, layerName: LayerNameOf = noLayerName) =>
+  anchorWords(thread.anchor, layerName).kind;
 
 export const useSlideThreads = (taskId: string, slideId: string) =>
   okData(useListThreads(taskId, slideId, undefined, { query: { enabled: slideId !== "" } }).data) ??

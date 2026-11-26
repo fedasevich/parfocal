@@ -48,6 +48,9 @@ const problem = (status: number, title: string, code: string) =>
     { status, headers: { "content-type": "application/problem+json" } },
   );
 
+export const editedSlideLabel = (slide: ScenarioSlide): string =>
+  slideEdits.get(slide.id)?.label ?? slide.label;
+
 const toSlideDetail = (slide: ScenarioSlide): SlideDetail => ({
   id: slide.id,
   label: slide.label,

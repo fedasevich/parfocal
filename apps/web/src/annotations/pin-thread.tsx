@@ -7,6 +7,7 @@ import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { toMentionTokens } from "../screens/review/mention-picking.ts";
 import { useMentionable } from "../screens/review/use-mentionable.ts";
+import { shapeOfObject } from "./anchor-place.ts";
 import type { AnnotationDocument } from "./document.ts";
 import { useSavedCodes } from "./drawn-object-ids.ts";
 import {
@@ -116,7 +117,15 @@ export function PinThread({
         resolved={resolved}
         loading={detail === undefined}
         messages={threadMessages(detail?.messages ?? [], person, me?.user_id, now())}
-        measurement={threadMeasurement(doc, threadId, micronsPerPixel, codes)}
+        measurement={threadMeasurement(
+          doc,
+          threadId,
+          micronsPerPixel,
+          codes,
+          thread.anchor.object_id
+            ? shapeOfObject({ doc, codes, areas: [] }, thread.anchor.object_id)
+            : null,
+        )}
         reply={reply}
         onReplyChange={setReply}
         onSend={send}

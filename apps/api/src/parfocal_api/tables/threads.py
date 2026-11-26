@@ -30,6 +30,7 @@ class AnchorKind(StrEnum):
     ROI = "roi"
     POINT = "point"
     SHAPE = "shape"
+    LAYER = "layer"
 
 
 threads = Table(
@@ -43,6 +44,7 @@ threads = Table(
     Column("anchor_kind", String(10), nullable=False, info=OPERATIONAL),
     Column("object_id", String(30), nullable=True, info=OPERATIONAL),
     Column("geometry", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
+    Column("layer", String(100), nullable=True, info=OPERATIONAL),
     Column("offset_x", Float[float](), nullable=True, info=OPERATIONAL),
     Column("offset_y", Float[float](), nullable=True, info=OPERATIONAL),
     Column("result_set_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
@@ -93,6 +95,7 @@ threads = Table(
     CheckConstraint(
         "(anchor_kind IN ('point', 'shape')) = (geometry IS NOT NULL)", name="geometry_anchor"
     ),
+    CheckConstraint("(anchor_kind = 'layer') = (layer IS NOT NULL)", name="layer_anchor"),
     CheckConstraint("(offset_x IS NULL) = (offset_y IS NULL)", name="offset"),
     CheckConstraint("(resolved_at IS NULL) = (resolved_by_user_id IS NULL)", name="resolved"),
 )

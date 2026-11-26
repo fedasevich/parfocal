@@ -39,6 +39,7 @@ import {
   postAnnouncement,
   resetAnnouncementBoard,
 } from "./announcement-board.ts";
+import { editedSlideLabel } from "./case-handlers.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { withoutDeleted } from "./deleted-result-sets.ts";
 import { taskDisplayFor } from "./display-settings.ts";
@@ -174,7 +175,7 @@ export const toSlideRow = (slideId: string): SlideRow => {
   const caseId = cases.find((item) => item.label === slide.caseLabel)?.id ?? null;
   return {
     id: slide.id,
-    label: slide.label,
+    label: editedSlideLabel(slide),
     project: toProjectRef(project),
     case_id: caseId,
     case_label: slide.caseLabel,

@@ -1,10 +1,12 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
+import { LinkedText } from "@parfocal/ui/components/comment-thread";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Person, type PersonInfo } from "@parfocal/ui/components/person";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
+import { useCommentLinker } from "@parfocal/ui/lib/comment-links";
 import {
   countThreads,
   emptyThreadsLine,
@@ -60,6 +62,8 @@ function ThreadCardRow({
   onGoTo: (() => void) | undefined;
 }) {
   const { t } = useLingui();
+  const linker = useCommentLinker();
+  const linked = linker?.(thread.title).some((part) => typeof part !== "string") ?? false;
 
   return (
     <li
@@ -99,7 +103,7 @@ function ThreadCardRow({
             </span>
           ) : null}
         </span>
-        <span className="text-body-sm text-fg">{thread.title}</span>
+        {linked ? null : <span className="text-body-sm text-fg">{thread.title}</span>}
         <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-fg-dim">
           {thread.author ? <Person person={thread.author} size={20} /> : null}
           <span aria-hidden="true">·</span>
@@ -120,6 +124,11 @@ function ThreadCardRow({
       >
         <Icon name="target" />
       </Button>
+      {linked ? (
+        <p data-slot="thread-title" className="col-span-2 m-0 px-2.5 pb-1 text-body-sm text-fg">
+          <LinkedText text={thread.title} />
+        </p>
+      ) : null}
     </li>
   );
 }
@@ -225,7 +234,7 @@ function CommentsTab({
       <Button block onClick={onNewComment}>
         <Icon name="comment" />
         <Trans>
-          New comment on an ID <Keycap keys="C" size="sm" />
+          Comment on the slide <Keycap keys="C" size="sm" />
         </Trans>
       </Button>
       {notes.length ? (

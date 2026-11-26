@@ -23,6 +23,11 @@ export type ClickPressOptions = {
   readonly engine: () => PressEngine;
   readonly onClick: (event: PointerEvent) => void;
   readonly ignore?: (event: PointerEvent) => boolean;
+  readonly onDrag?: (
+    from: { clientX: number; clientY: number },
+    event: PointerEvent,
+    done: boolean,
+  ) => void;
 };
 
 type Press = { id: number; x: number; y: number; dragging: boolean };
@@ -61,7 +66,13 @@ export function bindClickPress(stage: PressStage, options: ClickPressOptions): (
       const away = Math.hypot(event.clientX - press.x, event.clientY - press.y);
       if (away <= clickSlopScreenPixels) return;
       press.dragging = true;
-      options.engine().startDrag({ clientX: press.x, clientY: press.y });
+      if (options.onDrag === undefined) {
+        options.engine().startDrag({ clientX: press.x, clientY: press.y });
+      }
+    }
+    if (options.onDrag !== undefined) {
+      options.onDrag({ clientX: press.x, clientY: press.y }, event, false);
+      return;
     }
     options.engine().dragTo({ clientX: event.clientX, clientY: event.clientY });
   };
@@ -72,7 +83,9 @@ export function bindClickPress(stage: PressStage, options: ClickPressOptions): (
     const finished = press;
     press = null;
     release(event);
-    if (finished.dragging) options.engine().endDrag();
+    if (finished.dragging && options.onDrag !== undefined) {
+      options.onDrag({ clientX: finished.x, clientY: finished.y }, event, true);
+    } else if (finished.dragging) options.engine().endDrag();
     else options.onClick(event);
   };
 
@@ -80,7 +93,7 @@ export function bindClickPress(stage: PressStage, options: ClickPressOptions): (
     if (press === null || event.pointerId !== press.id) return;
     const finished = press;
     press = null;
-    if (finished.dragging) options.engine().stopMotion();
+    if (finished.dragging && options.onDrag === undefined) options.engine().stopMotion();
   };
 
   const lost = keepCapture(stage, (id) => press?.id === id, cancel);

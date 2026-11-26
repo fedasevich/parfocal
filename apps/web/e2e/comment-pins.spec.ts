@@ -32,9 +32,10 @@ async function centre(locator: Locator) {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-async function placePin(page: Page, at: { x: number; y: number }, text: string) {
+async function placePin(page: Page, at: { x: number; y: number }, text: string, onShape = false) {
   await page.keyboard.press("c");
   await page.mouse.click(at.x, at.y);
+  if (onShape) await page.getByRole("button", { name: "Pin the point instead" }).click();
   const composer = page.getByRole("textbox", { name: "Comment at the pin" });
   await expect(composer).toBeFocused();
   await composer.fill(text);
@@ -106,7 +107,7 @@ test("a pin placed on a shape follows the shape when it moves", async ({ page })
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await drawRectangle(page, box);
   await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
-  await placePin(page, { x: box.x + 300, y: box.y + 270 }, "Inside the outline");
+  await placePin(page, { x: box.x + 300, y: box.y + 270 }, "Inside the outline", true);
   const pin = pins(page).first();
   await expect(pin).toBeVisible();
   await expect(pin).not.toHaveAttribute("data-linked", "");
@@ -153,7 +154,7 @@ test("a pin on a shape embeds the shape's measurement in its thread", async ({ p
   const stage = await openTaskSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await drawRectangle(page, box);
-  await placePin(page, { x: box.x + 300, y: box.y + 270 }, "Inside the outline");
+  await placePin(page, { x: box.x + 300, y: box.y + 270 }, "Inside the outline", true);
   await pins(page).first().click();
   const embed = thread(page).locator('[data-slot="thread-measurement"]');
   await expect(embed).toContainText("Area");
