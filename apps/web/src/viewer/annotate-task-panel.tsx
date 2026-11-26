@@ -110,6 +110,7 @@ import {
 } from "../session/signature-sign-in.ts";
 import { GuidedCheck } from "./guided-check.tsx";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
+import { useStageDisplay } from "./stage-display.tsx";
 import { guidedZoomLimit, outlineArea, reviewMinSide } from "./stage-geometry.ts";
 import { useFinishSlot } from "./stage-notices.tsx";
 import { brushDocument } from "./stage-shape-edit.tsx";
@@ -161,6 +162,7 @@ export function AnnotateTaskPanel({
   const docked = useDocked();
   const finishSlot = useFinishSlot();
   const { taskId, slideId, focusObject } = task;
+  const outlineOpacity = useStageDisplay(taskId).opacity / 100;
   const queryClient = useQueryClient();
   const signedIn = okData(useGetMe().data);
   const me = signedIn?.user_id ?? null;
@@ -749,6 +751,7 @@ export function AnnotateTaskPanel({
           onReshape={reshape}
           onDelete={deleteSelection}
           onStep={stepCell}
+          opacity={outlineOpacity}
         />
       ) : null}
       {splitCellNow !== undefined && splitDocument !== null ? (

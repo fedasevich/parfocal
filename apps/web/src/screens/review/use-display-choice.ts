@@ -12,6 +12,7 @@ import { useEffect, useRef } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import type { Fired } from "../../keys/registry.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
+import { chooseDisplayDefault } from "../../shell/display-defaults.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { inLayer } from "./answer-keys.ts";
 import {
@@ -119,6 +120,9 @@ export function useDisplayChoice(
     const next = { ...overrides } as Record<string, unknown>;
     if (base[setting] === value) delete next[setting];
     else next[setting] = value;
+    if (setting === "opacity" && typeof value === "number") {
+      chooseDisplayDefault("fillOpacity", value);
+    }
     void put(idOf(preset), composeValues(display, preset, next));
   };
 

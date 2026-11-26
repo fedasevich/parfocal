@@ -36,6 +36,7 @@ type AiLayerProps = {
   onStep: (delta: 1 | -1) => void;
   startEditing?: string | null;
   onEditing?: (object: string | null) => void;
+  opacity?: number;
 };
 
 type Gesture =
@@ -51,6 +52,7 @@ const dragStartPx = 4;
 const areaViews = 3;
 const shrinkViews = 6;
 const deepShare = 4;
+const pickedFloor = 0.5;
 
 const viewArea = (camera: Camera, rect: StageRect): Extent => {
   const scale = screenScale(camera);
@@ -90,6 +92,7 @@ type CellOutlinesProps = {
   checkOf: (object: string) => CheckState;
   colourOf: (classKey: string | null) => string;
   draft: Draft | null;
+  opacity: number;
 };
 
 const slideTransform = (camera: Camera, rect: StageRect) => {
@@ -106,12 +109,14 @@ const CellOutline = memo(function CellOutline({
   picked,
   check,
   colour,
+  opacity,
 }: {
   cell: AiCell;
   ring: Ring;
   picked: boolean;
   check: CheckState;
   colour: string;
+  opacity: number;
 }) {
   const points = useMemo(() => ringPoints(ring), [ring]);
   return (
@@ -121,6 +126,8 @@ const CellOutline = memo(function CellOutline({
       data-check={check}
       data-class={cell.classId ?? ""}
       data-selected={picked ? "true" : "false"}
+      data-opacity={opacity}
+      style={opacity === 1 ? undefined : { opacity }}
       points={points}
       fill={picked ? colour : "none"}
       fillOpacity={picked ? 0.18 : undefined}
@@ -138,6 +145,7 @@ const CellOutlines = memo(function CellOutlines({
   checkOf,
   colourOf,
   draft,
+  opacity,
 }: CellOutlinesProps) {
   return shown.map((cell) => (
     <CellOutline
@@ -147,6 +155,7 @@ const CellOutlines = memo(function CellOutlines({
       picked={chosen.has(cell.object)}
       check={checkOf(cell.object)}
       colour={colourOf(cell.classId)}
+      opacity={chosen.has(cell.object) ? Math.max(opacity, pickedFloor) : opacity}
     />
   ));
 });
@@ -167,6 +176,7 @@ export function AiLayer({
   onStep,
   startEditing = null,
   onEditing,
+  opacity = 1,
 }: AiLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
@@ -479,6 +489,7 @@ export function AiLayer({
               checkOf={checkOf}
               colourOf={colourOf}
               draft={draft}
+              opacity={opacity}
             />
           </g>
           {deep ? (
@@ -488,6 +499,7 @@ export function AiLayer({
               checkOf={checkOf}
               colourOf={colourOf}
               draft={draft}
+              opacity={opacity}
             />
           ) : null}
         </g>

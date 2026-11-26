@@ -5,6 +5,8 @@ test.use({ viewport: { width: 1440, height: 900 } });
 const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const rt16 = "00000000-0000-4000-8043-000000000016";
+const annotateTask = "00000000-0000-4000-8007-000000000021";
+const withResults = "00000000-0000-4000-8005-000000000005";
 const cellsSlide = "00000000-0000-4000-8005-000000000008";
 
 type Shown = { part: string; outline: number; fill: number; dot: number | null };
@@ -109,4 +111,36 @@ test("drawn shapes in Annotate fade with the same opacity", async ({ page }) => 
   await expect(shape).toHaveCount(1);
   await expect(shape).toHaveAttribute("data-opacity", "0.1");
   await expect(shape).toHaveCSS("opacity", "0.1");
+});
+
+test("10% chosen in a review task also fades the plain viewer and Annotate outlines", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await openGuided(page);
+  await setOpacity(page, 10);
+  await expect.poll(async () => part(await shown(page), "main")?.outline).toBeCloseTo(0.1, 5);
+
+  await page.goto(`/projects/${p07}?tab=slides`);
+  await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 25_000 });
+  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await page.keyboard.press("r");
+  await page.mouse.move(box.x + 300, box.y + 250);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 460, box.y + 330, { steps: 5 });
+  await page.mouse.up();
+  const drawn = page.getByTestId("polygon-shape");
+  await expect(drawn).toHaveCount(1);
+  await expect(drawn).toHaveAttribute("data-opacity", "0.1");
+  await expect(drawn).toHaveCSS("opacity", "0.1");
+
+  await page.goto(`/projects/${p07}/slides/${withResults}?task=${annotateTask}&as=DH`);
+  await expect(stage).toHaveAttribute("data-layer", "shared", { timeout: 25_000 });
+  const unpicked = page.locator('[data-testid="ai-object"][data-selected="false"]').first();
+  await expect(unpicked).toBeAttached({ timeout: 30_000 });
+  await expect(unpicked).toHaveAttribute("data-opacity", "0.1");
+  await expect(unpicked).toHaveCSS("opacity", "0.1");
 });
