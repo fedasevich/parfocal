@@ -291,7 +291,7 @@ test("guided review on outlined cells moves to the next cell after a type", asyn
   const card = page.getByTestId("stage-review-objects");
   await expect(card).toHaveAttribute("data-current", "C1");
   await expect(page.getByTestId("cell-type-bar")).toHaveAttribute("aria-label", "Type for C1");
-  await page.keyboard.press("x");
+  await page.keyboard.press("1");
   await expect(card).toHaveAttribute("data-current", "C2");
 });
 
