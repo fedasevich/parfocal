@@ -91,7 +91,7 @@ def user_of(principal: Principal) -> uuid.UUID:
     "",
     operation_id="offerStudyTemplate",
     status_code=201,
-    **require(Permission.REPORT_TEMPLATES),
+    **require(Permission.REPORT_TEMPLATES, study_participants=False),
 )
 async def offer_study_template(
     draft: StudyTemplateDraft,

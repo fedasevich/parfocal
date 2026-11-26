@@ -32,7 +32,8 @@ ROLE_DUTIES = {
     Role.STUDY_PARTICIPANT: (
         "Does the study tasks in the one project prepared for them, as its owner. Seated only "
         "by a study join link, never invited or given admin rights. Never creates or deletes a "
-        "project, invites anyone, opens another project, the study console, the study results "
+        "project, runs models, invites anyone, opens or asks for another project, offers a "
+        "template, reads workspace settings, integrations, the study console, the study results "
         "or the admin pages, asks for emergency access, makes API tokens, adds a passkey, or "
         "makes or joins another workspace"
     ),
@@ -123,13 +124,13 @@ ROWS = {
     Permission.PRIVACY_MODE: "nnn",
     Permission.UPLOAD_SLIDES: "yny",
     Permission.MOVE_SLIDES: "yny",
-    Permission.RUN_MODELS: "yny",
+    Permission.RUN_MODELS: "ynn",
     Permission.REVIEW: "yoy",
     Permission.SET_OWN_STATUS: "yyy",
     Permission.SEE_PEOPLE: "yrr",
     Permission.MANAGE_PEOPLE: "nnn",
-    Permission.WORKSPACE_SETTINGS: "rnr",
-    Permission.INTEGRATIONS: "rnr",
+    Permission.WORKSPACE_SETTINGS: "rnn",
+    Permission.INTEGRATIONS: "rnn",
     Permission.REPORT_TEMPLATES: "rnr",
     Permission.AUDIT_LOG: "nnn",
     Permission.DEVELOPER_MODE: "ynn",
@@ -270,6 +271,8 @@ def grant_of(principal: object, permission: Permission) -> Grant:
     if isinstance(principal, ServicePrincipal):
         return Grant.ALL if permission.value in principal.scopes else Grant.NONE
     member = member_of(principal)
+    if is_study_participant(member):
+        return grant_for(Role.STUDY_PARTICIPANT, permission)
     return grant_for(member.role, permission, admin_rights=member.admin_rights)
 
 

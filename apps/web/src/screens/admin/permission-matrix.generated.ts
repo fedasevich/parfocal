@@ -24,7 +24,7 @@ export const permissionMatrix = [
     adminRights: false,
   },
   { key: "move-slides", researcher: "y", reviewer: "n", studyParticipant: "y", adminRights: false },
-  { key: "run-models", researcher: "y", reviewer: "n", studyParticipant: "y", adminRights: false },
+  { key: "run-models", researcher: "y", reviewer: "n", studyParticipant: "n", adminRights: false },
   { key: "review", researcher: "y", reviewer: "o", studyParticipant: "y", adminRights: false },
   {
     key: "set-own-status",
@@ -45,10 +45,10 @@ export const permissionMatrix = [
     key: "workspace-settings",
     researcher: "r",
     reviewer: "n",
-    studyParticipant: "r",
+    studyParticipant: "n",
     adminRights: true,
   },
-  { key: "integrations", researcher: "r", reviewer: "n", studyParticipant: "r", adminRights: true },
+  { key: "integrations", researcher: "r", reviewer: "n", studyParticipant: "n", adminRights: true },
   {
     key: "report-templates",
     researcher: "r",

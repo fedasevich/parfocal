@@ -5067,7 +5067,8 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "see-slides"
+        "x-permission": "see-slides",
+        "x-not-for-study-participants": true
       }
     },
     "/api/projects/{project_id}/imports": {
@@ -5425,7 +5426,8 @@
           }
         },
         "x-permission": "create-cases",
-        "x-permission-write": true
+        "x-permission-write": true,
+        "x-not-for-study-participants": true
       }
     },
     "/api/sample-project": {
@@ -51607,7 +51609,8 @@
             }
           }
         },
-        "x-permission": "report-templates"
+        "x-permission": "report-templates",
+        "x-not-for-study-participants": true
       }
     },
     "/api/template-offers/{offer_id}/acceptance": {

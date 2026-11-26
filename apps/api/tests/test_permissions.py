@@ -1901,6 +1901,9 @@ def test_the_matrix_covers_every_permission_for_every_role() -> None:
 
 STUDY_PARTICIPANT_CLOSED = {
     "createProject",
+    "createSampleProject",
+    "requestProjectAccess",
+    "offerStudyTemplate",
     "deleteProject",
     "inviteTaskReviewer",
     "acceptInvitation",
@@ -1928,6 +1931,9 @@ def test_a_study_participant_never_holds_more_than_a_researcher() -> None:
         Permission.MANAGE_PEOPLE,
         Permission.AUDIT_LOG,
         Permission.DEVELOPER_MODE,
+        Permission.RUN_MODELS,
+        Permission.WORKSPACE_SETTINGS,
+        Permission.INTEGRATIONS,
     }
 
 
