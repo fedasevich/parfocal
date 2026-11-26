@@ -14,6 +14,10 @@ asyncpg caches prepared statements per connection, which used to break with PgBo
 
 An idle Neon compute suspends and the first query after that waits for it to start. Keep autosuspend off for production and accept it for previews. Source: ADR 0003.
 
+## One R2 Infrequent Access operation costs $9
+
+Infrequent Access has no free tier and Cloudflare rounds every line up to the next billing unit, so one Class A operation in a month bills as a million at $9.00, one Class B as a million at $0.90, and a 48-byte object as 1 GB-month for at least 30 days. A lifecycle move to Infrequent Access is a Class A operation. On 2026-11-25 the OPS-009 drill moved one 48-byte object and the November cycle grew by $9.01. So tiering saves money only on terabytes, and a tiering rule on a small bucket costs $9 in every month it moves anything. Source: https://developers.cloudflare.com/r2/pricing/ and the account's Billable usage page.
+
 ## R2 presigned GET URLs bypass the CDN
 
 Presigned URLs work only on `<account>.r2.cloudflarestorage.com`, not on a custom domain, so responses are never cached at the edge and cannot carry COOP, COEP or CORP headers. Use presigned URLs for uploads only and serve reads through the Worker gateway with the R2 binding. Source: https://developers.cloudflare.com/r2/api/s3/presigned-urls/ and ADR 0003.
