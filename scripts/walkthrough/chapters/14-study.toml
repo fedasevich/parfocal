@@ -23,6 +23,15 @@ api = ["/api/me/home"]
 
 [[chapter.step]]
 role = "owner"
+title = "The one use join link"
+url = "/study/join"
+click = "In the console, type a participant code and press Make a join link, then open the link in the participant's browser. Open the plain page without a link, or open a used link a second time."
+expect = "A fresh link opens the study for that code and moves to /study. Without a link, or with a used or expired one, the page says This link was used already or has expired. Ask the moderator for a new one."
+why = "Each link works once, so a participant cannot start a second session or land in another participant's project."
+api = ["/api/me/home"]
+
+[[chapter.step]]
+role = "owner"
 title = "Consent and the anonymous code"
 url = "/study"
 click = "Open the participant page in the browser the participant will use. Read Help us test Parfocal: We test the app, not you, Think aloud, This tab is recorded and You stay anonymous. Press I agree and start."

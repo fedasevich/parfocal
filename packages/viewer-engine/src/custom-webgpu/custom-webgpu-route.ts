@@ -472,7 +472,7 @@ export function createCustomWebGpuRoute(
 
   const sendSet = (overlay: VectorOverlay) => {
     const dashed = overlay.style.dash !== null;
-    const options = { ringsFromMidFirstEdge: dashed };
+    const options = { ringsFromMidFirstEdge: true };
     const prepared = preparedShapes(overlay.shapes);
     const { data, counts } = buildVectorInstances(prepared?.shapes ?? overlay.shapes, options);
     sentLayers.set(overlay.id, { source: overlay.shapes, dashed });
