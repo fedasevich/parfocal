@@ -15,6 +15,7 @@ from parfocal_api.locales import (
     pseudo,
     pseudo_catalogue,
 )
+from parfocal_api.report_style import LAYOUT
 from parfocal_api.report_template import (
     EVERY_BLOCK,
     REPORT_MESSAGES,
@@ -173,7 +174,8 @@ REPORT_VALUES = (
 )
 TYPST_WORDS = re.compile(
     r"(?<![A-Za-z])(?:set|page|paper|a4|flipped|false|true|margin|cm|numbering|header|background|none|"
-    r"text|size|pt|rotate|deg|fill|luma|h|fr|table|columns|grid|column|gutter|pagebreak|inset)\b"
+    r"text|size|pt|rotate|deg|fill|luma|h|fr|table|columns|grid|column|gutter|pagebreak|inset|"
+    r"report-margin|report-head|report-meta|report-section|report-table|capitals)\b"
 )
 
 
@@ -232,7 +234,7 @@ def test_the_report_renders_with_every_string_translated_in_the_pseudo_locale() 
         ]
         shown = [without(literal, REPORT_VALUES) for literal in found]
         assert not any(LETTERS.search(text) for text in shown), shown
-        outside = TYPST_WORDS.sub("", LITERAL.sub("", source))
+        outside = TYPST_WORDS.sub("", LITERAL.sub("", source.replace(LAYOUT, "")))
         assert set(LETTERS.findall(outside)) == set(), outside
         literals += found
     for message in pseudo_catalogue(REPORT_MESSAGES).values():

@@ -53,7 +53,7 @@ def case_blocks(case: dict[str, Any]) -> tuple[Any, ...]:
 
 
 def test_every_block_kind_prints_its_own_content() -> None:
-    text = " ".join(pages_of(pdf_of(render_report(FULL_REPORT), SIGNED)))
+    text = " ".join(pages_of(pdf_of(render_report(FULL_REPORT), SIGNED))).replace("- ", "-")
     for expected in (
         "Dice 0.60",
         "CLASS-SENTINEL",

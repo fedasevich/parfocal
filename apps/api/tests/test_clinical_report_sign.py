@@ -178,31 +178,71 @@ def test_the_signed_version_downloads_as_a_pdf(api: ApiAs, database: str, clinic
     assert api(clinic.outsider).get(f"{clinic.url}/versions/1/pdf").status_code == 403
 
 
-def test_the_pdf_facts_leave_out_an_empty_microscopic_description_and_comment() -> None:
-    from datetime import UTC, datetime
+def test_the_pdf_carries_the_preview_sections_labels_and_values(
+    api: ApiAs, database: str, clinic: Clinic
+) -> None:
+    created(api, clinic)
+    deposit(api, clinic, slide_id=str(clinic.first), size_mm=2.5)
+    fill(api, clinic, extranodal="na", comment="Reviewed with the frozen section")
+    assert api(clinic.lead).post(f"{clinic.url}/sign").status_code == 200
+    response = api(clinic.lead).get(f"{clinic.url}/versions/1/pdf")
+    assert response.status_code == 200, response.text
+    text = pages_of(response.content)
+    workspace = owner(database, f"SELECT name FROM tenants WHERE id = '{clinic.lead.tenant_id}'")
+    for expected in (
+        str(workspace[0][0]),
+        "SURGICAL PATHOLOGY REPORT",
+        "Final report, version 1",
+        "Accession",
+        "Reported",
+        "SPECIMEN",
+        "Sentinel node, left axilla",
+        "FINAL DIAGNOSIS",
+        "SYNOPTIC REPORT · SURGICALLY REMOVED LYMPH NODES FOR BREAST TUMORS",
+        "ICCR Surgically removed lymph nodes for breast tumours",
+        "CAP Synoptic format",
+        "TNM UICC and AJCC 8th edition",
+        "Total number of sentinel lymph nodes examined: 2",
+        "Number of lymph nodes with metastatic carcinoma: 1",
+        "Size of largest metastatic deposit: 2.5 mm",
+        "Category: Macrometastasis",
+        "Extranodal extension: Not assessed",
+        "Regional lymph nodes, pN (UICC and AJCC TNM 8): pN1a(sn)",
+        "AI-assisted analysis:",
+        "COMMENT",
+        "Reviewed with the frozen section",
+        "Electronically signed by lead",
+        "I have reviewed the whole-slide images and rendered this diagnosis.",
+        "Page 1 of 1",
+    ):
+        assert expected in text, expected
+    for raw in (": na", "Not stated", "Clinical report", "Suggested pN", "macro "):
+        assert raw not in text, raw
 
-    from parfocal_api.clinical_report_pdf import facts_of
 
-    values: dict[str, object] = {
-        "specimen": "Node",
-        "category": None,
-        "nodes_examined": None,
-        "extranodal": None,
-        "diagnosis": "Negative",
-        "microscopic": " ",
-        "comment": "Seen twice",
-        "deposits": [],
-    }
-    facts = facts_of(
-        "S1",
-        "Template",
-        1,
-        {"values": values, "staging": None},
-        "Lead",
-        datetime.now(UTC),
-        None,
-        None,
+def test_an_amended_version_prints_as_the_amended_report(
+    api: ApiAs, database: str, clinic: Clinic
+) -> None:
+    ready(api, clinic)
+    assert api(clinic.lead).post(f"{clinic.url}/sign").status_code == 200
+    amended = api(clinic.lead).post(
+        f"{clinic.url}/amendments",
+        json={
+            "reason": "Corrected the diagnosis wording",
+            "change": {"diagnosis": "Metastatic carcinoma, one of two nodes, revised"},
+        },
     )
-    labels = [label for label, _ in facts["rows"]]
-    assert "Microscopic description" not in labels
-    assert "Comment" in labels
+    assert amended.status_code == 200, amended.text
+    text = pages_of(api(clinic.lead).get(f"{clinic.url}/versions/2/pdf").content)
+    for expected in (
+        "AMENDED REPORT",
+        "Version 2, replaces version 1",
+        "Reason: Corrected the diagnosis wording",
+        "Final diagnosis: rewritten",
+        "stays readable in Parfocal",
+        "signed again",
+    ):
+        assert expected in text, expected
+    first = pages_of(api(clinic.lead).get(f"{clinic.url}/versions/1/pdf").content)
+    assert "Metastatic carcinoma in one of two nodes" in first
+    assert "AMENDED REPORT" not in first

@@ -139,7 +139,7 @@ def test_co_signing_names_both_people(api: ApiAs, database: str, clinic: Clinic)
     text = " ".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf.content)).pages)
     text = " ".join(text.split())
     signer, reporter = name_of(database, clinic.lead), name_of(database, clinic.junior)
-    assert f"by {signer}, reported by {reporter}" in text
+    assert f"Reported by {reporter}, verified and signed by {signer}" in text
     assert "Cohesive tumour cells" in text
     details = owner(
         database,
