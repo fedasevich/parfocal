@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-26
 
+- PROTO-197: a Display tab slider change also sets the person's object opacity, the one Settings, Display, Object opacity sets on this device, and the plain viewer, review, guided review and Annotate read it, with Annotate AI outlines fading too and a selected one never below 50%. An old opacity saved on a task's display still wins in that task, and the setting is per device, not per account.
 - Added PROTO-197 (object opacity follows the person into every view), PROTO-198 (comment on annotate task AI objects and plain viewer cells, with stable region names), PROTO-199 (the top bar's progress ring leaves the slide picker free on narrow windows) and EXP-023 (a remote study participant holds a study only role) from tonight's hand-backs and the first walkthrough pass.
 - Production touch: release v0.61.1 (the PROTO-193 and PROTO-182 deployed fixes) deployed by run 45749007399, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
 - Production touch: release v0.61.0 (PROTO-189 part two, the first CI fixes and the regenerated catalogs) deployed by run 45748023598, whose deploy and browser smoke reviews the lead approved under the owner's 2026-11-25 order.
