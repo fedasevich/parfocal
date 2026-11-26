@@ -2,6 +2,23 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.64.0 (2026-11-26)
+
+### Features
+
+- EXP-023: Seat join link participants with a study only role
+- EXP-023: Close model runs, settings and three outside routes to study participants
+
+### Fixes
+
+- EXP-023: Keep the formatter off the generated permission matrix
+
+### Docs
+
+- EXP-023: Number the ADR from the merge
+- EXP-023: Log and tick after merge
+- PROTO-198: Log the v0.63.0 deploy
+
 ## v0.63.0 (2026-11-26)
 
 ### Features
