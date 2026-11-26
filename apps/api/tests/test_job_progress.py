@@ -235,6 +235,16 @@ def annotate_task(api: ApiAs, lab: Lab, slide: uuid.UUID) -> str:
     )["id"]
 
 
+def store_found_cells(database: str, set_id: str, cells: int) -> None:
+    owner(
+        database,
+        "INSERT INTO result_chunks (tenant_id, result_set_id, chunk, x, y, width, height, "
+        "cell_count, vertex_count, object_key) "
+        f"SELECT tenant_id, id, 0, 0, 0, {TILE * 2}, {TILE}, {cells}, {cells * 4}, 'run/0' "
+        f"FROM result_sets WHERE id = '{set_id}'",
+    )
+
+
 def test_a_finished_run_seals_its_result_set_and_an_annotate_task_takes_it(
     api: ApiAs, database: str, lab: Lab
 ) -> None:
@@ -248,11 +258,14 @@ def test_a_finished_run_seals_its_result_set_and_an_annotate_task_takes_it(
     assert early.status_code >= 400, early.text
     status = f"SELECT status FROM result_sets WHERE id = '{set_id}'"
     assert owner(database, status) == [("importing",)]
+    store_found_cells(database, set_id, sum(area(unit).objects for unit in range(2)))
 
     execute(database, claim(database, lab, tiled_plan(2)))
 
     assert ok(read(api, lab, run))["status"] == "done"
     assert owner(database, status) == [("ready",)]
+    sealed = f"SELECT cell_count FROM result_sets WHERE id = '{set_id}'"
+    assert owner(database, sealed) == [(3,)]
     joined = ok(client.post(join, json={"result_set_id": set_id}))
     assert joined["result_set_id"] == set_id
     assert joined["run_set_ids"] == []

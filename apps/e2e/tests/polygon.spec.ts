@@ -23,6 +23,11 @@ test("a researcher draws a polygon on a live slide, reloads, and PostGIS holds t
       `file_bytes = ${statSync(fixture).size} ` +
       `WHERE project_id = '${projectId}' AND label = 'test_065' RETURNING id`,
   ).split("\n")[0];
+  const firstFreeRegion = sql(
+    `SELECT coalesce(max(result_objects.number), 0) + 1 FROM result_objects ` +
+      `JOIN result_sets ON result_sets.id = result_objects.result_set_id ` +
+      `WHERE result_sets.slide_id = '${slideId}' AND result_objects.kind = 'region'`,
+  );
 
   await page.goto(`/projects/${projectId}/slides/${slideId}/live`);
   const stage = page.getByTestId("slide-stage");
@@ -49,7 +54,13 @@ test("a researcher draws a polygon on a live slide, reloads, and PostGIS holds t
       `|| '|' || ST_SRID(geometry) FROM annotations ` +
       `WHERE slide_id = '${slideId}' AND tenant_id = '${researcher.tenantId}'`,
   ).split("|");
-  expect([kind, number, type, points, srid]).toEqual(["region", "1", "POLYGON", "5", "0"]);
+  expect([kind, number, type, points, srid]).toEqual([
+    "region",
+    firstFreeRegion,
+    "POLYGON",
+    "5",
+    "0",
+  ]);
   const stored = sql(
     `SELECT string_agg(round(ST_X(point.geom))::int || ' ' || round(ST_Y(point.geom))::int, ' ' ` +
       `ORDER BY point.path) FROM annotations, ST_DumpPoints(ST_ExteriorRing(geometry)) AS point ` +

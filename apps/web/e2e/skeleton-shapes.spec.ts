@@ -53,9 +53,9 @@ const firstZoneOfMain = (loadedFirst: string, edges: Edge[] = ["left", "width"])
   edges,
 });
 
-const formZone = (heading: string): Part => ({
+const formZone = (heading: string, loading: string): Part => ({
   name: `the ${heading} zone`,
-  skeleton: '[data-slot="skeleton-form-zone"]',
+  skeleton: `[data-slot="skeleton-form-zone"]:has(.sr-only:text-is("${loading}"))`,
   loaded: `[data-slot="zone"]:has(h3:text-is("${heading}"))`,
   edges: ["left", "top", "width"],
 });
@@ -137,7 +137,7 @@ const shapes: Shape[] = [
     hold: "/api/tenant/retention",
     waiting: '[data-slot="skeleton-form-zone"]',
     settled: '[data-slot="zone"]:has(h3:text-is("Retention"))',
-    parts: [formZone("Retention")],
+    parts: [formZone("Retention", "Loading retention")],
   },
   {
     name: "the logo and joining form",
@@ -145,7 +145,7 @@ const shapes: Shape[] = [
     hold: "/api/tenant/join-settings",
     waiting: '[data-slot="skeleton-form-zone"]',
     settled: '[data-slot="zone"]:has(h3:text-is("Logo and joining"))',
-    parts: [formZone("Logo and joining")],
+    parts: [formZone("Logo and joining", "Loading join settings")],
   },
   {
     name: "the security contact form",
@@ -153,7 +153,7 @@ const shapes: Shape[] = [
     hold: "/api/tenant/security-contact",
     waiting: '[data-slot="skeleton-form-zone"]',
     settled: '[data-slot="zone"]:has(h3:text-is("Security contact"))',
-    parts: [formZone("Security contact")],
+    parts: [formZone("Security contact", "Loading the security contact")],
   },
   {
     name: "the admin models section",
@@ -327,7 +327,8 @@ test("the project page header and the home grid hold their place while data load
   await expect(page.locator(skeletonGrid)).toBeVisible();
   const homeBefore = (await boxOf(page, skeletonGrid)) as Box;
   await releaseApi(page);
-  const loadedGrid = 'main > div[class*="grid-cols-[minmax(0,1fr)_320px]"]';
+  const loadedGrid =
+    'main > div[class*="grid-cols-[minmax(0,1fr)_320px]"]:not([data-testid="home-skeleton"])';
   await expect(page.locator(loadedGrid).first()).toBeVisible();
   const homeAfter = (await boxOf(page, loadedGrid)) as Box;
   for (const edge of ["left", "width"] as const) {
