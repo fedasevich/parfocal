@@ -2,6 +2,26 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.69.0 (2026-11-28)
+
+### Features
+
+- PROTO-210: Cmd+Z takes back live Smart select clicks, Redo puts them back
+
+### Fixes
+
+- PROTO-210: One Cmd+Z removes a Smart select accepted shape, typing folds into the accept
+
+### Docs
+
+- PROTO-210: Log and move to review after merge
+- PROTO-211: Log the v0.68.2 deploy
+- PROTO-219: Record the deployed check of every report PDF on v0.68.1
+- PROTO-219: State the observed release, the edited draft and the co-sign gate
+- PROTO-219: Record the co-sign screen's PDF in the deployed check
+- PROTO-219: Tick every report PDF after the deployed check
+- PROTO-211: Log the reseed with tissue masks
+
 ## v0.68.2 (2026-11-28)
 
 ### Fixes
