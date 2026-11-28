@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-26
-note: second walkthrough: the PDF shows the reported time in UTC (21:17) where the preview shows local time (22:17)
+note: deployed check: the Showcase case PDF matches its preview in time and layout
