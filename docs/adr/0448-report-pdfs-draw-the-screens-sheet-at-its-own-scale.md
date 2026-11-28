@@ -21,7 +21,8 @@ ADR 0443 gave every report PDF one Typst layout with the clinical report's numbe
 Option 3.
 
 - `parfocal_api.evaluation_paper` is a port of `ReportPage` and its helpers in `numbers.ts`, `appendix.ts` and `counts-as-rule.ts`. `evaluation_paper_inputs` gathers `getEvaluationReport`, `getTaskEvaluation`, `getDisagreementQueue`, `getReviewTask` and member names, exactly what the screen reads.
-- `paper_layout.typ` draws the paper model with one unit, `px`, equal to 595.28 / 620 pt, so every Tailwind number of `packages/ui/src/components/evaluation-report.tsx` is written as it is in the class string. CSS borders take space, so the Typst blocks add the border to their inset. Text gets the tracking Chrome on a Mac at device scale 2 was measured to add to Plex Sans, 0.38 px below 15 px and 0.18 px at 15 px.
+- `paper_layout.typ` draws the paper model with one unit, `px`, equal to 595.28 / 620 pt, so every Tailwind number of `packages/ui/src/components/evaluation-report.tsx` is written as it is in the class string. CSS borders take space, so the Typst blocks add the border to their inset. Text gets no added tracking. The 0.38 px first measured was the system font, which Chrome keeps under `font-display: optional`. With Plex drawn, Typst's widths match Chrome's ([result](../results/2026-11-28-every-report-pdf-against-its-screen.md)).
+- The template samples follow the same rule with their own screen: `parfocal_api.template_sample` ports `ReportPages` of `packages/ui/src/components/report-editor-pages.tsx` and `sample_layout.typ` draws it at that sheet's scale, one px being the page width over 520.
 - `packages/test-fixtures/evaluation-report-screen.json` holds the props and the DOM text of the fake RT-14 report. A test renders the PDF from those props and finds every screen text in order with nothing left over but the checksum footer line, and a second test reads the class strings back from the component.
 - The PDF link and the preview send `?zone=`, as ADR 0447 (report PDFs print the reader's time zone) set for the clinical report.
 
@@ -29,4 +30,4 @@ Option 3.
 
 - A change to `ReportPage` text needs the same change in `evaluation_paper`, and the fixture is captured again from the fake API. A changed class number fails `test_the_layout_numbers_are_the_report_sheet_classes`.
 - The PDF follows the screen's English labels. The old `label_language` and locale switches of `ReportData` no longer reach the evaluation PDF, because the screen does not have them either.
-- The template samples and the annotate report still use `ReportData` until they get the same treatment.
+- The annotate task report still uses `ReportData`, because no screen shows an annotate task's report.

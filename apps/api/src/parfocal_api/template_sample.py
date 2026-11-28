@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 from parfocal_api.evaluation_paper import fixed
 from parfocal_api.locales import DEFAULT_LOCALE, Locale
-from parfocal_api.report_style import FONT_ASCENT, FONT_DESCENT, PAPER_TRACKING
+from parfocal_api.report_style import FONT_ASCENT, FONT_DESCENT
 from parfocal_api.report_template import RenderedReport
 from parfocal_common.report_blocks import ReportBlock, ReportFormat
 from parfocal_common.report_layout import ReportPage
@@ -300,7 +300,6 @@ def sample_layout(paper: SamplePaper) -> str:
     height_px = round(SHEET_WIDTH_PX * paper.height_pt / paper.width_pt, 3)
     return (
         SHEET_TEMPLATE.read_text()
-        .replace("SHEET_TRACKING", str(PAPER_TRACKING))
         .replace("SHEET_PX", str(sheet_px(paper)))
         .replace("SHEET_TOP_EDGE", str(round(half_leading + FONT_ASCENT, 4)))
         .replace("SHEET_BOTTOM_EDGE", str(round(half_leading + FONT_DESCENT, 4)))

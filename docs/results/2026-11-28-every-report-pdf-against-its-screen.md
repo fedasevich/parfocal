@@ -17,6 +17,7 @@ Does each report PDF show what its on-screen report shows, with the same section
 2. The props became the fixture. The "before" PDF is what `render_report` drew at commit 046b8846 from the same evaluation, blocks and format. The "after" PDF is what `paper_of` and `paper_layout.typ` draw from the fixture.
 3. Both PDFs were drawn to PNG at 144 × 620 / 595.28 ppi, so one sheet pixel of the screen is one PDF pixel, and compared with `compareFrames` from `@parfocal/golden-images` at the `shot` tolerance (channel delta 24). A second count looks only at ink, the pixels that are dark in either image.
 4. pypdf read the text of each PDF, and its baselines were set against the screen's, taken as the text box top plus 1.025 times the font size.
+5. The second half found that a reload does not make the screen draw Plex. The app loads its faces with `font-display: optional`, so on the dev server Chrome keeps the system font for the page even when the faces report `loaded`: the synoptic label "Total number of sentinel lymph nodes examined:" measured 253.7 px, the system font's width, not Plex's 240.2 px. Every capture of the second half therefore re-adds the page's own `@font-face` rules with `font-display: block` and waits for them, as the PROTO-171 result did, and the evaluation sheets were captured again the same way. Numbers marked "re-measured" are against those Plex captures.
 
 ## Results
 
@@ -54,10 +55,16 @@ What differed before: a running header on page 1, "Signed off 15/10/2026" in ano
 | Differing ink pixels, page 2 | 99.5% | 90.8% |
 | Differing ink pixels, page 3 | 99.8% | 89.6% |
 | Text baselines more than 0.6 px from the screen's, after | | 5 of 177 |
+| Re-measured against Plex, differing pixels, pages 1 to 3, with the 0.38 px tracking | | 9.23%, 3.42%, 1.81% |
+| Re-measured against Plex, differing pixels, pages 1 to 3, without tracking | | 2.30%, 2.22%, 1.17% |
+| Re-measured against Plex, differing ink, pages 1 to 3, with the 0.38 px tracking | | 95.5%, 88.0%, 80.4% |
+| Re-measured against Plex, differing ink, pages 1 to 3, without tracking | | 41.3%, 64.0%, 43.2% |
 
 The one text not found as a whole is the change row, which the screen splits into five DOM nodes. The test finds every screen text in order with nothing left over but the checksum line.
 
 The baselines that still differ are the four matrix column names, 2.5 px low, and the change line on the right of the letterhead, 0.4 px. Page 1 lost more than half its differing ink when the letterhead rule, the facts rule and the tile borders were made to take space as CSS borders do. Most of what remains is glyph placement along a line. Chrome on this Mac draws Plex Sans about 0.38 px wider per character at 7.5 to 11 px and 0.18 px at 15 px than Typst does, measured over 60 strings, so the layout adds that as tracking. Without it the lab name and the letterhead lines did not wrap where the screen wraps them. Small offsets of a glyph along a line fail most ink pixels even when the text sits where the screen puts it, which is why pages 2 and 3, mostly tables, still show about 90%.
+
+Re-measured: the 0.38 px was the system font, not Plex. With Plex drawn, Typst's Plex Sans widths match Chrome's with no tracking, a mean error of -0.02 px over 87 strings of the template editor and at most 0.85 px, while 0.38 px of tracking makes them 3.35 px too wide on average and up to 23 px. The tracking is now 0, which halves the differing ink on every page, and all 177 screen texts are still found in order.
 
 ### Study template samples (`previewStudyTemplate`, `downloadStudyTemplatePreview`, `previewSavedStudyTemplate`, `downloadSavedStudyTemplatePreview`)
 
@@ -69,22 +76,37 @@ What differed before: the samples printed the evaluation layout of `ReportData` 
 |---|---|---|
 | Editor texts found in the PDF text, of 142 | 50 | 142 |
 | Pages | 5 | 3 |
-| Differing pixels, page 1 | 7.76% | 3.57% |
-| Differing pixels, page 2 | 11.73% | 3.50% |
-| Differing pixels, page 3 | 0.95% | 0.91% |
-| Differing ink pixels, page 1 | 98.2% | 70.7% |
-| Differing ink pixels, page 2 | 99.7% | 83.0% |
-| Differing ink pixels, page 3 | 98.8% | 83.3% |
-| Text baselines more than 0.6 px from the editor's, after | | 0 of 142 |
+| Differing pixels, page 1 | 7.68% | 2.57% |
+| Differing pixels, page 2 | 11.69% | 2.61% |
+| Differing pixels, page 3 | 0.92% | 0.83% |
+| Differing ink pixels, page 1 | 98.0% | 50.1% |
+| Differing ink pixels, page 2 | 99.6% | 59.8% |
+| Differing ink pixels, page 3 | 99.1% | 77.3% |
+| Text baselines more than 0.7 px from the editor's, after | | 0 of 142 |
+| Text starts more than 1 px from the editor's along the line, after | | 0 of 142 |
 
-The samples are now drawn by `parfocal_api.template_sample`, a port of `ReportPages`, `SampleBody`, `filled`, `sampleValue` and `paginate`, with `sample_layout.typ` at the editor sheet's scale, one px being the page width over 520. The test finds every editor text in order with nothing left over but the "DRAFT" watermark, which the editor draws as a CSS `::after` and so has no DOM text. The checksum line is gone from the samples, because the editor shows none. Table columns still start up to 4.5 px from the editor's, because Typst measures Plex Sans semibold narrower and regular wider than Chrome does at 9 px, and the table splits its width in proportion to those measures as the browser does. "Cohen's κ" falls back to Libertinus Serif for the κ, as in the evaluation PDF, because the shipped Plex Sans files carry Latin only.
+The samples are now drawn by `parfocal_api.template_sample`, a port of `ReportPages`, `SampleBody`, `filled`, `sampleValue` and `paginate`, with `sample_layout.typ` at the editor sheet's scale, one px being the page width over 520. The test finds every editor text in order with nothing left over but the "DRAFT" watermark, which the editor draws as a CSS `::after` and so has no DOM text. The checksum line is gone from the samples, because the editor shows none. Table columns split their width in proportion to each column's widest text plus its padding, as the browser's automatic table layout does, and start within 0.92 px of the editor's. "Cohen's κ" falls back to Libertinus Serif for the κ, as in the evaluation PDF, because the shipped Plex Sans files carry Latin only.
+
+### Clinical case report (`downloadCaseReportPdf`, from `report-screen.tsx` and `cosign-screen.tsx`)
+
+Re-measured on the signed scene of the Showcase sentinel node case S26-04812 with Plex drawn: the `model` prop of `ReportDocument` and the text of `[data-slot="report-document"]` were saved as `packages/test-fixtures/clinical-report-screen.json`, with the section headings in capitals as the CSS `uppercase` shows them, and `clinical_document.pdf_of` drew the PDF from that model. The co-sign screen shows a review form, not the report sheet, and its "Download PDF" fetches the same version 1 PDF through the same endpoint, so the signed report sheet is its screen too.
+
+| Measure | Now |
+|---|---|
+| Screen texts found in order in the PDF text, of 57 | 57, nothing extra |
+| Differing pixels, the 1494 px rows both images have | 5.76% |
+| Differing ink pixels, same rows | 69.1% |
+| Text baselines more than 0.7 px from the screen's | 1, "Page 1 of 1" |
+| Text starts more than 0.6 px from the screen's along the line | 0 |
+
+Nothing needed fixing. The one moved text is the page line, which the screen prints at the foot of a sheet 746 px tall and the PDF at the foot of the A4 page, as the PROTO-171 result recorded. Against a capture in the system font, as a plain reload gives, the same PDF differed in 8.88% of pixels and 91.8% of ink, and the long synoptic labels wrapped on screen but not in the PDF, which is what a reader whose browser kept the system font sees.
 
 ## Interpretation
 
 - The evaluation PDF is now drawn from the same payloads the screen uses (`getEvaluationReport`, `getTaskEvaluation`, `getDisagreementQueue`, `getReviewTask` and member names), through a Python port of `ReportPage` in `apps/web/src/screens/evaluation/report-pages.tsx`, and laid out at the sheet's own scale: 620 CSS px across an A4 page, 10 px text at line height 1.4.
 - The checksum is kept as one footer line under the page footer, the only text the screen does not show.
 - Dates follow the reader's zone through `?zone=`, as the clinical report does since ADR 0447 (report PDFs print the reader's time zone).
-- The tracking is an assumption about the reader's browser. On a screen at device scale 1 or on another platform Chrome may draw Plex narrower, and the PDF would then look slightly wider spaced than that screen.
+- The report PDFs draw Plex with no added tracking, which is what Chrome draws once Plex is in use. A reader whose browser kept the system font under `font-display: optional` sees a wider screen than the PDF. That is a property of the screen's font loading, not of the PDFs.
 
 ## Follow-ups
 

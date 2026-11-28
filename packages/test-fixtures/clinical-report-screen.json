@@ -1,0 +1,116 @@
+{
+  "about": "The model ReportDocument drew for the signed Showcase sentinel node case S26-04812 at report?scene=signed on the fake API, with IBM Plex Sans drawn, and the text of the sheet in DOM order as CSS shows it. Synthetic data, no PHI.",
+  "version": 1,
+  "signed_at": "2026-10-15T09:42:00+00:00",
+  "model": {
+    "status": "final",
+    "lab": {
+      "name": "Fakultní nemocnice Vltava",
+      "department": "",
+      "address": "",
+      "footer": ""
+    },
+    "head": [
+      ["Accession", "S26-04812"],
+      ["Received", "14 Oct"],
+      ["Reported", "15 Oct 2026, 11:42"]
+    ],
+    "sections": [
+      {
+        "title": "Specimen",
+        "body": "Sentinel lymph nodes #1 and #2, left axilla, excision"
+      },
+      {
+        "title": "Final diagnosis",
+        "body": "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).",
+        "diagnosis": true
+      }
+    ],
+    "synopticTitle": "Synoptic report · Surgically removed lymph nodes for breast tumors",
+    "standards": [
+      ["ICCR", "Surgically removed lymph nodes for breast tumours, 1st ed. v1.2"],
+      ["CAP", "Synoptic format and element names, Breast Invasive Resection 4.11"],
+      ["TNM", "UICC and AJCC 8th edition, pN with (sn) and (i+)"]
+    ],
+    "rows": [
+      ["Total number of sentinel lymph nodes examined", "2"],
+      ["Number of lymph nodes with metastatic carcinoma", "1"],
+      ["Number of metastatic deposits", "3"],
+      ["Deposit D1", "8.0 mm, node 1, slide A1 · H&E, object T1"],
+      ["Deposit D2", "6.4 mm, node 1, slide A1 · H&E, object T2"],
+      ["Deposit D3", "1.3 mm, node 1, slide A1 · H&E, object T3"],
+      ["Size of largest metastatic deposit", "8.0 mm"],
+      ["Category", "Macrometastasis"],
+      ["Extranodal extension", "Absent"],
+      ["Regional lymph nodes, pN (UICC and AJCC TNM 8)", "pN1a(sn)"],
+      [
+        "AI-assisted analysis",
+        "The AI model flagged 5 regions. The pathologist confirmed 4 and rejected 1."
+      ]
+    ],
+    "after": [],
+    "sign": {
+      "by": "Electronically signed by Lenka Malá",
+      "at": "15 October 2026 at 11:42"
+    }
+  },
+  "screen": [
+    "Fakultní nemocnice Vltava",
+    "SURGICAL PATHOLOGY REPORT",
+    "Final report, version 1",
+    "Accession",
+    "S26-04812",
+    "Received",
+    "14 Oct",
+    "Reported",
+    "15 Oct 2026, 11:42",
+    "SPECIMEN",
+    "Sentinel lymph nodes #1 and #2, left axilla, excision",
+    "FINAL DIAGNOSIS",
+    "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).",
+    "SYNOPTIC REPORT · SURGICALLY REMOVED LYMPH NODES FOR BREAST TUMORS",
+    "ICCR",
+    "Surgically removed lymph nodes for breast tumours, 1st ed. v1.2",
+    "CAP",
+    "Synoptic format and element names, Breast Invasive Resection 4.11",
+    "TNM",
+    "UICC and AJCC 8th edition, pN with (sn) and (i+)",
+    "Total number of sentinel lymph nodes examined",
+    ":",
+    "2",
+    "Number of lymph nodes with metastatic carcinoma",
+    ":",
+    "1",
+    "Number of metastatic deposits",
+    ":",
+    "3",
+    "Deposit D1",
+    ":",
+    "8.0 mm, node 1, slide A1 · H&E, object T1",
+    "Deposit D2",
+    ":",
+    "6.4 mm, node 1, slide A1 · H&E, object T2",
+    "Deposit D3",
+    ":",
+    "1.3 mm, node 1, slide A1 · H&E, object T3",
+    "Size of largest metastatic deposit",
+    ":",
+    "8.0 mm",
+    "Category",
+    ":",
+    "Macrometastasis",
+    "Extranodal extension",
+    ":",
+    "Absent",
+    "Regional lymph nodes, pN (UICC and AJCC TNM 8)",
+    ":",
+    "pN1a(sn)",
+    "AI-assisted analysis",
+    ":",
+    "The AI model flagged 5 regions. The pathologist confirmed 4 and rejected 1.",
+    "Electronically signed by Lenka Malá",
+    "on 15 October 2026 at 11:42",
+    "I have reviewed the whole-slide images and rendered this diagnosis.",
+    "Page 1 of 1"
+  ]
+}

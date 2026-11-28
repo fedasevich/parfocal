@@ -4,7 +4,7 @@
 #let ink = rgb("#111111")
 #let dim-ink = rgb("#555555")
 #set text(font: "IBM Plex Sans", size: em * px, fill: ink, fallback: true,
-  top-edge: SHEET_TOP_EDGEem, bottom-edge: -SHEET_BOTTOM_EDGEem, tracking: SHEET_TRACKING * px)
+  top-edge: SHEET_TOP_EDGEem, bottom-edge: -SHEET_BOTTOM_EDGEem)
 #set par(leading: 0pt, spacing: 0pt, justify: false)
 #set block(spacing: 0pt)
 #let sized(size, body, fill: auto, weight: "regular") = text(size: size * px,
