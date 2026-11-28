@@ -22,6 +22,7 @@ All are set by the web app for features the user uses, hold no name or contact d
 | Key | Storage | What it holds | Why it is needed |
 |---|---|---|---|
 | `parfocal.device-settings` | localStorage | The device layer of the settings, such as the theme (system, light or dark) | Keeps the settings that belong to this device |
+| `parfocal.device-legend-fold` | localStorage | Whether the input help card on the Display tab is open, collapsed or hidden | Keeps the person's choice about the input help |
 | `parfocal-theme` | localStorage | The theme from before the device layer | Read once, moved into `parfocal.device-settings` and removed |
 | `parfocal-developer-mode` | localStorage | On or absent | Keeps developer mode on for people who turned it on |
 | `parfocal-developer-drawer` | sessionStorage | The open drawer section, or absent | Keeps the developer drawer open over the viewer in this tab until the researcher closes it |

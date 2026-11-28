@@ -169,11 +169,21 @@ test("a list of 5000 cells scrolls without a long frame", async ({ page }) => {
       },
     });
   });
-  const scroller = await tree(page).boundingBox();
-  if (scroller === null) throw new Error("the tree is not on screen");
+  const scroller = await page.getByTestId("stage-inspector").boundingBox();
+  if (scroller === null) throw new Error("the panel is not on screen");
   await page.mouse.move(scroller.x + scroller.width / 2, scroller.y + scroller.height / 2);
   for (let step = 0; step < 40; step++) await page.mouse.wheel(0, 600);
-  await expect.poll(() => tree(page).evaluate((node) => node.scrollTop)).toBeGreaterThan(20_000);
+  await expect
+    .poll(() =>
+      tree(page).evaluate((node) => {
+        for (let up = node.parentElement; up !== null; up = up.parentElement) {
+          const { overflowY } = window.getComputedStyle(up);
+          if (overflowY === "auto" || overflowY === "scroll") return up.scrollTop;
+        }
+        return node.scrollTop;
+      }),
+    )
+    .toBeGreaterThan(20_000);
   await expect(tree(page).locator("li").last()).toBeVisible();
   const watch = await page.evaluate(() =>
     (

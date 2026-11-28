@@ -116,7 +116,7 @@ export function LayersPanel({
       data-testid="layers-panel"
       data-overlays={off ? "hidden" : "shown"}
       data-target={effective ?? ""}
-      className="grid max-h-[46vh] gap-2 overflow-auto rounded-ctl border border-line bg-chrome p-2"
+      className="grid gap-2 rounded-ctl border border-line bg-chrome p-2"
     >
       {resultSets ? (
         <div data-testid="layers-result-sets" className="grid gap-1.5">
