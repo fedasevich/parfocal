@@ -1,0 +1,66 @@
+name: tmp-test-061
+
+on:
+  push:
+    branches: ["ci-repair-3-bench*"]
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  bench:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sha: 708a71ea35cb66354e2fcbb0664e08f4ebe3ef98
+          - sha: 8da300b88e145d46b602be9669a1c6b6477cd261
+          - sha: 8270a9c19b2d9493b86d1c56b83f67bc2802c4f5
+          - sha: cb754112c8e1e3d698311012a9fe45310669ddcc
+          - sha: 9458c27588949d819ea04266ecee6ddce9918575
+          - sha: e106422cc79ed6875dfc572ef7255fd0eddee8de
+          - sha: 39b1145803312999edc8ce55ee836b2cf95bce0e
+          - sha: d48058e37ae1ec90e09b63ed4ad308e6c2c9d726
+          - sha: 7b9014b05506d74440832d643923ce04d19745ac
+          - sha: 9c5398525434472799ce4befb432698501b7db3f
+          - sha: 3167db5baddb2067fa4bcc790ae00a481590460e
+          - sha: 728a11f846c96b9556688d0754b4b0a3a50df1f8
+          - sha: 728a11f846c96b9556688d0754b4b0a3a50df1f8
+            patch: nocap
+    name: bench ${{ matrix.sha }} ${{ matrix.patch }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.sha }}
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: browser-web
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small viewer)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-browser-${{ steps.fixtures.outputs.key }}
+      - run: pnpm fixtures small viewer
+        env:
+          PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.eu.r2.cloudflarestorage.com
+          PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_ACCESS_KEY_ID }}
+          PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_SECRET_ACCESS_KEY }}
+      - run: |
+          nproc
+          grep -m1 'model name' /proc/cpuinfo
+          google-chrome --version
+      - if: ${{ matrix.patch == 'nocap' }}
+        run: sed -i 's/void engine.flyToArea(area, guidedZoomLimit);/void engine.flyToArea(area);/' apps/web/src/viewer/guided-check.tsx
+      - working-directory: apps/web
+        run: |
+          pnpm exec playwright test e2e/decision-next-object.spec.ts --grep @budget --workers=1 --reporter=list || true
+          pnpm exec playwright test e2e/decision-next-object.spec.ts --grep @budget --workers=1 --reporter=list || true
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          PARFOCAL_MAIN_PATH_ROUNDS: "6"
