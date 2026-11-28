@@ -11,7 +11,15 @@ import {
   useListSlideResultSets,
 } from "@parfocal/api-client";
 import { Switch } from "@parfocal/ui/components/switch";
-import { type RefObject, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { clickSlopScreenPixels } from "../annotations/click-press.ts";
 import { slideAt } from "../annotations/stage-pointer.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -19,6 +27,7 @@ import { shownSetsOf, taskDisplayView } from "../screens/review/display-model.ts
 import { useDisplayChoice } from "../screens/review/use-display-choice.ts";
 import { useMyDisplay } from "../screens/review/use-my-display.ts";
 import { useDisplayDefaults } from "../shell/display-defaults.ts";
+import { smallestJudgedPx } from "./calm-camera.ts";
 import { type CellComments, useCellCommentObjects } from "./cell-comment-objects.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
 import { cellNumberOf } from "./focus-object.ts";
@@ -98,11 +107,25 @@ function usePagedCells(setId: string) {
   return { paged, version };
 }
 
+function useCellsBigEnough(engine: ViewerEngine, paged: PagedCells | null, gated: boolean) {
+  const cellSize = useMemo(() => {
+    if (paged === null || !gated) return 0;
+    const sizes = Array.from(paged.summary.diagonal).sort((a, b) => a - b);
+    return (sizes[Math.floor(sizes.length / 2)] ?? 0) / Math.SQRT2;
+  }, [paged, gated]);
+  const big = useCallback(
+    () => cellSize > 0 && cellSize * 2 ** engine.getCamera().zoom >= smallestJudgedPx,
+    [engine, cellSize],
+  );
+  return useSyncExternalStore(engine.subscribeCamera, big);
+}
+
 function SetCells({
   engine,
   module,
   set,
-  outlines,
+  outlines: outlinesWanted,
+  zoomGated,
   paints,
   retype,
   focus,
@@ -112,12 +135,15 @@ function SetCells({
   module: ViewerModule;
   set: ResultSet;
   outlines: boolean;
+  zoomGated: boolean;
   paints: readonly ClassPaint[];
   retype: CellRetype | null;
   focus: CellFocus | null;
   comments: CellComments | undefined;
 }) {
   const { paged, version } = usePagedCells(set.id);
+  const bigEnough = useCellsBigEnough(engine, paged, zoomGated);
+  const outlines = outlinesWanted || (zoomGated && bigEnough);
   const { frame, size } = useStageSize();
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const drawing = useMemo(
@@ -441,6 +467,7 @@ function ResultSetLayer({
           module={module}
           set={set}
           outlines={!inTask || taskSet}
+          zoomGated={inTask && !taskSet}
           paints={paints}
           retype={retype}
           focus={focus}
