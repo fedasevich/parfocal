@@ -1,3 +1,3 @@
-status: in-progress
+status: review
 since: 2026-11-28
-note: deployed: the screens must show the no-scale reason and explain the start minute
+note: deployed check: the no-scale reason and the GPU start minutes show on both screens

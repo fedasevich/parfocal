@@ -1,3 +1,3 @@
-status: in-progress
+status: review
 since: 2026-11-28
-note: deployed: an undone accepted cell must not stay drawn as a proposal
+note: deployed check: one Cmd+Z after an accept leaves nothing drawn
