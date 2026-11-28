@@ -4,8 +4,11 @@ Every decision the owner has answered, newest first. Open ones are in [decisions
 
 ## Answers of 2026-11-28
 
-You wrote this in decisions.md on 2026-11-26.
+You wrote these in decisions.md on 2026-11-26 and 2026-11-28.
 
+- Decision 183 (whether new models may use non-commercial weights), option A. Non-commercial weights are accepted while Parfocal has no paying customer, each licence is recorded in the model registry, and the choice is revisited before the first paid use. PROTO-217 (tissue type and scan quality models) and PROTO-218 (a second cell typer) may go ahead.
+- Decision 184 (whether a whole slide cell run is the default or an area is), option A. Run a model defaults to the tumor areas or a drawn area and keeps the whole slide as a choice with its projected cost, built by PROTO-214 (a cell run can cover only tumor areas or a drawn area).
+- Decision 185 (whether one full whole slide nucleus run may spend about 2.40 dollars of the December budget), option A. In your words, "A, and if produces some good results put them into seed so we don't waste it". PROTO-215 (one full whole slide nucleus run measured on an L4) runs once in December and, if its cells look right, the showcase seed keeps them as a stored result set.
 - Decision 182 (whether the $5 an hour GPU cap holds per pool or for all pools together), option A. The cap stays per pool as OPS-042 (GPU pools take any GPU big enough in any region) built it, because runs start only on demand and the $30 a month Modal limit still stops the bill. Nothing changed.
 
 ## Answers of 2026-11-25

@@ -7572,7 +7572,8 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Depends on PROTO-213. Size: M.
 - [ ] PROTO-215 · One full whole slide nucleus run measured on an L4
   From Fable's 2026-11-28 model line-up for the owner's request that every best model be available in Run a model and chosen by output. No full whole slide nucleus run was ever measured. Run PathoSAM + HoVer-NeXt on all of test_001 on an L4 and record real time, GPU seconds and cost, which replace the projection of PROTO-211.
-  Done when a result file holds the measured time and cost for test_001. Needs the owner's yes in decisions.md, about 2 to 2.40 dollars.
+  The owner said yes on 2026-11-28 in decision 185 (one measured run in December) and asked that good results go into the seed so the run is not wasted: if the cells look right, store them as a fixture result set that the showcase seed imports for test_001 instead of rerunning the model.
+  Done when a result file holds the measured time and cost for test_001, and, when the cells look right, the showcase seed imports them and a seed test finds them on test_001.
   Depends on PROTO-211. Size: S.
 - [ ] PROTO-216 · InstanSeg as a fast server cell detector
   From Fable's 2026-11-28 model line-up for the owner's request that every best model be available in Run a model and chosen by output. InstanSeg scored PQ 0.439 on CryoNuSeg on the Mac (docs/results/2026-11-16-newer-nucleus-models-on-the-mac.md) and is much faster than PathoSAM, so it is the change model choice for Cell outlines when speed matters. Its rdf.yaml says Apache-2.0, but ADR 0202 (the v1 model line-up) marks its weights TODO, so re-read the licence first.
