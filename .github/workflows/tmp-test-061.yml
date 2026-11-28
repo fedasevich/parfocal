@@ -1,0 +1,63 @@
+name: tmp-test-061
+
+on:
+  push:
+    branches: ["ci-repair-3-bench*"]
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  repro:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [a, b, tour]
+    name: repro ${{ matrix.part }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: browser-web
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small viewer)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-browser-${{ steps.fixtures.outputs.key }}
+      - run: pnpm fixtures small viewer
+        env:
+          PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.eu.r2.cloudflarestorage.com
+          PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_ACCESS_KEY_ID }}
+          PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_SECRET_ACCESS_KEY }}
+      - run: nproc
+      - if: ${{ matrix.part == 'a' }}
+        working-directory: apps/web
+        run: pnpm exec playwright test e2e/issue-pages.spec.ts:92 e2e/stage-parts-overlap.spec.ts:196 e2e/stage-top-stack.spec.ts:32 e2e/pen-touch-separation.spec.ts:76 --repeat-each=12 --retries=0 --trace retain-on-failure --reporter=list || true
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          PARFOCAL_BUDGETS_APART: "1"
+      - if: ${{ matrix.part == 'b' }}
+        working-directory: apps/web
+        run: pnpm exec playwright test e2e/inspector-panel.spec.ts:98 e2e/cell-decision-ai-call.spec.ts:8 e2e/comment-mention-reach.spec.ts:110 e2e/issue-pages.spec.ts:92 e2e/stage-parts-overlap.spec.ts:196 --repeat-each=12 --retries=0 --trace retain-on-failure --reporter=list || true
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          PARFOCAL_BUDGETS_APART: "1"
+      - if: ${{ matrix.part == 'tour' }}
+        working-directory: apps/web
+        run: pnpm exec playwright test e2e/app-tour.spec.ts e2e/comment-mention-reach.spec.ts e2e/cell-decision-ai-call.spec.ts --repeat-each=2 --retries=0 --trace retain-on-failure --reporter=list || true
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          PARFOCAL_BUDGETS_APART: "1"
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: repro-${{ matrix.part }}
+          path: apps/web/test-results
+          retention-days: 3
+          if-no-files-found: ignore
