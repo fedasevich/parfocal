@@ -20,6 +20,25 @@ Does each report PDF show what its on-screen report shows, with the same section
 
 ## Results
 
+### Every path that renders a report PDF
+
+A grep of `apps/api/src`, `apps/web/src`, `apps/edge/src` and `workers` for `typst`, `application/pdf`, `printPages`, `reportpdf` and `.pdf` found these, and no others.
+
+| Path | Server code | Screen it shows | Reached from the web |
+|---|---|---|---|
+| Task evaluation report, `exportTaskEvaluation` report.pdf | `evaluation_exports.task_report`, `evaluation_paper`, `paper_layout.typ` | `ReportPage` in `report-pages.tsx` | Evaluation screen download and the PDF preview's download |
+| Evaluation PDF preview, `previewTaskEvaluation` | the same `task_report`, compiled to SVG | the same | `TaskPdfOverlay` in `pdf-overlay.tsx` |
+| Sign-off window's ticked PDF export (PROTO-154) | the same `exportTaskEvaluation` report.pdf | the same | `downloadExport` in `sign-off-screen.tsx` |
+| Study template samples, the four template preview operations | `template_sample`, `sample_layout.typ` | `ReportPages` in `report-editor-pages.tsx` | `TemplatePdfOverlay` and `SavedTemplatePdfOverlay` from the template editor, the template library and the new task's template step |
+| Clinical case report, `downloadCaseReportPdf` | `clinical_document.pdf_of` | `ReportDocument` through `documentOf`, in `report-screen.tsx` and `cosign-screen.tsx` | "Download PDF" on both screens |
+| Annotate task report, `exportTaskEvaluation` report.pdf on an annotate task | `evaluation_exports.annotate_report`, `report_template.render_report` | none | nothing: `getEvaluationReport` refuses annotate tasks, the annotate sign-off has no export, and no screen calls `getTaskAiChanges` |
+
+The clinical report screen's own "Preview of the report" overlay draws `ReportDocument` in the browser, not a PDF, so it is the screen side of the clinical row.
+
+### Annotate task report
+
+The annotate task report PDF exists only as an API path. No screen shows an annotate task's report, so there is nothing to draw it from or to measure it against, and it stays on `render_report` with its "How the experts changed the AI" tables. It is left for the owner whether it should get a screen or be drawn with the evaluation sheet's letterhead.
+
 ### Task evaluation report (`exportTaskEvaluation` report.pdf, the `previewTaskEvaluation` pages and the sign-off window's PDF export)
 
 What differed before: a running header on page 1, "Signed off 15/10/2026" in another date format, a Project, Task and Checksum block without the lab, Model, Slides, Reviewers or Template, Results as a Measure and Value table, letterspaced section headings, cell types as a sensitivity table, reasons and opinions as tables, a Decisions table the screen does not have, and no "Left open on purpose" or signature sentence.
