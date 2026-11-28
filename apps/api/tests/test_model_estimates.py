@@ -43,6 +43,7 @@ class Lab:
     project: uuid.UUID
     measured: uuid.UUID
     unmeasured: uuid.UUID
+    unscaled: uuid.UUID
 
     def path(self, name: str = MODEL) -> str:
         return f"/api/projects/{self.project}/models/{name}/estimates"
@@ -57,14 +58,21 @@ def lab(database: str, storage: StorageLocation) -> Iterator[Lab]:
     join_project(database, project, people["owner"], "owner")
     measured = make_slide(database, workspace.tenant_id, project, "E1")
     unmeasured = make_slide(database, workspace.tenant_id, project, "E2")
+    unscaled = make_slide(database, workspace.tenant_id, project, "E3")
     owner(
         database,
         f"UPDATE slides SET width = 2560, height = 2560, mpp_x = {MPP}, mpp_y = {MPP} "
-        f"WHERE id = '{measured}'",
+        f"WHERE id IN ('{measured}', '{unmeasured}')",
     )
-    put_object(f"{slide_prefix(workspace.tenant_id, measured)}tissue.png", mask_png())
+    owner(
+        database,
+        f"UPDATE slides SET width = 2560, height = 2560, mpp_x = NULL, mpp_y = NULL "
+        f"WHERE id = '{unscaled}'",
+    )
+    for slide in (measured, unscaled):
+        put_object(f"{slide_prefix(workspace.tenant_id, slide)}tissue.png", mask_png())
     with api_as(database) as api:
-        yield Lab(api, people, project, measured, unmeasured)
+        yield Lab(api, people, project, measured, unmeasured, unscaled)
 
 
 def test_the_pathosam_run_makes_cells_only() -> None:
@@ -86,7 +94,34 @@ def test_a_slide_with_tissue_gets_a_projected_time_and_cost(lab: Lab) -> None:
     seconds = rate * area
     assert first["minutes"] == int(-(-seconds // 60))
     assert first["dollars"] > 0
+    assert first["assumed_mpp"] is None
+    assert first["unknown_because"] is None
     assert (second["tissue_mm2"], second["minutes"], second["dollars"]) == (None, None, None)
+
+
+@pytest.mark.db
+def test_a_slide_with_a_scale_and_no_tissue_mask_says_the_mask_is_missing(lab: Lab) -> None:
+    response = lab.api(lab.people["owner"]).get(
+        lab.path(), params={"slide_id": [str(lab.unmeasured)]}
+    )
+    assert response.status_code == 200, response.text
+    found = response.json()[0]
+    assert (found["minutes"], found["dollars"]) == (None, None)
+    assert found["unknown_because"] == "no-tissue-mask"
+
+
+@pytest.mark.db
+def test_a_slide_with_tissue_and_no_scale_is_projected_at_the_assumed_scale(lab: Lab) -> None:
+    response = lab.api(lab.people["owner"]).get(
+        lab.path(), params={"slide_id": [str(lab.measured), str(lab.unscaled)]}
+    )
+    assert response.status_code == 200, response.text
+    scaled, unscaled = response.json()
+    assert unscaled["assumed_mpp"] == MPP
+    assert unscaled["projected"] is True
+    assert unscaled["unknown_because"] is None
+    for field in ("tissue_mm2", "minutes", "dollars"):
+        assert unscaled[field] == scaled[field]
 
 
 @pytest.mark.db
@@ -96,6 +131,7 @@ def test_a_model_without_a_rate_has_no_estimate(lab: Lab) -> None:
     )
     assert response.status_code == 200, response.text
     assert response.json()[0]["minutes"] is None
+    assert response.json()[0]["unknown_because"] == "no-rate"
 
 
 @pytest.mark.db

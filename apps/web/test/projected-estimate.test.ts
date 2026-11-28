@@ -42,3 +42,31 @@ test("a model priced by tissue says nothing until every picked slide has tissue 
   assert.equal(unknown.total, null);
   assert.equal(unknown.cost, null);
 });
+
+test("a slide with a stated scale names no assumed scale", () => {
+  const shown = runEstimate(priced, [{}, {}], today, estimates);
+  assert.doesNotMatch(shown.perSlide, /µm per pixel/);
+});
+
+test("a slide that states no scale says which scale the projection assumed", () => {
+  const unscaled = estimates.map((item, index) =>
+    index === 1 ? { ...item, assumed_mpp: 0.25 } : item,
+  );
+  const shown = runEstimate(priced, [{}, {}], today, unscaled);
+  assert.equal(shown.cost, "$2.00");
+  assert.match(shown.perSlide, /taken as 0\.25 µm per pixel/);
+});
+
+test("a slide with no tissue mask leaves time and cost unknown", () => {
+  const missing: SlideEstimate = {
+    slide_id: "b",
+    tissue_mm2: null,
+    minutes: null,
+    dollars: null,
+    projected: true,
+    unknown_because: "no-tissue-mask",
+  };
+  const shown = runEstimate(priced, [{}, {}], today, [...estimates.slice(0, 1), missing]);
+  assert.equal(shown.total, null);
+  assert.equal(shown.cost, null);
+});

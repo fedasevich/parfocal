@@ -2989,6 +2989,13 @@ export interface ErasedPerson {
   memberships_kept: number;
 }
 
+export type EstimateGap = (typeof EstimateGap)[keyof typeof EstimateGap];
+
+export const EstimateGap = {
+  "no-rate": "no-rate",
+  "no-tissue-mask": "no-tissue-mask",
+} as const;
+
 export type EvaluationDice = { [key: string]: RateOut };
 
 export interface KappaOut {
@@ -7643,6 +7650,8 @@ export interface SlideEstimate {
   minutes: number | null;
   dollars: number | null;
   projected: boolean;
+  assumed_mpp?: number | null;
+  unknown_because?: EstimateGap | null;
 }
 
 export interface SlideMove {

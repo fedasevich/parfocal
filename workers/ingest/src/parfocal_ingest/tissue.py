@@ -41,6 +41,14 @@ class TissueMask:
     def fraction(self) -> float:
         return float(self.cells.mean())
 
+    def facts(self) -> dict[str, object]:
+        return {
+            "cell": self.cell,
+            "threshold": self.threshold,
+            "fraction": self.fraction,
+            "box": self.box.facts() if self.box else None,
+        }
+
     def png(self) -> bytes:
         buffer = io.BytesIO()
         Image.fromarray(self.cells).save(buffer, "PNG", optimize=True)
