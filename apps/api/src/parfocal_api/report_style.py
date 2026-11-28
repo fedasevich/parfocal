@@ -114,3 +114,34 @@ LAYOUT = f"""
 
 def compile_options() -> dict[str, Any]:
     return {"font_paths": [str(FONTS)], "ignore_system_fonts": True}
+
+
+PAPER_WIDTH_PX = 620
+PAPER_HEIGHT_PX = 877
+PAPER_PX = round(595.2756 / PAPER_WIDTH_PX, 6)
+PAPER_LINE_HEIGHT = 1.4
+PAPER_HALF_LEADING = (PAPER_LINE_HEIGHT - FONT_ASCENT - FONT_DESCENT) / 2
+PAPER_TRACKING = 0.38
+PAPER_LARGE_TRACKING = 0.18
+PAPER_MONO_TRACKING = 0.04
+PAPER_TEMPLATE = Path(__file__).parent / "paper_layout.typ"
+
+
+LETTER_PX = (round(612 / PAPER_PX, 2), round(792 / PAPER_PX, 2))
+
+
+def paper_layout(letter: bool = False, landscape: bool = False) -> str:
+    width, height = LETTER_PX if letter else (PAPER_WIDTH_PX, PAPER_HEIGHT_PX)
+    if landscape:
+        width, height = height, width
+    return (
+        PAPER_TEMPLATE.read_text()
+        .replace("PAPER_MONO_TRACKING", str(PAPER_MONO_TRACKING))
+        .replace("PAPER_LARGE_TRACKING", str(PAPER_LARGE_TRACKING))
+        .replace("PAPER_TRACKING", str(PAPER_TRACKING))
+        .replace("PAPER_PX", str(PAPER_PX))
+        .replace("PAPER_TOP_EDGE", str(round(PAPER_HALF_LEADING + FONT_ASCENT, 4)))
+        .replace("PAPER_BOTTOM_EDGE", str(round(PAPER_HALF_LEADING + FONT_DESCENT, 4)))
+        .replace("PAPER_WIDTH", str(width))
+        .replace("PAPER_HEIGHT", str(height))
+    )

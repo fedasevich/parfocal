@@ -4,7 +4,6 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Any
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Query
 from fastapi.responses import Response
@@ -23,13 +22,13 @@ from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import (
-    BadRequestError,
     ConflictError,
     ForbiddenError,
     NotFoundError,
 )
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError, visible
+from parfocal_api.reader_zone import zone_of
 from parfocal_api.sign_out import case_signers, signs_out_case
 from parfocal_api.slide_areas import MICRONS_PER_MM
 from parfocal_api.tables import (
@@ -1115,18 +1114,6 @@ async def amend_clinical_report(
 
 def safe_name(label: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", label)
-
-
-class UnknownTimeZoneError(BadRequestError):
-    code = "unknown-time-zone"
-    title = "The time zone is not a known IANA time zone"
-
-
-def zone_of(name: str | None) -> ZoneInfo:
-    try:
-        return ZoneInfo(name or "UTC")
-    except (ZoneInfoNotFoundError, ValueError) as unknown:
-        raise UnknownTimeZoneError from unknown
 
 
 @router.get(

@@ -240,7 +240,7 @@ def test_a_signed_report_keeps_its_layout_after_the_template_changes(
     text = " ".join(pages_of(after))
     assert text.index("SIGNED-FIRST") < text.index("SIGNED-SECOND")
     assert "LATER-ONLY" not in text
-    assert "Signed off: 03/11/2026" in text
+    assert "RT-1 · Evaluation v1" in text
 
 
 def test_the_reasons_print_as_words_and_not_as_codes() -> None:
