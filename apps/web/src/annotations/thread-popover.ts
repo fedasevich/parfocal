@@ -17,6 +17,16 @@ export const popoverMaxHeight = 460;
 
 const unknownAuthor: PersonInfo = { name: "Someone", initials: "?", color: "#64748b" };
 
+const charactersPerLine = 40;
+const unseenMessageLines = 2;
+const shownMessages = 3;
+
+export function pendingMessageLines(title: string, messageCount: number): number[] {
+  const opening = Math.min(Math.max(Math.ceil(title.length / charactersPerLine), 1), 4);
+  const count = Math.min(Math.max(messageCount, 1), shownMessages);
+  return [opening, ...Array.from({ length: count - 1 }, () => unseenMessageLines)];
+}
+
 export function threadMessages(
   messages: readonly Message[],
   personOf: (userId: string) => PersonInfo | undefined,

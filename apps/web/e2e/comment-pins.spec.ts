@@ -196,3 +196,44 @@ test("a pin goes on a slide opened outside any task and its thread takes replies
   await page.keyboard.press("Enter");
   await expect(thread).toContainText("Seen it too");
 });
+
+test("a slow thread shows message skeletons in the popover, then its messages without a jump", async ({
+  page,
+}) => {
+  const stage = await openTaskSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await placePin(page, { x: box.x + 600, y: box.y + 500 }, "Is this edge real?");
+  await expect(pins(page)).toHaveCount(1);
+  await page.addInitScript(() => {
+    const original = window.fetch.bind(window);
+    const held = new Promise<void>((resolve) => {
+      Object.assign(window, { releaseThread: resolve });
+    });
+    window.fetch = async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof Request ? input.url : "";
+      const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+      if (method === "GET" && /\/threads\/[0-9a-f-]{36}(\?.*)?$/.test(url)) await held;
+      return original(input, init);
+    };
+  });
+  const release = () =>
+    page.evaluate(() => (window as unknown as { releaseThread: () => void }).releaseThread());
+  await page.reload();
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await expect(pins(page)).toHaveCount(1);
+  await page.keyboard.press("c");
+  await pins(page).first().click();
+  const skeleton = thread(page).locator('[data-slot="comment-thread-skeleton"]');
+  await expect(skeleton).toBeVisible();
+  await expect(skeleton.locator('[data-slot="comment-skeleton"]')).toHaveCount(1);
+  await expect(skeleton).toContainText("Loading the messages");
+  await expect(thread(page).getByRole("status")).toHaveCount(1);
+  const body = thread(page).locator("div.overflow-y-auto");
+  const loadingHeight = (await body.boundingBox())?.height ?? 0;
+  await release();
+  await expect(thread(page).locator('[data-slot="comment"]')).toHaveCount(1);
+  await expect(skeleton).toHaveCount(0);
+  const loadedHeight = (await body.boundingBox())?.height ?? 0;
+  expect(Math.abs(loadedHeight - loadingHeight)).toBeLessThanOrEqual(8);
+});

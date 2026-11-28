@@ -19,7 +19,12 @@ import {
   threadKey,
   threadListKey,
 } from "./thread-home.ts";
-import { type PopoverSpot, threadMeasurement, threadMessages } from "./thread-popover.ts";
+import {
+  type PopoverSpot,
+  pendingMessageLines,
+  threadMeasurement,
+  threadMessages,
+} from "./thread-popover.ts";
 
 type PinThreadProps = {
   thread: Thread;
@@ -120,6 +125,7 @@ export function PinThread({
         title={thread.title}
         resolved={resolved}
         loading={detail === undefined}
+        pendingLines={pendingMessageLines(thread.title, thread.message_count)}
         messages={threadMessages(detail?.messages ?? [], person, me?.user_id, now())}
         measurement={threadMeasurement(
           doc,

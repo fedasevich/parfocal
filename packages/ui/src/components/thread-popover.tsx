@@ -6,8 +6,8 @@ import {
   type CommentMessage,
   CommentThread,
 } from "@parfocal/ui/components/comment-thread";
+import { CommentThreadSkeleton } from "@parfocal/ui/components/comment-thread-skeleton";
 import { IconButton } from "@parfocal/ui/components/icon-button";
-import { Loader } from "@parfocal/ui/components/loader";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -43,6 +43,7 @@ type ThreadPopoverProps = Omit<React.ComponentProps<"section">, "title" | "child
   messages: CommentMessage[];
   measurement?: ThreadMeasurement | undefined;
   loading?: boolean;
+  pendingLines?: readonly number[];
   failed?: boolean;
   busy?: boolean;
   reply: string;
@@ -61,6 +62,7 @@ function ThreadPopover({
   messages,
   measurement,
   loading = false,
+  pendingLines,
   failed = false,
   busy = false,
   reply,
@@ -110,7 +112,7 @@ function ThreadPopover({
       {measurement ? <MeasurementEmbed measurement={measurement} /> : null}
       <div className="max-h-64 overflow-y-auto pr-1">
         {loading ? (
-          <Loader label={t`Loading the messages`} />
+          <CommentThreadSkeleton lines={pendingLines} />
         ) : (
           <CommentThread messages={messages} />
         )}
