@@ -2,6 +2,27 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.65.2 (2026-11-28)
+
+### Fixes
+
+- PROTO-178: Cover the narrow magnification bar at 484 and 360 px in a spec and a story
+- PROTO-182: Type unscaled slides at an assumed 0.25 mpp and end the Typing chip on failure
+
+### Docs
+
+- PROTO-150: Log the owner's request for every best model in Run a model
+- PROTO-204: Log the lead's order for the new tasks
+- PROTO-178: Log and move to review after merge
+- PROTO-211: Add the Run a model line-up tasks and their owner questions
+- PROTO-211: Log the lead's order for the Run a model tasks
+- PROTO-215: Record the owner's answers on model licences, run scope and the measured run
+- TEST-061: Pause the CI repair until the run is deployed
+- TEST-061: Log where the paused CI repair stopped
+- PROTO-208: Add the Figma collapse of a group that holds the selection
+- PROTO-171: Log the v0.65.1 deploy
+- PROTO-182: Log and move to review after merge
+
 ## v0.65.1 (2026-11-28)
 
 ### Fixes
