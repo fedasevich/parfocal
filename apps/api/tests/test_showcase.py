@@ -73,6 +73,7 @@ from parfocal_api.tables import (
     review_task_slides,
     review_tasks,
 )
+from parfocal_api.tables.base import ASSIGNABLE_ROLES
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.ingest import (
     SAMPLE_FACTS_NAME,
@@ -263,7 +264,7 @@ async def test_every_state_and_kind_has_a_seeded_row(seeded: str) -> None:
     assert await values(seeded, "SELECT DISTINCT decision_style FROM review_tasks") == set(
         DecisionStyle
     )
-    assert await values(seeded, "SELECT DISTINCT role FROM memberships") == set(Role)
+    assert await values(seeded, "SELECT DISTINCT role FROM memberships") == ASSIGNABLE_ROLES
     assert await values(seeded, "SELECT DISTINCT admin_rights FROM memberships") == {
         "True",
         "False",
