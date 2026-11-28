@@ -41,9 +41,10 @@ test("a throttled first load renders Plex from files the build contains", async 
   const hrefs = await page
     .locator('link[rel="preload"][as="font"]')
     .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
-  expect(hrefs).toHaveLength(2);
+  expect(hrefs).toHaveLength(3);
   expect(hrefs.some((href) => href.includes("ibm-plex-sans-latin-400-normal"))).toBe(true);
   expect(hrefs.some((href) => href.includes("ibm-plex-sans-latin-600-normal"))).toBe(true);
+  expect(hrefs.some((href) => href.includes("ibm-plex-sans-latin-700-normal"))).toBe(true);
   for (const href of hrefs) {
     const response = await page.request.get(new URL(href, origin).href);
     expect(response.status()).toBe(200);

@@ -57,11 +57,11 @@ The screen's computed values were IBM Plex Sans throughout, body 11px at weight 
 
 - The crowding came from Typst's line box. Before, a one-line grid row was cap height to baseline, 7.7pt at 11pt, plus a 5pt gutter, while the screen gives every line 16.5px. With the CSS line box and the screen's gaps ported, every baseline sits where the screen puts it.
 - The remaining 4.5% of differing pixels sit on glyph edges, where Chrome and Typst antialias differently, and on the signature rule, which Chrome snaps from 620.5 to 621 px. No text or rule is displaced.
-- This run does not explain the "different, larger face" the owner saw. The PDF always embeds Plex, while a cold load of the screen drew the system font, which ran about 5% wider, so that case would make the PDF look narrower, not larger. A PDF viewer at 100% zoom draws 1pt as 1.33 CSS px, which may be what looked larger. Assumption, not measured: on the deployed app, too, the faces can miss the optional block period on a first visit. Weight 700 is not preloaded in `apps/web/index.html`, so bold headings are the likeliest to fall back. `TODO` decide whether the report sheet should load Plex with `display: block` or preload 700. This belongs to ADR 0227, not to the PDF.
+- This run does not explain the "different, larger face" the owner saw. The PDF always embeds Plex, while a cold load of the screen drew the system font, which ran about 5% wider, so that case would make the PDF look narrower, not larger. A PDF viewer at 100% zoom draws 1pt as 1.33 CSS px, which may be what looked larger. Assumption, not measured: on the deployed app, too, the faces can miss the optional block period on a first visit. Weight 700 was not preloaded in `apps/web/index.html`, so bold headings were the likeliest to fall back. The lead chose to preload weight 700 next to 400 and 600, and the same branch adds it, so no owner decision is needed.
 - The time zone gap is fixed separately. The download link now sends `?zone=` with the browser's zone. Tests pin 21:17 UTC to 22:17 in Prague on both the screen and the PDF side.
 
 ## Follow-ups
 
 - ADR XXXX (report PDFs print the reader's time zone and lay out text in the screen's line box), which amends ADR 0443 (one Typst report layout for every PDF).
-- `TODO` the font loading question above for the owner or a frontend task.
+- The font loading question above is settled: the lead chose to preload IBM Plex Sans 700 in `apps/web/index.html`, and `e2e/font-preload.spec.ts` checks it. No owner decision is needed.
 - The lead checks the deployed Showcase case's PDF against its preview.
