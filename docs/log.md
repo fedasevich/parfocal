@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-28
 
+- Production touch: release v0.65.2 (PROTO-182 typer scale fallback and Typing chip failure, with the GPU pool redeployed) deployed by run 46146513685, whose deploy and browser smoke reviews the lead approved under ADR 0151. Cost TODO, a deploy runs no GPU.
 - Owner asked on 2026-11-28, through the side session, to recheck every report and generated PDF because none match their screens. PROTO-219 is widened to every report PDF path (clinical case report, task evaluation report, evaluation PDF preview, study template samples, the sign-off window's ticked export and any other Typst report), size L, first in the queue.
 - Owner asked on 2026-11-28, through a side session with three screenshots of RT-4, that the evaluation report PDF match the on-screen evaluation report, which it again does not. Added PROTO-219 (the evaluation report PDF shows what the on-screen evaluation report shows), run ahead of the queue. PROTO-171's deployed check of the clinical report PDF on v0.65.1 is still open.
 - PROTO-182: the typer assumes 0.25 micrometres per pixel on slides with no scale, as Smart select does in prompt-pass.ts, and says so in scale_assumed, the audit line and a toast, so CMU-1.tiff no longer answers 503. Any typer failure (status, network, 90 s timeout, cancel) ends the Typing chip with a toast saying why and leaves the cells for keys 1 to 4. smart-typing.spec.ts 5 of 5, API DB, worker typer and web unit tests pass.
