@@ -98,6 +98,7 @@ export type SavedAnnotations = {
   readonly latest: () => AnnotationDocument;
   readonly undo: () => string | null;
   readonly redo: () => string | null;
+  readonly headId: () => EntryId | null;
   readonly fold: (id: EntryId, change: (doc: AnnotationDocument) => AnnotationDocument) => void;
   readonly target: GroupId | null;
   readonly setTarget: (id: GroupId | null) => void;
@@ -573,6 +574,7 @@ export function useSavedAnnotations(
     apply,
     undo: undoLast,
     redo: redoLast,
+    headId: () => log.current.entries[log.current.cursor - 1]?.id ?? null,
     fold: foldInto,
     target,
     setTarget,

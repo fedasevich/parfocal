@@ -237,21 +237,11 @@ test("Cmd+Z takes back live clicks one by one before it undoes the saved shape",
   page,
 }) => {
   const { stage, centre } = await openSmart(page);
-  const corner = { x: centre.x - 300, y: centre.y - 200 };
-  await page.keyboard.press("p");
-  for (const [x, y] of [
-    [0, 0],
-    [120, 10],
-    [100, 120],
-    [10, 100],
-  ] as const) {
-    await page.mouse.click(corner.x + x, corner.y + y);
-  }
-  await page.mouse.click(corner.x + 2, corner.y + 1);
+  await page.mouse.click(centre.x, centre.y);
+  await settled(page);
+  await page.keyboard.press("Enter");
   await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
   await expect(stage).toHaveAttribute("data-save-state", "saved");
-  await page.keyboard.press("s");
-  await expect(stage).toHaveAttribute("data-tool", "smart");
 
   await page.mouse.click(centre.x + 100, centre.y + 40);
   await settled(page);

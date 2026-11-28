@@ -40,7 +40,7 @@ export function useProposals(
   typing: ProposalTyping,
 ): ProposalControls {
   const { t } = useLingui();
-  const { document, apply, latest } = saved;
+  const { document, apply, latest, headId, fold } = saved;
   const pending = useMemo(() => pendingProposals(document), [document]);
   const [typingState, setTypingState] = useState<TypingState>({ state: "idle" });
   const now = useRef(typing);
@@ -54,6 +54,7 @@ export function useProposals(
     const bare = acceptProposals(first.document, untyped, { classKey: null });
     const second = acceptProposals(bare.document, kept);
     apply(second.document, "Accept proposals");
+    const acceptEntry = second.document === document ? null : headId();
     if (autoType) onAccepted?.([...first.shapes, ...bare.shapes]);
     if (first.shapes.length === 0) return;
     const call = ++calls.current;
@@ -66,9 +67,12 @@ export function useProposals(
     const finish = (outcome: TypingOutcome) => {
       if (outcome.kind === "failed") return failed(outcome.failure);
       if (outcome.kind === "nothing") return;
-      const before = latest();
-      const next = outcome.apply(before);
-      if (next !== before) apply(next, "Type accepted outlines");
+      if (acceptEntry !== null) fold(acceptEntry, outcome.apply);
+      else {
+        const before = latest();
+        const next = outcome.apply(before);
+        if (next !== before) apply(next, "Type accepted outlines");
+      }
       if (outcome.scaleAssumed) {
         showUndoToast({
           message: t`The slide states no microns per pixel, so the typer assumed 0.25 µm per pixel.`,
@@ -97,7 +101,7 @@ export function useProposals(
       .finally(() => {
         if (call === calls.current) setTypingState({ state: "idle" });
       });
-  }, [apply, document, latest, slideId, t]);
+  }, [apply, document, latest, headId, fold, slideId, t]);
 
   const discard = useCallback(() => {
     apply(discardProposals(document), "Discard proposals");
