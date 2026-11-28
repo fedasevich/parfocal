@@ -18,6 +18,7 @@ import {
   maskToSlideRing,
   modelPrompt,
   normalisedBox,
+  ringHolds,
   type SmartPrompts,
   withBox,
   withoutLast,
@@ -137,7 +138,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
   let hoverLatest: HoverRequest | null = null;
   let hoverKey: string | null = null;
   let prewarmTurn = 0;
-  let kept: SmartObject[] = [];
+  let kept: Draft[] = [];
   let draft: Draft | null = null;
   let phase: SmartPhase = "idle";
   let message: string | null = null;
@@ -154,7 +155,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
 
   function snapshot(): SmartSnapshot {
     return {
-      kept: [...kept],
+      kept: kept.map(objectOf),
       live: draft === null ? null : objectOf(draft),
       phase,
       message,
@@ -174,7 +175,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
   }
 
   function retire() {
-    if (draft !== null && draft.ring !== null) kept = [...kept, objectOf(draft)];
+    if (draft !== null && draft.ring !== null) kept = [...kept, draft];
     draft = null;
   }
 
@@ -378,13 +379,47 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     return next;
   }
 
-  function startsNewObject(press: SmartPress): boolean {
+  function holder(point: { readonly x: number; readonly y: number }): Draft | "live" | null {
+    if (draft !== null && draft.ring !== null && ringHolds(draft.ring, point)) return "live";
+    for (let index = kept.length - 1; index >= 0; index--) {
+      const candidate = kept[index];
+      if (candidate?.ring && ringHolds(candidate.ring, point)) return candidate;
+    }
+    return null;
+  }
+
+  function isPlain(press: SmartPress): boolean {
     if (press.kind === "box") return true;
     return press.positive && !press.extend;
   }
 
+  function startsNewObject(press: SmartPress): boolean {
+    if (!isPlain(press)) return false;
+    return press.kind === "box" || holder(press.at) === null;
+  }
+
+  function refinable(press: SmartPress): Draft | null {
+    if (!isPlain(press) || press.kind === "box") return null;
+    const found = holder(press.at);
+    if (found === null || found === "live") return null;
+    return found;
+  }
+
   function applyPress(press: SmartPress): boolean {
-    if (startsNewObject(press)) retire();
+    const reopened = refinable(press);
+    if (reopened !== null) {
+      if (
+        reopened.patch !== null &&
+        press.kind === "point" &&
+        !patchContains(reopened.patch, press.at)
+      ) {
+        settle("outside", "Outside the area being refined");
+        return false;
+      }
+      if (draft !== null && draft !== reopened) retire();
+      kept = kept.filter((item) => item !== reopened);
+      draft = reopened;
+    } else if (startsNewObject(press)) retire();
     else if (draft === null) return false;
     const target = draft ?? newDraft();
     if (press.kind === "box") {
@@ -426,8 +461,8 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     const head = waiting[0];
     if (head === undefined) return [];
     let count = 1;
-    if (!startsNewObject(head.press)) {
-      const next = waiting.findIndex((item, index) => index > 0 && startsNewObject(item.press));
+    if (!isPlain(head.press) || !startsNewObject(head.press)) {
+      const next = waiting.findIndex((item, index) => index > 0 && isPlain(item.press));
       count = next === -1 ? waiting.length : next;
     }
     const batch = waiting.slice(0, count);

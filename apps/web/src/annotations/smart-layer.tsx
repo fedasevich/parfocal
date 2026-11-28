@@ -686,6 +686,11 @@ export function SmartLayer({
           >
             {hoverOn ? t`Hover on` : t`Hover off`}
           </button>
+          {live?.ring ? null : (
+            <span data-testid="smart-hint" className={contextChip}>
+              {t`Shift adds, right click cuts`}
+            </span>
+          )}
           {shownFallback !== null ? (
             <span
               data-testid="smart-encoder-fallback"

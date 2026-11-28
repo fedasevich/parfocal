@@ -279,6 +279,45 @@ describe("smart select session", () => {
     assert.ok(live.x0 > 1050);
   });
 
+  it("a plain click inside the live outline refines it with the mask fed back", async () => {
+    const { session, sam } = open();
+    await session.press(click(1000, 1000));
+    await session.press(click(1010, 1000));
+    const snapshot = session.snapshot();
+    assert.equal(snapshot.kept.length, 0);
+    assert.equal(snapshot.live?.prompts.points.length, 2);
+    const second = sam.prompts[1]?.prompt;
+    assert.deepEqual(
+      second?.points.map((point) => point.positive),
+      [true, true],
+    );
+    assert.equal(second?.previousLogits?.length, 256 * 256);
+  });
+
+  it("a plain click inside an object kept earlier reopens it with its prompts and mask", async () => {
+    const { session, sam } = open();
+    await session.press(click(1000, 1000));
+    await session.press(click(1300, 1000));
+    assert.equal(session.snapshot().kept.length, 1);
+    await session.press(click(1010, 1000));
+    const snapshot = session.snapshot();
+    assert.equal(snapshot.kept.length, 1);
+    assert.equal(snapshot.live?.prompts.points.length, 2);
+    const reopened = sam.prompts[2]?.prompt;
+    assert.equal(reopened?.points.length, 2);
+    assert.equal(reopened?.previousLogits?.length, 256 * 256);
+    const keptBox = bounds(snapshot.kept[0]?.ring ?? new Float32Array());
+    assert.ok(keptBox.x0 > 1200);
+  });
+
+  it("a right click inside the live outline still cuts it", async () => {
+    const { session } = open();
+    await session.press(click(1000, 1000));
+    await session.press(click(1012, 1000, { positive: false, extend: true }));
+    assert.equal(session.snapshot().kept.length, 0);
+    assert.equal(session.snapshot().live?.prompts.points.length, 2);
+  });
+
   it("a drag is a box prompt, never a box derived from a mask", async () => {
     const { session, sam } = open();
     await session.press({ kind: "box", from: { x: 2000, y: 2000 }, to: { x: 2060, y: 2040 } });

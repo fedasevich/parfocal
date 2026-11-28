@@ -104,7 +104,7 @@ export function modelPrompt(
   return { points, box, previousLogits };
 }
 
-function ringHolds(ring: Ring, point: SamPlanePoint): boolean {
+export function ringHolds(ring: Ring, point: SamPlanePoint): boolean {
   let inside = false;
   const count = ring.length / 2;
   for (let i = 0, j = count - 1; i < count; j = i++) {
