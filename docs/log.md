@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-28
 
+- Production touch: release v0.66.0 (PROTO-206 Smart select refine) deployed by run 46148827533, whose deploy and browser smoke reviews the lead approved under ADR 0151. Cost TODO, a deploy runs no GPU.
 - Production touch: release v0.65.3 (PROTO-211 projected run time and cost) deployed by run 46148133133, whose deploy and browser smoke reviews the lead approved under ADR 0151. Cost TODO, a deploy runs no GPU.
 - PROTO-206: in smart-session.ts a plain click inside the live Smart select outline adds a positive point to that object and feeds the previous mask back, and a plain click inside a cell kept earlier in the session reopens it with its prompts and mask, so no second object is made. Right, Alt and Shift clicks behave as before, queued clicks batch by their plain click, and the bar shows Shift adds, right click cuts while no outline is live. Session unit tests and the smart-select, smart-typing, smart-hover and smart-select-queue specs pass.
 - PROTO-211: PathoSAM + HoVer-NeXt makes cells only. The new estimateModelRun route (model_estimates.py) projects time and cost per slide from the stored tissue mask's mm2 at 150 s per mm2 and 0.0178 dollars per 94.9 s, both from the recorded L4 run, labelled projected until three real runs give a measured mean. The Run a model window and the viewer's start-run panel show the same figure. 51 API DB tests and the model-runs, annotate-run, run-stream and hide-model specs pass.
