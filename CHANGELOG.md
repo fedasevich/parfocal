@@ -2,6 +2,24 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.65.3 (2026-11-28)
+
+### Fixes
+
+- PROTO-211: PathoSAM + HoVer-NeXt makes cells only, with projected time and cost
+- PROTO-211: Start-run panel shows the same projected time and cost as Run a model
+
+### Docs
+
+- PROTO-219: Add the evaluation report PDF task
+- PROTO-219: Widen the task to every report PDF
+- PROTO-182: Log the v0.65.2 deploy
+- PROTO-211: Log and move to review after merge
+
+### Other
+
+- PROTO-219: Claim PROTO-219 for the parallel run
+
 ## v0.65.2 (2026-11-28)
 
 ### Fixes
