@@ -94,7 +94,6 @@ def test_a_slide_with_tissue_gets_a_projected_time_and_cost(lab: Lab) -> None:
     seconds = rate * area
     assert first["minutes"] == int(-(-seconds // 60))
     assert first["dollars"] > 0
-    assert first["assumed_mpp"] is None
     assert first["unknown_because"] is None
     assert (second["tissue_mm2"], second["minutes"], second["dollars"]) == (None, None, None)
 
@@ -111,17 +110,14 @@ def test_a_slide_with_a_scale_and_no_tissue_mask_says_the_mask_is_missing(lab: L
 
 
 @pytest.mark.db
-def test_a_slide_with_tissue_and_no_scale_is_projected_at_the_assumed_scale(lab: Lab) -> None:
+def test_a_slide_with_tissue_and_no_scale_says_the_scale_is_missing(lab: Lab) -> None:
     response = lab.api(lab.people["owner"]).get(
-        lab.path(), params={"slide_id": [str(lab.measured), str(lab.unscaled)]}
+        lab.path(), params={"slide_id": [str(lab.unscaled)]}
     )
     assert response.status_code == 200, response.text
-    scaled, unscaled = response.json()
-    assert unscaled["assumed_mpp"] == MPP
-    assert unscaled["projected"] is True
-    assert unscaled["unknown_because"] is None
-    for field in ("tissue_mm2", "minutes", "dollars"):
-        assert unscaled[field] == scaled[field]
+    found = response.json()[0]
+    assert (found["tissue_mm2"], found["minutes"], found["dollars"]) == (None, None, None)
+    assert found["unknown_because"] == "no-scale"
 
 
 @pytest.mark.db

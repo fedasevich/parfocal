@@ -69342,6 +69342,7 @@
         "type": "string",
         "enum": [
           "no-rate",
+          "no-scale",
           "no-tissue-mask"
         ],
         "title": "EstimateGap"
@@ -87546,17 +87547,6 @@
           "projected": {
             "type": "boolean",
             "title": "Projected"
-          },
-          "assumed_mpp": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assumed Mpp"
           },
           "unknown_because": {
             "anyOf": [

@@ -14,7 +14,6 @@ from parfocal_api.model_catalogue import (
     CatalogueModel,
     throughput,
 )
-from parfocal_api.model_registry import PATHOSAM_MPP
 from parfocal_api.model_runs import ModelNotFoundError, SlideNotInProjectError, measured_seconds
 from parfocal_api.permissions import Permission, require
 from parfocal_api.projects import visible
@@ -25,11 +24,11 @@ from parfocal_common.object_store import StorageError
 
 MAX_SLIDES = 200
 SQUARE_MICRONS_PER_SQUARE_MM = 1_000_000
-ASSUMED_MPP = PATHOSAM_MPP
 
 
 class EstimateGap(StrEnum):
     NO_RATE = "no-rate"
+    NO_SCALE = "no-scale"
     NO_TISSUE_MASK = "no-tissue-mask"
 
 
@@ -39,7 +38,6 @@ class SlideEstimate(BaseModel):
     minutes: int | None
     dollars: float | None
     projected: bool
-    assumed_mpp: float | None = None
     unknown_because: EstimateGap | None = None
 
 
@@ -77,12 +75,6 @@ def unknown(slide_id: uuid.UUID, because: EstimateGap) -> SlideEstimate:
     )
 
 
-def scale_of(row: Any) -> tuple[float, float, float | None]:
-    if row.mpp_x and row.mpp_y:
-        return row.mpp_x, row.mpp_y, None
-    return ASSUMED_MPP, ASSUMED_MPP, ASSUMED_MPP
-
-
 def estimate_of(
     slide_id: uuid.UUID,
     model: CatalogueModel,
@@ -93,10 +85,11 @@ def estimate_of(
     rate = model.projected_seconds_per_mm2
     if rate is None:
         return unknown(slide_id, EstimateGap.NO_RATE)
+    if not (row.mpp_x and row.mpp_y):
+        return unknown(slide_id, EstimateGap.NO_SCALE)
     if mask is None:
         return unknown(slide_id, EstimateGap.NO_TISSUE_MASK)
-    mpp_x, mpp_y, assumed = scale_of(row)
-    area = tissue_mm2(mask, mpp_x, mpp_y)
+    area = tissue_mm2(mask, row.mpp_x, row.mpp_y)
     seconds = rate * area if measured_minutes is None else measured_minutes * 60
     return SlideEstimate(
         slide_id=slide_id,
@@ -104,7 +97,6 @@ def estimate_of(
         minutes=max(1, math.ceil(seconds / 60)),
         dollars=round(seconds * L4_DOLLARS_PER_SECOND, 4),
         projected=measured_minutes is None,
-        assumed_mpp=assumed,
     )
 
 
@@ -138,7 +130,7 @@ async def estimate_model_run(
             raise SlideNotInProjectError
         mask = (
             await stored_mask(store, row, slide_id)
-            if model.projected_seconds_per_mm2 is not None
+            if row.mpp_x and row.mpp_y and model.projected_seconds_per_mm2 is not None
             else None
         )
         found.append(estimate_of(slide_id, model, mask, row, measured))

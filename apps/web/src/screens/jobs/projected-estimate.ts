@@ -34,14 +34,11 @@ export function projectedEstimate(
   const basis = projected
     ? "Projected from the slide's tissue area at the rate of the one L4 run measured so far."
     : "From earlier runs of this model.";
-  const assumed = known.find((item) => item.assumed_mpp != null)?.assumed_mpp;
-  const scale =
-    assumed == null ? "" : ` A slide that states no scale is taken as ${assumed} µm per pixel.`;
   const wait = model.queue_minutes + model.start_minutes;
   return {
     total: total + model.start_minutes,
     doneAround: formatClock(new Date(now.getTime() + (total + wait) * 60000)),
     cost: dollars(known.reduce((sum, item) => sum + item.dollars, 0)),
-    perSlide: `About ${range} min a slide on the ${model.server}. ${queue} ${basis}${scale}`,
+    perSlide: `About ${range} min a slide on the ${model.server}. ${queue} ${basis}`,
   };
 }

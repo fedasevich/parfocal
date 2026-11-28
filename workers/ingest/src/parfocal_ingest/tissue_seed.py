@@ -32,6 +32,7 @@ COPIED = "copied"
 PRESENT = "present"
 MISSING = "missing"
 UNREADABLE = "unreadable"
+FAILED = "failed"
 NOT_FOUND = 404
 CONCURRENCY = 8
 
@@ -188,7 +189,11 @@ async def store_seeded_masks(
         else:
             outcomes[PRESENT] += 1
     for original_key, group in waiting.items():
-        state, files = await files_for(store, original_key)
+        try:
+            state, files = await files_for(store, original_key)
+        except Exception:
+            logger.exception("tissue mask failed for a seeded original")
+            state, files = FAILED, None
         outcomes[state] += len(group)
         if files is not None:
             await give_masks(store, group, files)

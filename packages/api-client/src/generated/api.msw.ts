@@ -5379,7 +5379,6 @@ export const getEstimateModelRunResponseMock = (): SlideEstimate[] =>
     minutes: faker.helpers.arrayElement([faker.number.int(), null]),
     dollars: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     projected: faker.datatype.boolean(),
-    assumed_mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     unknown_because: faker.helpers.arrayElement([
       faker.helpers.arrayElement(Object.values(EstimateGap)),
       null,

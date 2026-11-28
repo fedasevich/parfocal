@@ -2993,6 +2993,7 @@ export type EstimateGap = (typeof EstimateGap)[keyof typeof EstimateGap];
 
 export const EstimateGap = {
   "no-rate": "no-rate",
+  "no-scale": "no-scale",
   "no-tissue-mask": "no-tissue-mask",
 } as const;
 
@@ -7650,7 +7651,6 @@ export interface SlideEstimate {
   minutes: number | null;
   dollars: number | null;
   projected: boolean;
-  assumed_mpp?: number | null;
   unknown_because?: EstimateGap | null;
 }
 

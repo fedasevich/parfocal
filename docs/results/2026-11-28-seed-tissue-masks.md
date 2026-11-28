@@ -5,7 +5,7 @@
 - Kind: benchmark
 - Commit: the PROTO-211 fix on top of f12a3e3e
 - Environment: Apple M4, local Postgres in the shared parfocal compose project, an in-memory object store that links each original from the local fixture cache instead of copying it, so no download time is in these numbers
-- Data: the showcase seed with an owner email, the fixture cache of the format gallery and test_065 (no PHI)
+- Data: the showcase seed with an owner email, the fixture cache and the synthetic folder for the format gallery and test_065 (no PHI)
 
 ## Question
 
@@ -19,9 +19,9 @@ How much time does the new tissue mask step (`parfocal_ingest.tissue_seed.store_
 
 | Run | Slides | Outcome | Time |
 | --- | --- | --- | --- |
-| First seed | 117 | 114 stored, 3 with no original in the cache | 2.4 s |
-| Second seed | 117 | 114 already present | under 0.5 s |
-| After a reset | 117 | 78 copied from beside the original, 36 rendered again from `fixtures/` originals, 3 missing | 2.2 s |
+| First seed | 117 | 117 stored | 2.4 s |
+| Second seed | 117 | 117 already present | under 0.5 s |
+| After a reset | 117 | 78 copied from beside the original, 39 rendered again from `fixtures/` originals | 2.2 s |
 
 | Fixture | File size | Mask time | Peak process memory |
 | --- | --- | --- | --- |
@@ -33,4 +33,4 @@ How much time does the new tissue mask step (`parfocal_ingest.tissue_seed.store_
 
 ## Interpretation
 
-The masks are made from a coarse pyramid level, so computing them costs a few seconds over the whole seed. In production the seeded originals live under `fixture-slides/` and `samples/`, which a reset keeps, so the mask is kept beside each original. Only the first deployed seed after this change downloads the originals once, about 9 GB for the format gallery and test_065. That download was not measured. Every later reseed costs one head request a slide and one copy per original. The peak memory stays under the seed function's 1 GB on Modal. The step runs after the workspace transactions, so it adds no lock wait.
+The masks are made from a coarse pyramid level, so computing them costs a few seconds over the whole seed. In production the seeded originals live under `fixture-slides/` and `samples/`, which a reset keeps, so the mask is kept beside each original. Only the first deployed seed after this change downloads the originals once, about 9 GB for the format gallery and test_065. That download was not measured. Every later reseed costs one head request a slide and one copy per original. `ObjectStore.download` streams to disk, and the peak memory of the mask step stays under the seed function's 1 GB on Modal. One original that fails is counted as failed and the other slides still get their masks. The step runs after the workspace transactions, so it adds no lock wait.

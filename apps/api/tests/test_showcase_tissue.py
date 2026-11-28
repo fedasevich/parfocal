@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 from db_support import OWNER_URL, migrated_database, run_sql, with_database
-from fixture_support import cache_dir, fixture_path
+from fixture_support import SYNTHETIC, cache_dir, fixture_path
 from test_showcase import OPENABLE, RESULTS, EmptyStore, counts
 from test_showcase_outcomes import as_owner
 
@@ -20,7 +20,14 @@ from parfocal_api.slide_tissue import read_mask
 from parfocal_common.ingest import fixture_original_key, sample_original_key
 from parfocal_common.object_store import StorageError
 from parfocal_ingest.tissue import CELL
-from parfocal_ingest.tissue_seed import COPIED, PRESENT, STORED, store_seeded_masks
+from parfocal_ingest.tissue_seed import (
+    COPIED,
+    FAILED,
+    MISSING,
+    PRESENT,
+    STORED,
+    store_seeded_masks,
+)
 
 pytestmark = pytest.mark.db
 
@@ -61,12 +68,23 @@ def local_originals() -> dict[str, Path]:
         if (cache_dir() / name).exists():
             served[fixture_original_key(name)] = cache_dir() / name
     for slide in FORMAT_GALLERY:
-        if (cache_dir() / slide.file).exists():
-            served[f"{FIXTURE_PREFIX}{slide.file}"] = cache_dir() / slide.file
+        for folder in (SYNTHETIC, cache_dir()):
+            if (folder / slide.file).exists():
+                served[f"{FIXTURE_PREFIX}{slide.file}"] = folder / slide.file
     sample = cache_dir() / VIEWER_SAMPLE_FILE
     if sample.exists():
         served[sample_original_key("test_065", VIEWER_SAMPLE_FILE)] = sample
     return served
+
+
+def all_gallery_local() -> bool:
+    return (
+        all(
+            (SYNTHETIC / slide.file).exists() or (cache_dir() / slide.file).exists()
+            for slide in FORMAT_GALLERY
+        )
+        and (cache_dir() / VIEWER_SAMPLE_FILE).exists()
+    )
 
 
 @dataclass(frozen=True)
@@ -110,7 +128,9 @@ async def test_every_seeded_slide_with_a_readable_original_has_a_stored_tissue_m
     served = [row for row in slides if row[2] in seeded.store.originals]
     assert served
     assert seeded.first[STORED] == len(served)
-    assert set(seeded.first) <= {STORED, "missing"}
+    assert set(seeded.first) <= {STORED, MISSING}
+    if all_gallery_local():
+        assert seeded.first[MISSING] == 0
     for tenant_id, slide_id, original_key, width, height in served:
         mask = read_mask(seeded.store.written[mask_key(tenant_id, slide_id)])
         assert seeded.store.written[f"t/{tenant_id}/s/{slide_id}/tissue.json"]
@@ -156,7 +176,7 @@ async def test_a_second_seed_stores_no_mask_again_and_leaves_the_same_rows(
     puts_after_seed = seeded.store.puts
     again = await store_seeded_masks(seeded.url, seeded.store, tenant_ids)  # type: ignore[arg-type]
     assert tenant_ids == seeded.tenant_ids
-    assert set(again) == {PRESENT, "missing"} or set(again) == {PRESENT}
+    assert set(again) <= {PRESENT, MISSING}
     assert again[PRESENT] == seeded.first[STORED]
     assert seeded.store.puts == puts_after_seed
     assert seeded.store.downloads == downloads
@@ -185,3 +205,28 @@ async def test_a_slide_seeded_after_a_reset_copies_the_mask_kept_beside_its_orig
         {row[2] for row in await seeded_slides(seeded.url) if row[2] in seeded.store.originals}
         - beside
     )
+
+
+async def test_one_original_that_breaks_the_reader_leaves_the_other_slides_seeded(
+    seeded: Seeded, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    broken = fixture_original_key(REQUIRED)
+    folder = broken.rsplit("/", 1)[0]
+    for name in list(seeded.store.written):
+        if name.endswith(("tissue.png", "tissue.json")) and (
+            name.startswith("t/") or name.startswith(folder)
+        ):
+            del seeded.store.written[name]
+    served = seeded.store.download
+
+    async def breaking(key: str, target: Path) -> None:
+        if key == broken:
+            raise RuntimeError("the reader broke")
+        await served(key, target)
+
+    monkeypatch.setattr(seeded.store, "download", breaking)
+    outcomes = await store_seeded_masks(seeded.url, seeded.store, seeded.tenant_ids)  # type: ignore[arg-type]
+    rows = await seeded_slides(seeded.url)
+    assert outcomes[FAILED] == sum(1 for row in rows if row[2] == broken)
+    assert outcomes[FAILED] > 0
+    assert outcomes[COPIED] + outcomes[STORED] > 0
