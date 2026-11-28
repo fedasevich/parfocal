@@ -37,6 +37,16 @@ async function setOpacity(page: Page, percent: number) {
   await expect(slider).toHaveAttribute("aria-valuenow", String(percent));
 }
 
+async function zoomOut(page: Page) {
+  const box = await page.getByTestId("slide-stage").boundingBox();
+  await page.mouse.move((box?.x ?? 0) + 200, (box?.y ?? 0) + 200);
+  for (let step = 0; step < 60; step += 1) {
+    if ((await outlines(page).getAttribute("data-draw")) === "dots") return;
+    await page.mouse.wheel(0, 60);
+    await page.waitForTimeout(40);
+  }
+}
+
 async function drawAs(page: Page, mode: string) {
   await page
     .locator('[data-slot="control-row"]')
@@ -66,6 +76,7 @@ test("at 10% opacity the outline, fill and dots draw at a tenth and the current 
   expect(filled?.outline).toBeCloseTo(0.1, 5);
 
   await drawAs(page, "Dots");
+  await zoomOut(page);
   await expect.poll(async () => part(await shown(page), "main")?.dot ?? null).toBeCloseTo(0.1, 5);
 
   await setOpacity(page, 100);

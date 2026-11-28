@@ -98,7 +98,12 @@ import {
   StageShapeEditBar,
   StageShapeFateBar,
 } from "./stage-shape-edit.tsx";
-import { StageSlideMarks, sampleOf, useSampleCollapsed } from "./stage-slide-marks.tsx";
+import {
+  StageSlideMarks,
+  sampleOf,
+  useCellsBigEnough,
+  useSampleCollapsed,
+} from "./stage-slide-marks.tsx";
 import { StageTypePicker } from "./stage-type-picker.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
@@ -245,7 +250,12 @@ function ObjectOutlines({
     () => placed.filter((item) => fixed.has(item.id) || fates.has(item.id)),
     [placed, fixed, fates],
   );
-  const choices = useMemo(() => drawChoicesOf(settings), [settings]);
+  const sample = useMemo(() => sampleOf(objects), [objects]);
+  const outlinesFit = useCellsBigEnough(engine, sample);
+  const choices = useMemo(() => {
+    const chosen = drawChoicesOf(settings);
+    return chosen.draw === "dots" && outlinesFit ? { ...chosen, draw: "outline" as const } : chosen;
+  }, [settings, outlinesFit]);
   const dimmedChoices = useMemo(
     () => ({ ...choices, opacity: Math.round((choices.opacity ?? 100) * dimmedShare) }),
     [choices],
@@ -278,6 +288,7 @@ function ObjectOutlines({
       data-dimmed={dimmed.map((item) => item.id).join(" ")}
       data-reviewed={reviewed.map((item) => item.id).join(" ")}
       data-draw={choices.draw}
+      data-setting-draw={settings.draw}
       data-width={choices.width}
       data-opacity={choices.opacity}
       data-shown={JSON.stringify([...keptShown, ...reviewedShown])}

@@ -1,6 +1,7 @@
 import type { ReviewObject } from "@parfocal/api-client";
 import { CellCluster } from "@parfocal/ui/components/cells-panel";
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { smallestJudgedPx } from "./calm-camera.ts";
 import { outlineArea } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 import { WholeSlideButton } from "./whole-slide-button.tsx";
@@ -58,6 +59,15 @@ export function useSampleCollapsed(engine: ViewerEngine, sample: SampleCells | n
     [engine, cellSize],
   );
   return useSyncExternalStore(engine.subscribeCamera, collapsed);
+}
+
+export function useCellsBigEnough(engine: ViewerEngine, sample: SampleCells | null) {
+  const cellSize = sample?.cellSize ?? 0;
+  const big = useCallback(
+    () => cellSize > 0 && cellSize * 2 ** engine.getCamera().zoom >= smallestJudgedPx,
+    [engine, cellSize],
+  );
+  return useSyncExternalStore(engine.subscribeCamera, big);
 }
 
 type Size = { width: number; height: number };

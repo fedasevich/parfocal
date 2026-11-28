@@ -180,7 +180,9 @@ export function drawObjectOverlays(options: DrawOptions): DrawnOverlays {
   const share = clampOpacity(settings.opacity) / 100;
   const opacity = layerOpacityOf(share);
   const shown: ShownAlpha[] = [];
-  const asDot = (object: DrawnObject) => settings.draw === "dots" && object.kind === "cell";
+  const dotted = (object: DrawnObject) => settings.draw === "dots" && object.kind === "cell";
+  const ringOnly = (object: DrawnObject) => dotted(object) && object.id === options.current?.id;
+  const asDot = (object: DrawnObject) => dotted(object) && !ringOnly(object);
 
   const overlayFor = (group: readonly DrawnObject[], part: string, dashed: boolean) => {
     if (group.length === 0) return [];
@@ -188,7 +190,7 @@ export function drawObjectOverlays(options: DrawOptions): DrawnOverlays {
     const colored = (object: DrawnObject) =>
       withAlpha(objectColour(object, settings.colourBy), alpha);
     const polygons = group
-      .filter((object) => !asDot(object))
+      .filter((object) => !asDot(object) && !ringOnly(object))
       .map((object) => ({ ring: object.ring, color: colored(object) }));
     const dots = group
       .filter(asDot)
