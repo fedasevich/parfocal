@@ -1,0 +1,44 @@
+name: tmp-test-061
+
+on:
+  push:
+    branches: ["ci-repair-3-bench*"]
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  diag:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        patch: [cap, nocap]
+    name: diag ${{ matrix.patch }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: browser-web
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small viewer)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-browser-${{ steps.fixtures.outputs.key }}
+      - run: pnpm fixtures small viewer
+        env:
+          PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.eu.r2.cloudflarestorage.com
+          PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_ACCESS_KEY_ID }}
+          PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_SECRET_ACCESS_KEY }}
+      - run: grep -m1 'model name' /proc/cpuinfo
+      - if: ${{ matrix.patch == 'nocap' }}
+        run: sed -i 's/void engine.flyToArea(area, guidedZoomLimit);/void engine.flyToArea(area);/' apps/web/src/viewer/guided-check.tsx
+      - working-directory: apps/web
+        run: pnpm exec playwright test e2e/zz-diag.spec.ts --workers=1 --repeat-each=2 --reporter=list || true
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
