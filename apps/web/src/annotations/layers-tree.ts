@@ -20,7 +20,7 @@ import type { Extent, GroupId, Shape, ShapeId } from "./shapes.ts";
 
 export const noClassName = "No class";
 
-export const treeRowPx = 28;
+export const treeRowPx = 44;
 
 export const groupPickLimit = 200;
 

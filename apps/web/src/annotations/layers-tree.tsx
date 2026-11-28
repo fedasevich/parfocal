@@ -15,6 +15,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -85,7 +86,7 @@ type Pending = {
 
 type Actions = {
   click: (row: TreeRow, event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) => void;
-  toggleOpen: (row: TreeRow) => void;
+  toggleOpen: (row: TreeRow, wholeLevel: boolean) => void;
   hide: (row: TreeRow) => void;
   lock: (row: TreeRow) => void;
   startRename: (row: TreeRow) => void;
@@ -116,6 +117,14 @@ function writeOpen(key: string, open: ReadonlySet<string>) {
   }
 }
 
+function scrollParentOf(node: HTMLElement | null): HTMLElement | null {
+  for (let parent = node?.parentElement ?? null; parent !== null; parent = parent.parentElement) {
+    const { overflowY } = window.getComputedStyle(parent);
+    if (overflowY === "auto" || overflowY === "scroll") return parent;
+  }
+  return null;
+}
+
 const shownName = (row: TreeRow) => (row.kind === "group" ? row.name : (row.name ?? row.label));
 
 const kindWords: Record<Shape["kind"], string> = {
@@ -138,6 +147,7 @@ const Row = memo(function Row({
   top,
   selected,
   picked,
+  holds,
   aimed,
   renaming,
   drop,
@@ -151,6 +161,7 @@ const Row = memo(function Row({
   top: number;
   selected: boolean;
   picked: boolean;
+  holds: boolean;
   aimed: boolean;
   renaming: boolean;
   drop: DropPlace | null;
@@ -177,6 +188,7 @@ const Row = memo(function Row({
       data-kind={row.kind}
       data-depth={row.depth}
       data-selected={selected || picked || undefined}
+      data-holds-selection={holds || undefined}
       data-target={aimed || undefined}
       data-hidden={off || undefined}
       data-locked={row.locked || undefined}
@@ -204,6 +216,7 @@ const Row = memo(function Row({
       className={cn(
         "absolute inset-x-0 grid grid-cols-[16px_10px_minmax(64px,1fr)_minmax(0,max-content)_24px_24px_24px] items-center gap-1.5 rounded-md pr-1 text-body-sm text-fg-dim select-none",
         (selected || picked) && "bg-accent-soft text-fg",
+        holds && !selected && !picked && "bg-accent-soft/50 text-fg",
         aimed && "ring-1 ring-accent ring-inset",
         (row.hiddenAbove || off) && "italic",
         drop === "into" && "bg-accent-soft ring-1 ring-accent",
@@ -217,7 +230,7 @@ const Row = memo(function Row({
           type="button"
           aria-expanded={row.expanded}
           aria-label={row.expanded ? t`Collapse ${name}` : t`Expand ${name}`}
-          onClick={() => actions.toggleOpen(row)}
+          onClick={(event) => actions.toggleOpen(row, event.altKey)}
           className="grid size-4 cursor-pointer place-items-center border-0 bg-transparent p-0 text-fg-faint"
         >
           <Icon name="caret" className={cn("transition-transform", row.expanded && "rotate-90")} />
@@ -265,20 +278,31 @@ const Row = memo(function Row({
           className="min-w-0 rounded-sm border border-line bg-chrome px-1 text-body-sm text-fg"
         />
       ) : (
-        <button
-          type="button"
-          data-testid="layers-row-name"
-          aria-pressed={selected || picked}
-          title={group ? t`Select the group and show it` : t`Select and show it`}
-          onClick={(event) => actions.click(row, event)}
-          onDoubleClick={() => actions.startRename(row)}
-          className="flex min-w-0 cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-left text-inherit"
-        >
-          {row.kind === "shape" ? <ObjectIdTag>{row.label}</ObjectIdTag> : null}
-          {row.kind === "shape" && row.name === null ? null : (
-            <span className="truncate">{name}</span>
+        <div className="grid min-w-0">
+          <button
+            type="button"
+            data-testid="layers-row-name"
+            aria-pressed={selected || picked}
+            title={group ? t`Select the group and show it` : t`Select and show it`}
+            onClick={(event) => actions.click(row, event)}
+            onDoubleClick={() => actions.startRename(row)}
+            className="flex min-w-0 cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-left text-inherit"
+          >
+            {row.kind === "shape" ? <ObjectIdTag>{row.label}</ObjectIdTag> : null}
+            {row.kind === "shape" && row.name === null ? null : (
+              <span className="truncate">{name}</span>
+            )}
+          </button>
+          {group ? null : (
+            <span
+              data-testid="layers-row-measure"
+              title={measure ?? undefined}
+              className="truncate font-mono text-caption text-fg-faint"
+            >
+              {measure ?? ""}
+            </span>
           )}
-        </button>
+        </div>
       )}
       <span className="flex min-w-0 items-center justify-end gap-1">
         {comments > 0 ? (
@@ -295,17 +319,7 @@ const Row = memo(function Row({
             {comments}
           </button>
         ) : null}
-        {group ? (
-          <span className="font-mono text-caption text-fg-faint">{row.count}</span>
-        ) : (
-          <span
-            data-testid="layers-row-measure"
-            title={measure ?? undefined}
-            className="truncate font-mono text-caption text-fg-dim"
-          >
-            {measure ?? ""}
-          </span>
-        )}
+        {group ? <span className="font-mono text-caption text-fg-faint">{row.count}</span> : null}
       </span>
       <button
         type="button"
@@ -441,34 +455,66 @@ export function LayersTree({
     publishLayerNames([...groups, ...classes]);
   }, [doc.groups, rows]);
 
+  const [outer, setOuter] = useState<HTMLElement | null>(null);
+  const [margin, setMargin] = useState(0);
+  const [revealed, setRevealed] = useState(0);
+
+  useLayoutEffect(() => {
+    const own = scroller.current;
+    if (outer === null) {
+      const found = scrollParentOf(own);
+      if (found !== null) setOuter(found);
+      return;
+    }
+    if (own === null) return;
+    const next = Math.round(
+      own.getBoundingClientRect().top - outer.getBoundingClientRect().top + outer.scrollTop,
+    );
+    setMargin((current) => (current === next ? current : next));
+  });
+
   const virtualizer = useVirtualizer({
     count: rows.length,
-    getScrollElement: () => scroller.current,
+    getScrollElement: () => outer ?? scroller.current,
     estimateSize: () => treeRowPx,
     getItemKey: (index) => rows[index]?.key ?? index,
     overscan: 8,
+    scrollMargin: outer === null ? 0 : margin,
   });
 
   const only = selected.length === 1 ? selected[0] : undefined;
+  const revealedShape = useRef<ShapeId | undefined>(undefined);
   useEffect(() => {
-    if (only === undefined) return;
+    if (only === undefined) {
+      revealedShape.current = undefined;
+      return;
+    }
+    if (revealedShape.current === only) return;
     setPicked(null);
     const keys = openKeysFor(doc, only);
+    if (keys.length === 0) return;
+    revealedShape.current = only;
     scrollTo.current = shapeKey(only);
-    if (keys.every((key) => open.has(key))) return;
+    setRevealed((count) => count + 1);
     changeOpen((next) => {
       for (const key of keys) next.add(key);
     });
-  }, [only, doc, open, changeOpen]);
+  }, [only, doc, changeOpen]);
+
+  const holding = useMemo(() => {
+    const keys = new Set<string>();
+    for (const id of selected) for (const key of openKeysFor(doc, id)) keys.add(key);
+    return keys;
+  }, [doc, selected]);
 
   useEffect(() => {
     const wanted = scrollTo.current;
-    if (wanted === null) return;
+    if (wanted === null || revealed === 0) return;
     const index = rows.findIndex((row) => row.key === wanted);
     if (index < 0) return;
     scrollTo.current = null;
     virtualizer.scrollToIndex(index, { align: "auto" });
-  }, [rows, virtualizer]);
+  }, [rows, virtualizer, revealed]);
 
   useEffect(() => {
     const from = knownGroups.current;
@@ -530,10 +576,11 @@ export function LayersTree({
         if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < dragThresholdPx) return;
         drag.active = true;
       }
-      const box = scroller.current?.getBoundingClientRect();
-      if (box && scroller.current) {
-        if (event.clientY < box.top + edgeScrollPx) scroller.current.scrollTop -= treeRowPx / 2;
-        if (event.clientY > box.bottom - edgeScrollPx) scroller.current.scrollTop += treeRowPx / 2;
+      const moving = scrollParentOf(scroller.current) ?? scroller.current;
+      const box = moving?.getBoundingClientRect();
+      if (box && moving) {
+        if (event.clientY < box.top + edgeScrollPx) moving.scrollTop -= treeRowPx / 2;
+        if (event.clientY > box.bottom - edgeScrollPx) moving.scrollTop += treeRowPx / 2;
       }
       setDrop(dropAt(event.clientX, event.clientY));
     };
@@ -599,10 +646,18 @@ export function LayersTree({
         }
         pick([row.shapeId], unionBounds(current, [row.shapeId]));
       },
-      toggleOpen: (row) =>
+      toggleOpen: (row, wholeLevel) =>
         changeOpen((next) => {
-          if (next.has(row.key)) next.delete(row.key);
-          else next.add(row.key);
+          const opening = !next.has(row.key);
+          const keys = wholeLevel
+            ? latest.current.rows.flatMap((other) =>
+                other.kind === "group" && other.depth === row.depth ? [other.key] : [],
+              )
+            : [row.key];
+          for (const key of keys) {
+            if (opening) next.add(key);
+            else next.delete(key);
+          }
         }),
       hide: (row) => {
         const { doc: current, onApply: apply } = latest.current;
@@ -684,15 +739,15 @@ export function LayersTree({
   }
 
   const items = virtualizer.getVirtualItems();
-  const height = Math.min(rows.length * treeRowPx, treeHeightPx);
+  const shift = outer === null ? 0 : margin;
   return (
     <div className="grid gap-1">
       <div
         ref={scroller}
         data-testid="layers-tree"
         data-rows={rows.length}
-        className="overflow-y-auto overscroll-contain"
-        style={{ height }}
+        className={outer === null ? "overflow-y-auto overscroll-contain" : undefined}
+        style={outer === null ? { height: Math.min(rows.length * treeRowPx, treeHeightPx) } : {}}
       >
         <ul
           ref={list}
@@ -708,9 +763,10 @@ export function LayersTree({
               <Row
                 key={row.key}
                 row={row}
-                top={item.start}
+                top={item.start - shift}
                 selected={row.kind === "shape" && chosen.has(row.shapeId)}
                 picked={row.key === picked}
+                holds={row.kind === "group" && !row.expanded && holding.has(row.key)}
                 aimed={parsed?.kind === "group" && parsed.id === target}
                 renaming={row.key === renaming}
                 drop={drop?.key === row.key ? drop.place : null}
