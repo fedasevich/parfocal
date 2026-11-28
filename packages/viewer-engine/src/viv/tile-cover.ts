@@ -17,8 +17,14 @@ export function boxesCover(view: Box, boxes: readonly Box[]): boolean {
   return covered >= width * height * (1 - coverSlack);
 }
 
-export function insideSlide(view: Box, width: number, height: number): boolean {
-  return view[0] >= 0 && view[1] >= 0 && view[2] <= width && view[3] <= height;
+export function partOverSlide(view: Box, width: number, height: number): Box | null {
+  const part: Box = [
+    Math.max(view[0], 0),
+    Math.max(view[1], 0),
+    Math.min(view[2], width),
+    Math.min(view[3], height),
+  ];
+  return part[2] > part[0] && part[3] > part[1] ? part : null;
 }
 
 export interface DrawnLayer {

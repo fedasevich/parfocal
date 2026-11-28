@@ -4,8 +4,8 @@ import {
   type Box,
   boxesCover,
   type DrawnLayer,
-  insideSlide,
   opaqueTileBoxes,
+  partOverSlide,
   type TiledLayer,
 } from "./tile-cover.ts";
 import { type TileFade, tileFadeProp } from "./tile-fade.ts";
@@ -36,9 +36,10 @@ export class SlideImageLayer extends VivSlideLayer {
     if (height === undefined || width === undefined || (self.props.opacity ?? 1) < 1) return true;
     const bounds = context.viewport.getBounds();
     const view: Box = [bounds[0] ?? 0, bounds[1] ?? 0, bounds[2] ?? 0, bounds[3] ?? 0];
-    if (!insideSlide(view, width, height)) return true;
+    const shown = partOverSlide(view, width, height);
+    if (shown === null) return true;
     const tiled = self.getSubLayers().find((layer) => layer.id.startsWith(tiledLayerPrefix));
     const boxes = tiled ? opaqueTileBoxes(tiled, self.props[tileFadeProp]) : null;
-    return boxes === null || !boxesCover(view, boxes);
+    return boxes === null || !boxesCover(shown, boxes);
   }
 }
