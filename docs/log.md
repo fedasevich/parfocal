@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-28
 
+- PROTO-210 (Cmd+Z takes back the last Smart select click, as the POC did) added for the owner's 2026-11-28 request. Backspace already does it, but use-undo-keys.ts sends Cmd+Z to the Smart select shape only while clicks are queued, so it undoes the previous saved annotation instead.
 - PROTO-209 (a comment thread loads behind a message skeleton, not the app loader) added: the owner asked on 2026-11-28 that comment text loads behind a skeleton, and thread-popover.tsx shows the app Loader while messages load.
 - PROTO-208 (the annotate Display tab scrolls once, its input help can be hidden and its cell list is tall) added from the owner's 2026-11-28 screenshot of a cell annotation task. The same screenshot shows yellow score dots for a result set in the annotate task, so PROTO-204 now covers the summary dots of stage-result-cells.tsx in annotate tasks as well.
 - Owner asked on 2026-11-28 about a side panel with a display part: it has three nested scroll areas, a help or input suggestion block takes much space and its open and close control sits so deep it cannot be used, so make the input suggestion closable or hidable, and make the list of cells clearer, bigger and taller. The screenshot did not come through, so the lead asked which screen before adding a task.
