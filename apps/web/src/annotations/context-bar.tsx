@@ -81,6 +81,7 @@ type ContextBarViewProps = {
   activeClass: string | null;
   onPick: (classKey: string) => void;
   forSelection?: boolean;
+  classesHidden?: boolean;
   proposals: ProposalActions | null;
   onCloseHints?: () => void;
 };
@@ -91,21 +92,23 @@ export function ContextBarView({
   activeClass,
   onPick,
   forSelection = false,
+  classesHidden = false,
   proposals,
   onCloseHints,
 }: ContextBarViewProps) {
   const { t } = useLingui();
   const stacked = useTopStacked();
   const placed = stacked ? wrapping : fitted;
-  const strip = model.classStrip ? (
-    <ClassStrip
-      classes={classes}
-      activeClass={activeClass}
-      onPick={onPick}
-      forSelection={forSelection}
-      compact={proposals !== null}
-    />
-  ) : null;
+  const strip =
+    model.classStrip && !classesHidden ? (
+      <ClassStrip
+        classes={classes}
+        activeClass={activeClass}
+        onPick={onPick}
+        forSelection={forSelection}
+        compact={proposals !== null}
+      />
+    ) : null;
   if (proposals !== null) {
     return (
       <ContextBar

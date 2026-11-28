@@ -12,6 +12,7 @@ import {
 } from "../aiseg/accept-typing.ts";
 import { showUndoToast } from "../shell/undo-toasts.tsx";
 import { acceptProposals, discardProposals, type Proposal, pendingProposals } from "./proposals.ts";
+import type { Shape } from "./shapes.ts";
 import type { SavedAnnotations } from "./use-saved-annotations.ts";
 
 export type TypingState =
@@ -30,6 +31,7 @@ export type ProposalTyping = {
   readonly autoType: boolean;
   readonly classOfType: ClassOfType;
   readonly typer?: OutlineTyper;
+  readonly onAccepted?: (shapes: readonly Shape[]) => void;
 };
 
 export function useProposals(
@@ -46,12 +48,13 @@ export function useProposals(
   const calls = useRef(0);
 
   const accept = useCallback(() => {
-    const { autoType, classOfType, typer = serverTyper } = now.current;
+    const { autoType, classOfType, typer = serverTyper, onAccepted } = now.current;
     const { typed, untyped, kept } = splitForTyping(pendingProposals(document), autoType);
     const first = acceptProposals(document, typed, { classKey: null });
     const bare = acceptProposals(first.document, untyped, { classKey: null });
     const second = acceptProposals(bare.document, kept);
     apply(second.document, "Accept proposals");
+    if (autoType) onAccepted?.([...first.shapes, ...bare.shapes]);
     if (first.shapes.length === 0) return;
     const call = ++calls.current;
     const count = first.shapes.length;

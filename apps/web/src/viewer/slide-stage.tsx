@@ -429,7 +429,9 @@ function OpenedSlide({
   useEffect(() => {
     setActiveClass((current) => current ?? classes[0]?.id ?? null);
   }, [classes]);
-  const cellTyping = useCellTyping(saved, slideId, classes, activeClass);
+  const cellTyping = useCellTyping(saved, slideId, classes, activeClass, (shapes) =>
+    setSelectedIds(shapes.map((shape) => shape.id)),
+  );
   const { stripClass, selectionTakesClass, pickClassKey } = useSelectionClass({
     saved,
     tool,
@@ -751,6 +753,7 @@ function OpenedSlide({
                       activeClass={stripClass}
                       onPick={pickClassKey}
                       forSelection={selectionTakesClass}
+                      classesHidden={tool === "smart" && cellTyping.autoType}
                       proposals={
                         proposalCount > 0
                           ? {
