@@ -45022,6 +45022,23 @@
               "$ref": "#/components/schemas/Locale",
               "default": "en"
             }
+          },
+          {
+            "name": "zone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zone"
+            }
           }
         ],
         "responses": {
@@ -45292,6 +45309,23 @@
               "minimum": 1,
               "default": 4,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "zone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zone"
             }
           }
         ],

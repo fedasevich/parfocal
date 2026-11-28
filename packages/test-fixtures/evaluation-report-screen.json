@@ -1,0 +1,900 @@
+{
+  "about": "Props the evaluation report screen drew for the fake RT-14 report at scene=report, and the text of each sheet in DOM order. Synthetic data, no PHI.",
+  "zone": "Europe/Prague",
+  "inputs": {
+    "report": {
+      "task_id": "00000000-0000-4000-8007-000000000014",
+      "task_code": "RT-14",
+      "round_name": "Round 2",
+      "model": "CAMELYON tumor model v1.0",
+      "project": {
+        "id": "00000000-0000-4000-8003-000000000007",
+        "code": "P07",
+        "name": "Sentinel node AI evaluation"
+      },
+      "lab": {
+        "name": "Fakultní nemocnice Vltava",
+        "short": "FV"
+      },
+      "slides": 12,
+      "objects": 660,
+      "reviewer_ids": [
+        "00000000-0000-4000-8001-000000000001",
+        "00000000-0000-4000-8001-000000000003"
+      ],
+      "adjudicators": 1,
+      "version": 1,
+      "signed_at": "2026-10-15T14:02:00+02:00",
+      "signed_by_user_id": "00000000-0000-4000-8001-000000000009",
+      "template": {
+        "id": "00000000-0000-4000-8042-000000000001",
+        "name": "Sentinel node AI evaluation",
+        "version": 2,
+        "latest_version": 3,
+        "retired_on": null,
+        "blocks": [
+          {
+            "kind": "headline-numbers",
+            "title": "Results",
+            "width": "full",
+            "metrics": ["sensitivity", "precision", "dice", "kappa", "cell-agreement"]
+          },
+          {
+            "kind": "confusion-matrix",
+            "title": "Cell types, AI against the consensus",
+            "width": "full"
+          },
+          {
+            "kind": "disagreement-reasons",
+            "title": "Why reviewers disagreed",
+            "width": "half"
+          },
+          {
+            "kind": "opinion-answers",
+            "title": "Opinion answers",
+            "width": "half"
+          },
+          {
+            "kind": "worst-objects",
+            "title": "Objects, worst first",
+            "width": "full"
+          },
+          {
+            "kind": "text",
+            "title": "Methods",
+            "width": "full"
+          }
+        ],
+        "format": {
+          "paper": "a4",
+          "orientation": "portrait",
+          "text_size": "normal",
+          "running_header": true,
+          "page_numbers": "page-of",
+          "draft_watermark": true,
+          "signature": true,
+          "label_language": "en",
+          "decimals": 2,
+          "appendices": ["objects"]
+        }
+      },
+      "formats": [
+        {
+          "key": "pdf",
+          "label": "PDF, this layout"
+        },
+        {
+          "key": "docx",
+          "label": "Word, this layout, editable"
+        },
+        {
+          "key": "decisions",
+          "label": "Decisions per object, CSV"
+        },
+        {
+          "key": "objects",
+          "label": "Objects with full IDs, CSV"
+        },
+        {
+          "key": "geojson",
+          "label": "Reviewed annotations, GeoJSON"
+        }
+      ],
+      "confusion": {
+        "classes": ["Tumor", "Immune", "Stroma", "Other"],
+        "counts": [[412, 18, 6, 4], [21, 388, 12, 9], [5, 14, 201, 7], [3, 11, 8, 101]]
+      },
+      "worst": [
+        {
+          "object": "T2",
+          "what": "Tumor region",
+          "answers": [
+            {
+              "user_id": "00000000-0000-4000-8001-000000000001",
+              "raw": "disagree"
+            },
+            {
+              "user_id": "00000000-0000-4000-8001-000000000003",
+              "raw": "agree"
+            }
+          ]
+        },
+        {
+          "object": "T4",
+          "what": "Tumor region",
+          "answers": [
+            {
+              "user_id": "00000000-0000-4000-8001-000000000001",
+              "raw": "unsure"
+            },
+            {
+              "user_id": "00000000-0000-4000-8001-000000000003",
+              "raw": "disagree"
+            }
+          ]
+        },
+        {
+          "object": "T5",
+          "what": "Tumor region",
+          "answers": [
+            {
+              "user_id": "00000000-0000-4000-8001-000000000001",
+              "raw": "disagree"
+            },
+            {
+              "user_id": "00000000-0000-4000-8001-000000000003",
+              "raw": "agree"
+            }
+          ]
+        },
+        {
+          "object": "T1·C212",
+          "what": "Tumor cell",
+          "answers": [
+            {
+              "user_id": "00000000-0000-4000-8001-000000000001",
+              "raw": "unsure"
+            },
+            {
+              "user_id": "00000000-0000-4000-8001-000000000003",
+              "raw": "agree"
+            }
+          ]
+        },
+        {
+          "object": "T1·C145",
+          "what": "Tumor cell",
+          "answers": [
+            {
+              "user_id": "00000000-0000-4000-8001-000000000001",
+              "raw": "disagree"
+            },
+            {
+              "user_id": "00000000-0000-4000-8001-000000000003",
+              "raw": "disagree"
+            }
+          ]
+        },
+        {
+          "object": "T1",
+          "what": "Tumor region",
+          "answers": [
+            {
+              "user_id": "00000000-0000-4000-8001-000000000001",
+              "raw": "agree"
+            },
+            {
+              "user_id": "00000000-0000-4000-8001-000000000003",
+              "raw": "agree"
+            }
+          ]
+        }
+      ],
+      "opinion_question": "Is the AI result acceptable?",
+      "changes": [
+        {
+          "version": 1,
+          "by_user_id": "00000000-0000-4000-8001-000000000009",
+          "at": "2026-10-16T09:12:00+02:00",
+          "object": "T4",
+          "slide_label": "A1",
+          "text": "disagree changed to not sure",
+          "reason": "second look with the CK slide"
+        }
+      ]
+    },
+    "evaluation": {
+      "task_id": "00000000-0000-4000-8007-000000000014",
+      "sample": false,
+      "ai_result": true,
+      "decisions": {
+        "style": "agree",
+        "counts_as": ["disagree", "disagree", "unsure", "agree", "agree"],
+        "counted": {
+          "agree": 0,
+          "disagree": 0,
+          "unsure": 2
+        },
+        "answers": {
+          "unsure": 2
+        }
+      },
+      "display": {
+        "defaults": {
+          "draw_as": "outline",
+          "width": 2,
+          "opacity": 100,
+          "colour_by": "class",
+          "id_labels": true,
+          "confidence": "number",
+          "heatmap": 0,
+          "score_cutoff": 0.4,
+          "other_sets": {
+            "reviewed_layer": true,
+            "result_set_ids": []
+          },
+          "order": "ai",
+          "zoom": "fit",
+          "move_on": true,
+          "buttons": "card"
+        },
+        "locks": {
+          "order": "Everyone sees the objects in the same order, so agreement is fair"
+        },
+        "add_missed": true
+      },
+      "presets": [],
+      "classes": [
+        {
+          "kind": "region",
+          "class_name": "Tumor",
+          "true_positives": 46,
+          "false_positives": 6,
+          "false_negatives": 4,
+          "unsure": 2,
+          "undecided": 0,
+          "precision": {
+            "value": 0.88,
+            "numerator": 46,
+            "denominator": 52
+          },
+          "sensitivity": {
+            "value": 0.92,
+            "numerator": 46,
+            "denominator": 50
+          }
+        }
+      ],
+      "overall": [
+        {
+          "kind": "region",
+          "class_name": "Tumor",
+          "true_positives": 46,
+          "false_positives": 6,
+          "false_negatives": 4,
+          "unsure": 2,
+          "undecided": 0,
+          "precision": {
+            "value": 0.88,
+            "numerator": 46,
+            "denominator": 52
+          },
+          "sensitivity": {
+            "value": 0.92,
+            "numerator": 46,
+            "denominator": 50
+          }
+        }
+      ],
+      "dice": {
+        "Tumor": {
+          "value": 0.86,
+          "numerator": 43,
+          "denominator": 50
+        }
+      },
+      "kappa": [
+        {
+          "first": "00000000-0000-4000-8001-000000000001",
+          "second": "00000000-0000-4000-8001-000000000003",
+          "value": 0.71,
+          "objects": 660
+        }
+      ],
+      "mean_kappa": 0.71,
+      "fleiss_kappa": null,
+      "cell_agreement_with_ai": {
+        "value": 0.91,
+        "numerator": 1110,
+        "denominator": 1220
+      },
+      "cell_agreement_between_reviewers": {
+        "value": 0.94,
+        "numerator": 1147,
+        "denominator": 1220
+      },
+      "reasons": [
+        ["wrong_class", 38],
+        ["boundary_off", 21],
+        ["not_class", 14],
+        ["artefact", 6],
+        ["two_regions", 3]
+      ],
+      "opinions": [
+        {
+          "key": "acceptable",
+          "count": 24,
+          "mean": 4.04,
+          "spread": null,
+          "counts": {
+            "1": 0,
+            "2": 1,
+            "3": 4,
+            "4": 12,
+            "5": 7
+          },
+          "texts": []
+        }
+      ]
+    },
+    "queue": [
+      {
+        "key": "A1:T2",
+        "slide_id": "00000000-0000-4000-8005-000000000001",
+        "slide_label": "A1",
+        "object": "T2",
+        "kind": "region",
+        "ai": {
+          "class_name": "Tumor",
+          "score": 0.91
+        },
+        "size_mm": 6.2,
+        "tag": "differ",
+        "answers": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "raw": "disagree",
+            "reason": "Boundary is off",
+            "note": "Runs past the capsule fold, about 0.4 mm. @Daniel Hruška worth a CK level?",
+            "retyped_to": null
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "raw": "agree",
+            "reason": null,
+            "note": null,
+            "retyped_to": null
+          }
+        ],
+        "state": "decided",
+        "decision": {
+          "raw": "disagree",
+          "kept_type": null,
+          "note": "Agree with Lenka, the boundary runs past the fold.",
+          "by_user_id": "00000000-0000-4000-8001-000000000009",
+          "at": "2026-10-17T11:05:00+02:00"
+        },
+        "adjudicator": null,
+        "edited": null,
+        "settled_outline": null
+      },
+      {
+        "key": "A1:T4",
+        "slide_id": "00000000-0000-4000-8005-000000000001",
+        "slide_label": "A1",
+        "object": "T4",
+        "kind": "region",
+        "ai": {
+          "class_name": "Tumor",
+          "score": 0.58
+        },
+        "size_mm": 0.75,
+        "tag": "second",
+        "answers": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "raw": "unsure",
+            "reason": "Need a second look",
+            "note": null,
+            "retyped_to": null
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "raw": "disagree",
+            "reason": "Not tumor",
+            "note": "Reactive sinus histiocytes, no atypia.",
+            "retyped_to": null
+          }
+        ],
+        "state": "adjudicated",
+        "decision": {
+          "raw": "disagree",
+          "note": null,
+          "by_user_id": "00000000-0000-4000-8001-000000000002",
+          "at": "2026-10-17T13:30:00+02:00"
+        },
+        "adjudicator": {
+          "user_id": "00000000-0000-4000-8001-000000000002",
+          "note": null
+        },
+        "edited": null,
+        "settled_outline": null
+      },
+      {
+        "key": "A1:T5",
+        "slide_id": "00000000-0000-4000-8005-000000000001",
+        "slide_label": "A1",
+        "object": "T5",
+        "kind": "region",
+        "ai": {
+          "class_name": "Tumor",
+          "score": 0.52
+        },
+        "size_mm": 0.4,
+        "tag": "differ",
+        "answers": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "raw": "disagree",
+            "reason": "Artefact or fold",
+            "note": "Crush artefact at the cut edge.",
+            "retyped_to": null
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "raw": "agree",
+            "reason": null,
+            "note": null,
+            "retyped_to": null
+          }
+        ],
+        "state": "adjudicated",
+        "decision": {
+          "raw": "disagree",
+          "note": null,
+          "by_user_id": "00000000-0000-4000-8001-000000000002",
+          "at": "2026-10-17T13:34:00+02:00"
+        },
+        "adjudicator": {
+          "user_id": "00000000-0000-4000-8001-000000000002",
+          "note": null
+        },
+        "edited": null,
+        "outline_differs": true,
+        "outline_overlap": 0.42,
+        "outlines": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "outline": [769, 507.5, 833, 503.5, 841, 563.5, 777, 571.5]
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "outline": [796, 500, 876, 495, 886, 570, 806, 580]
+          }
+        ],
+        "settled_outline": null
+      },
+      {
+        "key": "A1:T1·C212",
+        "slide_id": "00000000-0000-4000-8005-000000000001",
+        "slide_label": "A1",
+        "object": "T1·C212",
+        "kind": "cell",
+        "ai": {
+          "class_name": "Tumor",
+          "score": 0.48
+        },
+        "size_mm": null,
+        "tag": "differ",
+        "answers": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "raw": "unsure",
+            "reason": "Border unclear",
+            "note": null,
+            "retyped_to": null
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "raw": "agree",
+            "reason": null,
+            "note": null,
+            "retyped_to": null
+          }
+        ],
+        "state": "left-open",
+        "decision": null,
+        "adjudicator": null,
+        "edited": null,
+        "settled_outline": null
+      },
+      {
+        "key": "A1:T1·C145",
+        "slide_id": "00000000-0000-4000-8005-000000000001",
+        "slide_label": "A1",
+        "object": "T1·C145",
+        "kind": "cell",
+        "ai": {
+          "class_name": "Tumor",
+          "score": 0.46
+        },
+        "size_mm": null,
+        "tag": "bothai",
+        "answers": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "raw": "disagree",
+            "reason": "It is an immune cell",
+            "note": null,
+            "retyped_to": null
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "raw": "disagree",
+            "reason": "It is an immune cell",
+            "note": "Histiocyte, bean-shaped nucleus.",
+            "retyped_to": null
+          }
+        ],
+        "state": "adjudicated",
+        "decision": {
+          "raw": "disagree",
+          "note": null,
+          "by_user_id": "00000000-0000-4000-8001-000000000002",
+          "at": "2026-10-17T13:37:00+02:00"
+        },
+        "adjudicator": {
+          "user_id": "00000000-0000-4000-8001-000000000002",
+          "note": null
+        },
+        "edited": null,
+        "settled_outline": null
+      },
+      {
+        "key": "CMU-1-Small-Region-tumor_031.svs:T1",
+        "slide_id": "00000000-0000-4000-8005-000000000004",
+        "slide_label": "CMU-1-Small-Region-tumor_031.svs",
+        "object": "T1",
+        "kind": "region",
+        "ai": {
+          "class_name": "Tumor",
+          "score": 0.88
+        },
+        "size_mm": 3.1,
+        "tag": "differ",
+        "answers": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "raw": "agree",
+            "reason": null,
+            "note": null,
+            "retyped_to": null
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "raw": "disagree",
+            "reason": "Not tumor",
+            "note": "Germinal centre with tingible body macrophages.",
+            "retyped_to": null
+          }
+        ],
+        "state": "left-open",
+        "decision": null,
+        "adjudicator": null,
+        "edited": null,
+        "settled_outline": null
+      },
+      {
+        "key": "tumor_044:T2·C88",
+        "slide_id": "00000000-0000-4000-8005-000000000005",
+        "slide_label": "tumor_044",
+        "object": "T2·C88",
+        "kind": "cell",
+        "ai": {
+          "class_name": "Immune",
+          "score": 0.52
+        },
+        "size_mm": null,
+        "tag": "bothai",
+        "answers": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "raw": "disagree",
+            "reason": "It is a tumor cell",
+            "note": "Large nucleolus, a tumor cell.",
+            "retyped_to": "Tumor"
+          },
+          {
+            "user_id": "00000000-0000-4000-8001-000000000003",
+            "raw": "disagree",
+            "reason": "It is a tumor cell",
+            "note": null,
+            "retyped_to": null
+          }
+        ],
+        "state": "decided",
+        "decision": {
+          "raw": "disagree",
+          "kept_type": null,
+          "note": "Tumor cell, both reviewers were right.",
+          "by_user_id": "00000000-0000-4000-8001-000000000009",
+          "at": "2026-10-17T11:12:00+02:00"
+        },
+        "adjudicator": null,
+        "edited": null,
+        "outlines": [
+          {
+            "user_id": "00000000-0000-4000-8001-000000000001",
+            "outline": [4060, 3050, 4540, 3050, 4540, 3450, 4060, 3450]
+          }
+        ],
+        "settled_outline": null
+      }
+    ],
+    "changes": [
+      {
+        "version": 1,
+        "by_user_id": "00000000-0000-4000-8001-000000000009",
+        "at": "2026-10-16T09:12:00+02:00",
+        "object": "T4",
+        "slide_label": "A1",
+        "text": "disagree changed to not sure",
+        "reason": "second look with the CK slide"
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "headline-numbers",
+        "title": "Results",
+        "width": "full",
+        "show_title": true,
+        "page_break": false,
+        "metrics": ["sensitivity", "precision", "dice", "kappa", "cell-agreement"]
+      },
+      {
+        "kind": "confusion-matrix",
+        "title": "Cell types, AI against the consensus",
+        "width": "full",
+        "show_title": true,
+        "page_break": false
+      },
+      {
+        "kind": "disagreement-reasons",
+        "title": "Why reviewers disagreed",
+        "width": "half",
+        "show_title": true,
+        "page_break": false
+      },
+      {
+        "kind": "opinion-answers",
+        "title": "Opinion answers",
+        "width": "half",
+        "show_title": true,
+        "page_break": false
+      },
+      {
+        "kind": "worst-objects",
+        "title": "Objects, worst first",
+        "width": "full",
+        "show_title": true,
+        "page_break": false
+      },
+      {
+        "kind": "text",
+        "title": "Methods",
+        "width": "full",
+        "show_title": true,
+        "page_break": false
+      }
+    ],
+    "format": {
+      "paper": "a4",
+      "orientation": "portrait",
+      "text_size": "normal",
+      "running_header": true,
+      "page_numbers": "page-of",
+      "draft_watermark": true,
+      "signature": true,
+      "label_language": "en",
+      "decimals": 2,
+      "appendices": ["objects"]
+    },
+    "template_version": 2,
+    "names": {
+      "00000000-0000-4000-8001-000000000001": "Lenka Malá",
+      "00000000-0000-4000-8001-000000000003": "Simona Marková",
+      "00000000-0000-4000-8001-000000000009": "Daniel Hruška"
+    },
+    "counts_as_changes": [],
+    "style": {
+      "kind": "agree",
+      "agree_from": 4,
+      "disagree_to": 2
+    }
+  },
+  "screen": [
+    [
+      "FV",
+      "Fakultní nemocnice Vltava",
+      "Parfocal · research output",
+      "Evaluation report",
+      "RT-14 · CAMELYON tumor model v1.0",
+      "Evaluation v1 · signed 15 Oct 2026",
+      "Changed after sign-off · 1 change listed at the end · the checksum is of v1 as signed",
+      "Project",
+      "Sentinel node AI evaluation (P07)",
+      "Task",
+      "RT-14 · Round 2",
+      "Model",
+      "CAMELYON tumor model v1.0",
+      "Slides",
+      "12 slides · 660 objects",
+      "Reviewers",
+      "2 blind reviewers, 1 adjudicator",
+      "Template",
+      "Sentinel node AI evaluation v2",
+      "Results",
+      "0.92",
+      "Sensitivity, regions",
+      "0.88",
+      "Precision, regions",
+      "0.86",
+      "Dice, regions",
+      "0.71",
+      "Cohen's κ, reviewers",
+      "91%",
+      "Cells agreed",
+      "Cell types, AI against the consensus",
+      "The AI said",
+      "Consensus of the reviewers",
+      "Tumor",
+      "Immune",
+      "Stroma",
+      "Other",
+      "Tumor",
+      "412",
+      "18",
+      "6",
+      "4",
+      "Immune",
+      "21",
+      "388",
+      "12",
+      "9",
+      "Stroma",
+      "5",
+      "14",
+      "201",
+      "7",
+      "Other",
+      "3",
+      "11",
+      "8",
+      "101",
+      "The diagonal is agreement between the AI and the consensus.",
+      "Why reviewers disagreed",
+      "Wrong cell type",
+      "38",
+      "Boundary is off",
+      "21",
+      "Not tumor",
+      "14",
+      "Artefact or fold",
+      "6",
+      "Two regions, not one",
+      "3",
+      "Opinion answers",
+      "Is the AI result acceptable?",
+      "1 · unusable",
+      "0",
+      "2",
+      "1",
+      "3",
+      "4",
+      "4",
+      "12",
+      "5 · sign as is",
+      "7",
+      "RT-14 · Evaluation v1 · signed 15 Oct 2026",
+      "Page 1 of 3"
+    ],
+    [
+      "RT-14 · Evaluation report v1",
+      "Objects, worst first",
+      "ID",
+      "Object",
+      "Lenka Malá",
+      "Simona Marková",
+      "T2",
+      "Tumor region",
+      "disagree",
+      "agree",
+      "T4",
+      "Tumor region",
+      "unsure",
+      "disagree",
+      "T5",
+      "Tumor region",
+      "disagree",
+      "agree",
+      "T1·C212",
+      "Tumor cell",
+      "unsure",
+      "agree",
+      "T1·C145",
+      "Tumor cell",
+      "disagree",
+      "disagree",
+      "T1",
+      "Tumor region",
+      "agree",
+      "agree",
+      "6 of 660 objects. Every object is in the CSV with its full ID.",
+      "Methods",
+      "Reviewers answered in the Agree with the AI style. Each answer counts as it reads. Not sure stays not sure.",
+      "The decisions count as 0 agree, 0 disagree, 2 not sure. The answers as given were Not sure 2.",
+      "Changes after sign-off",
+      "T4 on A1",
+      "disagree changed to not sure",
+      "· \"",
+      "second look with the CK slide",
+      "\"",
+      "Daniel Hruška",
+      "16 Oct 2026",
+      ",",
+      "09:12",
+      "Left open on purpose",
+      "T1·C212 on A1, T1 on CMU-1-Small-Region-tumor_031.svs",
+      "Signature",
+      "Signed by Daniel Hruška on 15 Oct 2026 at 14:02. Changes after sign-off are logged with a reason.",
+      "RT-14 · Evaluation v1 · signed 15 Oct 2026",
+      "Page 2 of 3"
+    ],
+    [
+      "RT-14 · Evaluation report v1",
+      "Appendix: objects",
+      "ID",
+      "Slide",
+      "Lenka Malá",
+      "Simona Marková",
+      "Decision",
+      "T2",
+      "A1",
+      "Disagree",
+      "Agree",
+      "Disagree",
+      "T4",
+      "A1",
+      "Not sure",
+      "Disagree",
+      "Disagree",
+      "T5",
+      "A1",
+      "Disagree",
+      "Agree",
+      "Disagree",
+      "T1·C212",
+      "A1",
+      "Not sure",
+      "Agree",
+      "Left open",
+      "T1·C145",
+      "A1",
+      "Disagree",
+      "Disagree",
+      "Disagree",
+      "T1",
+      "CMU-1-Small-Region-tumor_031.svs",
+      "Agree",
+      "Disagree",
+      "Left open",
+      "T2·C88",
+      "tumor_044",
+      "Disagree",
+      "Disagree",
+      "Disagree",
+      "RT-14 · Evaluation v1 · signed 15 Oct 2026",
+      "Page 3 of 3"
+    ]
+  ]
+}

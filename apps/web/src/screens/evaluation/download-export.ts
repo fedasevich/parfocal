@@ -1,4 +1,5 @@
 import { ExportKind, getExportTaskEvaluationUrl } from "@parfocal/api-client";
+import { readerZone } from "../clinical-report/pdf-link.ts";
 
 const kindOfFormat: Record<string, ExportKind> = {
   pdf: ExportKind.reportpdf,
@@ -10,6 +11,9 @@ const kindOfFormat: Record<string, ExportKind> = {
 
 export const hasExport = (format: string) => format in kindOfFormat;
 
+export const exportUrl = (taskId: string, kind: ExportKind, zone: string = readerZone()) =>
+  getExportTaskEvaluationUrl(taskId, kind, kind === ExportKind.reportpdf ? { zone } : undefined);
+
 const fileNameOf = (response: Response, fallback: string) => {
   const header = response.headers.get("Content-Disposition") ?? "";
   return /filename="([^"]+)"/.exec(header)?.[1] ?? fallback;
@@ -18,7 +22,7 @@ const fileNameOf = (response: Response, fallback: string) => {
 export async function downloadExport(taskId: string, format: string): Promise<string | null> {
   const kind = kindOfFormat[format];
   if (kind === undefined) return null;
-  const response = await fetch(getExportTaskEvaluationUrl(taskId, kind), {
+  const response = await fetch(exportUrl(taskId, kind), {
     credentials: "same-origin",
   });
   if (!response.ok) return null;

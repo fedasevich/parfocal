@@ -1,8 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
+  ExportKind,
   getDownloadSavedStudyTemplatePreviewUrl,
   getDownloadStudyTemplatePreviewUrl,
-  getExportTaskEvaluationUrl,
   previewTaskEvaluation,
   type ReportPreview,
   type TemplatePreviewDraft,
@@ -12,7 +12,9 @@ import {
 } from "@parfocal/api-client";
 import { PdfPreview } from "@parfocal/ui/components/report-templates";
 import { useEffect, useRef, useState } from "react";
+import { readerZone } from "../clinical-report/pdf-link.ts";
 import { okData } from "../placeholder.tsx";
+import { exportUrl } from "./download-export.ts";
 import { fetchPdf, paperLabel, printPages, saveFile, svgSource } from "./pdf-file.ts";
 
 type ViewerProps = {
@@ -154,15 +156,15 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
 }
 
 const laterPagesOf = (taskId: string) => async (offset: number) => {
-  const found = okData(await previewTaskEvaluation(taskId, { offset }));
+  const found = okData(await previewTaskEvaluation(taskId, { offset, zone: readerZone() }));
   if (!found) throw new Error("The pages could not be loaded");
   return found.pages;
 };
 
 export function TaskPdfOverlay({ taskId, onClose }: { taskId: string; onClose: () => void }) {
-  const query = usePreviewTaskEvaluation(taskId, undefined);
+  const query = usePreviewTaskEvaluation(taskId, { zone: readerZone() });
   const preview = okData(query.data);
-  const url = getExportTaskEvaluationUrl(taskId, "report.pdf");
+  const url = exportUrl(taskId, ExportKind.reportpdf);
   const [loadPages] = useState(() => laterPagesOf(taskId));
   return (
     <PdfViewer

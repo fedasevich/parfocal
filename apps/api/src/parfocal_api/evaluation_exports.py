@@ -3,12 +3,13 @@ import hashlib
 import io
 import json
 import uuid
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import Annotated, Any
+from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -27,22 +28,21 @@ from parfocal_api.evaluation import (
     evaluate,
     first_of_each_match,
 )
+from parfocal_api.evaluation_paper import Paper, paper_json, paper_of
 from parfocal_api.locales import DEFAULT_LOCALE, Locale
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import ProblemError
+from parfocal_api.reader_zone import zone_of
 from parfocal_api.report_cache import ReportCache, ReportKey
-from parfocal_api.report_style import compile_options
+from parfocal_api.report_style import compile_options, paper_layout
 from parfocal_api.report_template import (
     RenderedReport,
     ReportChange,
-    ReportCompared,
     ReportData,
     ReportDecision,
     ReportObject,
-    headline_of,
     render_report,
-    report_data,
 )
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task
@@ -72,13 +72,13 @@ from parfocal_common import evaluation as engine
 from parfocal_common.object_ids import ObjectId, ObjectPath
 from parfocal_common.report_blocks import (
     BLOCKS,
-    Comparison,
     ExpertChanges,
     ReportBlock,
     ReportFormat,
     SlideFigure,
     TextBlock,
 )
+from parfocal_common.report_layout import ReportPage
 from parfocal_common.result_store import ResultStore
 
 CHECKSUM_HEADER = "X-Parfocal-Evaluation-Checksum"
@@ -478,62 +478,6 @@ def report_decisions(rows: list[dict[str, Any]]) -> tuple[ReportDecision, ...]:
     )
 
 
-async def compared_tasks(
-    connection: AsyncConnection,
-    principal: Any,
-    blocks: tuple[ReportBlock, ...],
-    store: Results | None,
-) -> dict[str, ReportCompared]:
-    compared: dict[str, ReportCompared] = {}
-    for block in blocks:
-        if not isinstance(block, Comparison) or block.task_id is None:
-            continue
-        try:
-            other, whole = await readable_task(connection, principal, block.task_id)
-            review_only(other.kind)
-        except ProblemError:
-            continue
-        if whole:
-            found = await evaluate(connection, other, store)
-            compared[str(block.task_id)] = ReportCompared(other.name, headline_of(found))
-    return compared
-
-
-async def rendered_report(
-    connection: AsyncConnection,
-    principal: Any,
-    task: Any,
-    evaluation: Evaluation,
-    version: Version,
-    locale: Locale,
-    store: Results | None = None,
-) -> RenderedReport:
-    project_name = await connection.scalar(
-        select(projects.c.name).where(projects.c.id == task.project_id)
-    )
-    blocks, report_format = await signed_layout(connection, task)
-    data = report_data(
-        evaluation,
-        str(project_name),
-        task.name,
-        version.number,
-        version.signed_at.date() if version.signed_at else None,
-        version.checksum,
-        blocks,
-        report_format,
-    )
-    data = replace(
-        data,
-        objects=report_objects(await object_rows(connection, task, version, store)),
-        decision_rows=report_decisions(await decision_rows(connection, task, version, store))
-        if "decisions" in report_format.appendices
-        else (),
-        compared=await compared_tasks(connection, principal, blocks, store),
-        changes=version.changes,
-    )
-    return render_report(data, locale)
-
-
 ANNOTATE_BLOCKS = (ExpertChanges, TextBlock, SlideFigure)
 ANNOTATE_DEFAULT: tuple[ReportBlock, ...] = (
     ExpertChanges(kind="ai-changes", title="Changes to the AI by class"),
@@ -592,15 +536,28 @@ async def task_report(
     task: Any,
     results: Results,
     locale: Locale,
+    zone: ZoneInfo | None = None,
 ) -> tuple[RenderedReport, Version]:
     if task.kind == TaskKind.ANNOTATE:
         return await annotate_report(connection, principal, task, results, locale)
+    from parfocal_api.evaluation_paper_inputs import paper_inputs
+
     evaluation = await evaluate(connection, task, results)
     version = await version_of(connection, task, evaluation)
-    rendered = await rendered_report(
-        connection, principal, task, evaluation, version, locale, results
+    inputs = await paper_inputs(
+        connection, principal, task, results, evaluation, version.checksum, zone
     )
-    return rendered, version
+    return paper_report(paper_of(inputs), inputs.format, locale), version
+
+
+def paper_report(paper: Paper, report_format: ReportFormat, locale: Locale) -> RenderedReport:
+    return RenderedReport(
+        locale=locale,
+        source=paper_layout(paper.letter, paper.landscape),
+        inputs={"paper": paper_json(paper)},
+        pages=tuple(ReportPage() for _ in paper.sheets),
+        format=report_format,
+    )
 
 
 def typst_options(report: RenderedReport, version: Version) -> dict[str, Any]:
@@ -689,14 +646,18 @@ async def export_task_evaluation(
     connection: TenantConnection,
     results: Results,
     locale: Locale = DEFAULT_LOCALE,
+    zone: Annotated[str | None, Query(max_length=64)] = None,
 ) -> Response:
+    reader_zone = zone_of(zone)
     task, whole = await readable_task(connection, principal, task_id)
     if task.kind != TaskKind.ANNOTATE or kind is not ExportKind.PDF:
         review_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
     if kind is ExportKind.PDF:
-        report, version = await task_report(connection, principal, task, results, locale)
+        report, version = await task_report(
+            connection, principal, task, results, locale, reader_zone
+        )
         return attachment(kind, task_pdf(principal, task, report, version), version)
     evaluation = await evaluate(connection, task, results)
     version = await version_of(connection, task, evaluation)

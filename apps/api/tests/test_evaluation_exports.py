@@ -165,13 +165,31 @@ def test_the_pdf_export_names_the_task_and_its_blocks(api: ApiAs, database: str)
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
     text = text_of(response.content)
-    for expected in (
+    report = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/evaluation-report").json()
+    shown = [
+        report["lab"]["name"],
+        "Parfocal · research output",
         "Evaluation report",
-        "Draft, not signed off",
-        "Decisions",
-        "Agree 3 Disagree 5",
-    ):
-        assert expected in text, (expected, text)
+        f"{report['task_code']} · {report['model']}",
+        "Evaluation v1 · draft",
+        "Project",
+        f"{report['project']['name']} ({report['project']['code']})",
+        "Task",
+        "Model",
+        "Slides",
+        "Reviewers",
+        "Template",
+        f"{report['template']['name']} v{report['template']['version']}",
+        f"{report['task_code']} · Evaluation v1 · draft",
+    ]
+    squeezed = text.replace("\n", " ")
+    at = 0
+    for expected in shown:
+        found = squeezed.find(expected, at)
+        assert found >= 0, (expected, squeezed)
+        at = found + len(expected)
+    for gone in ("Draft, not signed off", "Measure", "Signed off"):
+        assert gone not in text
     assert exported(api, r, "report.pdf").content == response.content
 
 

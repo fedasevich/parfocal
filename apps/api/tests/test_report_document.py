@@ -10,7 +10,7 @@ import pytest
 from pypdf import PdfReader
 
 from parfocal_api.clinical_document import CaseSlide, SignedVersion, document_of, pdf_of
-from parfocal_api.clinical_reports import UnknownTimeZoneError, zone_of
+from parfocal_api.reader_zone import UnknownTimeZoneError, zone_of
 from parfocal_api.report_style import (
     BLOCK_GAP_PT,
     BODY_PT,

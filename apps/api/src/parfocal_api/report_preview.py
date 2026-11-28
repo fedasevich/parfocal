@@ -18,6 +18,7 @@ from parfocal_api.evaluation_exports import (
 )
 from parfocal_api.locales import DEFAULT_LOCALE, Locale
 from parfocal_api.permissions import Permission, require
+from parfocal_api.reader_zone import zone_of
 from parfocal_api.report_template import (
     RenderedReport,
     ReportClass,
@@ -142,13 +143,15 @@ async def preview_task_evaluation(
     locale: Locale = DEFAULT_LOCALE,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=MAX_PREVIEW_PAGES)] = PREVIEW_PAGES,
+    zone: Annotated[str | None, Query(max_length=64)] = None,
 ) -> ReportPreview:
+    reader_zone = zone_of(zone)
     task, whole = await readable_task(connection, principal, task_id)
     if task.kind != TaskKind.ANNOTATE:
         review_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
-    report, version = await task_report(connection, principal, task, results, locale)
+    report, version = await task_report(connection, principal, task, results, locale, reader_zone)
     file_name = f"evaluation_v{version.number}_{ExportKind.PDF.value}"
     pages = task_svg_pages(principal, task, report, version)
     window = slice(offset, offset + limit)

@@ -9181,6 +9181,7 @@ export type ListAdjudicationObjectsParams = {
 
 export type ExportTaskEvaluationParams = {
   locale?: Locale;
+  zone?: string | null;
 };
 
 export type PreviewTaskEvaluationParams = {
@@ -9194,6 +9195,7 @@ export type PreviewTaskEvaluationParams = {
    * @maximum 20
    */
   limit?: number;
+  zone?: string | null;
 };
 
 export type PreviewStudyTemplateParams = {
