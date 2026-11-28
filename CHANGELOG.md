@@ -2,6 +2,17 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.68.0 (2026-11-28)
+
+### Features
+
+- PROTO-212: Run a model chooses tumor regions, cell outlines or cell types
+
+### Docs
+
+- PROTO-212: Log and move to review after merge
+- PROTO-219: Log the v0.67.0 deploy
+
 ## v0.67.0 (2026-11-28)
 
 ### Features
