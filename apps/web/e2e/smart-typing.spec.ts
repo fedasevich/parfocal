@@ -190,11 +190,10 @@ test("typing on hides the class chips, typing off brings them back, and key 2 re
   await findCell(page, centre);
   await page.keyboard.press("Enter");
   await expect(cells(page)).toHaveCount(1);
-  await page.keyboard.press("Escape");
-  await page.mouse.click(centre.x, centre.y);
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-tool", "smart");
+  await expect(chips).toHaveCount(0);
   await page.keyboard.press("2");
   await expect(cells(page).first()).toHaveAttribute("data-class", `${p07}-class-2`);
-  await page.keyboard.press("s");
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-tool", "smart");
   await expect(chips).toHaveCount(0);
 

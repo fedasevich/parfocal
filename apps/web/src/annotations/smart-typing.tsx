@@ -8,7 +8,7 @@ import { ContextExtra, contextChip } from "./context-extras.tsx";
 import type { AnnotationDocument } from "./document.ts";
 import { pickShape } from "./hit-test.ts";
 import { hitTolerancePx } from "./select-tool.ts";
-import type { ShapeId } from "./shapes.ts";
+import type { Shape, ShapeId } from "./shapes.ts";
 import { slideAt } from "./stage-pointer.ts";
 import { useStageRect } from "./stage-size.ts";
 import { type ProposalControls, type TypingState, useProposals } from "./use-proposals.ts";
@@ -31,6 +31,7 @@ export function useCellTyping(
   slideId: string,
   classes: readonly NamedClass[],
   activeClass: string | null,
+  onAccepted?: (shapes: readonly Shape[]) => void,
 ): CellTypingControls {
   const [autoType, setAutoType] = useSavedAutoTyping();
   const classOfType = useCallback(
@@ -45,7 +46,11 @@ export function useCellTyping(
     (classKey: string) => classes.find((item) => item.id === classKey)?.name ?? null,
     [classes],
   );
-  const proposals = useProposals(saved, slideId, { autoType, classOfType });
+  const proposals = useProposals(saved, slideId, {
+    autoType,
+    classOfType,
+    ...(onAccepted === undefined ? {} : { onAccepted }),
+  });
   const acceptName = proposals.typesOnAccept
     ? null
     : (classes.find((item) => item.id === activeClass)?.name ?? null);
@@ -117,7 +122,7 @@ export function SmartTypingBar({
       </button>
       {autoType ? (
         <span data-testid="smart-typer" className={contextChip}>
-          {t`Typed by the cell typer`}
+          {t`Cell typer`}
         </span>
       ) : null}
       {typing.state === "idle" ? null : (
