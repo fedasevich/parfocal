@@ -4604,7 +4604,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on SEC-014.
   Size: L.
 
-- [ ] OPS-009 · Storage lifecycle and cost controls
+- [x] OPS-009 · Storage lifecycle and cost controls
   Tiering for old slides, GPU scale to zero, budgets and alerts per environment.
   Done when cost dashboards exist and lifecycle rules are tested in a drill environment.
   Account-level caps and alerts were set on 2026-10-31 under [ADR 0115](adr/0115-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
