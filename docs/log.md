@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-28
 
+- PROTO-207: with Typing on, the Smart select bar hides the class chips and shows a Cell typer chip, and the chips return with Typing off. Accepted cells become the selection while the Smart tool stays active, so keys 1 to 4 retype them at once. The first chip text made the bar wider and put Accept under the side panel resize handle, which failed the smart-select model picker spec, so the chip is short. The four smart specs pass, 23 tests.
 - Production touch: release v0.66.0 (PROTO-206 Smart select refine) deployed by run 46148827533, whose deploy and browser smoke reviews the lead approved under ADR 0151. Cost TODO, a deploy runs no GPU.
 - Production touch: release v0.65.3 (PROTO-211 projected run time and cost) deployed by run 46148133133, whose deploy and browser smoke reviews the lead approved under ADR 0151. Cost TODO, a deploy runs no GPU.
 - PROTO-206: in smart-session.ts a plain click inside the live Smart select outline adds a positive point to that object and feeds the previous mask back, and a plain click inside a cell kept earlier in the session reopens it with its prompts and mask, so no second object is made. Right, Alt and Shift clicks behave as before, queued clicks batch by their plain click, and the bar shows Shift adds, right click cuts while no outline is live. Session unit tests and the smart-select, smart-typing, smart-hover and smart-select-queue specs pass.
