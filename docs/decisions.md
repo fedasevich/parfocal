@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-25
+Last updated: 2026-11-28
 
 This file holds only what is open. Everything you have answered is in [decisions-answered.md](decisions-answered.md), newest first.
 
@@ -18,15 +18,7 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Open questions
 
-### 182. Whether the $5 an hour GPU cap holds per pool or for all pools together
-
-OPS-042 (GPU pools take any GPU big enough in any region) gave every pool cards up to the H100 and kept each pool under $5 an hour at its container cap, as the task asked. Before, all pools together stayed under $5 an hour, so now all pools at full load could reach $20.25 an hour, with only the $30 a month Modal limit above that.
-
-- **A. Keep the cap per pool**, because runs start only on demand and the $30 a month Modal limit still stops the bill.
-- B. Shorten the card lists so all pools together stay under $5 an hour again, which makes busy runs wait longer.
-- Other.
-
-Your choice:
+None open.
 
 ## The review column, what each task waits for
 

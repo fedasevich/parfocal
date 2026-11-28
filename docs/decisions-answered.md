@@ -2,6 +2,12 @@
 
 Every decision the owner has answered, newest first. Open ones are in [decisions.md](decisions.md).
 
+## Answers of 2026-11-28
+
+You wrote this in decisions.md on 2026-11-26.
+
+- Decision 182 (whether the $5 an hour GPU cap holds per pool or for all pools together), option A. The cap stays per pool as OPS-042 (GPU pools take any GPU big enough in any region) built it, because runs start only on demand and the $30 a month Modal limit still stops the bill. Nothing changed.
+
 ## Answers of 2026-11-25
 
 You wrote these in decisions.md and said "process my decisions" in chat on 2026-11-25.

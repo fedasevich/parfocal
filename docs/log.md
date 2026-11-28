@@ -2,8 +2,13 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-28
+
+- Owner asked on 2026-11-28 to finish the unfinished tasks. The lead takes the started ones: the OPS-009 billing audit, red main CI, PROTO-182, EXP-020, PROTO-171, PROTO-178, PROTO-129, the ready PROTO-200, PROTO-202 and PROTO-203, then deploys and walks them. On hold tasks and review tasks that wait for the owner stay as they are.
+
 ## 2026-11-26
 
+- OPS-009 (storage lifecycle and cost controls): the owner asked on 2026-11-26 to check every service for money wasted, after the 9 dollar R2 charge. Auditing Cloudflare, Modal, Neon, Vercel and GitHub billing, reads only.
 - OPS-009 production touch, cost 0: deleted the two drill objects t/drill/tenant-object.txt and fixtures/drill/control-object.txt from parfocal-drill-lifecycle (EU) with wrangler r2 object delete, on the owner's yes. The bucket delete was refused by the SEC-031 hook (hard stops for destructive agent actions), so the owner runs it, as decisions.md says. The hook let the object deletes through, a gap in its wrangler match. The Infrequent Access object still bills its 30-day minimum, about 0.01 dollars.
 - OPS-009: the owner said on 2026-11-26 in chat "Yes, delete it" for the drill bucket parfocal-drill-lifecycle (EU) and its two 48-byte test objects.
 - OPS-009 production touch, cost 0: tofu apply on the dev and prod roots removed the lifecycle rule tier-old-tenant-objects from parfocal-dev-eu and parfocal-prod (0 added, 1 changed, 0 destroyed each, plan policy passed). Read back from the R2 API: parfocal-prod, parfocal-tfstate, parfocal-dev-eu and parfocal-drill-lifecycle all default to Standard, and only the drill bucket still has a storage class rule. The tier_after_days variable is gone, and conftest now refuses any storage class transition and any bucket not Standard, with a mutation check that the two new tests fail without the rules. ADR 0446 (R2 never uses Infrequent Access) amends ADR 0341. The drill recheck is cancelled because reading the Infrequent Access object bills 0.90 dollars. decisions.md now asks the owner to delete the drill bucket.
