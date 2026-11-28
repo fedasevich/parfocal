@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-28
 
+- Production touch: release v0.69.0 (PROTO-210 Cmd+Z takes back Smart select clicks) deployed by run 46157801144, whose deploy and browser smoke reviews the lead approved under ADR 0151. Cost TODO, a deploy runs no GPU.
 - Production touch: Reset production run 46156636245 from v0.68.2, approved by the lead under ADR 0390 (the deployed app is dev), reseeded app.parfocal.eu in 12.5 minutes, under the 15 minute reseed budget. The new tissue mask step stored 120 masks in 202 s. Cost TODO, the seed runs on CPU.
 - PROTO-219 deployed check on app.parfocal.eu (docs/results/2026-11-28-every-report-pdf-against-its-screen.md): the RT-4 and RT-2 evaluation PDFs, the preview window, the sign-off window's PDF export, the signed clinical report, the co-sign screen's download and the saved and unsaved template samples all hold every screen text in order with only the checksum or the DRAFT watermark extra, the same date formats as the screen, and page 1 differing in 1.0% to 5.8% of pixels. Ticked. The seeded Showcase co-sign case was co-signed for the check and the lead reseeds.
 - Production touch: release v0.68.2 (PROTO-211 seeded tissue masks in the seed function) deployed by run 46155493854, whose deploy and browser smoke reviews the lead approved under ADR 0151. Cost TODO, a deploy runs no GPU. The reseed waits for the PROTO-219 PDF walk.
