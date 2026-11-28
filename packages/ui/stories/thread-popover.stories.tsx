@@ -80,3 +80,20 @@ export const OpenThread: Story = { render: () => <Frame /> };
 export const ResolvedThread: Story = { render: () => <Frame resolvedAtStart /> };
 
 export const WithoutMeasurement: Story = { render: () => <Frame withMeasurement={false} /> };
+
+export const LoadingMessages: Story = {
+  render: () => (
+    <ThreadPopover
+      title="Does the boundary run past the capsule fold?"
+      resolved={false}
+      messages={[]}
+      loading
+      pendingLines={[2, 2, 3]}
+      reply=""
+      onReplyChange={() => undefined}
+      onSend={() => undefined}
+      onToggleResolved={() => undefined}
+      onClose={() => undefined}
+    />
+  ),
+};
