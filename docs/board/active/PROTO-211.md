@@ -1,3 +1,3 @@
-status: review
+status: in-progress
 since: 2026-11-28
-note: deployed check: Run a model shows the projected time and cost for a seeded slide
+note: deployed check failed: no seeded slide has a tissue mask, so the seed must store masks as ingest does and the estimate must show
