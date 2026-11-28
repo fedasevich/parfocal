@@ -18,9 +18,9 @@ from parfocal_common.view_maps import seconds_in
 from parfocal_ml.gpu_pool import POOLS, Family
 from parfocal_ml.modal_pool import default_runners, pool_entry
 from parfocal_ml.outline_typer import (
+    ASSUMED_MPP,
     LEAST_TYPER_PIXELS,
     WINDOW,
-    SlideWithoutScaleError,
     answer_outline_types,
 )
 from parfocal_ml.outline_typer_worker import OutlineTyperService
@@ -147,10 +147,27 @@ def test_a_coarser_slide_is_scaled_to_the_typer_resolution() -> None:
     assert seen == [(256, 256, 3)]
 
 
-def test_a_slide_without_a_scale_is_refused() -> None:
-    slide, _ = small_slide(mpp=None)
-    with pytest.raises(SlideWithoutScaleError):
-        typed(slide, call_for(square(110, 110)))
+@pytest.mark.parametrize("mpp", [None, 0.0])
+def test_a_slide_without_a_scale_is_typed_at_the_assumed_scale(mpp: float | None) -> None:
+    slide, _ = small_slide(mpp=mpp)
+    seen: list[tuple[int, ...]] = []
+
+    def model(rgb: np.ndarray) -> np.ndarray:
+        seen.append(rgb.shape)
+        return dark_is_neoplastic(rgb)
+
+    reply = typed(slide, call_for(square(110, 110)), model)
+    outlines = typed_outlines_in(reply, 1)
+    assert outlines is not None
+    assert outlines[0]["type"] == "tumor"
+    assert reply["scale_assumed"] is True
+    assert ASSUMED_MPP == 0.25
+    assert seen == [(LEAST_TYPER_PIXELS, LEAST_TYPER_PIXELS, 3)]
+
+
+def test_a_slide_with_a_scale_says_the_scale_was_not_assumed() -> None:
+    slide, _ = small_slide()
+    assert typed(slide, call_for(square(110, 110)))["scale_assumed"] is False
 
 
 def test_the_slide_is_opened_from_the_folder_the_call_names() -> None:

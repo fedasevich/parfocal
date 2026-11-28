@@ -2010,6 +2010,10 @@ msgstr "{count, plural, one {Export CSV, # run} other {Export CSV, # runs}}"
 msgid "{count, plural, one {Signed out of the # other device} other {Signed out of the # other devices}}"
 msgstr "{count, plural, one {Signed out of the # other device} other {Signed out of the # other devices}}"
 
+#: src/annotations/use-proposals.ts
+msgid "{count} cells are left untyped. Select one and press 1 to 4 to type it."
+msgstr "{count} cells are left untyped. Select one and press 1 to 4 to type it."
+
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "{count} cells in {zoneName} marked agree"
 msgstr "{count} cells in {zoneName} marked agree"
@@ -19018,6 +19022,10 @@ msgstr "The move and the reason are kept in the audit log."
 msgid "The move was not undone"
 msgstr "The move was not undone"
 
+#: src/annotations/use-proposals.ts
+msgid "The network dropped while typing."
+msgstr "The network dropped while typing."
+
 #: src/screens/new-task/new-task-screen.tsx
 msgid "the new review task"
 msgstr "the new review task"
@@ -19500,6 +19508,10 @@ msgstr "The slide has objects, so it is not empty."
 msgid "The slide is still being inspected at its source."
 msgstr "The slide is still being inspected at its source."
 
+#: src/annotations/use-proposals.ts
+msgid "The slide states no microns per pixel, so the typer assumed 0.25 µm per pixel."
+msgstr "The slide states no microns per pixel, so the typer assumed 0.25 µm per pixel."
+
 #: src/viewer/live-top-bar.tsx
 msgid "The slide was not submitted. Nothing was lost."
 msgstr "The slide was not submitted. Nothing was lost."
@@ -19637,15 +19649,29 @@ msgstr "The two factor setting did not save. Try again."
 msgid "The type was not saved. Try again."
 msgstr "The type was not saved. Try again."
 
-#. placeholder {0}: outcome.count
 #: src/annotations/use-proposals.ts
-msgid "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
-msgstr "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
+msgid "The typer did not answer."
+msgstr "The typer did not answer."
 
 #. placeholder {0}: learnerView.corrections
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
 msgstr "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
+
+#. placeholder {0}: failure.status
+#: src/annotations/use-proposals.ts
+msgid "The typer refused the cells ({0})."
+msgstr "The typer refused the cells ({0})."
+
+#. placeholder {0}: failure.title
+#: src/annotations/use-proposals.ts
+msgid "The typer refused the cells: {0}."
+msgstr "The typer refused the cells: {0}."
+
+#. placeholder {0}: typerAttemptMs / 1000
+#: src/annotations/use-proposals.ts
+msgid "The typer took longer than {0} s to answer."
+msgstr "The typer took longer than {0} s to answer."
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/use-viewer-state.tsx
@@ -20605,11 +20631,6 @@ msgstr "typer said {0} {1}%"
 msgid "Typing {0} cells"
 msgstr "Typing {0} cells"
 
-#. placeholder {0}: typing.count
-#: src/annotations/smart-typing.tsx
-msgid "Typing failed, {0} untyped"
-msgstr "Typing failed, {0} untyped"
-
 #: src/annotations/smart-typing.tsx
 msgid "Typing off"
 msgstr "Typing off"
@@ -20617,6 +20638,10 @@ msgstr "Typing off"
 #: src/annotations/smart-typing.tsx
 msgid "Typing on"
 msgstr "Typing on"
+
+#: src/annotations/use-proposals.ts
+msgid "Typing was cancelled."
+msgstr "Typing was cancelled."
 
 #: ../../packages/ui/src/components/person.tsx
 msgid "Unassigned"

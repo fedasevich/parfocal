@@ -123,9 +123,7 @@ export function SmartTypingBar({
           role="status"
           className={contextChip}
         >
-          {typing.state === "working"
-            ? t`Typing ${typing.count} cells`
-            : t`Typing failed, ${typing.count} untyped`}
+          {t`Typing ${typing.count} cells`}
         </span>
       )}
     </ContextExtra>

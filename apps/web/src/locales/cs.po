@@ -2008,6 +2008,10 @@ msgstr ""
 msgid "{count, plural, one {Signed out of the # other device} other {Signed out of the # other devices}}"
 msgstr ""
 
+#: src/annotations/use-proposals.ts
+msgid "{count} cells are left untyped. Select one and press 1 to 4 to type it."
+msgstr ""
+
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "{count} cells in {zoneName} marked agree"
 msgstr ""
@@ -19009,6 +19013,10 @@ msgstr ""
 msgid "The move was not undone"
 msgstr ""
 
+#: src/annotations/use-proposals.ts
+msgid "The network dropped while typing."
+msgstr ""
+
 #: src/screens/new-task/new-task-screen.tsx
 msgid "the new review task"
 msgstr ""
@@ -19491,6 +19499,10 @@ msgstr ""
 msgid "The slide is still being inspected at its source."
 msgstr ""
 
+#: src/annotations/use-proposals.ts
+msgid "The slide states no microns per pixel, so the typer assumed 0.25 µm per pixel."
+msgstr ""
+
 #: src/viewer/live-top-bar.tsx
 msgid "The slide was not submitted. Nothing was lost."
 msgstr ""
@@ -19628,14 +19640,28 @@ msgstr ""
 msgid "The type was not saved. Try again."
 msgstr ""
 
-#. placeholder {0}: outcome.count
 #: src/annotations/use-proposals.ts
-msgid "The typer did not answer, so {0} cells are left untyped. Select one and press 1 to 4 to type it."
+msgid "The typer did not answer."
 msgstr ""
 
 #. placeholder {0}: learnerView.corrections
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
+msgstr ""
+
+#. placeholder {0}: failure.status
+#: src/annotations/use-proposals.ts
+msgid "The typer refused the cells ({0})."
+msgstr ""
+
+#. placeholder {0}: failure.title
+#: src/annotations/use-proposals.ts
+msgid "The typer refused the cells: {0}."
+msgstr ""
+
+#. placeholder {0}: typerAttemptMs / 1000
+#: src/annotations/use-proposals.ts
+msgid "The typer took longer than {0} s to answer."
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
@@ -20596,17 +20622,16 @@ msgstr ""
 msgid "Typing {0} cells"
 msgstr ""
 
-#. placeholder {0}: typing.count
-#: src/annotations/smart-typing.tsx
-msgid "Typing failed, {0} untyped"
-msgstr ""
-
 #: src/annotations/smart-typing.tsx
 msgid "Typing off"
 msgstr ""
 
 #: src/annotations/smart-typing.tsx
 msgid "Typing on"
+msgstr ""
+
+#: src/annotations/use-proposals.ts
+msgid "Typing was cancelled."
 msgstr ""
 
 #: ../../packages/ui/src/components/person.tsx

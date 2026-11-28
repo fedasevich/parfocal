@@ -5679,6 +5679,7 @@ export interface OutlineTypes {
   typer: string;
   version: string;
   calibrated: boolean;
+  scale_assumed?: boolean;
   outlines: TypedOutline[];
 }
 

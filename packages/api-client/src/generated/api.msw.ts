@@ -21096,6 +21096,7 @@ export const getTypeOutlinesResponseMock = (
       typer: faker.string.alpha({ length: { min: 10, max: 20 } }),
       version: faker.string.alpha({ length: { min: 10, max: 20 } }),
       calibrated: faker.datatype.boolean(),
+      scale_assumed: faker.datatype.boolean(),
       outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
         () => ({
           probabilities: {
