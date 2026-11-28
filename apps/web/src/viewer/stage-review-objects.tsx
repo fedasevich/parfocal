@@ -29,6 +29,7 @@ import { pendingOrder } from "../screens/review/review-order-state.ts";
 import { ReviewOrderTabNotice } from "../screens/review/review-order-state.tsx";
 import { answerFromDecision } from "../screens/review/review-state.ts";
 import {
+  retypedTo,
   storedType,
   type TypeOption,
   typeAnswers,
@@ -1004,6 +1005,7 @@ export function StageReviewObjects({
           data-ready={ready}
           data-guided={guided}
           data-current={current ?? ""}
+          data-retyped-immune={retypedTo("Immune", objects, session.classes, session.decisions)}
           className={guided ? "flex flex-col gap-4" : "flex flex-col gap-2"}
         >
           {guided && done ? (

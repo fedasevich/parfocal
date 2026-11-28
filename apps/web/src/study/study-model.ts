@@ -288,7 +288,7 @@ export const round5Tasks: StudyTask[] = [
       "Find a cell the AI calls a tumor cell that you think is an immune cell. Change its type to immune.",
     startPath: cellOnStudySlide,
     check: {
-      selector: '[data-testid="cell-type-bar"]:not([data-chosen=""]):not([data-chosen="keep"])',
+      selector: '[data-testid="stage-review-objects"]:not([data-retyped-immune="0"])',
     },
     guard: studyCellGuard,
   },
