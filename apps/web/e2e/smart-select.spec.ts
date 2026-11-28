@@ -148,6 +148,50 @@ test("smart select starts on Good, asks the server for nothing, and Enter accept
   expect(embeds).toEqual([]);
 });
 
+interface FakePrompts {
+  __parfocalFakePrompts: {
+    prompt: { points: { positive: boolean }[]; previousLogits: Float32Array | null };
+  }[];
+}
+
+test("a click inside the found shape refines it, a right click cuts it, a kept cell reopens", async ({
+  page,
+}) => {
+  const { centre } = await openSmart(page);
+  const requests = () =>
+    page.evaluate(() =>
+      (globalThis as unknown as FakePrompts).__parfocalFakePrompts.map((item) => ({
+        positives: item.prompt.points.filter((point) => point.positive).length,
+        negatives: item.prompt.points.filter((point) => !point.positive).length,
+        mask: item.prompt.previousLogits !== null,
+      })),
+    );
+  await expect(page.getByTestId("smart-hint")).toBeVisible();
+  await page.mouse.click(centre.x, centre.y);
+  await settled(page);
+  await page.mouse.click(centre.x + 6, centre.y);
+  await expect(layer(page)).toHaveAttribute("data-points", "2");
+  await settled(page);
+  await expect(layer(page)).toHaveAttribute("data-kept", "0");
+  await expect(proposals(page)).toHaveAttribute("data-proposals", "1");
+  expect((await requests()).at(-1)).toEqual({ positives: 2, negatives: 0, mask: true });
+
+  await page.mouse.click(centre.x + 8, centre.y, { button: "right" });
+  await expect(layer(page)).toHaveAttribute("data-negatives", "1");
+  await settled(page);
+  await expect(layer(page)).toHaveAttribute("data-kept", "0");
+  expect((await requests()).at(-1)).toEqual({ positives: 2, negatives: 1, mask: true });
+
+  await page.mouse.click(centre.x - 160, centre.y);
+  await expect(layer(page)).toHaveAttribute("data-kept", "1");
+  await settled(page);
+  await page.mouse.click(centre.x, centre.y);
+  await expect(layer(page)).toHaveAttribute("data-points", "4");
+  await settled(page);
+  await expect(layer(page)).toHaveAttribute("data-kept", "1");
+  await expect(proposals(page)).toHaveAttribute("data-proposals", "2");
+});
+
 test("Escape discards the proposal and keeps the tool", async ({ page }) => {
   const { stage, centre } = await openSmart(page);
   await page.mouse.click(centre.x, centre.y);

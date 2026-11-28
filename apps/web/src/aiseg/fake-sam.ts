@@ -103,6 +103,7 @@ export function createFakeSam(): FakeSam {
   const prompts: FakePromptRecord[] = [];
   const encodes: string[] = [];
   const dropped: string[] = [];
+  Object.assign(globalThis, { __parfocalFakePrompts: prompts });
   return {
     prompts,
     encodes,
