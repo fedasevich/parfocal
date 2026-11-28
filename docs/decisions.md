@@ -18,7 +18,35 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Open questions
 
-None open.
+### 183. Whether new models may use non-commercial weights
+
+Fable's model line-up of 2026-11-28 found that every model already wired (PathoSAM, HoVer-NeXt with PanNuke weights, the CAMELYON tumor model) carries non-commercial or unclear weights, and the best candidates for tissue type regions and a second typer do too. Parfocal is a thesis project with no paying customer yet. PROTO-217 (tissue type and scan quality models) and PROTO-218 (a second cell typer) wait for this.
+
+- **A. Accept non-commercial weights while Parfocal has no paying customer**, record each licence in the model registry, and revisit before the first paid use.
+- B. Only permissive weights such as Apache-2.0 from now on, which leaves few tissue type models and no better typer.
+- Other.
+
+Your choice:
+
+### 184. Whether a whole slide cell run is the default or an area is
+
+A full PathoSAM + HoVer-NeXt run over one slide costs about 2 to 2.40 dollars on an L4 by projection, so the $30 a month allows about ten. PROTO-214 (a cell run can cover only tumor areas or a drawn area) builds the area choice.
+
+- **A. Run a model defaults to the tumor areas or a drawn area, and the whole slide stays a choice** with its projected cost shown.
+- B. Whole slide by default, with the cost shown.
+- Other.
+
+Your choice:
+
+### 185. May one full whole slide nucleus run spend about 2.40 dollars of the December budget
+
+PROTO-215 (one full whole slide nucleus run measured on an L4) replaces the projected time and cost with a real one on test_001.
+
+- **A. Yes, one run in December**, logged with its cost.
+- B. No, keep the projection.
+- Other.
+
+Your choice:
 
 ## The review column, what each task waits for
 
