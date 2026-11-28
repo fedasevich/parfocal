@@ -2,6 +2,17 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.66.0 (2026-11-28)
+
+### Features
+
+- PROTO-206: Refine the shape under a Smart select click instead of finding it again
+
+### Docs
+
+- PROTO-206: Log and move to review after merge
+- PROTO-211: Log the v0.65.3 deploy
+
 ## v0.65.3 (2026-11-28)
 
 ### Fixes
