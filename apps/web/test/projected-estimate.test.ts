@@ -43,6 +43,31 @@ test("a model priced by tissue says nothing until every picked slide has tissue 
   assert.equal(unknown.cost, null);
 });
 
+const gap = (because: NonNullable<SlideEstimate["unknown_because"]>): SlideEstimate => ({
+  slide_id: "c",
+  tissue_mm2: null,
+  minutes: null,
+  dollars: null,
+  projected: true,
+  unknown_because: because,
+});
+
+test("each reason an estimate cannot be projected gets its own plain line", () => {
+  const noScale = runEstimate(priced, [{}], today, [gap("no-scale")]);
+  assert.match(noScale.perSlide, /states no scale, so the cell run cannot start/);
+  const noMask = runEstimate(priced, [{}], today, [gap("no-tissue-mask")]);
+  assert.match(noMask.perSlide, /tissue of this slide is not measured yet/);
+  const noRate = runEstimate(priced, [{}], today, [gap("no-rate")]);
+  assert.match(noRate.perSlide, /no measured rate yet/);
+});
+
+test("the headline minutes explain the GPU start minute with the model's own start time", () => {
+  const started = { ...priced, start_minutes: 1 };
+  const shown = runEstimate(started, [{}, {}], today, estimates);
+  assert.equal(shown.total, 181);
+  assert.match(shown.perSlide, /About 1 min of the total is waiting for a GPU to start/);
+});
+
 test("a slide whose estimate names a missing tissue mask leaves time and cost unknown", () => {
   const missing: SlideEstimate = {
     slide_id: "b",

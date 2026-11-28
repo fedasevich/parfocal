@@ -1,5 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type { SlideEstimate } from "../generated/api.ts";
+import { toSlideRef } from "./scenario-jobs.ts";
 
 const secondsPerMm2 = 150.1;
 const dollarsPerSecond = 0.0178 / 94.9;
@@ -10,7 +11,19 @@ const tissueOf = (slideId: string): number => {
   return 20 + (sum % 41);
 };
 
+const noScaleLabel = "A2 · H&E";
+
 const estimateOf = (slideId: string, model: string): SlideEstimate => {
+  if (model === estimatedModel && toSlideRef(slideId)?.label === noScaleLabel) {
+    return {
+      slide_id: slideId,
+      tissue_mm2: null,
+      minutes: null,
+      dollars: null,
+      projected: true,
+      unknown_because: "no-scale",
+    };
+  }
   if (model !== estimatedModel) {
     return { slide_id: slideId, tissue_mm2: null, minutes: null, dollars: null, projected: true };
   }

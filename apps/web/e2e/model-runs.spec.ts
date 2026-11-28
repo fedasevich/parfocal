@@ -112,6 +112,18 @@ test("Cell outlines alone starts a run with typer null and says what it saves", 
   });
 });
 
+test("a slide the estimate cannot project says why in the window", async ({ page }) => {
+  await page.goto(`/projects/${p07}/run-model?scene=pick`);
+  const dialog = runModel(page);
+  await expect(dialog).toContainText(/about \d+ min and \$/);
+  await dialog.getByRole("combobox").click();
+  await page.getByRole("option", { name: /^A2 · H&E/ }).click();
+  await expect(dialog).toContainText(
+    "This slide states no scale, so the cell run cannot start on it.",
+  );
+  await expect(dialog).toContainText("time and cost are not known yet");
+});
+
 test("ticking Cell types ticks Cell outlines and starts a typed run beside the tumor run", async ({
   page,
 }) => {
