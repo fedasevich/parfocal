@@ -400,3 +400,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0445](0445-a-remote-study-participant-holds-a-study-only-role.md) | A remote study participant holds a study only role that reaches only their own prepared project | Accepted | 2026-11-26 |
 | [0446](0446-r2-never-uses-infrequent-access.md) | R2 never uses Infrequent Access, every bucket stays Standard and no lifecycle rule changes a storage class | Accepted | 2026-11-26 |
 | [0447](0447-report-pdfs-print-the-readers-zone-and-the-screens-line-box.md) | Report PDFs print the reader's time zone and lay out text in the screen's line box | Accepted | 2026-11-28 |
+| [0448](0448-report-pdfs-draw-the-screens-sheet-at-its-own-scale.md) | A report PDF draws its screen's sheet from the screen's own payloads, at the sheet's scale | Accepted | 2026-11-28 |

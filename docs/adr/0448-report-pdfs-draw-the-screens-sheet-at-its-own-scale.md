@@ -1,4 +1,4 @@
-# XXXX. A report PDF draws its screen's sheet from the screen's own payloads, at the sheet's scale
+# 0448. A report PDF draws its screen's sheet from the screen's own payloads, at the sheet's scale
 
 - Date: 2026-11-28
 - Status: Accepted
