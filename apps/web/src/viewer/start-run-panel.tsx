@@ -2,13 +2,15 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type ModelRunDraft,
   startModelRuns,
+  useEstimateModelRun,
   useListModelRuns,
   useListProjectModels,
   useListProjectSlides,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useState } from "react";
-import { slideMinutes } from "../screens/jobs/model.ts";
+import { now } from "../clock.ts";
+import { runEstimate } from "../screens/jobs/model.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { useDocked } from "./inspector-slots.tsx";
 import {
@@ -61,7 +63,16 @@ export function StartRunPanel(props: StartRunPanelProps) {
   const slide = okData(useListProjectSlides(props.projectId).data)?.find(
     (item) => item.id === props.slideId,
   );
-  const minutes = model ? slideMinutes(model, slide) : 0;
+  const projected = model?.seconds_per_mm2 != null;
+  const estimates = okData(
+    useEstimateModelRun(
+      props.projectId,
+      model?.name ?? "",
+      { slide_id: [props.slideId] },
+      { query: { enabled: projected } },
+    ).data,
+  );
+  const estimate = model ? runEstimate(model, [slide ?? {}], now(), estimates) : null;
 
   const used: RunOptions = props.canTune
     ? {
@@ -141,9 +152,18 @@ export function StartRunPanel(props: StartRunPanelProps) {
       ) : null}
       {model ? (
         <span className="text-fg-dim" data-testid="start-run-model">
-          <Trans>
-            {model.title} on the {model.server}, about {minutes} min for this slide
-          </Trans>
+          {estimate?.total == null ? (
+            estimate?.perSlide
+          ) : estimate.cost === null ? (
+            <Trans>
+              {model.title}: about {estimate.total} min for this slide. {estimate.perSlide}
+            </Trans>
+          ) : (
+            <Trans>
+              {model.title}: about {estimate.total} min and {estimate.cost} for this slide.{" "}
+              {estimate.perSlide}
+            </Trans>
+          )}
         </span>
       ) : null}
       {props.canTune && open ? (

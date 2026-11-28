@@ -32,7 +32,8 @@ test("every Run a model scene opens from the prototype index on fake data", asyn
   await expect(runModel(page)).toContainText("tumor_052");
   await expect(runModel(page)).toContainText("tumor_060");
   await expect(runModel(page)).toContainText("PathoSAM + HoVer-NeXt");
-  await expect(runModel(page)).toContainText("About 34 min");
+  await expect(runModel(page)).toContainText(/About \d+ min and \$\d+\.\d\d/);
+  await expect(runModel(page)).toContainText("Projected from the slide");
   await expect(page.getByRole("button", { name: /Run on 2 slides/ })).toBeEnabled();
   await expect(badge(page)).toContainText("Fake data");
 
