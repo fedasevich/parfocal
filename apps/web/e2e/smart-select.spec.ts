@@ -278,3 +278,23 @@ test("Cmd+Z takes back live clicks one by one before it undoes the saved shape",
   await page.keyboard.press("Meta+z");
   await expect(page.getByTestId("polygon-shape")).toHaveCount(0);
 });
+
+test("one Cmd+Z after an Enter accept leaves no proposal drawn and Enter saves nothing", async ({
+  page,
+}) => {
+  const { stage, centre } = await openSmart(page);
+  await page.mouse.click(centre.x, centre.y);
+  await settled(page);
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+
+  await page.keyboard.press("Meta+z");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(0);
+  await expect(proposals(page)).toHaveCount(0);
+  await expect(page.getByTestId("proposal-accept")).toHaveCount(0);
+
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(0);
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+});

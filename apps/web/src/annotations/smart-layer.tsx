@@ -31,7 +31,7 @@ import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { ContextExtra, contextChip } from "./context-extras.tsx";
-import type { AnnotationDocument } from "./document.ts";
+import { type AnnotationDocument, openPieces, removeRun } from "./document.ts";
 import { useElapsedSeconds } from "./elapsed-seconds.ts";
 import { ModelTierChoice } from "./model-tier-choice.tsx";
 import {
@@ -151,6 +151,7 @@ export function SmartLayer({
   const services = useRef<Promise<SmartServices> | null>(null);
   const session = useRef<Promise<SmartSession> | null>(null);
   const built = useRef(false);
+  const accepted = useRef(new Set<number>());
   const ready = useRef(false);
   const earlyRef = useRef<readonly EarlyPress[]>([]);
   const [early, setEarly] = useState<readonly SmartPress[]>([]);
@@ -279,8 +280,20 @@ export function SmartLayer({
     if (id === null || !built.current || !smartRunFinished(doc, id)) return;
     runId.current = null;
     built.current = false;
+    accepted.current.add(id);
     undone.current = [];
     void session.current?.then((value) => value.reset());
+  }, [doc]);
+
+  useEffect(() => {
+    for (const id of accepted.current) {
+      if (!doc.runs.has(id)) accepted.current.delete(id);
+      else if (openPieces(doc, id).length > 0) {
+        accepted.current.delete(id);
+        latest.current.onDocumentChange(removeRun(doc, id));
+        return;
+      }
+    }
   }, [doc]);
 
   useEffect(() => {

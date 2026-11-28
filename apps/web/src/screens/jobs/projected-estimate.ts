@@ -9,6 +9,21 @@ const isKnown = (item: SlideEstimate): item is KnownEstimate =>
 
 const dollars = (amount: number) => `$${amount.toFixed(2)}`;
 
+const gaps = ["no-scale", "no-tissue-mask", "no-rate"] as const;
+
+const gapLines: Record<(typeof gaps)[number], string> = {
+  "no-scale": "This slide states no scale, so the cell run cannot start on it.",
+  "no-tissue-mask": "The tissue of this slide is not measured yet, so time and cost show later.",
+  "no-rate": "This model has no measured rate yet, so time and cost are not known.",
+};
+
+const gapLine = (estimates: SlideEstimate[] | undefined, title: string) => {
+  const found = gaps.find((gap) => (estimates ?? []).some((item) => item.unknown_because === gap));
+  return found
+    ? gapLines[found]
+    : `${title} takes as long as the slide has tissue. Time and cost show once the tissue of each picked slide is measured.`;
+};
+
 export function projectedEstimate(
   model: ProjectModel,
   count: number,
@@ -22,7 +37,7 @@ export function projectedEstimate(
       total: null,
       doneAround: null,
       cost: null,
-      perSlide: `${model.title} takes as long as the slide has tissue. Time and cost show once the tissue of each picked slide is measured.`,
+      perSlide: gapLine(estimates, model.title),
     };
   }
   const minutes = known.map((item) => item.minutes);
@@ -35,10 +50,14 @@ export function projectedEstimate(
     ? "Projected from the slide's tissue area at the rate of the one L4 run measured so far."
     : "From earlier runs of this model.";
   const wait = model.queue_minutes + model.start_minutes;
+  const start =
+    model.start_minutes > 0
+      ? ` About ${model.start_minutes} min of the total is waiting for a GPU to start.`
+      : "";
   return {
     total: total + model.start_minutes,
     doneAround: formatClock(new Date(now.getTime() + (total + wait) * 60000)),
     cost: dollars(known.reduce((sum, item) => sum + item.dollars, 0)),
-    perSlide: `About ${range} min a slide on the ${model.server}. ${queue} ${basis}`,
+    perSlide: `About ${range} min a slide on the ${model.server}. ${queue} ${basis}${start}`,
   };
 }
