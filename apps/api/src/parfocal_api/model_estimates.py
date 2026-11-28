@@ -1,5 +1,6 @@
 import math
 import uuid
+from enum import StrEnum
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
@@ -25,12 +26,19 @@ MAX_SLIDES = 200
 SQUARE_MICRONS_PER_SQUARE_MM = 1_000_000
 
 
+class EstimateGap(StrEnum):
+    NO_RATE = "no-rate"
+    NO_SCALE = "no-scale"
+    NO_TISSUE_MASK = "no-tissue-mask"
+
+
 class SlideEstimate(BaseModel):
     slide_id: uuid.UUID
     tissue_mm2: float | None
     minutes: int | None
     dollars: float | None
     projected: bool
+    unknown_because: EstimateGap | None = None
 
 
 router = APIRouter(prefix="/api/projects", tags=["model-runs"])
@@ -56,14 +64,32 @@ def tissue_mm2(mask: MaskImage, mpp_x: float, mpp_y: float) -> float:
     return microns / SQUARE_MICRONS_PER_SQUARE_MM
 
 
+def unknown(slide_id: uuid.UUID, because: EstimateGap) -> SlideEstimate:
+    return SlideEstimate(
+        slide_id=slide_id,
+        tissue_mm2=None,
+        minutes=None,
+        dollars=None,
+        projected=True,
+        unknown_because=because,
+    )
+
+
 def estimate_of(
-    slide_id: uuid.UUID, model: CatalogueModel, area: float | None, measured_minutes: int | None
+    slide_id: uuid.UUID,
+    model: CatalogueModel,
+    mask: MaskImage | None,
+    row: Any,
+    measured_minutes: int | None,
 ) -> SlideEstimate:
     rate = model.projected_seconds_per_mm2
-    if area is None or rate is None:
-        return SlideEstimate(
-            slide_id=slide_id, tissue_mm2=area, minutes=None, dollars=None, projected=True
-        )
+    if rate is None:
+        return unknown(slide_id, EstimateGap.NO_RATE)
+    if not (row.mpp_x and row.mpp_y):
+        return unknown(slide_id, EstimateGap.NO_SCALE)
+    if mask is None:
+        return unknown(slide_id, EstimateGap.NO_TISSUE_MASK)
+    area = tissue_mm2(mask, row.mpp_x, row.mpp_y)
     seconds = rate * area if measured_minutes is None else measured_minutes * 60
     return SlideEstimate(
         slide_id=slide_id,
@@ -107,6 +133,5 @@ async def estimate_model_run(
             if row.mpp_x and row.mpp_y and model.projected_seconds_per_mm2 is not None
             else None
         )
-        area = tissue_mm2(mask, row.mpp_x, row.mpp_y) if mask is not None else None
-        found.append(estimate_of(slide_id, model, area, measured))
+        found.append(estimate_of(slide_id, model, mask, row, measured))
     return found
