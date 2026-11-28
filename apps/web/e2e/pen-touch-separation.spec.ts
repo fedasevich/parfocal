@@ -81,6 +81,5 @@ test("a finger drag pans the slide while a freehand tool is active", async ({ pa
   const before = await engine.getAttribute("data-camera");
   await stroke(page, "touch", false);
   await expect(page.getByTestId("freehand-layer")).toHaveAttribute("data-drawing", "0");
-  const after = await engine.getAttribute("data-camera");
-  expect(after).not.toBe(before);
+  await expect(engine).not.toHaveAttribute("data-camera", before ?? "");
 });

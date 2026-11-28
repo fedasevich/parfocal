@@ -97,11 +97,16 @@ test("guided review shows the shared banner for a real lost connection and for t
   const banner = page.getByTestId("connection-banner");
   await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible();
   await expect(banner).toHaveCount(0);
+  let offline = true;
+  await context.route(/[?&]connection-check=/, (route) =>
+    offline ? route.abort("internetdisconnected") : route.fallback(),
+  );
   await context.setOffline(true);
   await expect(banner).toContainText("Connection lost.");
   await expect(
     page.getByRole("tabpanel").getByRole("button", { name: /Agree/ }).first(),
   ).toBeDisabled();
+  offline = false;
   await context.setOffline(false);
   await expect(banner).toHaveCount(0);
   await expect(page.getByRole("status").filter({ hasText: "Connection is back." })).toBeVisible();

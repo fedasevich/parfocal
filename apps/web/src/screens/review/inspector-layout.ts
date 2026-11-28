@@ -1,5 +1,6 @@
 import {
   getGetMySettingLayersQueryKey,
+  getSetMySettingLayersMutationKey,
   type SettingValues,
   useSetMySettingLayers,
 } from "@parfocal/api-client";
@@ -61,8 +62,10 @@ export function useInspectorLayout(): [InspectorLayout, (change: InspectorLayout
   const queryClient = useQueryClient();
   const { mutate } = useSetMySettingLayers({
     mutation: {
-      onSettled: () =>
-        void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() }),
+      onSettled: () => {
+        if (queryClient.isMutating({ mutationKey: getSetMySettingLayersMutationKey() }) > 1) return;
+        void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+      },
     },
   });
   const layout = useMemo(
@@ -76,6 +79,9 @@ export function useInspectorLayout(): [InspectorLayout, (change: InspectorLayout
       const patch = typeof change === "function" ? change(latest.current) : change;
       latest.current = { ...latest.current, ...patch };
       const values = settingsOfLayoutPatch(patch);
+      if (queryClient.getQueryData(getGetMySettingLayersQueryKey()) !== undefined) {
+        void queryClient.cancelQueries({ queryKey: getGetMySettingLayersQueryKey() });
+      }
       queryClient.setQueryData(getGetMySettingLayersQueryKey(), (old: unknown) => {
         const response = old as { status: number; data: { personal: object } } | undefined;
         if (response?.status !== 200) return old;
