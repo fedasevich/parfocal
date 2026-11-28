@@ -223,3 +223,20 @@ def test_the_layout_numbers_are_the_screen_classes() -> None:
         f"text-[{FOOTER_PT}px] text-[{FOOTER}]",
     ):
         assert expected in screen, expected
+
+
+SCREEN_CAPTURE = json.loads(
+    (ROOT / "packages" / "test-fixtures" / "clinical-report-screen.json").read_text("utf-8")
+)
+
+
+def test_the_pdf_has_every_text_of_the_signed_screen_in_order_and_nothing_else() -> None:
+    pdf = pdf_of(
+        SCREEN_CAPTURE["model"], SCREEN_CAPTURE["version"], moment(SCREEN_CAPTURE["signed_at"])
+    )
+    left = re.sub(r"\s+", "", text_of(pdf))
+    for shown in SCREEN_CAPTURE["screen"]:
+        piece = re.sub(r"\s+", "", shown)
+        assert left.startswith(piece), (shown, left[:80])
+        left = left[len(piece) :]
+    assert left == ""

@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from parfocal_api.decision_styles import CountsAsChange, DecisionSettings
 from parfocal_api.disagreement_queue import QueueRow
 from parfocal_api.evaluation import Evaluation
-from parfocal_api.evaluation_exports import Version, paper_report, pdf_of
+from parfocal_api.evaluation_exports import Version, paper_report, pdf_of, svg_pages_of
 from parfocal_api.evaluation_paper import (
     Clock,
     PaperInputs,
@@ -99,6 +99,19 @@ def test_the_pdf_has_every_screen_text_in_order_and_nothing_else() -> None:
             assert at == 0, (text, left[:80])
             left = left[len(piece) :]
         assert left == ""
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+def test_the_preview_pages_draw_the_glyphs_of_the_pdf_pages() -> None:
+    pytest.importorskip("typst")
+    version = Version(number=1, checksum=CHECKSUM, signed_at=datetime(2026, 10, 15, tzinfo=UTC))
+    report = paper_report(paper_of(inputs_of(FIXTURE)), ReportFormat(), DEFAULT_LOCALE)
+    pages = svg_pages_of(report, version)
+    reader = PdfReader(io.BytesIO(pdf_of(report, version)))
+    assert len(pages) == len(reader.pages) == len(FIXTURE["screen"])
+    for svg, page in zip(pages, reader.pages, strict=True):
+        assert "<text" not in svg
+        assert abs(svg.count("<use ") - len(squeezed(page.extract_text()))) <= 1
 
 
 def test_the_pdf_page_is_the_screen_sheet_in_points() -> None:
