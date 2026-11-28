@@ -18,6 +18,7 @@ import type {
 import { hiddenModelHandlers, isModelHidden } from "./hidden-models.ts";
 import { fakeJobsState, updateJobsState } from "./jobs-scene.ts";
 import { modelEstimateHandlers } from "./model-estimate-handlers.ts";
+import { fakeOutputsOf } from "./model-outputs.ts";
 import { people, projectByCode, projects } from "./scenario.ts";
 import {
   batchesFor,
@@ -167,6 +168,7 @@ export const toProjectModels = (): ProjectModel[] =>
       seconds_per_mm2: model.name === "pathosam-hovernext" ? 150.1 : null,
       latency_ms: isWorkerOffline(model.name) ? null : model.latencyMs,
       serving: servingOf(model.name),
+      outputs: fakeOutputsOf(model.name),
     }),
   );
 
@@ -192,7 +194,16 @@ export function startRuns(draft: ModelRunDraft): ModelRun[] {
     started: { slides, model },
     cancelled: state.cancelled.filter((id) => id !== startedRunId),
   }));
-  return toModelRuns(projectByCode("P07").id, startedRunId);
+  const typer = draft.parameters.typer;
+  return toModelRuns(projectByCode("P07").id, startedRunId).map((run) => ({
+    ...run,
+    parameters: {
+      ...run.parameters,
+      typer: typer
+        ? { name: typer.name, version: typer.version ?? run.parameters.detector.version }
+        : null,
+    },
+  }));
 }
 
 type RunParams = { projectId: string; runId: string };

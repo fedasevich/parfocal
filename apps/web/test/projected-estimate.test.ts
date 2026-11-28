@@ -21,6 +21,7 @@ const priced: ProjectModel = {
   start_minutes: 0,
   seconds_per_mm2: 150.1,
   latency_ms: null,
+  outputs: [],
 };
 
 const estimates: SlideEstimate[] = [

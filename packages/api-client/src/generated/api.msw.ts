@@ -345,6 +345,7 @@ import {
   Metric,
   ModelHost,
   ModelMakes,
+  ModelOutput,
   ModelStatus,
   ModelTask,
   ModelTier,
@@ -5351,6 +5352,23 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     seconds_per_mm2: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
     serving: faker.helpers.arrayElement(Object.values(Serving)),
+    outputs: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        output: faker.helpers.arrayElement(Object.values(ModelOutput)),
+        measured: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        data: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        result: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      }),
+    ),
   }));
 
 export const getEstimateModelRunResponseMock = (): SlideEstimate[] =>

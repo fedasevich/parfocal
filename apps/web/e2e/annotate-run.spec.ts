@@ -138,8 +138,10 @@ test("a model run on the current view sends the view scope with the task", async
   const draft = (await posted).postDataJSON() as {
     task_id: string;
     scope: { kind: string; width: number; height: number };
+    parameters: { typer: { name: string } | null };
   };
   expect(draft.task_id).toBe(annotateTask);
+  expect(draft.parameters.typer).toEqual({ name: "pathosam-hovernext" });
   expect(draft.scope.kind).toBe("view");
   expect(draft.scope.width).toBeGreaterThan(0);
   expect(draft.scope.height).toBeGreaterThan(0);

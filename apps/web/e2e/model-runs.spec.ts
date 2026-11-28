@@ -32,7 +32,9 @@ test("every Run a model scene opens from the prototype index on fake data", asyn
   await expect(runModel(page)).toContainText("tumor_052");
   await expect(runModel(page)).toContainText("tumor_060");
   await expect(runModel(page)).toContainText("PathoSAM + HoVer-NeXt");
-  await expect(runModel(page)).toContainText(/About \d+ min and \$\d+\.\d\d/);
+  await expect(runModel(page)).toContainText(
+    /Cell outlines and types: about \d+ min and \$\d+\.\d\d/,
+  );
   await expect(runModel(page)).toContainText("Projected from the slide");
   await expect(page.getByRole("button", { name: /Run on 2 slides/ })).toBeEnabled();
   await expect(badge(page)).toContainText("Fake data");
@@ -41,7 +43,7 @@ test("every Run a model scene opens from the prototype index on fake data", asyn
   const models = page.getByRole("listbox", { name: "Models" });
   await expect(models).toContainText("Parfocal models");
   await expect(models).toContainText("Your lab's models");
-  await expect(models.getByRole("option")).toHaveCount(4);
+  await expect(models.getByRole("option")).toHaveCount(3);
 
   await openFromIndex(page, "Run a model · lab");
   await expect(runModel(page)).toContainText("Lab HoVer-Net fork");
@@ -58,9 +60,9 @@ test("Run starts the job, the tray shows it and its row opens the job window", a
   const errors = watchErrors(page);
   await page.goto(`/projects/${p07}/run-model?scene=pick`);
   await expect(page.getByRole("listbox", { name: "Slides matches" })).toBeHidden();
-  await page.getByRole("button", { name: /PathoSAM \+ HoVer-NeXt/ }).click();
-  await page.getByRole("option", { name: /CAMELYON tumor model/ }).click();
-  await expect(runModel(page)).toContainText("About 8 min, done around");
+  await runModel(page).getByRole("checkbox", { name: "Cell outlines" }).click();
+  await runModel(page).getByRole("checkbox", { name: "Tumor regions and heatmap" }).click();
+  await expect(runModel(page)).toContainText("Tumor regions: about 8 min, done around");
   await page.getByRole("button", { name: /Run on 2 slides/ }).click();
   await expect(runModel(page)).toBeHidden();
   await expect(tray(page)).toContainText("CAMELYON tumor model v1.0");
@@ -73,6 +75,64 @@ test("Run starts the job, the tray shows it and its row opens the job window", a
   await expect(job).toContainText("tumor_052.tif");
   await expect(job).toContainText("Tiles read");
   expect(errors).toEqual([]);
+});
+
+type Sent = { slide_ids: string[]; parameters: Record<string, unknown> };
+
+function watchStarts(page: Page) {
+  const sent: Sent[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().endsWith("/model-runs")) {
+      sent.push(request.postDataJSON() as Sent);
+    }
+  });
+  return sent;
+}
+
+test("Cell outlines alone starts a run with typer null and says what it saves", async ({
+  page,
+}) => {
+  const sent = watchStarts(page);
+  await page.goto(`/projects/${p07}/run-model?scene=pick`);
+  const dialog = runModel(page);
+  await expect(dialog.getByTestId("evidence-cell-types")).toContainText(
+    "On PanNuke test split, 12,928 nuclei",
+  );
+  await expect(dialog.getByTestId("evidence-tumor-regions")).toContainText("FROC 0.722");
+  await dialog.getByRole("checkbox", { name: "Cell types" }).click();
+  await expect(dialog.getByRole("checkbox", { name: "Cell outlines" })).toBeChecked();
+  await expect(dialog.getByTestId("typing-saves")).toContainText("an estimated 4 to 9 percent");
+  await expect(dialog).toContainText(/Cell outlines: about \d+ min/);
+  await dialog.getByRole("button", { name: /Run on 2 slides/ }).click();
+  await expect(dialog).toBeHidden();
+  expect(sent).toHaveLength(1);
+  expect(sent[0]?.parameters).toEqual({
+    detector: { name: "pathosam-hovernext", version: "v1.2" },
+    typer: null,
+  });
+});
+
+test("ticking Cell types ticks Cell outlines and starts a typed run beside the tumor run", async ({
+  page,
+}) => {
+  const sent = watchStarts(page);
+  await page.goto(`/projects/${p07}/run-model?scene=pick`);
+  const dialog = runModel(page);
+  await dialog.getByRole("checkbox", { name: "Cell outlines" }).click();
+  await expect(dialog.getByRole("checkbox", { name: "Cell types" })).not.toBeChecked();
+  await dialog.getByRole("checkbox", { name: "Cell types" }).click();
+  await expect(dialog.getByRole("checkbox", { name: "Cell outlines" })).toBeChecked();
+  await dialog.getByRole("checkbox", { name: "Tumor regions and heatmap" }).click();
+  await expect(dialog).toContainText("Two jobs and two new result sets on each slide");
+  await dialog.getByRole("button", { name: /Run on 2 slides/ }).click();
+  await expect(dialog).toBeHidden();
+  expect(sent.map((body) => body.parameters)).toEqual([
+    { detector: { name: "camelyon-tumor", version: "v1.0" } },
+    {
+      detector: { name: "pathosam-hovernext", version: "v1.2" },
+      typer: { name: "pathosam-hovernext", version: "v1.2" },
+    },
+  ]);
 });
 
 test("removing every slide and the run shows its blocker", async ({ page }) => {
