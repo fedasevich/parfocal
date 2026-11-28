@@ -42,6 +42,11 @@ class FakeTyper:
         return reply if self.seconds is None else timed(reply, self.seconds)
 
 
+class UnscaledTyper(FakeTyper):
+    def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
+        return {**super().call(function_name, call), "scale_assumed": True}
+
+
 class ShortTyper(FakeTyper):
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
         return {"outlines": []}
@@ -98,6 +103,38 @@ def test_each_outline_comes_back_typed_and_calibrated_in_order(
         f"WHERE action = 'outlines.typed' AND target_id = '{lab.slides[0]}'",
     )
     assert rows == [(3, False)]
+
+
+def test_a_slide_without_microns_per_pixel_is_typed_at_an_assumed_scale(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    slide = lab.slides[0]
+    assert owner(database, f"SELECT mpp_x, mpp_y FROM slides WHERE id = '{slide}'") == [
+        (None, None)
+    ]
+    api.app.state.warm_gate = WarmGate(UnscaledTyper())
+    try:
+        response = ask(api, lab, [SQUARE, shifted(2000)])
+    finally:
+        del api.app.state.warm_gate
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["scale_assumed"] is True
+    assert [outline["type"] for outline in body["outlines"]] == ["tumor", "immune"]
+    rows = owner(
+        database,
+        "SELECT details::jsonb->>'scale_assumed' FROM audit_events "
+        f"WHERE action = 'outlines.typed' AND target_id = '{slide}'",
+    )
+    assert rows == [("true",)]
+
+
+def test_a_scaled_answer_says_the_scale_was_not_assumed(
+    api: ApiAs, lab: Lab, typer: FakeTyper
+) -> None:
+    response = ask(api, lab, [SQUARE])
+    assert response.status_code == 200, response.text
+    assert response.json()["scale_assumed"] is False
 
 
 def test_the_typer_is_sent_the_folder_beside_the_slide_original(

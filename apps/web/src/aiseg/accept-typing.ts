@@ -1,8 +1,13 @@
-import { type OutlineTypes, type TypedOutline, typeOutlines } from "@parfocal/api-client";
+import { ApiError, type OutlineTypes, type TypedOutline, typeOutlines } from "@parfocal/api-client";
 import { mayNotBeNucleus } from "@parfocal/ui/lib/not-a-nucleus";
 import { type AnnotationDocument, typeShape } from "../annotations/document.ts";
 import { boundsOf, type OutlineTyping, type Shape } from "../annotations/shapes.ts";
-import { type GpuCancel, serverGpuCancel, untilGpuAnswers } from "../gpu/gpu-wait.ts";
+import {
+  GpuCallCancelledError,
+  type GpuCancel,
+  serverGpuCancel,
+  untilGpuAnswers,
+} from "../gpu/gpu-wait.ts";
 import { smartSource } from "./smart-run.ts";
 
 export const typedSources: ReadonlySet<string> = new Set([smartSource]);
@@ -12,14 +17,30 @@ export type OutlineTyper = (
   outlines: readonly { points: number[] }[],
 ) => Promise<OutlineTypes>;
 
-export function typerOf(cancelCall: GpuCancel = serverGpuCancel): OutlineTyper {
+export const typerAttemptMs = 90_000;
+
+export class TyperTimeoutError extends Error {
+  constructor() {
+    super("The typer took too long to answer");
+    this.name = "TyperTimeoutError";
+  }
+}
+
+export function typerOf(
+  cancelCall: GpuCancel = serverGpuCancel,
+  attemptMs: number = typerAttemptMs,
+): OutlineTyper {
   return (slideId, outlines) =>
     untilGpuAnswers(
       "typer",
       async (call, signal) => {
         const params = call === null ? undefined : { call };
+        const timer = AbortSignal.timeout(attemptMs);
+        const both = AbortSignal.any([signal, timer]);
         const response = await typeOutlines(slideId, { outlines: [...outlines] }, params, {
-          signal,
+          signal: both,
+        }).catch((error: unknown) => {
+          throw timer.aborted && !signal.aborted ? new TyperTimeoutError() : error;
         });
         if (response.status === 202) return { waiting: response.data };
         if (response.status !== 200) throw new Error("The typer did not answer");
@@ -49,14 +70,31 @@ export function typerSized(points: Float32Array): boolean {
 
 export type ClassOfType = (type: string) => string | null;
 
+export type TypingFailure =
+  | { readonly reason: "offline" }
+  | { readonly reason: "timeout" }
+  | { readonly reason: "network" }
+  | { readonly reason: "cancelled" }
+  | { readonly reason: "refused"; readonly status: number; readonly title: string | null };
+
 export type TypingOutcome =
   | { readonly kind: "nothing" }
   | {
       readonly kind: "typed";
       readonly count: number;
+      readonly scaleAssumed: boolean;
       readonly apply: (latest: AnnotationDocument) => AnnotationDocument;
     }
-  | { readonly kind: "failed"; readonly count: number };
+  | { readonly kind: "failed"; readonly count: number; readonly failure: TypingFailure };
+
+export function typingFailureOf(error: unknown): TypingFailure {
+  if (error instanceof TyperTimeoutError) return { reason: "timeout" };
+  if (error instanceof GpuCallCancelledError) return { reason: "cancelled" };
+  if (!(error instanceof ApiError)) return { reason: "offline" };
+  if (error.kind === "network") return { reason: "network" };
+  if (error.status >= 500 || error.status === 0) return { reason: "offline" };
+  return { reason: "refused", status: error.status, title: error.problem?.title ?? null };
+}
 
 type TypablePiece = {
   readonly run: { readonly source: string | null };
@@ -141,13 +179,15 @@ export async function typeAccepted(
       slideId,
       targets.map((shape) => ({ points: Array.from(shape.points) })),
     );
-    if (!answerFits(answer, targets)) return { kind: "failed", count };
+    if (!answerFits(answer, targets))
+      return { kind: "failed", count, failure: { reason: "offline" } };
     return {
       kind: "typed",
       count,
+      scaleAssumed: answer.scale_assumed === true,
       apply: (latest) => withTypings(latest, targets, answer, classOfType),
     };
-  } catch {
-    return { kind: "failed", count };
+  } catch (error) {
+    return { kind: "failed", count, failure: typingFailureOf(error) };
   }
 }

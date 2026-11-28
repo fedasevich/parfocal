@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, describe, it } from "node:test";
+import { ApiError } from "@parfocal/api-client";
 import { toOutlineTypes } from "@parfocal/api-client/fake";
 import {
   type OutlineTyper,
   splitForTyping,
+  TyperTimeoutError,
   typeAccepted,
   typerBatch,
+  typerOf,
   typerSized,
+  typingFailureOf,
   typingTargets,
   withTypings,
 } from "../src/aiseg/accept-typing.ts";
@@ -17,6 +21,7 @@ import { addRun, createDocument, getShape, updateShape } from "../src/annotation
 import { acceptProposals, pendingProposals } from "../src/annotations/proposals.ts";
 import { runFromProposals } from "../src/annotations/runs.ts";
 import type { Shape } from "../src/annotations/shapes.ts";
+import { GpuCallCancelledError } from "../src/gpu/gpu-wait.ts";
 
 type Outcome = Awaited<ReturnType<typeof typeAccepted>>;
 
@@ -133,7 +138,7 @@ describe("typing one-click accepts with the server typer", () => {
       Promise.resolve(toOutlineTypes(slideId, outlines.slice(1)));
     for (const typer of [uncalibrated, short]) {
       const outcome = await typeAccepted("slide-1", accepted.document, accepted.shapes, typer);
-      assert.deepEqual(outcome, { kind: "failed", count: 4 });
+      assert.deepEqual(outcome, { kind: "failed", count: 4, failure: { reason: "offline" } });
     }
   });
 
@@ -141,7 +146,7 @@ describe("typing one-click accepts with the server typer", () => {
     const accepted = acceptedSmartRun("area2-tumor");
     assert.equal(accepted.shapes.length, 4);
     const typed = await typeAccepted("slide-1", accepted.document, accepted.shapes, offline);
-    assert.deepEqual(typed, { kind: "failed", count: 4 });
+    assert.deepEqual(typed, { kind: "failed", count: 4, failure: { reason: "offline" } });
     for (const shape of accepted.shapes) {
       const kept = getShape(accepted.document, shape.id);
       assert.equal(kept?.classKey, "area2-tumor");
@@ -259,5 +264,52 @@ describe("typing one-click accepts with the server typer", () => {
     const split = splitForTyping(many, true);
     assert.equal(split.typed.length, typerBatch);
     assert.equal(split.kept.length, 2);
+  });
+});
+
+const realFetch = globalThis.fetch;
+
+describe("typer failures", () => {
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it("gives up on an attempt that hangs past its time and says it timed out", async () => {
+    globalThis.fetch = (_input, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted")));
+      });
+    const typer = typerOf(() => Promise.resolve(), 20);
+    await assert.rejects(typer("slide-1", [{ points: [0, 0, 8, 0, 8, 8] }]), TyperTimeoutError);
+    const accepted = acceptedSmartRun();
+    const outcome = await typeAccepted("slide-1", accepted.document, accepted.shapes, typer);
+    assert.deepEqual(outcome, { kind: "failed", count: 4, failure: { reason: "timeout" } });
+  });
+
+  it("names why the typer failed", () => {
+    const problem = {
+      type: "about:blank",
+      title: "The slide has no scale",
+      status: 422,
+      code: "slide-without-scale",
+    };
+    assert.deepEqual(typingFailureOf(new TyperTimeoutError()), { reason: "timeout" });
+    assert.deepEqual(typingFailureOf(new GpuCallCancelledError()), { reason: "cancelled" });
+    assert.deepEqual(typingFailureOf(new ApiError("network", 0)), { reason: "network" });
+    assert.deepEqual(typingFailureOf(new ApiError("server", 503)), { reason: "offline" });
+    assert.deepEqual(typingFailureOf(new TypeError("Failed to fetch")), { reason: "offline" });
+    assert.deepEqual(typingFailureOf(new ApiError("bad-request", 422, problem)), {
+      reason: "refused",
+      status: 422,
+      title: "The slide has no scale",
+    });
+  });
+
+  it("passes on that the typer assumed the scale", async () => {
+    const accepted = acceptedSmartRun();
+    const unscaled: OutlineTyper = (slideId, outlines) =>
+      Promise.resolve({ ...toOutlineTypes(slideId, outlines), scale_assumed: true });
+    const outcome = await typeAccepted("slide-1", accepted.document, accepted.shapes, unscaled);
+    assert.equal(outcome.kind === "typed" && outcome.scaleAssumed, true);
   });
 });

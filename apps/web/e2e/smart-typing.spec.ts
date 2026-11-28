@@ -153,17 +153,27 @@ for (const tier of ["Best", "Good"] as const) {
   });
 }
 
-test("a typer failure shows a toast and leaves the cells untyped", async ({ page }) => {
+test("a typer failure ends the chip, shows a toast and leaves the cells for keys 1 to 4", async ({
+  page,
+}) => {
   const { centre } = await openSmart(page, "&typer=down");
   await findCell(page, centre);
   await findCell(page, { x: centre.x + 60, y: centre.y });
   await page.keyboard.press("Enter");
   await expect(cells(page)).toHaveCount(2);
   const toast = page.locator('[data-slot="undo-toast-host"] [data-slot="toast"]');
-  await expect(toast).toContainText("The typer did not answer, so 2 cells are left untyped");
-  await expect(page.getByTestId("smart-typing")).toHaveAttribute("data-state", "failed");
-  await expect(page.getByTestId("smart-typing")).toHaveText("Typing failed, 2 untyped");
-  await expect(cells(page).first()).toHaveAttribute("data-type", "");
-  await expect(cells(page).first()).toHaveAttribute("data-class", "");
-  await expect(cells(page).first()).toHaveAttribute("data-colour", unclassed);
+  await expect(toast).toContainText("The typer did not answer. 2 cells are left untyped");
+  await expect(page.getByTestId("smart-typing")).toHaveCount(0);
+  for (const index of [0, 1]) {
+    await expect(cells(page).nth(index)).toHaveAttribute("data-type", "");
+    await expect(cells(page).nth(index)).toHaveAttribute("data-class", "");
+    await expect(cells(page).nth(index)).toHaveAttribute("data-colour", unclassed);
+  }
+
+  await page.keyboard.press("Escape");
+  await page.mouse.click(centre.x, centre.y);
+  await page.keyboard.press("1");
+  await expect(cells(page).first()).toHaveAttribute("data-class", `${p07}-class-1`);
+  await expect(cells(page).first()).toHaveAttribute("data-colour", "#f87171");
+  await expect(cells(page).nth(1)).toHaveAttribute("data-colour", unclassed);
 });

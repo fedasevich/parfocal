@@ -13,10 +13,7 @@ from parfocal_ml.typer import TYPER_MPP, Model, Outline, TypedNucleus, type_nucl
 WINDOW = 1024
 MARGIN = 16
 LEAST_TYPER_PIXELS = 256
-
-
-class SlideWithoutScaleError(ValueError):
-    pass
+ASSUMED_MPP = 0.25
 
 
 @dataclass(frozen=True)
@@ -98,19 +95,22 @@ def answered(nucleus: TypedNucleus) -> dict[str, object]:
     }
 
 
+def scale_of(slide: SlideImage) -> float:
+    return slide.mpp if slide.mpp is not None and slide.mpp > 0 else ASSUMED_MPP
+
+
 def typed_in_window(
     slide: SlideImage, outlines: Sequence[Points], model: Model, temperature: float
 ) -> list[TypedNucleus]:
-    if slide.mpp is None:
-        raise SlideWithoutScaleError("The typer needs the slide's microns per pixel")
-    window = window_of([box_of(points) for points in outlines], slide, least_span(slide.mpp))
+    mpp = scale_of(slide)
+    window = window_of([box_of(points) for points in outlines], slide, least_span(mpp))
     if window.empty:
         return [unknown() for _ in outlines]
     rgb = slide.reader.read(
         window.left, window.top, window.right - window.left, window.bottom - window.top
     )
     shapes = [outline_in(points, window) for points in outlines]
-    return type_nuclei(rgb, shapes, model, slide.mpp, temperature=temperature)
+    return type_nuclei(rgb, shapes, model, mpp, temperature=temperature)
 
 
 def typed_outlines(
@@ -132,4 +132,7 @@ async def answer_outline_types(
     request = outline_types_call_of(call)
     slide = await open_slide(request.tenant_id, request.slide_id, request.folder)
     nuclei = typed_outlines(slide, request.outlines, model, request.temperature)
-    return {"outlines": [answered(nucleus) for nucleus in nuclei]}
+    return {
+        "outlines": [answered(nucleus) for nucleus in nuclei],
+        "scale_assumed": scale_of(slide) != slide.mpp,
+    }

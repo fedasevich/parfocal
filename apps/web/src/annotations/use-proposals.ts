@@ -5,7 +5,10 @@ import {
   type OutlineTyper,
   serverTyper,
   splitForTyping,
+  type TypingFailure,
+  type TypingOutcome,
   typeAccepted,
+  typerAttemptMs,
 } from "../aiseg/accept-typing.ts";
 import { showUndoToast } from "../shell/undo-toasts.tsx";
 import { acceptProposals, discardProposals, type Proposal, pendingProposals } from "./proposals.ts";
@@ -13,8 +16,7 @@ import type { SavedAnnotations } from "./use-saved-annotations.ts";
 
 export type TypingState =
   | { readonly state: "idle" }
-  | { readonly state: "working"; readonly count: number }
-  | { readonly state: "failed"; readonly count: number };
+  | { readonly state: "working"; readonly count: number };
 
 export type ProposalControls = {
   readonly pending: readonly Proposal[];
@@ -54,23 +56,44 @@ export function useProposals(
     const call = ++calls.current;
     const count = first.shapes.length;
     setTypingState({ state: "working", count });
-    void typeAccepted(slideId, second.document, first.shapes, typer, classOfType).then(
-      (outcome) => {
-        const last = call === calls.current;
-        if (outcome.kind === "failed") {
-          if (last) setTypingState({ state: "failed", count: outcome.count });
-          showUndoToast({
-            message: t`The typer did not answer, so ${outcome.count} cells are left untyped. Select one and press 1 to 4 to type it.`,
-          });
-          return;
-        }
-        if (last) setTypingState({ state: "idle" });
-        if (outcome.kind === "nothing") return;
-        const before = latest();
-        const next = outcome.apply(before);
-        if (next !== before) apply(next, "Type accepted outlines");
-      },
-    );
+    const failed = (failure: TypingFailure) => {
+      const left = t`${count} cells are left untyped. Select one and press 1 to 4 to type it.`;
+      showUndoToast({ message: `${failureText(failure)} ${left}` });
+    };
+    const finish = (outcome: TypingOutcome) => {
+      if (outcome.kind === "failed") return failed(outcome.failure);
+      if (outcome.kind === "nothing") return;
+      const before = latest();
+      const next = outcome.apply(before);
+      if (next !== before) apply(next, "Type accepted outlines");
+      if (outcome.scaleAssumed) {
+        showUndoToast({
+          message: t`The slide states no microns per pixel, so the typer assumed 0.25 µm per pixel.`,
+        });
+      }
+    };
+    const failureText = (failure: TypingFailure): string => {
+      switch (failure.reason) {
+        case "timeout":
+          return t`The typer took longer than ${typerAttemptMs / 1000} s to answer.`;
+        case "network":
+          return t`The network dropped while typing.`;
+        case "cancelled":
+          return t`Typing was cancelled.`;
+        case "refused":
+          return failure.title === null
+            ? t`The typer refused the cells (${failure.status}).`
+            : t`The typer refused the cells: ${failure.title}.`;
+        case "offline":
+          return t`The typer did not answer.`;
+      }
+    };
+    void typeAccepted(slideId, second.document, first.shapes, typer, classOfType)
+      .then(finish)
+      .catch(() => failed({ reason: "offline" }))
+      .finally(() => {
+        if (call === calls.current) setTypingState({ state: "idle" });
+      });
   }, [apply, document, latest, slideId, t]);
 
   const discard = useCallback(() => {

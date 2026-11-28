@@ -93,6 +93,7 @@ class OutlineTypes(BaseModel):
     typer: str
     version: str
     calibrated: bool
+    scale_assumed: bool = False
     outlines: list[TypedOutline]
 
 
@@ -148,6 +149,7 @@ async def type_outlines(
     typed, answer = outcome
     reported = seconds_in(answer.reply)
     gpu_seconds = answer.waited_seconds if reported is None else round(reported, 3)
+    scale_assumed = answer.reply.get("scale_assumed") is True
     await record(
         connection,
         actor_of(principal),
@@ -162,6 +164,7 @@ async def type_outlines(
             "calibrated": temperature is not None,
             "gpu_seconds": gpu_seconds,
             "waited_seconds": answer.waited_seconds,
+            "scale_assumed": scale_assumed,
         },
     )
     return OutlineTypes(
@@ -169,5 +172,6 @@ async def type_outlines(
         typer=TYPER,
         version=TYPER_VERSION,
         calibrated=temperature is not None,
+        scale_assumed=scale_assumed,
         outlines=[TypedOutline.model_validate(outline) for outline in typed],
     )

@@ -77144,6 +77144,11 @@
             "type": "boolean",
             "title": "Calibrated"
           },
+          "scale_assumed": {
+            "type": "boolean",
+            "title": "Scale Assumed",
+            "default": false
+          },
           "outlines": {
             "items": {
               "$ref": "#/components/schemas/TypedOutline"
