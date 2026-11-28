@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ExportKind } from "@parfocal/api-client";
-import { exportUrl } from "../src/screens/evaluation/download-export.ts";
+import { downloadExport, exportUrl } from "../src/screens/evaluation/download-export.ts";
 
 process.env.TZ = "Europe/Prague";
 
@@ -17,4 +17,19 @@ test("the CSV and annotation exports carry no time zone", () => {
     exportUrl("t1", ExportKind.decisionscsv),
     "/api/review-tasks/t1/evaluation/exports/decisions.csv",
   );
+});
+
+test("the sign-off window's ticked PDF fetches the same report the preview downloads", async () => {
+  const asked: string[] = [];
+  const real = globalThis.fetch;
+  globalThis.fetch = ((url: string) => {
+    asked.push(url);
+    return Promise.resolve(new Response(null, { status: 503 }));
+  }) as typeof fetch;
+  try {
+    assert.equal(await downloadExport("t1", "pdf"), null);
+  } finally {
+    globalThis.fetch = real;
+  }
+  assert.deepEqual(asked, [exportUrl("t1", ExportKind.reportpdf)]);
 });

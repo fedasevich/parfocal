@@ -66,6 +66,18 @@ The baselines that still differ are the four matrix column names, 2.5 px low, an
 
 Re-measured: the 0.38 px was the system font, not Plex. With Plex drawn, Typst's Plex Sans widths match Chrome's with no tracking, a mean error of -0.02 px over 87 strings of the template editor and at most 0.85 px, while 0.38 px of tracking makes them 3.35 px too wide on average and up to 23 px. The tracking is now 0, which halves the differing ink on every page, and all 177 screen texts are still found in order.
 
+### Evaluation PDF preview and the sign-off window's PDF export
+
+`previewTaskEvaluation` returns the pages of the same `task_report` compile as SVG, so the preview changed with the PDF and has the same "before" and "after". Typst draws SVG text as glyph outlines with no `<text>`, so the preview cannot be read as text. A test instead checks that each preview page draws as many glyphs as its PDF page has characters, within one: 886, 782 and 383 glyphs against 886, 783 and 383 characters. The pages were drawn with rsvg-convert at 1240 px and compared with the PDF drawn by pdftoppm and with the Plex screen captures.
+
+| Pair, pages 1 to 3 | Differing pixels | Differing ink |
+|---|---|---|
+| Preview against the PDF | 1.69%, 1.33%, 0.59% | 33.3%, 55.5%, 51.3% |
+| Preview against the screen | 2.70%, 2.48%, 1.44% | 48.5%, 69.7%, 61.1% |
+| PDF against the screen | 2.30%, 2.22%, 1.17% | 41.3%, 64.0%, 43.2% |
+
+The preview and the PDF hold the same glyphs at the same places. What differs between them is how two rasterisers antialias outlines and hinted embedded fonts. The sign-off window's ticked PDF (PROTO-154) calls `downloadExport`, which fetches the same `report.pdf?zone=` URL the preview's download button fetches, and a web test pins that.
+
 ### Study template samples (`previewStudyTemplate`, `downloadStudyTemplatePreview`, `previewSavedStudyTemplate`, `downloadSavedStudyTemplatePreview`)
 
 The template editor does not draw `ReportPage`. It draws `ReportPages` in `packages/ui/src/components/report-editor-pages.tsx`: a sheet 520 CSS px wide with 28 px padding, text at 9, 11 or 13 px by the text size setting, line height 1.5, the "Parfocal" and "Sample project · sample numbers" letterhead with the filled title and subtitle, a running header on later pages, the blocks in a two column grid with fixed sample bodies, and a footer with "Sample · not a real evaluation" or the signature line and the page number. The capture opened `/admin?section=templates` on the fake API, opened CAMELYON rounds in the editor and gave it a draft with every block kind, two half width pairs, a page break, a hidden title and an empty text block (saved as `packages/test-fixtures/template-sample-screen.json`), then took each `section[data-page]` at device scale 2, 1040 x 1471 px.
@@ -110,5 +122,5 @@ Nothing needed fixing. The one moved text is the page line, which the screen pri
 
 ## Follow-ups
 
-- The study template samples, the clinical report and the annotate task report are measured in the next sections of this file as their paths are done.
+- Whether the annotate task report should get a screen, or be drawn with the evaluation sheet's letterhead, is a question for the owner. TODO
 - The lead checks on app.parfocal.eu that each deployed download matches its preview, RT-4 included.
