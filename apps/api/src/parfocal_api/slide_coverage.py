@@ -113,6 +113,8 @@ async def readable_slide(
                 slides.c.project_id,
                 slides.c.width,
                 slides.c.height,
+                slides.c.mpp_x,
+                slides.c.mpp_y,
                 slides.c.original_key,
                 projects.c.privacy_mode,
             )
