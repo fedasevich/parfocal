@@ -751,6 +751,7 @@ function OpenedSlide({
                       activeClass={stripClass}
                       onPick={pickClassKey}
                       forSelection={selectionTakesClass}
+                      classesHidden={tool === "smart" && cellTyping.autoType}
                       proposals={
                         proposalCount > 0
                           ? {

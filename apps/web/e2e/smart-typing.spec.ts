@@ -177,3 +177,29 @@ test("a typer failure ends the chip, shows a toast and leaves the cells for keys
   await expect(cells(page).first()).toHaveAttribute("data-colour", "#f87171");
   await expect(cells(page).nth(1)).toHaveAttribute("data-colour", unclassed);
 });
+
+test("typing on hides the class chips, typing off brings them back, and key 2 retypes a cell meanwhile", async ({
+  page,
+}) => {
+  const { centre } = await openSmart(page);
+  const chips = page.getByTestId("class-swatch");
+  await expect(toggle(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(chips).toHaveCount(0);
+  await expect(page.getByTestId("smart-typer")).toBeVisible();
+
+  await findCell(page, centre);
+  await page.keyboard.press("Enter");
+  await expect(cells(page)).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await page.mouse.click(centre.x, centre.y);
+  await page.keyboard.press("2");
+  await expect(cells(page).first()).toHaveAttribute("data-class", `${p07}-class-2`);
+  await page.keyboard.press("s");
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-tool", "smart");
+  await expect(chips).toHaveCount(0);
+
+  await toggle(page).click();
+  await expect(toggle(page)).toHaveAttribute("aria-pressed", "false");
+  await expect(chips.first()).toBeVisible();
+  await expect(page.getByTestId("smart-typer")).toHaveCount(0);
+});

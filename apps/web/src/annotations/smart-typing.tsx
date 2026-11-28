@@ -115,6 +115,11 @@ export function SmartTypingBar({
       >
         {autoType ? t`Typing on` : t`Typing off`}
       </button>
+      {autoType ? (
+        <span data-testid="smart-typer" className={contextChip}>
+          {t`Typed by the cell typer`}
+        </span>
+      ) : null}
       {typing.state === "idle" ? null : (
         <span
           data-testid="smart-typing"
