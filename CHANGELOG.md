@@ -2,6 +2,45 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.65.1 (2026-11-28)
+
+### Fixes
+
+- ci: Press Comment on the slide in the comments tab spec
+- OPS-009: Stop using R2 Infrequent Access
+- OPS-009: Give ADR 0341 a plain status and an Amended by line
+- EXP-023: Expect the showcase seed to hold only the assignable roles
+- PROTO-171: Print the report PDF in the reader's zone with the screen's line box
+- PROTO-171: Pad the amendment box by its border and plain the ADR status
+- PROTO-171: Preload IBM Plex Sans 700 so bold headings keep Plex on a first visit
+
+### Docs
+
+- PROTO-184: Log the v0.65.0 deploy
+- FOUND-002: Log the stop of the 2026-11-25 run
+- PROTO-203: Add hiding the cell review type bar fully
+- PROTO-171: Log the owner's report PDF font and spacing finding
+- OPS-009: Explain the 9 dollar R2 Infrequent Access charge
+- OPS-009: Hand the empty drill bucket delete to the owner
+- OPS-042: Record the owner's answer on the per pool GPU cap
+- TEST-061: Add the browser shards repair task
+- OPS-009: Record the billing audit of every paid service
+- OPS-009: Tick storage lifecycle and cost controls
+- PROTO-182: Log the owner's cell review dots and zoom request
+- PROTO-204: Add outlines for dotted cells when zoomed in and the kept review zoom
+- PROTO-182: Log the owner's Smart select requests
+- PROTO-206: Add refining the found Smart select shape and hiding the picker while typing
+- PROTO-206: Log the owner's side panel scroll and cell list request
+- PROTO-208: Add the one scroll annotate Display tab with a hidable input help
+- PROTO-209: Add the comment thread message skeleton
+- PROTO-210: Add Cmd+Z for the last Smart select click
+- PROTO-171: Log and move to review after merge
+
+### Other
+
+- TEST-061: Claim TEST-061 PROTO-171 for the parallel run
+- PROTO-171: Merge the report PDF match
+
 ## v0.65.0 (2026-11-26)
 
 ### Features
