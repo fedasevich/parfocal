@@ -8,10 +8,29 @@ MARGIN_Y_PT = 36
 BODY_PT = 11
 SMALL_PT = 9
 SECTION_PT = 10
+FOOTER_PT = 8
+LINE_HEIGHT = 1.5
+FONT_ASCENT = 1.025
+FONT_DESCENT = 0.275
+BLOCK_GAP_PT = 6
+ROW_GAP_PT = 2
+HEADING_ABOVE_PT = 12
+HEADING_BELOW_PT = 2
+HEAD_BELOW_PT = 8
+META_INSET_PT = 6
+META_LABEL_PT = 96
+SIGN_ABOVE_PT = 16
+SIGN_INSET_PT = 8
+RULE_PT = 1
+STRONG_RULE_PT = 1
 INK = "#111111"
 MUTED = "#555555"
+FOOTER = "#6b6b6b"
 RULE = "#bbbbbb"
 STRONG_RULE = "#222222"
+HALF_LEADING = (LINE_HEIGHT - FONT_ASCENT - FONT_DESCENT) / 2
+TOP_EDGE_EM = round(HALF_LEADING + FONT_ASCENT, 4)
+BOTTOM_EDGE_EM = round(HALF_LEADING + FONT_DESCENT, 4)
 
 LAYOUT = f"""
 #let report-ink = rgb("{INK}")
@@ -19,48 +38,62 @@ LAYOUT = f"""
 #let report-rule = rgb("{RULE}")
 #let report-strong-rule = rgb("{STRONG_RULE}")
 #let report-margin = (x: {MARGIN_X_PT}pt, y: {MARGIN_Y_PT}pt)
-#set text(font: "{FONT_FAMILY}", size: {BODY_PT}pt, fill: report-ink, fallback: true)
-#set par(leading: 0.55em, spacing: 0.8em)
+#let report-gap = {BLOCK_GAP_PT}pt
+#let report-row-gap = {ROW_GAP_PT}pt
+#let report-sign-above = {SIGN_ABOVE_PT}pt
+#let report-sign-inset = {SIGN_INSET_PT}pt
+#let report-line(paint, width: {RULE_PT}pt) = block(width: 100%, height: width, fill: paint,
+  above: 0pt, below: 0pt)
+#set text(font: "{FONT_FAMILY}", size: {BODY_PT}pt, fill: report-ink, fallback: true,
+  top-edge: {TOP_EDGE_EM}em, bottom-edge: -{BOTTOM_EDGE_EM}em)
+#set par(leading: 0pt, spacing: report-gap)
+#set block(spacing: report-gap)
 #let report-small(body) = text(size: {SMALL_PT}pt, fill: report-muted, body)
-#let report-head(name, name-lines, kind, kind-line) = block(
-  width: 100%,
-  inset: (bottom: 7pt),
-  below: 8pt,
-  stroke: (bottom: 1.5pt + report-strong-rule),
+#let report-footer(body) = text(size: {FOOTER_PT}pt, fill: rgb("{FOOTER}"), body)
+#let report-head(name, name-lines, kind, kind-line) = block(width: 100%, stack(
   grid(
     columns: (1fr, auto),
     column-gutter: 16pt,
-    stack(spacing: 4pt, text(size: 13pt, weight: "bold", name), ..name-lines.map(report-small)),
-    align(right, stack(spacing: 4pt,
+    stack(text(size: 13pt, weight: "bold", name), ..name-lines.map(report-small)),
+    align(right, stack(
       text(size: 12pt, weight: "bold", kind),
       report-small(kind-line),
     )),
   ),
-)
-#let report-meta(pairs) = block(below: 10pt, grid(
+  v({HEAD_BELOW_PT}pt),
+  report-line(report-strong-rule, width: {STRONG_RULE_PT}pt),
+))
+#let report-meta(pairs) = block(width: 100%, inset: (y: {META_INSET_PT}pt), grid(
   columns: (1fr, 1fr),
   column-gutter: 24pt,
-  row-gutter: 5pt,
+  row-gutter: report-row-gap,
   ..pairs.map(pair => grid(
-    columns: (72pt, 1fr),
+    columns: ({META_LABEL_PT}pt, 1fr),
     column-gutter: 8pt,
     text(fill: report-muted, pair.at(0)),
     text(weight: "semibold", pair.at(1)),
   )),
 ))
-#let report-section(title, capitals: true) = block(
-  width: 100%,
-  above: 14pt,
-  below: 6pt,
-  inset: (bottom: 3pt),
-  stroke: (bottom: 0.5pt + report-rule),
+#let report-heading(title, capitals: true) = block(width: 100%, stack(
   text(size: {SECTION_PT}pt, weight: "bold", tracking: 0.06em, fill: rgb("#333333"),
     if capitals {{ upper(title) }} else {{ title }}),
+  v({HEADING_BELOW_PT}pt),
+  report-line(report-rule),
+))
+#let report-section(title, capitals: true) = block(
+  above: report-gap + {HEADING_ABOVE_PT}pt,
+  below: report-gap,
+  report-heading(title, capitals: capitals),
+)
+#let report-titled(title, body) = block(
+  width: 100%,
+  above: report-gap + {HEADING_ABOVE_PT}pt,
+  grid(row-gutter: report-row-gap, report-heading(title), body),
 )
 #let report-rows(pairs) = grid(
   columns: (1fr, 1fr),
   column-gutter: 12pt,
-  row-gutter: 5pt,
+  row-gutter: report-row-gap,
   ..pairs.map(pair => (
     text(fill: report-muted)[#pair.at(0):],
     text(weight: "semibold", pair.at(1)),

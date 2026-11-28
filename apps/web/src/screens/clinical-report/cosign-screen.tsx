@@ -1,11 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
-import {
-  type CaseReport,
-  getDownloadCaseReportPdfUrl,
-  useReturnCaseReport,
-  useSignCaseReport,
-} from "@parfocal/api-client";
+import { type CaseReport, useReturnCaseReport, useSignCaseReport } from "@parfocal/api-client";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { CoSignColumns, type CoSignRow } from "@parfocal/ui/components/clinical-report";
 import { FlowBar, FlowPage } from "@parfocal/ui/components/flow-page";
@@ -54,6 +49,7 @@ import {
   type Values,
 } from "./model.ts";
 import { fieldId, useLinkRenderer, useToast } from "./parts.tsx";
+import { reportPdfUrl } from "./pdf-link.ts";
 import { type LoadedReport, useCaseReportData, useReportWriter } from "./report-data.ts";
 import { workEmail } from "./report-screen.tsx";
 import { pushValues } from "./report-sync.ts";
@@ -411,7 +407,7 @@ function CosignFlow({
                   onClick={() => {
                     if (live) {
                       const link = document.createElement("a");
-                      link.href = getDownloadCaseReportPdfUrl(projectId, caseId, 1);
+                      link.href = reportPdfUrl(projectId, caseId, 1);
                       link.click();
                     }
                     toast.show({ text: t`${data.case.label}_report_v1.pdf saved to Downloads` });

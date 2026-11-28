@@ -2,7 +2,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, tzinfo
 from typing import Any
 
 from parfocal_api.evaluation_exports import typst_module
@@ -257,29 +257,29 @@ def amendment_changes(
     ]
 
 
-def stamp(at: datetime, time: bool = True) -> str:
-    moment = at.astimezone(UTC)
+def stamp(at: datetime, zone: tzinfo, time: bool = True) -> str:
+    moment = at.astimezone(zone)
     day = f"{moment.day} {MONTHS[moment.month - 1]}"
     return f"{day} {moment.hour:02d}:{moment.minute:02d}" if time else day
 
 
-def long_day(at: datetime) -> str:
-    moment = at.astimezone(UTC)
+def long_day(at: datetime, zone: tzinfo) -> str:
+    moment = at.astimezone(zone)
     return f"{moment.day} {FULL_MONTHS[moment.month - 1]} {moment.year}"
 
 
-def long_date(at: datetime) -> str:
-    moment = at.astimezone(UTC)
-    return f"{long_day(at)} at {moment.hour:02d}:{moment.minute:02d}"
+def long_date(at: datetime, zone: tzinfo) -> str:
+    moment = at.astimezone(zone)
+    return f"{long_day(at, zone)} at {moment.hour:02d}:{moment.minute:02d}"
 
 
-def day_with_year(at: datetime) -> str:
-    return f"{stamp(at, False)} {at.astimezone(UTC).year}"
+def day_with_year(at: datetime, zone: tzinfo) -> str:
+    return f"{stamp(at, zone, False)} {at.astimezone(zone).year}"
 
 
-def stamp_with_year(at: datetime) -> str:
-    moment = at.astimezone(UTC)
-    return f"{moment.day} {MONTHS[moment.month - 1]} {moment.year}, {stamp(at)[-5:]}"
+def stamp_with_year(at: datetime, zone: tzinfo) -> str:
+    moment = at.astimezone(zone)
+    return f"{moment.day} {MONTHS[moment.month - 1]} {moment.year}, {stamp(at, zone)[-5:]}"
 
 
 def document_of(
@@ -293,6 +293,7 @@ def document_of(
     versions: Sequence[SignedVersion],
     number: int,
     names: Mapping[str, str],
+    zone: tzinfo = UTC,
 ) -> dict[str, Any]:
     ordered = sorted(versions, key=lambda version: version.number)
     first = ordered[0]
@@ -344,12 +345,12 @@ def document_of(
         (label, value)
         for label, value in (
             ("Accession", accession),
-            ("Received", stamp(received_at, False) if received_at else ""),
+            ("Received", stamp(received_at, zone, False) if received_at else ""),
             (
                 "Reported",
-                f"{day_with_year(version.signed_at)}, amended"
+                f"{day_with_year(version.signed_at, zone)}, amended"
                 if amended
-                else stamp_with_year(first.signed_at),
+                else stamp_with_year(first.signed_at, zone),
             ),
         )
         if value.strip()
@@ -364,7 +365,7 @@ def document_of(
     )
     amendment = (
         {
-            "title": f"Amendment, {day_with_year(version.signed_at)}, by {signer}",
+            "title": f"Amendment, {day_with_year(version.signed_at, zone)}, by {signer}",
             "reason": version.reason or "",
             "changes": [
                 list(change)
@@ -372,7 +373,8 @@ def document_of(
                     shown, (first.values, first_deposits), (values, deposits)
                 )
             ],
-            "note": f"Version 1 of {stamp_with_year(first.signed_at)} stays readable in Parfocal.",
+            "note": f"Version 1 of {stamp_with_year(first.signed_at, zone)} "
+            "stays readable in Parfocal.",
         }
         if amended
         else None
@@ -401,9 +403,9 @@ def document_of(
             "by": f"Reported by {reporter}, verified and signed by {signer}"
             if reporter
             else f"Electronically signed by {signer}",
-            "at": f"{long_day(version.signed_at)}, signed again"
+            "at": f"{long_day(version.signed_at, zone)}, signed again"
             if amended
-            else long_date(first.signed_at),
+            else long_date(first.signed_at, zone),
         },
     }
 
@@ -412,7 +414,7 @@ SOURCE = (
     LAYOUT
     + """
 #let doc = json(bytes(sys.inputs.at("document")))
-#set page(paper: "a4", margin: report-margin, footer: context report-small(grid(
+#set page(paper: "a4", margin: report-margin, footer: context report-footer(grid(
   columns: (1fr, auto),
   doc.at("lab").at("footer"),
   [Page #counter(page).display() of #counter(page).final().first()],
@@ -427,7 +429,7 @@ SOURCE = (
 #if "amendment" in doc {
   let amendment = doc.at("amendment")
   block(width: 100%, inset: (x: 10pt, y: 8pt), radius: 3pt, fill: rgb("#fdf6dc"),
-    stroke: 0.75pt + rgb("#c9a227"), below: 8pt, stack(spacing: 4pt,
+    stroke: 1pt + rgb("#c9a227"), stack(spacing: report-row-gap,
       text(weight: "bold", amendment.at("title")),
       [Reason: #amendment.at("reason")],
       ..amendment.at("changes").map(change => [
@@ -439,26 +441,28 @@ SOURCE = (
       report-small(amendment.at("note")),
     ))
 }
-#for section in doc.at("sections") [
-  #report-section(section.at("title"))
-  #let body = section.at("body")
-  #if section.at("diagnosis", default: false) { text(weight: "semibold", body) } else { body }
-]
+#for section in doc.at("sections") {
+  let body = section.at("body")
+  report-titled(section.at("title"),
+    if section.at("diagnosis", default: false) { text(weight: "semibold", body) } else { body })
+}
 #report-section(doc.at("synopticTitle"))
 #if doc.at("standards").len() > 0 {
-  let standards = doc.at("standards").map(pair => [*#pair.at(0)* #pair.at(1)])
-  block(below: 6pt, report-small(stack(spacing: 3pt, ..standards)))
+  block(width: 100%, report-small(grid(row-gutter: report-row-gap,
+    ..doc.at("standards").map(pair => [*#pair.at(0)* #pair.at(1)]))))
 }
-#report-rows(doc.at("rows"))
-#for section in doc.at("after") [
-  #report-section(section.at("title"))
-  #section.at("body")
-]
-#block(above: 16pt, width: 100%, inset: (top: 6pt), stroke: (top: 0.5pt + report-rule),
-  stack(spacing: 4pt,
-  text(weight: "bold", doc.at("sign").at("by")),
-  [on #doc.at("sign").at("at")],
-  report-small[I have reviewed the whole-slide images and rendered this diagnosis.],
+#block(width: 100%, report-rows(doc.at("rows")))
+#for section in doc.at("after") {
+  report-titled(section.at("title"), section.at("body"))
+}
+#block(above: report-gap + report-sign-above, width: 100%, stack(
+  report-line(report-rule),
+  v(report-sign-inset),
+  stack(spacing: report-row-gap,
+    text(weight: "bold", doc.at("sign").at("by")),
+    [on #doc.at("sign").at("at")],
+    report-small[I have reviewed the whole-slide images and rendered this diagnosis.],
+  ),
 ))
 """
 )
