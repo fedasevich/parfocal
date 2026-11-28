@@ -893,16 +893,15 @@
       "measures": "The time from the key press of an agree decision in the guided check to the next object being current and a frame painted, fastest of eight decisions after a warm-up page",
       "kind": "ms",
       "unit": "ms",
-      "baseline": 42,
-      "limit": 126,
-      "headroom": 3,
-      "headroomReason": "The baseline is the fastest of 24 decisions on an Apple M4 shared with other agents, and it holds two animation frames. A hosted runner paints with software rendering, so a frame there can take three times as long.",
+      "baseline": 137,
+      "limit": 205,
+      "headroom": 1.5,
+      "headroomReason": "The baseline is the slowest fastest-of-eight measured on a hosted runner, an AMD EPYC 7763 with software rendering. The measure moves in steps of one software frame of 40 to 55 ms and runner classes differ by 1.4 times, so the limit leaves room for one more frame on the slowest class.",
       "rttMs": 0,
-      "environment": "Chrome headless, production build of apps/web with the in-browser fake API, 1440 x 900",
+      "environment": "Chrome headless with software rendering on a hosted ubuntu-24.04 runner, production build of apps/web with the in-browser fake API, 1440 x 900",
       "check": "apps/web/e2e/decision-next-object.spec.ts",
       "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
-      "result": "docs/results/2026-11-16-application-main-paths.md",
-      "todo": "Record the hosted-runner number from the first CI run and tighten the headroom."
+      "result": "docs/results/2026-11-28-decision-budget-on-hosted-runners.md"
     }
   ]
 }

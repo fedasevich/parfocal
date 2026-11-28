@@ -5,8 +5,8 @@ import {
   boxesCover,
   type DrawnLayer,
   type DrawnTile,
-  insideSlide,
   opaqueTileBoxes,
+  partOverSlide,
 } from "../../src/viv/tile-cover.ts";
 
 const view: Box = [100, 100, 300, 200];
@@ -62,11 +62,25 @@ describe("tile cover", () => {
     assert.equal(boxesCover([10, 10, 10, 50], [[0, 0, 100, 100]]), false);
   });
 
-  it("knows when the view lies inside the slide", () => {
-    assert.equal(insideSlide(view, 300, 200), true);
-    assert.equal(insideSlide(view, 299, 200), false);
-    assert.equal(insideSlide([-1, 0, 10, 10], 300, 200), false);
-    assert.equal(insideSlide([0, 0, 10, 201], 300, 200), false);
+  it("keeps only the part of the view that lies over the slide", () => {
+    assert.deepEqual(partOverSlide(view, 300, 200), view);
+    assert.deepEqual(partOverSlide(view, 299, 150), [100, 100, 299, 150]);
+    assert.deepEqual(partOverSlide([-236, -57, 1204, 843], 1024, 768), [0, 0, 1024, 768]);
+    assert.equal(partOverSlide([-50, 0, 0, 10], 300, 200), null);
+    assert.equal(partOverSlide([300, 0, 400, 10], 300, 200), null);
+  });
+
+  it("counts tiles that end at the slide edge as covering a view that overhangs it", () => {
+    const shown = partOverSlide([-100, -100, 400, 300], 300, 200);
+    assert.ok(shown !== null);
+    assert.equal(
+      boxesCover(shown, [
+        [0, 0, 256, 200],
+        [256, 0, 300, 200],
+      ]),
+      true,
+    );
+    assert.equal(boxesCover(shown, [[0, 0, 256, 200]]), false);
   });
 
   it("gives each loaded tile the box its image is drawn into", () => {

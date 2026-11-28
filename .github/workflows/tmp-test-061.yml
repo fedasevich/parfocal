@@ -1,0 +1,56 @@
+name: tmp-test-061
+
+on:
+  push:
+    branches: ["ci-repair-3-bench*"]
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        copy: [1, 2, 3]
+    name: check ${{ matrix.copy }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: browser-web
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small viewer)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-browser-${{ steps.fixtures.outputs.key }}
+      - run: pnpm fixtures small viewer
+        env:
+          PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.eu.r2.cloudflarestorage.com
+          PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_ACCESS_KEY_ID }}
+          PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_SECRET_ACCESS_KEY }}
+      - run: grep -m1 'model name' /proc/cpuinfo
+      - working-directory: apps/web
+        run: pnpm exec playwright test e2e/issue-pages.spec.ts e2e/stage-parts-overlap.spec.ts e2e/pen-touch-separation.spec.ts e2e/inspector-panel.spec.ts -g "guided review shows the shared banner|annotate task focused|finger drag pans|arrow keys resize" --repeat-each=12 --retries=0 --trace retain-on-failure --reporter=list || true
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          PARFOCAL_BUDGETS_APART: "1"
+      - working-directory: apps/web
+        run: |
+          pnpm exec playwright test --grep @budget --workers=1 --reporter=list || true
+          pnpm exec playwright test --grep @budget --workers=1 --reporter=list || true
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+      - if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: check-${{ matrix.copy }}
+          path: apps/web/test-results/**/error-context.md
+          retention-days: 3
+          if-no-files-found: ignore

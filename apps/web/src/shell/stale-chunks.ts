@@ -5,9 +5,11 @@ type ReloadPlace = {
   readonly storage: Pick<Storage, "getItem" | "setItem">;
   readonly now: () => number;
   readonly reload: () => void;
+  readonly online?: () => boolean;
 };
 
 export function reloadForStaleChunk(place: ReloadPlace): boolean {
+  if (place.online?.() === false) return false;
   const last = Number(place.storage.getItem(reloadKey) ?? 0);
   if (place.now() - last < retryAfterMs) return false;
   place.storage.setItem(reloadKey, String(place.now()));
@@ -21,6 +23,7 @@ export function reloadOnStaleChunks(target: Window) {
       storage: target.sessionStorage,
       now: () => Date.now(),
       reload: () => target.location.reload(),
+      online: () => target.navigator.onLine,
     });
     if (reloaded) event.preventDefault();
   });

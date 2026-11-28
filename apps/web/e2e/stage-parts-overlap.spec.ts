@@ -170,6 +170,8 @@ function minimapMoving(page: Page) {
   });
 }
 
+const restMs = 300;
+
 const homeMargin = 12;
 
 const cornerSlack = 8;
@@ -220,24 +222,24 @@ for (const viewport of [
       }
       if (steps > 0) await expect(page.getByTestId("stage-minimap")).toBeVisible();
       let before = "";
-      await expect
-        .poll(async () => {
-          const now = JSON.stringify(await floatingParts(page));
-          const still = now === before && !(await minimapMoving(page));
-          before = now;
-          return still;
-        })
-        .toBe(true);
-      const seen = await floatingParts(page);
-      expectApart(seen.stage, seen.parts);
-      for (const { name, box } of seen.parts) {
-        if (objectInView) expect(meets(box, seen.target), `${name} covers ${focused}`).toBe(false);
-        if (seen.panel !== null) {
-          expect(meets(box, seen.panel), `${name} meets the side panel`).toBe(false);
+      await expect(async () => {
+        const seen = await floatingParts(page);
+        const now = JSON.stringify(seen);
+        const still = now === before && !(await minimapMoving(page));
+        before = now;
+        expect(still, "the floating parts stopped moving").toBe(true);
+        expectApart(seen.stage, seen.parts);
+        for (const { name, box } of seen.parts) {
+          if (objectInView) {
+            expect(meets(box, seen.target), `${name} covers ${focused}`).toBe(false);
+          }
+          if (seen.panel !== null) {
+            expect(meets(box, seen.panel), `${name} meets the side panel`).toBe(false);
+          }
         }
-      }
-      const map = seen.parts.find((part) => part.name === "smart-minimap");
-      if (map !== undefined) expectInCorner(seen.stage, seen.corner, map.box);
+        const map = seen.parts.find((part) => part.name === "smart-minimap");
+        if (map !== undefined) expectInCorner(seen.stage, seen.corner, map.box);
+      }).toPass({ intervals: [restMs], timeout: 20_000 });
     }
   });
 }

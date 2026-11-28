@@ -120,6 +120,29 @@ test("a stale chunk reloads the page once a minute at most", () => {
   assert.equal(reloads, 2);
 });
 
+test("a chunk that fails to load without a connection never reloads the page", () => {
+  const kept = new Map<string, string>();
+  let reloads = 0;
+  let online = false;
+  const place = {
+    storage: {
+      getItem: (key: string) => kept.get(key) ?? null,
+      setItem: (key: string, value: string) => void kept.set(key, value),
+    },
+    now: () => 1_000_000,
+    reload: () => {
+      reloads += 1;
+    },
+    online: () => online,
+  };
+  assert.equal(reloadForStaleChunk(place), false);
+  assert.equal(reloads, 0);
+  assert.equal(kept.size, 0);
+  online = true;
+  assert.equal(reloadForStaleChunk(place), true);
+  assert.equal(reloads, 1);
+});
+
 test("workspaces of one organisation get initials from their own name", () => {
   assert.equal(initialsOf("ČVUT · Medical Imaging Group"), "MI");
   assert.equal(initialsOf("ČVUT · Machine Learning Lab"), "ML");
