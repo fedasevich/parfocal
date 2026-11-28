@@ -1,7 +1,8 @@
 # 0341. Old tenant objects move to Infrequent Access after 90 days, and budgets per environment live in a cost report
 
 - Date: 2026-11-15
-- Status: Accepted, tiering withdrawn by [ADR 0446](0446-r2-never-uses-infrequent-access.md) (R2 never uses Infrequent Access) on 2026-11-26
+- Status: Accepted
+- Amended by: [ADR 0446](0446-r2-never-uses-infrequent-access.md) (R2 never uses Infrequent Access), which withdrew the tiering on 2026-11-26
 - Deciders: Parfocal agents, owner to review
 - Backlog: OPS-009 (storage lifecycle and cost controls). Builds on [ADR 0115](0115-production-access-and-spend-caps.md) (production access and spend caps), [ADR 0288](0288-conftest-checks-the-opentofu-code-and-every-plan.md) (conftest checks the OpenTofu code) and [ADR 0331](0331-no-staging-environment.md) (no staging environment)
 
