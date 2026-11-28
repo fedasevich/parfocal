@@ -1,6 +1,8 @@
 import io
 import json
+from datetime import UTC, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
 from db_support import ApiAs
@@ -246,3 +248,22 @@ def test_an_amended_version_prints_as_the_amended_report(
     first = pages_of(api(clinic.lead).get(f"{clinic.url}/versions/1/pdf").content)
     assert "Metastatic carcinoma in one of two nodes" in first
     assert "AMENDED REPORT" not in first
+
+
+def test_the_pdf_prints_its_times_in_the_zone_the_download_names(
+    api: ApiAs, database: str, clinic: Clinic
+) -> None:
+    ready(api, clinic)
+    assert api(clinic.lead).post(f"{clinic.url}/sign").status_code == 200
+    versions = api(clinic.lead).get(clinic.url).json()["versions"]
+    signed = datetime.fromisoformat(versions[0]["signed_at"]).astimezone(UTC)
+    for zone in ("UTC", "Europe/Prague", "America/Los_Angeles"):
+        moment = signed.astimezone(ZoneInfo(zone))
+        response = api(clinic.lead).get(f"{clinic.url}/versions/1/pdf?zone={zone}")
+        assert response.status_code == 200, response.text
+        assert f"{moment.year}, {moment.hour:02d}:{moment.minute:02d}" in pages_of(response.content)
+    plain = pages_of(api(clinic.lead).get(f"{clinic.url}/versions/1/pdf").content)
+    assert f"{signed.year}, {signed.hour:02d}:{signed.minute:02d}" in plain
+    unknown = api(clinic.lead).get(f"{clinic.url}/versions/1/pdf?zone=Mars/Olympus")
+    assert unknown.status_code == 400
+    assert unknown.json()["code"] == "unknown-time-zone"

@@ -8851,6 +8851,10 @@ export type ListProjectsParams = {
   archived?: boolean;
 };
 
+export type DownloadCaseReportPdfParams = {
+  zone?: string | null;
+};
+
 export type ResolveClassNamesParams = {
   /**
    * @minItems 1
@@ -19487,8 +19491,25 @@ export type downloadCaseReportPdfResponse =
   | downloadCaseReportPdfResponseSuccess
   | downloadCaseReportPdfResponseError;
 
-export const getDownloadCaseReportPdfUrl = (projectId: string, caseId: string, number: number) => {
-  return `/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}/pdf`;
+export const getDownloadCaseReportPdfUrl = (
+  projectId: string,
+  caseId: string,
+  number: number,
+  params?: DownloadCaseReportPdfParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}/pdf?${stringifiedParams}`
+    : `/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}/pdf`;
 };
 
 /**
@@ -19498,10 +19519,11 @@ export const downloadCaseReportPdf = async (
   projectId: string,
   caseId: string,
   number: number,
+  params?: DownloadCaseReportPdfParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<downloadCaseReportPdfResponse> => {
   return apiFetch<downloadCaseReportPdfResponse>(
-    getDownloadCaseReportPdfUrl(projectId, caseId, number),
+    getDownloadCaseReportPdfUrl(projectId, caseId, number, params),
     {
       ...options,
       method: "GET",
@@ -19513,9 +19535,11 @@ export const getDownloadCaseReportPdfQueryKey = (
   projectId: string,
   caseId: string,
   number: number,
+  params?: DownloadCaseReportPdfParams,
 ) => {
   return [
     `/api/projects/${projectId}/cases/${caseId}/clinical-report/versions/${number}/pdf`,
+    ...(params ? [params] : []),
   ] as const;
 };
 
@@ -19526,6 +19550,7 @@ export const getDownloadCaseReportPdfQueryOptions = <
   projectId: string,
   caseId: string,
   number: number,
+  params?: DownloadCaseReportPdfParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
@@ -19536,10 +19561,10 @@ export const getDownloadCaseReportPdfQueryOptions = <
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getDownloadCaseReportPdfQueryKey(projectId, caseId, number);
+    queryOptions?.queryKey ?? getDownloadCaseReportPdfQueryKey(projectId, caseId, number, params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadCaseReportPdf>>> = ({ signal }) =>
-    downloadCaseReportPdf(projectId, caseId, number, { signal, ...requestOptions });
+    downloadCaseReportPdf(projectId, caseId, number, params, { signal, ...requestOptions });
 
   return {
     queryKey,
@@ -19569,6 +19594,7 @@ export function useDownloadCaseReportPdf<
   projectId: string,
   caseId: string,
   number: number,
+  params: undefined | DownloadCaseReportPdfParams,
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
@@ -19592,6 +19618,7 @@ export function useDownloadCaseReportPdf<
   projectId: string,
   caseId: string,
   number: number,
+  params?: DownloadCaseReportPdfParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
@@ -19615,6 +19642,7 @@ export function useDownloadCaseReportPdf<
   projectId: string,
   caseId: string,
   number: number,
+  params?: DownloadCaseReportPdfParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
@@ -19634,6 +19662,7 @@ export function useDownloadCaseReportPdf<
   projectId: string,
   caseId: string,
   number: number,
+  params?: DownloadCaseReportPdfParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof downloadCaseReportPdf>>, TError, TData>
@@ -19642,7 +19671,13 @@ export function useDownloadCaseReportPdf<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getDownloadCaseReportPdfQueryOptions(projectId, caseId, number, options);
+  const queryOptions = getDownloadCaseReportPdfQueryOptions(
+    projectId,
+    caseId,
+    number,
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

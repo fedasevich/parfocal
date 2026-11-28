@@ -1,7 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CaseReport,
-  getDownloadCaseReportPdfUrl,
   useAmendCaseReport,
   useListCases,
   useSendCaseReportForCosign,
@@ -63,6 +62,7 @@ import {
   type Values,
 } from "./model.ts";
 import { fieldId, useLinkRenderer, useToast } from "./parts.tsx";
+import { reportPdfUrl } from "./pdf-link.ts";
 import {
   type LoadedReport,
   useCaseReportData,
@@ -518,7 +518,7 @@ function ReportFlow({
                 const number = live ? serverRef.current.version : report.amend ? 2 : 1;
                 if (live) {
                   const link = document.createElement("a");
-                  link.href = getDownloadCaseReportPdfUrl(projectId, caseId, number);
+                  link.href = reportPdfUrl(projectId, caseId, number);
                   link.click();
                 }
                 toast.show({

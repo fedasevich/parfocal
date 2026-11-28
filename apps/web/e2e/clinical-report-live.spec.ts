@@ -68,6 +68,7 @@ test("Lenka fills a report from Findings to Sign out, amends it and the earlier 
   const download = page.waitForEvent("download");
   await flow(page).getByRole("button", { name: "Download PDF" }).click();
   expect((await download).suggestedFilename()).toMatch(/_v1\.pdf$/);
+  expect((await download).url()).toMatch(/\/versions\/1\/pdf\?zone=Europe%2FPrague$/);
 
   await page.reload();
   await expect(flow(page).getByText(/Signed out .* by Lenka Malá/)).toBeVisible();

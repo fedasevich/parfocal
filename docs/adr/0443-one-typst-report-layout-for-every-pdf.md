@@ -2,6 +2,7 @@
 
 - Date: 2026-11-26
 - Status: Accepted
+- Amended by: [ADR 0447](0447-report-pdfs-print-the-readers-zone-and-the-screens-line-box.md) (report PDFs print the reader's time zone and lay out text in the screen's line box)
 - Deciders: Claude, for PROTO-171 (the downloaded report PDF matches the on-screen report) and PROTO-172 (report PDFs from the templates are laid out like a designed report)
 - Backlog: PROTO-171, PROTO-172
 

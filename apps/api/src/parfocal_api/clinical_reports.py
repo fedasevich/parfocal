@@ -4,8 +4,9 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import delete, func, insert, select, update
@@ -21,7 +22,12 @@ from parfocal_api.my_work import ProjectRef, project_ref
 from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
-from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
+from parfocal_api.problems import (
+    BadRequestError,
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+)
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError, visible
 from parfocal_api.sign_out import case_signers, signs_out_case
@@ -1111,6 +1117,18 @@ def safe_name(label: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", label)
 
 
+class UnknownTimeZoneError(BadRequestError):
+    code = "unknown-time-zone"
+    title = "The time zone is not a known IANA time zone"
+
+
+def zone_of(name: str | None) -> ZoneInfo:
+    try:
+        return ZoneInfo(name or "UTC")
+    except (ZoneInfoNotFoundError, ValueError) as unknown:
+        raise UnknownTimeZoneError from unknown
+
+
 @router.get(
     "/versions/{number}/pdf",
     operation_id="downloadCaseReportPdf",
@@ -1123,7 +1141,9 @@ async def download_clinical_report_pdf(
     number: int,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    zone: Annotated[str | None, Query(max_length=64)] = None,
 ) -> Response:
+    reader_zone = zone_of(zone)
     await clinical_case(connection, principal, project_id, case_id)
     row = await report_row(connection, case_id)
     versions = (
@@ -1198,6 +1218,7 @@ async def download_clinical_report_pdf(
         ],
         number=number,
         names=names,
+        zone=reader_zone,
     )
     return Response(
         pdf_of(document, number, versions[-1].signed_at),
