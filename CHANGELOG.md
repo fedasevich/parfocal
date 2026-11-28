@@ -2,6 +2,24 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.67.0 (2026-11-28)
+
+### Features
+
+- PROTO-207: Hide the class chips in the Smart select bar while Typing is on
+
+### Fixes
+
+- PROTO-207: Select the just-accepted cells with Typing on and shorten the typer chip
+- PROTO-219: Draw the evaluation report PDF from the screen's report model
+
+### Docs
+
+- PROTO-206: Log the v0.66.0 deploy
+- PROTO-207: Log and move to review after merge
+- PROTO-219: Number ADR 0448 and amend ADR 0443
+- PROTO-219: Log the evaluation report PDF merge
+
 ## v0.66.0 (2026-11-28)
 
 ### Features
