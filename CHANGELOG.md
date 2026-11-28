@@ -2,6 +2,27 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.68.1 (2026-11-28)
+
+### Fixes
+
+- PROTO-219: Draw the template sample PDFs from the template editor's sheet
+- PROTO-219: List every report PDF path and record the annotate report as API only
+- PROTO-219: Drop the fallback font's tracking and pin the clinical PDF to its screen text
+- PROTO-219: Measure the evaluation PDF preview and the sign-off PDF export
+
+### Docs
+
+- TEST-056: Walk four deployed clauses on v0.66.0
+- TEST-056: Add the two-outline Expand row and the billing readings to the walk
+- TEST-056: Tick the passed checks and add the walk's findings
+- PROTO-212: Log the v0.68.0 deploy
+- PROTO-219: Log part two and move to review
+
+### Other
+
+- TEST-056: Merge the v0.66.0 walk
+
 ## v0.68.0 (2026-11-28)
 
 ### Features
