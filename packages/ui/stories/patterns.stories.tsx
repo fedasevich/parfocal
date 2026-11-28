@@ -303,6 +303,28 @@ export const MagnificationBars: Story = {
   ),
 };
 
+export const MagnificationBarsNarrow: Story = {
+  render: () => (
+    <div className="grid justify-items-start gap-4 bg-canvas p-8">
+      {[640, 484, 360, 260, 200].map((width) => (
+        <div key={width} style={{ width }} className="border border-dashed border-line">
+          <MagnificationBar
+            magnification={86}
+            digital
+            scaleLabel="10 µm"
+            scalePx={96}
+            micronsPerPixel={0.1}
+            brightness={80}
+            onBrightnessChange={() => undefined}
+            onPreset={() => undefined}
+            open
+          />
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 export const SlideDone: Story = {
   render: () => (
     <div className="w-[470px] bg-chrome p-6">

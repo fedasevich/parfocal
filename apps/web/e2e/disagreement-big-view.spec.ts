@@ -151,3 +151,26 @@ test("the magnification bar drops parts in order and never overlaps in a stage f
   expect(counts[counts.length - 1] ?? 0).toBeLessThan(counts[0] ?? 0);
   expect(counts).toEqual([...counts].sort((a, b) => b - a));
 });
+
+for (const stageWidth of [484, 360]) {
+  test(`the bar fits a ${stageWidth} px stage with the widest content: brightness changed and a deep zoom`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${base}/disagreements?stage=open`);
+    await slideReady(page, "T2");
+    const reference = (await boxOf(objectStage(page))).width;
+    await page.setViewportSize({ width: Math.round(1440 - reference + stageWidth), height: 900 });
+    expect(Math.abs((await boxOf(objectStage(page))).width - stageWidth)).toBeLessThan(2);
+    const bar = page.getByTestId("magnification-bar");
+    await bar.hover();
+    await page.keyboard.press("Alt+6");
+    await page.keyboard.press("Alt+ArrowDown");
+    await page.keyboard.press("Alt+ArrowDown");
+    await expect(bar.getByRole("button", { name: /^Slide brightness 80%/ })).toBeAttached();
+    await page.mouse.move(stageWidth / 2, 200);
+    for (let step = 0; step < 6; step += 1) await page.mouse.wheel(0, -400);
+    await page.waitForTimeout(400);
+    expect(await barFits(page, objectStage(page))).toBeGreaterThan(1);
+  });
+}
