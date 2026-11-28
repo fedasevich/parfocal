@@ -2,6 +2,18 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.68.2 (2026-11-28)
+
+### Fixes
+
+- PROTO-211: Store a tissue mask for every seeded slide so the run estimate shows
+- PROTO-211: Answer no-scale for a slide with no stated scale, as the cell run refuses it
+
+### Docs
+
+- PROTO-219: Log the v0.68.1 deploy
+- PROTO-211: Log the seeded tissue masks
+
 ## v0.68.1 (2026-11-28)
 
 ### Fixes

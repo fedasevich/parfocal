@@ -29,6 +29,7 @@ from parfocal_common.result_store import ObjectResultStore
 from parfocal_common.settings import AppEnv, StorageSettings
 from parfocal_ingest import study_seed
 from parfocal_ingest.patch_export import PatchWriter, source_of
+from parfocal_ingest.tissue_seed import store_seeded_masks
 
 NOT_FOUND = 404
 
@@ -180,6 +181,8 @@ async def main() -> None:
             role_emails=role_emails_of(os.environ.get("SEED_ROLE_EMAILS", "")),
             require_fixture_folders=settings.app_env in DEPLOYED_ENVS,
         )
+        masks = await store_seeded_masks(database_url, store, tenant_ids)
+        print(f"tissue masks: {dict(sorted(masks.items()))}")
         await cut_seeded_exports(
             database_url, store, require_annotations=settings.app_env in DEPLOYED_ENVS
         )

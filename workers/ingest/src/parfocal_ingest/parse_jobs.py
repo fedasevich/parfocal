@@ -183,12 +183,7 @@ def derive_upload(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[
         if arguments.get("tissue"):
             mask = tissue_mask(opened.path, found, opened.pyramid)
             (out / TISSUE_OUTPUT).write_bytes(mask.png())
-            facts["tissue"] = {
-                "cell": mask.cell,
-                "threshold": mask.threshold,
-                "fraction": mask.fraction,
-                "box": mask.box.facts() if mask.box else None,
-            }
+            facts["tissue"] = mask.facts()
         if arguments.get("restricted"):
             labelled = opened_in(arguments["source"], storage) if "source" in arguments else opened
             for image in associated_images(labelled.path, labelled.pyramid):

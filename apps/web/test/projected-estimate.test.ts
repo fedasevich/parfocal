@@ -42,3 +42,17 @@ test("a model priced by tissue says nothing until every picked slide has tissue 
   assert.equal(unknown.total, null);
   assert.equal(unknown.cost, null);
 });
+
+test("a slide whose estimate names a missing tissue mask leaves time and cost unknown", () => {
+  const missing: SlideEstimate = {
+    slide_id: "b",
+    tissue_mm2: null,
+    minutes: null,
+    dollars: null,
+    projected: true,
+    unknown_because: "no-tissue-mask",
+  };
+  const shown = runEstimate(priced, [{}, {}], today, [...estimates.slice(0, 1), missing]);
+  assert.equal(shown.total, null);
+  assert.equal(shown.cost, null);
+});

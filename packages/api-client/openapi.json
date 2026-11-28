@@ -69338,6 +69338,15 @@
         ],
         "title": "ErasedPerson"
       },
+      "EstimateGap": {
+        "type": "string",
+        "enum": [
+          "no-rate",
+          "no-scale",
+          "no-tissue-mask"
+        ],
+        "title": "EstimateGap"
+      },
       "Evaluation": {
         "properties": {
           "task_id": {
@@ -87538,6 +87547,16 @@
           "projected": {
             "type": "boolean",
             "title": "Projected"
+          },
+          "unknown_because": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EstimateGap"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
