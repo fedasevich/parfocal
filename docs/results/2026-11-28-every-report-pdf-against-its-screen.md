@@ -124,3 +124,40 @@ Nothing needed fixing. The one moved text is the page line, which the screen pri
 
 - Whether the annotate task report should get a screen, or be drawn with the evaluation sheet's letterhead, is a question for the owner. TODO
 - The lead checks on app.parfocal.eu that each deployed download matches its preview, RT-4 included.
+
+## Deployed check on v0.68.1
+
+- Date: 2026-11-28
+- Environment: https://app.parfocal.eu on release v0.68.1, signed in as the agent test account in the ČVUT · Biomedical Engineering workspace, headless Google Chrome through Playwright at device scale 2, viewport 1440 x 1800, time zone Europe/Prague, pypdf for the PDF text, pdftoppm and rsvg-convert for the page images
+- Data: the seeded Showcase projects. Nothing was signed, saved or created. The only writes were the two template sample preview POSTs, which store nothing, and the template list still holds its five templates.
+
+### Method
+
+1. Each screen was opened in the deployed app and left to reach network idle. Plex was then checked by width, because a face that reports `loaded` is not proof it was drawn: the longest one line text of the sheet was measured on the page and with a canvas in Plex and in the fallback fonts. On the deployed app Plex was already drawn on first load on every screen, for example "RT-4 · Evaluation v1 · signed 28 Nov 2026" at 8 px measured 150.28 px on the page, 150.28 px in Plex and 166.37 px in the fallback. The `font-display: block` rules were re-added all the same and `document.fonts.ready` awaited, and the width did not change.
+2. The screen texts are the visible text nodes of each sheet in DOM order, with CSS `uppercase` applied: `[data-slot="report-sheet"]` on the evaluation screen, `[data-slot="report-document"]` on the clinical report screen and `section[data-page]` in the template editor.
+3. Every PDF was downloaded by clicking the app's own control and catching the browser download. Its text was read with pypdf and walked with the loops of the local tests: whitespace squeezed, each screen text consumed from the front of the page text in order, the checksum line (evaluation) or the "DRAFT" watermark (samples) taken out first, and nothing allowed to be left over.
+4. A preview window draws SVG pages with glyph outlines and no text, so its pages were taken from the preview response the window received and their glyphs counted against the characters of the PDF page.
+5. Page 1 of each PDF was drawn at the sheet's pixel width (1240, 1190 or 1040 px) and compared with the element screenshot of the sheet by `compareFrames` at channel delta 24. Ink is every pixel with a luma under 128 in either image.
+
+### One row per path
+
+| Path | Where on the deployed app | Screen texts found in the PDF in order | Extra in the PDF | Dates on screen and in the PDF | Page 1, differing pixels and ink | Result |
+|---|---|---|---|---|---|---|
+| Task evaluation report, RT-4 (Half done review, Evaluation v1) in P03 (Scanner format comparison) | Evaluation screen, Download with "PDF, this layout", `GET .../evaluation/exports/report.pdf?zone=Europe/Prague` | 95 of 95, 3 sheets and 3 pages | only the checksum line, once a page | "28 Nov 2026" and "on 28 Nov 2026 at 13:48" on both | 1.64%, ink 39.5% | PASS |
+| Task evaluation report, RT-2 (Signed-off review, Evaluation v1) in P01 (Sentinel node metastasis study) | the same control | 68 of 68, 3 sheets and 3 pages | only the checksum line, once a page | "23 Nov 2026" on both | 1.71%, ink 57.4% | PASS |
+| Evaluation PDF preview window, RT-4 | "Preview the PDF", `GET .../evaluation/preview?zone=Europe/Prague`, then the window's Download | no text to read. Glyphs against PDF characters per page: 574 and 574, 563 and 565, 268 and 268. The window's download is byte for byte the screen's download (sha256 529979ec...) | none | drawn from the same compile | preview against the PDF 1.13%, ink 25.9%. Preview against the sheet 1.84%, ink 43.0% | PASS |
+| Evaluation PDF preview window, RT-2 | the same | glyphs against PDF characters: 594 and 594, 482 and 484, 198 and 198. Download byte for byte the screen's download (sha256 8625254d...) | none | drawn from the same compile | preview against the PDF 1.02%, ink 35.8%. Preview against the sheet 1.81%, ink 59.2% | PASS |
+| Sign-off window's ticked PDF export, RT-4 | Sign-off screen, Export with only "Evaluation report PDF" ticked, "Download 1 file" | 95 of 95, the file is byte for byte the evaluation screen's download | only the checksum line | as the first row | as the first row | PASS |
+| Signed clinical case report, "Showcase case" in P02 (Breast surgery sentinel nodes) | Report screen, "Download PDF", `GET .../clinical-report/versions/1/pdf?zone=Europe/Prague` | 46 of 46, 1 sheet and 1 page | none | "23 Nov 2026, 22:17" and "on 23 November 2026 at 22:17" on both | 5.71%, ink 67.0%, over the 1314 px rows both images have | PASS |
+| Co-sign screen's "Download PDF" | Co-sign screen of "Showcase co-sign" and of "Showcase case" | not checked | not checked | not checked | not measured | NOT CHECKED |
+| Study template sample, saved, "Detection study" | Template library, Preview, `GET /api/study-templates/{id}/preview`, then the window's Download | 51 of 51 against the template editor's sheet, 1 sheet and 1 page. Preview glyphs 424 against 425 PDF characters | only the "DRAFT" watermark | the sheet and the PDF hold no date | 2.30%, ink 41.4%. Preview against the PDF 1.50%, ink 35.8% | PASS |
+| Study template sample, unsaved, the "Detection study copy" draft the editor opens from Duplicate | Template editor, "Preview the PDF", `POST /api/study-templates/preview`, then the window's Download, `POST /api/study-templates/preview/pdf` | 51 of 51, 1 sheet and 1 page. Preview glyphs 424 against 425 PDF characters. The file is byte for byte the saved sample's download | only the "DRAFT" watermark | the sheet and the PDF hold no date | 2.30%, ink 41.4%. Preview against the PDF 1.50%, ink 35.8% | PASS |
+
+The pixel numbers sit where the local ones did: 2.30% and 41.3% for page 1 of the fake evaluation, 2.57% and 50.1% for the template sample and 5.76% and 69.1% for the clinical report. No image had to be opened.
+
+### Findings
+
+| Finding | Evidence | Weight |
+|---|---|---|
+| The co-sign screen's "Download PDF" cannot be reached without co-signing. `cosign-screen.tsx` shows the button only after "Co-sign and sign out" succeeds in the same visit. Opening the co-sign screen of the already signed "Showcase case" shows the form again, with "Return with a note" and "Co-sign and sign out" and no download. | The seeded "Showcase co-sign" report is in state `sent` with no version, and a signature needs a fresh sign in or the password. Co-signing would use up the seeded case for the other walkthroughs until a reseed, so it was left alone. The button calls `reportPdfUrl(projectId, caseId, 1)`, the same URL the report screen's button fetched in the row above. | Not a mismatch. The path is unchecked on the deployed app. TODO: check it after a reseed, by an agent that may sign. |
+| A preview page draws fewer glyphs than its PDF page has characters wherever the text holds "fi". Page 2 of both evaluation reports is 2 short and the template sample is 1 short. | The "fi" pairs counted in the PDF text are 0, 2, 0 for RT-4, 0, 2, 0 for RT-2 and 1 for the sample, the same as each page's shortfall. Plex draws "fi" as one ligature glyph, which pypdf reads back as two characters. | Not a mismatch. The local test allows a difference of one, which a report with two "fi" on a page, as both deployed ones have, would exceed. |
