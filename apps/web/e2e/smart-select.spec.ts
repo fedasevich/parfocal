@@ -232,3 +232,59 @@ test("picking a model, clicking a nucleus and accepting saves the outline", asyn
   await expect(stage).toHaveAttribute("data-annotations", "loaded", { timeout: 15_000 });
   await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
 });
+
+test("Cmd+Z takes back live clicks one by one before it undoes the saved shape", async ({
+  page,
+}) => {
+  const { stage, centre } = await openSmart(page);
+  const corner = { x: centre.x - 300, y: centre.y - 200 };
+  await page.keyboard.press("p");
+  for (const [x, y] of [
+    [0, 0],
+    [120, 10],
+    [100, 120],
+    [10, 100],
+  ] as const) {
+    await page.mouse.click(corner.x + x, corner.y + y);
+  }
+  await page.mouse.click(corner.x + 2, corner.y + 1);
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+  await page.keyboard.press("s");
+  await expect(stage).toHaveAttribute("data-tool", "smart");
+
+  await page.mouse.click(centre.x + 100, centre.y + 40);
+  await settled(page);
+  await page.keyboard.down("Shift");
+  await page.mouse.click(centre.x + 110, centre.y + 40);
+  await settled(page);
+  await page.mouse.click(centre.x + 120, centre.y + 40);
+  await page.keyboard.up("Shift");
+  await expect(layer(page)).toHaveAttribute("data-points", "3");
+  await settled(page);
+
+  await page.keyboard.press("Meta+z");
+  await expect(layer(page)).toHaveAttribute("data-points", "2");
+  await expect(page.getByTestId("smart-undone")).toHaveText("Took back the last click");
+  await settled(page);
+  await page.keyboard.press("Meta+z");
+  await expect(layer(page)).toHaveAttribute("data-points", "1");
+  await settled(page);
+  await expect(proposals(page)).toHaveAttribute("data-proposals", "1");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+
+  await page.keyboard.press("Meta+Shift+z");
+  await expect(layer(page)).toHaveAttribute("data-points", "2");
+  await settled(page);
+  await page.keyboard.press("Meta+z");
+  await expect(layer(page)).toHaveAttribute("data-points", "1");
+  await settled(page);
+
+  await page.keyboard.press("Meta+z");
+  await expect(layer(page)).toHaveAttribute("data-points", "0");
+  await expect(proposals(page)).toHaveCount(0);
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+
+  await page.keyboard.press("Meta+z");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(0);
+});

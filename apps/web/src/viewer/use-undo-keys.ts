@@ -31,6 +31,10 @@ export function useUndoKeys({
       if (phase !== "press") return;
       const aiFirst = aiIsNewer();
       if (action === "redo") {
+        if (smartQueue.current?.canRedo() === true) {
+          smartQueue.current.redo();
+          return;
+        }
         if (!aiFirst || !aiBridge.current.redo()) redoEdit();
         return;
       }

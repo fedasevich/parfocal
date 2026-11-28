@@ -69,7 +69,12 @@ type SmartLayerProps = {
   onDocumentChange: (next: AnnotationDocument) => void;
 };
 
-export type SmartQueueControl = { readonly count: () => number; readonly pop: () => void };
+export type SmartQueueControl = {
+  readonly count: () => number;
+  readonly pop: () => void;
+  readonly canRedo: () => boolean;
+  readonly redo: () => void;
+};
 
 type EarlyPress = { readonly request: SmartPress };
 
@@ -149,6 +154,8 @@ export function SmartLayer({
   const ready = useRef(false);
   const earlyRef = useRef<readonly EarlyPress[]>([]);
   const [early, setEarly] = useState<readonly SmartPress[]>([]);
+  const undone = useRef<readonly SmartPress[]>([]);
+  const [takenBack, setTakenBack] = useState<"undo" | "redo" | null>(null);
   const writeEarly = useCallback((next: readonly EarlyPress[]) => {
     earlyRef.current = next;
     setEarly(next.map((item) => item.request));
@@ -272,6 +279,7 @@ export function SmartLayer({
     if (id === null || !built.current || !smartRunFinished(doc, id)) return;
     runId.current = null;
     built.current = false;
+    undone.current = [];
     void session.current?.then((value) => value.reset());
   }, [doc]);
 
@@ -387,6 +395,8 @@ export function SmartLayer({
         movedScreenPixels: finished.moved,
       });
       if (gesture === null) return;
+      undone.current = [];
+      setTakenBack(null);
       const end = slideAt(latest.current.engine, stage, event);
       const request: SmartPress =
         gesture.kind === "box"
@@ -457,25 +467,66 @@ export function SmartLayer({
 
   useEffect(() => {
     if (!active) return;
-    const count = () => earlyRef.current.length + shown.current.queued.length;
+    const livePrompts = () => shown.current.live?.prompts ?? null;
+    const waitingCount = () => earlyRef.current.length + shown.current.queued.length;
+    const count = () => {
+      const prompts = livePrompts();
+      const liveCount =
+        prompts === null ? 0 : prompts.points.length + (prompts.box === null ? 0 : 1);
+      return waitingCount() + liveCount;
+    };
     const clear = () => {
       writeEarly([]);
       void session.current?.then((value) => value.clearQueue());
     };
+    const lastPress = (): SmartPress | null => {
+      const early = earlyRef.current.at(-1);
+      if (early !== undefined) return early.request;
+      const waiting = shown.current.queued.at(-1);
+      if (waiting !== undefined) return waiting;
+      const prompts = livePrompts();
+      if (prompts === null) return null;
+      const point = prompts.points.at(-1);
+      if (point !== undefined) {
+        return {
+          kind: "point",
+          at: { x: point.x, y: point.y },
+          positive: point.positive,
+          extend: prompts.points.length > 1,
+        };
+      }
+      const box = prompts.box;
+      return box === null
+        ? null
+        : { kind: "box", from: { x: box.x0, y: box.y0 }, to: { x: box.x1, y: box.y1 } };
+    };
     const control: SmartQueueControl = {
       count,
       pop: () => {
+        const removed = lastPress();
+        if (removed !== null) undone.current = [...undone.current, removed];
+        setTakenBack("undo");
         if (earlyRef.current.length > 0) writeEarly(earlyRef.current.slice(0, -1));
         else void session.current?.then((value) => value.removeLast());
       },
+      canRedo: () => undone.current.length > 0,
+      redo: () => {
+        const again = undone.current.at(-1);
+        if (again === undefined) return;
+        undone.current = undone.current.slice(0, -1);
+        setTakenBack("redo");
+        void sessionPromise().then((value) => value.press(again));
+      },
     };
     if (queueControl) queueControl.current = control;
-    const leaveRung = escRegistry?.add("draft", { open: () => count() > 0, peel: clear });
+    const leaveRung = escRegistry?.add("draft", { open: () => waitingCount() > 0, peel: clear });
     return () => {
       if (queueControl?.current === control) queueControl.current = null;
+      undone.current = [];
+      setTakenBack(null);
       leaveRung?.();
     };
-  }, [active, escRegistry, queueControl, writeEarly]);
+  }, [active, escRegistry, queueControl, writeEarly, sessionPromise]);
 
   const live = snapshot.live;
   const prompts = live?.prompts ?? { points: [], box: null };
@@ -702,6 +753,16 @@ export function SmartLayer({
               {fallbackWords[shownFallback]}
             </span>
           ) : null}
+          {takenBack === null ? null : (
+            <span
+              data-testid="smart-undone"
+              data-bar-state=""
+              role="status"
+              className={contextChip}
+            >
+              {takenBack === "undo" ? t`Took back the last click` : t`Put the click back`}
+            </span>
+          )}
           {(status !== null && status !== "found") || queuedCount > 0 ? (
             <span
               data-testid="smart-status"
