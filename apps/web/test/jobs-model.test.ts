@@ -69,6 +69,7 @@ const model = (patch: Partial<ProjectModel>): ProjectModel => ({
   queue_minutes: 8,
   start_minutes: 0,
   latency_ms: null,
+  outputs: [],
   ...patch,
 });
 

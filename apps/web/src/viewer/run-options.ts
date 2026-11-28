@@ -78,6 +78,7 @@ export function buildRunDraft(input: {
     scope,
     parameters: {
       detector: { name: nucleiDetector },
+      typer: { name: nucleiDetector },
       ordering: input.options.ordering,
     },
   };

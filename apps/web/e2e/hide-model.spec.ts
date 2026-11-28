@@ -12,10 +12,7 @@ async function openRunModel(page: Page) {
   await expect(palette.getByRole("option").first()).toHaveText(/Run a model/);
   await page.keyboard.press("Enter");
   await expect(runModel(page)).toBeVisible();
-  await runModel(page)
-    .getByRole("button", { name: /PathoSAM \+ HoVer-NeXt/ })
-    .click();
-  return page.getByRole("listbox", { name: "Models" });
+  return runModel(page);
 }
 
 test("a hidden Parfocal model leaves Run a model", async ({ page }) => {
@@ -28,9 +25,12 @@ test("a hidden Parfocal model leaves Run a model", async ({ page }) => {
     page.getByText("CAMELYON tumor model is hidden from every model list"),
   ).toBeVisible();
 
-  const models = await openRunModel(page);
+  const dialog = await openRunModel(page);
+  await expect(dialog).not.toContainText("CAMELYON tumor model");
+  await expect(dialog.getByRole("checkbox", { name: "Tumor regions and heatmap" })).toBeDisabled();
+  await dialog.getByRole("button", { name: /PathoSAM \+ HoVer-NeXt/ }).click();
+  const models = page.getByRole("listbox", { name: "Models" });
   await expect(models.getByRole("option")).toHaveCount(3);
-  await expect(models).not.toContainText("CAMELYON tumor model");
   await expect(models).toContainText("HoVer-Net");
 });
 
@@ -41,7 +41,7 @@ test("Undo shows the model in every model list again", async ({ page }) => {
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(camelyon).toBeChecked();
 
-  const models = await openRunModel(page);
-  await expect(models.getByRole("option")).toHaveCount(4);
-  await expect(models).toContainText("CAMELYON tumor model");
+  const dialog = await openRunModel(page);
+  await expect(dialog).toContainText("With CAMELYON tumor model");
+  await expect(dialog.getByRole("checkbox", { name: "Tumor regions and heatmap" })).toBeEnabled();
 });

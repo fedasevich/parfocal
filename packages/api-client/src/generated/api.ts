@@ -5044,6 +5044,14 @@ export const ModelMakes = {
   heatmap: "heatmap",
 } as const;
 
+export type ModelOutput = (typeof ModelOutput)[keyof typeof ModelOutput];
+
+export const ModelOutput = {
+  "tumor-regions": "tumor-regions",
+  "cell-outlines": "cell-outlines",
+  "cell-types": "cell-types",
+} as const;
+
 export interface ModelRef {
   name: ModelName;
   version: ModelVersion;
@@ -5691,6 +5699,13 @@ export interface OutlinesToType {
   outlines: OutlineToType[];
 }
 
+export interface OutputEvidence {
+  output: ModelOutput;
+  measured: string | null;
+  data: string | null;
+  result: string | null;
+}
+
 export interface PaintedMap {
   id: string;
   slide_id: string;
@@ -6250,6 +6265,7 @@ export interface ProjectModel {
   seconds_per_mm2?: number | null;
   latency_ms: number | null;
   serving?: Serving;
+  outputs: OutputEvidence[];
 }
 
 export interface SlideFile {

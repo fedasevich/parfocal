@@ -11,6 +11,7 @@ from test_annotations import make_class
 from test_blinding import make_result_set
 from workspace_support import join_project, make_project, make_slide, make_workspace, owner
 
+from parfocal_api.model_catalogue import calibration_of
 from parfocal_api.model_runs import SHARED_QUEUE_MINUTES
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
@@ -933,3 +934,30 @@ def test_a_cancelled_run_and_a_turned_off_notice_send_nothing(
     settle(database, claim(database, lab, Tiles(cancel_at=1).plan()))
     assert ok(read(api, lab, other))["status"] == "cancelled"
     assert run_notices(database, lab) == []
+
+
+def test_a_cell_run_sends_its_typer_or_null_for_outlines_only(api: ApiAs, lab: Lab) -> None:
+    cells = {"name": "pathosam-hovernext"}
+    outlines = one_run(api, lab, parameters={"detector": cells, "typer": None})
+    typed = one_run(api, lab, parameters={"detector": cells, "typer": cells})
+    assert outlines["parameters"]["typer"] is None
+    assert typed["parameters"]["typer"] == {"name": "pathosam-hovernext", "version": "v1.2"}
+    assert calibration_of("pathosam-hovernext", "v1.2", 1) is not None
+
+
+def test_each_model_says_what_it_makes_and_what_was_measured_on_which_data(
+    api: ApiAs, lab: Lab
+) -> None:
+    listed = models_of(api, lab)
+    outputs = {
+        name: [(item["output"], item["measured"] is not None) for item in model["outputs"]]
+        for name, model in listed.items()
+    }
+    assert outputs == {
+        "camelyon-tumor": [("tumor-regions", True)],
+        "pathosam-hovernext": [("cell-outlines", True), ("cell-types", True)],
+        "hovernet": [("cell-outlines", False), ("cell-types", False)],
+    }
+    types = listed["pathosam-hovernext"]["outputs"][1]
+    assert types["measured"].startswith("83.0% of nuclei typed right")
+    assert types["data"] == "PanNuke test split, 12,928 nuclei from 18 tissue sites, lung left out"

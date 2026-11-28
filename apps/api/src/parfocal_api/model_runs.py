@@ -44,6 +44,7 @@ from parfocal_api.model_catalogue import (
     queue_minutes,
     throughput,
 )
+from parfocal_api.model_outputs import OutputEvidence, outputs_of
 from parfocal_api.model_tiers import TierPick, mapped
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -267,6 +268,7 @@ class ProjectModel(BaseModel):
     seconds_per_mm2: float | None = None
     latency_ms: int | None
     serving: Serving = Serving.READY
+    outputs: list[OutputEvidence]
 
 
 class ModelNotFoundError(BadRequestError):
@@ -1078,6 +1080,7 @@ async def list_project_models(
             serving=serving_of(probe, model.name)
             if model.name in NUCLEI_DETECTORS
             else Serving.NOT_SERVED,
+            outputs=outputs_of(model.name),
         )
         for model in CATALOGUE
         if model.name not in hidden

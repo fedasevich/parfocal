@@ -62,6 +62,7 @@ NOT_SERVED = "model-not-served"
 NO_SCALE = "model-run-no-scale"
 NO_AREA = "model-run-no-area"
 TYPER_MISSING = "typer-weights-missing"
+TYPER_NOT_ASKED = "typer-not-asked"
 PROBABILITY_SCALE = 255
 WEIGHTS_FAMILY = "pathosam-vit-b-ais"
 WEIGHTS_VERSION = "v1.2"
@@ -168,20 +169,23 @@ def nuclei_running(
         tissue = image.tissue()
         core, halo = tile_sizes(image.mpp, quality.mpp)
         plan = plan_tiles(whole, bounds_of(settings, whole), core, halo, tissue)
+        typing = typer if settings.typer is not None else None
         detector = TypingDetector(
             PathoSamDetector(ScaledReader(image.reader, image.mpp), model, quality, tissue=tissue),
             image,
-            typer,
+            typing,
         )
         prefix = run_prefix(step.tenant_id, slide_id, step.job_id)
         started = time.perf_counter()
-        progress = StepProgress(step, typing=typer is not None)
+        progress = StepProgress(step, typing=typing is not None)
         ran = await run_tiles(plan, plan.tiles, detector, store, prefix, progress)
         seconds = time.perf_counter() - started
         if ran:
             await report_gpu_seconds(step, seconds, gpu)
         found = {"tiles": len(plan.tiles), "ran": ran, "seconds": round(seconds, 1)}
-        return found if typer is not None else {**found, "untyped": TYPER_MISSING}
+        if settings.typer is None:
+            return {**found, "untyped": TYPER_NOT_ASKED}
+        return found if typing is not None else {**found, "untyped": TYPER_MISSING}
 
     return run
 

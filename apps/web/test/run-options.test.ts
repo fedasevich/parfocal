@@ -15,7 +15,11 @@ test("the default run is the whole slide with fixed settings", () => {
   assert.deepEqual(draft, {
     slide_ids: ["s1"],
     scope: { kind: "slide" },
-    parameters: { detector: { name: "pathosam-hovernext" }, ordering: "raster" },
+    parameters: {
+      detector: { name: "pathosam-hovernext" },
+      typer: { name: "pathosam-hovernext" },
+      ordering: "raster",
+    },
   });
 });
 

@@ -21,7 +21,12 @@ from parfocal_common.model_runs import RunScopeKind, RunSettings, run_prefix, ti
 from parfocal_common.object_store import Downloaded, ObjectStore, StorageError
 from parfocal_common.outline_types import TYPER_CLASSES, TYPER_VERSION, TYPER_WEIGHTS
 from parfocal_ml import nuclei_run_worker
-from parfocal_ml.nuclei_run_worker import TYPER_MISSING, loaded_typer, nuclei_running
+from parfocal_ml.nuclei_run_worker import (
+    TYPER_MISSING,
+    TYPER_NOT_ASKED,
+    loaded_typer,
+    nuclei_running,
+)
 from parfocal_ml.outline_typer_worker import WEIGHTS_NAME
 from parfocal_ml.sam_contract import onnx_dir
 from parfocal_ml.tumor_map_job import SlideImage
@@ -89,12 +94,14 @@ class FakeStep:
         return False
 
 
-def settings(scope: Mapping[str, int] | None = None) -> RunSettings:
+def settings(scope: Mapping[str, int] | None = None, *, typed: bool = True) -> RunSettings:
     return RunSettings(
         scope_kind=RunScopeKind.SLIDE if scope is None else RunScopeKind.VIEW,
         scope=scope,
         detector="pathosam-hovernext",
         detector_version="v1.2",
+        typer="pathosam-hovernext" if typed else None,
+        typer_version="v1.2" if typed else None,
     )
 
 
@@ -171,6 +178,18 @@ def test_without_typer_weights_the_run_finishes_with_untyped_cells_and_says_why(
     cells = stored_cells(store, step)
     assert len(cells) > 100
     assert found["untyped"] == TYPER_MISSING
+    assert all(cell.class_index == UNCLASSIFIED and cell.probs is None for cell in cells)
+    assert all("typed" not in unit for unit in step.units.values())
+
+
+def test_an_outlines_only_run_stores_untyped_cells_even_with_the_typer_loaded(
+    no_database: list[RunSettings],
+) -> None:
+    no_database[0] = settings(typed=False)
+    step, found, store = ran(disk_slide(), dark_is_neoplastic)
+    cells = stored_cells(store, step)
+    assert len(cells) > 100
+    assert found["untyped"] == TYPER_NOT_ASKED
     assert all(cell.class_index == UNCLASSIFIED and cell.probs is None for cell in cells)
     assert all("typed" not in unit for unit in step.units.values())
 

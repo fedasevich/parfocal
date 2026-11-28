@@ -186,6 +186,7 @@ type StepContext = { model: ProjectModel | undefined; resultSet: string };
 
 const untypedReasons: Record<string, string> = {
   "typer-weights-missing": "the typer weights are missing",
+  "typer-not-asked": "only outlines were asked for",
 };
 
 function typingDetail(stage: RunStage): string | undefined {

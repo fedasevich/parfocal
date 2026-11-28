@@ -13,23 +13,26 @@ import {
   useStartModelRuns,
 } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
-import { ModelPicker, OutcomeRow } from "@parfocal/ui/components/model-picker";
+import { OutcomeRow } from "@parfocal/ui/components/model-picker";
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { TokenField } from "@parfocal/ui/components/token-field";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { now } from "../../clock.ts";
 import { formatDayMonth } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { runEstimate } from "./model.ts";
+import { slideItems, startingModel, startingSlides } from "./run-model-parts.ts";
 import {
-  modelGroups,
-  runBlockers,
-  slideItems,
-  startingModel,
-  startingSlides,
-} from "./run-model-parts.ts";
+  cellModels,
+  outputBlockers,
+  type PlannedRun,
+  plannedRuns,
+  startingFor,
+  startingPicks,
+  tumorModels,
+} from "./run-outputs.ts";
+import { RunOutputsZone } from "./run-outputs-zone.tsx";
 
 export type RunModelScene = "pick" | "menu" | "lab";
 
@@ -90,6 +93,52 @@ type RunModelFormProps = {
   onStarted: () => void;
 };
 
+function useRunEstimate(
+  projectId: string,
+  model: ProjectModel | undefined,
+  slides: ProjectSlide[],
+  picked: string[],
+  wanted: boolean,
+) {
+  const projected = model?.seconds_per_mm2 != null ? model : undefined;
+  const estimates = okData(
+    useEstimateModelRun(
+      projectId,
+      projected?.name ?? "",
+      { slide_id: picked },
+      { query: { enabled: wanted && projected !== undefined && picked.length > 0 } },
+    ).data,
+  );
+  return model
+    ? runEstimate(
+        model,
+        picked.map((id) => slides.find((slide) => slide.id === id) ?? {}),
+        now(),
+        estimates,
+      )
+    : null;
+}
+
+type PlannedRowProps = {
+  run: PlannedRun;
+  estimate: ReturnType<typeof runEstimate> | null;
+  pickedCount: number;
+};
+
+function PlannedRow({ run, estimate, pickedCount }: PlannedRowProps) {
+  const { t } = useLingui();
+  if (!estimate) return null;
+  const what = run.what;
+  const title = !pickedCount
+    ? t`No slides picked yet`
+    : estimate.total === null
+      ? t`${what}: time and cost are not known yet`
+      : estimate.cost === null
+        ? t`${what}: about ${estimate.total} min, done around ${estimate.doneAround}`
+        : t`${what}: about ${estimate.total} min and ${estimate.cost}, done around ${estimate.doneAround}`;
+  return <OutcomeRow icon="calendar" title={title} detail={estimate.perSlide} />;
+}
+
 function RunModelForm({
   projectLabel,
   projectId,
@@ -103,47 +152,33 @@ function RunModelForm({
   onStarted,
 }: RunModelFormProps) {
   const { t } = useLingui();
-
+  const initial = models.find((item) => item.id === initialModel);
   const [picked, setPicked] = useState(initialSlides);
-  const [modelId, setModelId] = useState<string | null>(initialModel);
-  const [open, setOpen] = useState(menuOpen);
+  const [picks, setPicks] = useState(() => startingPicks(initial));
+  const [tumorId, setTumorId] = useState(() => startingFor(tumorModels(models), initial));
+  const [cellId, setCellId] = useState(() => startingFor(cellModels(models), initial));
   const queryClient = useQueryClient();
   const start = useStartModelRuns();
-  const model = models.find((item) => item.id === modelId);
-  const items = slideItems(slides, setNames, model);
+  const tumor = tumorModels(models).find((item) => item.id === tumorId);
+  const cells = cellModels(models).find((item) => item.id === cellId);
+  const primary = picks.outlines ? cells : picks.tumor ? tumor : undefined;
+  const items = slideItems(slides, setNames, primary);
   const again = picked.some((id) => items.find((item) => item.id === id)?.end);
-  const blockers = runBlockers(picked.length, model);
-  const projectedModel = model?.seconds_per_mm2 != null ? model : undefined;
-  const estimates = okData(
-    useEstimateModelRun(
-      projectId,
-      projectedModel?.name ?? "",
-      { slide_id: picked },
-      { query: { enabled: projectedModel !== undefined && picked.length > 0 } },
-    ).data,
-  );
-  const estimate = model
-    ? runEstimate(
-        model,
-        picked.map((id) => slides.find((slide) => slide.id === id) ?? {}),
-        now(),
-        estimates,
-      )
-    : null;
+  const blockers = outputBlockers(picked.length, picks, tumor, cells);
+  const planned = plannedRuns(picked, picks, tumor, cells);
+  const tumorEstimate = useRunEstimate(projectId, tumor, slides, picked, picks.tumor);
+  const cellEstimate = useRunEstimate(projectId, cells, slides, picked, picks.outlines);
+  const estimateOf = (run: PlannedRun) => (run.model === tumor ? tumorEstimate : cellEstimate);
   const run = async () => {
-    if (model?.serving !== "ready" || picked.length === 0) return;
-    await start.mutateAsync({
-      projectId,
-      data: {
-        slide_ids: picked,
-        scope: { kind: "slide" },
-        parameters: { detector: { name: model.name, version: model.version } },
-      },
-    });
+    if (blockers.length > 0 || planned.length === 0) return;
+    for (const item of planned) {
+      await start.mutateAsync({ projectId, data: item.draft });
+    }
     await queryClient.invalidateQueries({ queryKey: getListMyJobsQueryKey() });
     await queryClient.invalidateQueries({ queryKey: getListModelRunsQueryKey(projectId) });
     onStarted();
   };
+  const names = planned.map((item) => item.model.title).join(" and ");
   return (
     <SmallModal
       open
@@ -186,51 +221,39 @@ function RunModelForm({
           </small>
         </div>
       </SmallModalZone>
-      <SmallModalZone title={t`Model`}>
-        <ModelPicker
-          groups={modelGroups(models)}
-          value={modelId}
-          onValueChange={setModelId}
-          open={open}
-          onOpenChange={setOpen}
-          invalid={!model}
-          footer={
-            <Link
-              to="/admin"
-              search={{ scene: "addmodel" }}
-              className="flex items-center gap-2 p-2.5 text-accent no-underline hover:underline"
-            >
-              <Icon name="plus" />
-              <Trans>Connect your own model</Trans>
-            </Link>
-          }
-          note={t`A run always uses the latest version, and the result set records which one.`}
+      <SmallModalZone title={t`What to make`}>
+        <RunOutputsZone
+          models={models}
+          picks={picks}
+          onPicks={setPicks}
+          tumorId={tumorId}
+          onTumorId={setTumorId}
+          cellId={cellId}
+          onCellId={setCellId}
+          menuOpen={menuOpen}
         />
       </SmallModalZone>
       <SmallModalZone title={t`What happens`}>
         <div className="grid gap-3">
-          {model && estimate ? (
-            <>
-              <OutcomeRow
-                icon="layers"
-                title={t`A new result set on each slide`}
-                detail={t`Called ${model.title} · ${formatDayMonth(now())}. Result sets you already have stay as they are.`}
-              />
-              <OutcomeRow
-                icon="calendar"
-                title={
-                  !picked.length
-                    ? t`No slides picked yet`
-                    : estimate.total === null
-                      ? t`Time and cost are not known yet`
-                      : estimate.cost === null
-                        ? t`About ${estimate.total} min, done around ${estimate.doneAround}`
-                        : t`About ${estimate.total} min and ${estimate.cost}, done around ${estimate.doneAround}`
-                }
-                detail={estimate.perSlide}
-              />
-            </>
+          {planned.length ? (
+            <OutcomeRow
+              icon="layers"
+              title={
+                planned.length === 1
+                  ? t`A new result set on each slide`
+                  : t`Two jobs and two new result sets on each slide`
+              }
+              detail={t`Called ${names} · ${formatDayMonth(now())}. Result sets you already have stay as they are.`}
+            />
           ) : null}
+          {planned.map((item) => (
+            <PlannedRow
+              key={item.what}
+              run={item}
+              estimate={estimateOf(item)}
+              pickedCount={picked.length}
+            />
+          ))}
           <OutcomeRow
             icon="bell"
             title={t`You get a notification when it is done`}

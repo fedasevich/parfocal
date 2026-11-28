@@ -75028,6 +75028,15 @@
         ],
         "title": "ModelOfTest"
       },
+      "ModelOutput": {
+        "type": "string",
+        "enum": [
+          "tumor-regions",
+          "cell-outlines",
+          "cell-types"
+        ],
+        "title": "ModelOutput"
+      },
       "ModelRef": {
         "properties": {
           "name": {
@@ -77335,6 +77344,54 @@
         ],
         "title": "OutlinesToType"
       },
+      "OutputEvidence": {
+        "properties": {
+          "output": {
+            "$ref": "#/components/schemas/ModelOutput"
+          },
+          "measured": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Measured"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "output",
+          "measured",
+          "data",
+          "result"
+        ],
+        "title": "OutputEvidence"
+      },
       "PaintedMap": {
         "properties": {
           "id": {
@@ -79583,6 +79640,13 @@
           "serving": {
             "$ref": "#/components/schemas/Serving",
             "default": "ready"
+          },
+          "outputs": {
+            "items": {
+              "$ref": "#/components/schemas/OutputEvidence"
+            },
+            "type": "array",
+            "title": "Outputs"
           }
         },
         "type": "object",
@@ -79600,7 +79664,8 @@
           "runs_ahead",
           "queue_minutes",
           "start_minutes",
-          "latency_ms"
+          "latency_ms",
+          "outputs"
         ],
         "title": "ProjectModel"
       },
