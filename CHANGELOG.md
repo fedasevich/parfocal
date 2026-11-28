@@ -2,6 +2,32 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.70.0 (2026-11-28)
+
+### Features
+
+- PROTO-209: Load a comment thread behind message skeletons, not the app loader
+- PROTO-208: One-scroll Display tab, foldable input help, Figma-style layers tree collapse
+- PROTO-204: Draw dotted cells as outlines once they are 12 px on screen
+
+### Fixes
+
+- EXP-020: Complete the change-type study task from the saved Immune decision, not the type bar
+- PROTO-211: Say why a run cannot be projected and explain the GPU start minute
+- PROTO-210: Clear the accepted Smart select proposal when its accept is undone
+
+### Docs
+
+- PROTO-210: Log the v0.69.0 deploy
+- PROTO-209: Log and move to review after merge
+- TEST-056: Walk of v0.69.0, four deployed clauses pass with two 11 tile runs measured
+- TEST-056: Mark the no-scale reason and the outline left after Cmd+Z as failing halves
+- TEST-056: Tick the v0.69.0 passes and reopen two halves
+- PROTO-208: Log and move to review after merge
+- EXP-020: Log and move to review after merge
+- PROTO-211: Log the reason lines and the undo proposal fix
+- PROTO-204: Log and move to review after merge
+
 ## v0.69.0 (2026-11-28)
 
 ### Features
