@@ -1,7 +1,8 @@
 # XXXX. Report PDFs print the reader's time zone and lay out text in the screen's line box
 
 - Date: 2026-11-28
-- Status: Accepted, amends [ADR 0443](0443-one-typst-report-layout-for-every-pdf.md) (one Typst report layout for every PDF)
+- Status: Accepted
+- Amends: [ADR 0443](0443-one-typst-report-layout-for-every-pdf.md) (one Typst report layout for every PDF)
 - Deciders: Claude, for PROTO-171 (the downloaded report PDF matches the on-screen report)
 - Backlog: PROTO-171
 

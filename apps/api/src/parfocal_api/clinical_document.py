@@ -428,7 +428,7 @@ SOURCE = (
 #report-meta(doc.at("head"))
 #if "amendment" in doc {
   let amendment = doc.at("amendment")
-  block(width: 100%, inset: (x: 10pt, y: 8pt), radius: 3pt, fill: rgb("#fdf6dc"),
+  block(width: 100%, inset: (x: 11pt, y: 9pt), radius: 3pt, fill: rgb("#fdf6dc"),
     stroke: 1pt + rgb("#c9a227"), stack(spacing: report-row-gap,
       text(weight: "bold", amendment.at("title")),
       [Reason: #amendment.at("reason")],
