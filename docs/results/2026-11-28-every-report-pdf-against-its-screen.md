@@ -40,6 +40,26 @@ The one text not found as a whole is the change row, which the screen splits int
 
 The baselines that still differ are the four matrix column names, 2.5 px low, and the change line on the right of the letterhead, 0.4 px. Page 1 lost more than half its differing ink when the letterhead rule, the facts rule and the tile borders were made to take space as CSS borders do. Most of what remains is glyph placement along a line. Chrome on this Mac draws Plex Sans about 0.38 px wider per character at 7.5 to 11 px and 0.18 px at 15 px than Typst does, measured over 60 strings, so the layout adds that as tracking. Without it the lab name and the letterhead lines did not wrap where the screen wraps them. Small offsets of a glyph along a line fail most ink pixels even when the text sits where the screen puts it, which is why pages 2 and 3, mostly tables, still show about 90%.
 
+### Study template samples (`previewStudyTemplate`, `downloadStudyTemplatePreview`, `previewSavedStudyTemplate`, `downloadSavedStudyTemplatePreview`)
+
+The template editor does not draw `ReportPage`. It draws `ReportPages` in `packages/ui/src/components/report-editor-pages.tsx`: a sheet 520 CSS px wide with 28 px padding, text at 9, 11 or 13 px by the text size setting, line height 1.5, the "Parfocal" and "Sample project · sample numbers" letterhead with the filled title and subtitle, a running header on later pages, the blocks in a two column grid with fixed sample bodies, and a footer with "Sample · not a real evaluation" or the signature line and the page number. The capture opened `/admin?section=templates` on the fake API, opened CAMELYON rounds in the editor and gave it a draft with every block kind, two half width pairs, a page break, a hidden title and an empty text block (saved as `packages/test-fixtures/template-sample-screen.json`), then took each `section[data-page]` at device scale 2, 1040 x 1471 px.
+
+What differed before: the samples printed the evaluation layout of `ReportData` with other sample numbers (0.88, 0.83, 0.85 where the editor shows 0.86, 0.81, 0.77), a "CAMELYON rounds Evaluation version 1" running header, a Project, Task, Signed by and Checksum block, Results as a Measure and Value table, "Pick a slide for this figure." and "Pick a review task to compare with." where the editor shows sample bodies, the text block with its `{task}` placeholders unfilled, Decisions and Signature sections and an objects appendix the editor does not have, and five pages where the editor shows three.
+
+| Measure | Before | After |
+|---|---|---|
+| Editor texts found in the PDF text, of 142 | 50 | 142 |
+| Pages | 5 | 3 |
+| Differing pixels, page 1 | 7.76% | 3.57% |
+| Differing pixels, page 2 | 11.73% | 3.50% |
+| Differing pixels, page 3 | 0.95% | 0.91% |
+| Differing ink pixels, page 1 | 98.2% | 70.7% |
+| Differing ink pixels, page 2 | 99.7% | 83.0% |
+| Differing ink pixels, page 3 | 98.8% | 83.3% |
+| Text baselines more than 0.6 px from the editor's, after | | 0 of 142 |
+
+The samples are now drawn by `parfocal_api.template_sample`, a port of `ReportPages`, `SampleBody`, `filled`, `sampleValue` and `paginate`, with `sample_layout.typ` at the editor sheet's scale, one px being the page width over 520. The test finds every editor text in order with nothing left over but the "DRAFT" watermark, which the editor draws as a CSS `::after` and so has no DOM text. The checksum line is gone from the samples, because the editor shows none. Table columns still start up to 4.5 px from the editor's, because Typst measures Plex Sans semibold narrower and regular wider than Chrome does at 9 px, and the table splits its width in proportion to those measures as the browser does. "Cohen's κ" falls back to Libertinus Serif for the κ, as in the evaluation PDF, because the shipped Plex Sans files carry Latin only.
+
 ## Interpretation
 
 - The evaluation PDF is now drawn from the same payloads the screen uses (`getEvaluationReport`, `getTaskEvaluation`, `getDisagreementQueue`, `getReviewTask` and member names), through a Python port of `ReportPage` in `apps/web/src/screens/evaluation/report-pages.tsx`, and laid out at the sheet's own scale: 620 CSS px across an A4 page, 10 px text at line height 1.4.
