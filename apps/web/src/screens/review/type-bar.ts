@@ -145,3 +145,22 @@ export function chosenType(
     return choice.raw === answer.raw && choice.reasons.join() === answer.reasons.join();
   })?.id;
 }
+
+export function retypedTo(
+  typeId: string,
+  cells: readonly ReviewObject[],
+  classes: ProjectClass[],
+  decisions: ReadonlyMap<string, { reasons: readonly string[]; reason_class_id: string | null }>,
+): number {
+  const classId = classes.find((item) => item.name === typeId)?.id;
+  if (classId === undefined) return 0;
+  return cells.filter((cell) => {
+    const stored = decisions.get(cell.object);
+    return (
+      cell.kind === "cell" &&
+      cell.class_name !== typeId &&
+      stored?.reasons.includes("wrong_class") === true &&
+      stored.reason_class_id === classId
+    );
+  }).length;
+}
