@@ -222,6 +222,7 @@ import type {
   SlideCoverage,
   SlideDetail,
   SlideEmbeddings,
+  SlideEstimate,
   SlideFigure,
   SlideMoved,
   SlidePage,
@@ -5347,8 +5348,18 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     runs_ahead: faker.number.int(),
     queue_minutes: faker.number.int(),
     start_minutes: faker.number.int(),
+    seconds_per_mm2: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
     serving: faker.helpers.arrayElement(Object.values(Serving)),
+  }));
+
+export const getEstimateModelRunResponseMock = (): SlideEstimate[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    slide_id: faker.string.uuid(),
+    tissue_mm2: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    minutes: faker.helpers.arrayElement([faker.number.int(), null]),
+    dollars: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    projected: faker.datatype.boolean(),
   }));
 
 export const getStartTumorMapResponseMock = (
@@ -23272,6 +23283,30 @@ export const getListProjectModelsMockHandler = (
   );
 };
 
+export const getEstimateModelRunMockHandler = (
+  overrideResponse?:
+    | SlideEstimate[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideEstimate[]> | SlideEstimate[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/models/:modelName/estimates",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEstimateModelRunResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getStartTumorMapMockHandler = (
   overrideResponse?:
     | TumorMapJob
@@ -31949,6 +31984,7 @@ export const getParfocalAPIMock = () => [
   getRetryModelRunMockHandler(),
   getMoveModelRunMockHandler(),
   getListProjectModelsMockHandler(),
+  getEstimateModelRunMockHandler(),
   getStartTumorMapMockHandler(),
   getListModelTiersMockHandler(),
   getSetModelTierMockHandler(),

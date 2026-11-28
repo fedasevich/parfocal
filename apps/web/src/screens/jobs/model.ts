@@ -1,5 +1,6 @@
-import type { ModelRun, MyJob, ProjectModel, RunStage } from "@parfocal/api-client";
+import type { ModelRun, MyJob, ProjectModel, RunStage, SlideEstimate } from "@parfocal/api-client";
 import { daysBetween, formatClock, formatDayMonth } from "../format.ts";
+import { projectedEstimate } from "./projected-estimate.ts";
 
 export type ProgressTone = "accent" | "ok" | "warn" | "bad";
 
@@ -321,7 +322,12 @@ export function startedText(job: MyJob, by: string, today: Date): string {
   return days === 0 ? `${when} by ${by}` : `${when} ${formatClock(at)} by ${by}`;
 }
 
-export type RunEstimate = { total: number; doneAround: string; perSlide: string };
+export type RunEstimate = {
+  total: number | null;
+  doneAround: string | null;
+  perSlide: string;
+  cost: string | null;
+};
 
 function queueAhead(model: ProjectModel): string {
   if (model.runs_ahead === 0 && model.queue_minutes > 0)
@@ -343,7 +349,15 @@ export function slideMinutes(model: ProjectModel, size: SlideSize | undefined): 
   return Math.max(2, Math.ceil(startMinutes + (tiles / referenceTiles) * (typical - startMinutes)));
 }
 
-export function runEstimate(model: ProjectModel, sizes: SlideSize[], now: Date): RunEstimate {
+export function runEstimate(
+  model: ProjectModel,
+  sizes: SlideSize[],
+  now: Date,
+  estimates?: SlideEstimate[],
+): RunEstimate {
+  if (model.seconds_per_mm2 != null) {
+    return projectedEstimate(model, sizes.length, estimates, now, queueAhead(model));
+  }
   const each = sizes.map((size) => slideMinutes(model, size));
   const total = each.reduce((sum, minutes) => sum + minutes, 0);
   const least = each.length ? Math.min(...each) : model.minutes_per_slide;
@@ -360,7 +374,7 @@ export function runEstimate(model: ProjectModel, sizes: SlideSize[], now: Date):
       : model.host === "lab"
         ? `About ${range} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
         : `About ${range} min a slide on the ${model.server}. ${queueAhead(model)}${start}`;
-  return { total: total + gpuStart, doneAround, perSlide };
+  return { total: total + gpuStart, doneAround, perSlide, cost: null };
 }
 
 export const makesLabel = { regions: "Regions", cells: "Cells", heatmap: "Heatmap" } as const;

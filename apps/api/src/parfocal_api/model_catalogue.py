@@ -64,6 +64,13 @@ class CatalogueModel:
     description: str
     makes: tuple[ModelMakes, ...]
     nominal_minutes: int
+    projected_seconds_per_mm2: float | None = None
+
+
+L4_RUN_SECONDS = 94.9
+L4_RUN_DOLLARS = 0.0178
+L4_DOLLARS_PER_SECOND = L4_RUN_DOLLARS / L4_RUN_SECONDS
+NUCLEI_SECONDS_PER_MM2 = 9198 / 61.27
 
 
 CATALOGUE: tuple[CatalogueModel, ...] = (
@@ -80,8 +87,9 @@ CATALOGUE: tuple[CatalogueModel, ...] = (
         "v1.2",
         "PathoSAM + HoVer-NeXt",
         "Every nucleus outlined and typed",
-        (ModelMakes.REGIONS, ModelMakes.CELLS),
+        (ModelMakes.CELLS,),
         17,
+        NUCLEI_SECONDS_PER_MM2,
     ),
     CatalogueModel(
         "hovernet",

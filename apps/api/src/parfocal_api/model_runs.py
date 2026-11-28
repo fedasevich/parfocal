@@ -264,6 +264,7 @@ class ProjectModel(BaseModel):
     runs_ahead: int
     queue_minutes: int
     start_minutes: int
+    seconds_per_mm2: float | None = None
     latency_ms: int | None
     serving: Serving = Serving.READY
 
@@ -1072,6 +1073,7 @@ async def list_project_models(
             runs_ahead=len(ahead),
             queue_minutes=queue_minutes(ahead, minutes, minutes[model.name], now, shared),
             start_minutes=start if model.name in NUCLEI_DETECTORS else 0,
+            seconds_per_mm2=model.projected_seconds_per_mm2,
             latency_ms=None,
             serving=serving_of(probe, model.name)
             if model.name in NUCLEI_DETECTORS

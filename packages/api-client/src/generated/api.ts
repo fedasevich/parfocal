@@ -6247,6 +6247,7 @@ export interface ProjectModel {
   runs_ahead: number;
   queue_minutes: number;
   start_minutes: number;
+  seconds_per_mm2?: number | null;
   latency_ms: number | null;
   serving?: Serving;
 }
@@ -7620,6 +7621,14 @@ export interface SlideEmbeddings {
   tile_count: number;
 }
 
+export interface SlideEstimate {
+  slide_id: string;
+  tissue_mm2: number | null;
+  minutes: number | null;
+  dollars: number | null;
+  projected: boolean;
+}
+
 export interface SlideMove {
   case_id: string | null;
   /**
@@ -8874,6 +8883,13 @@ export type ListModelRunsParams = {
    * @maximum 200
    */
   limit?: number;
+};
+
+export type EstimateModelRunParams = {
+  /**
+   * @maxItems 200
+   */
+  slide_id: string[];
 };
 
 export type ListModelRunAreasParams = {
@@ -25492,6 +25508,240 @@ export function useListProjectModels<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListProjectModelsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type estimateModelRunResponse200 = {
+  data: SlideEstimate[];
+  status: 200;
+};
+
+export type estimateModelRunResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type estimateModelRunResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type estimateModelRunResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type estimateModelRunResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type estimateModelRunResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type estimateModelRunResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type estimateModelRunResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type estimateModelRunResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type estimateModelRunResponseSuccess = estimateModelRunResponse200 & {
+  headers: Headers;
+};
+export type estimateModelRunResponseError = (
+  | estimateModelRunResponse400
+  | estimateModelRunResponse401
+  | estimateModelRunResponse403
+  | estimateModelRunResponse404
+  | estimateModelRunResponse409
+  | estimateModelRunResponse422
+  | estimateModelRunResponse429
+  | estimateModelRunResponse500
+) & {
+  headers: Headers;
+};
+
+export type estimateModelRunResponse =
+  | estimateModelRunResponseSuccess
+  | estimateModelRunResponseError;
+
+export const getEstimateModelRunUrl = (
+  projectId: string,
+  modelName: string,
+  params: EstimateModelRunParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["slide_id"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/models/${modelName}/estimates?${stringifiedParams}`
+    : `/api/projects/${projectId}/models/${modelName}/estimates`;
+};
+
+/**
+ * @summary Estimate Model Run
+ */
+export const estimateModelRun = async (
+  projectId: string,
+  modelName: string,
+  params: EstimateModelRunParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<estimateModelRunResponse> => {
+  return apiFetch<estimateModelRunResponse>(getEstimateModelRunUrl(projectId, modelName, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getEstimateModelRunQueryKey = (
+  projectId: string,
+  modelName: string,
+  params?: EstimateModelRunParams,
+) => {
+  return [
+    `/api/projects/${projectId}/models/${modelName}/estimates`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getEstimateModelRunQueryOptions = <
+  TData = Awaited<ReturnType<typeof estimateModelRun>>,
+  TError = Problem,
+>(
+  projectId: string,
+  modelName: string,
+  params: EstimateModelRunParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof estimateModelRun>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getEstimateModelRunQueryKey(projectId, modelName, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof estimateModelRun>>> = ({ signal }) =>
+    estimateModelRun(projectId, modelName, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      modelName !== null &&
+      modelName !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof estimateModelRun>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type EstimateModelRunQueryResult = NonNullable<Awaited<ReturnType<typeof estimateModelRun>>>;
+export type EstimateModelRunQueryError = Problem;
+
+export function useEstimateModelRun<
+  TData = Awaited<ReturnType<typeof estimateModelRun>>,
+  TError = Problem,
+>(
+  projectId: string,
+  modelName: string,
+  params: EstimateModelRunParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof estimateModelRun>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof estimateModelRun>>,
+          TError,
+          Awaited<ReturnType<typeof estimateModelRun>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useEstimateModelRun<
+  TData = Awaited<ReturnType<typeof estimateModelRun>>,
+  TError = Problem,
+>(
+  projectId: string,
+  modelName: string,
+  params: EstimateModelRunParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof estimateModelRun>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof estimateModelRun>>,
+          TError,
+          Awaited<ReturnType<typeof estimateModelRun>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useEstimateModelRun<
+  TData = Awaited<ReturnType<typeof estimateModelRun>>,
+  TError = Problem,
+>(
+  projectId: string,
+  modelName: string,
+  params: EstimateModelRunParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof estimateModelRun>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Estimate Model Run
+ */
+
+export function useEstimateModelRun<
+  TData = Awaited<ReturnType<typeof estimateModelRun>>,
+  TError = Problem,
+>(
+  projectId: string,
+  modelName: string,
+  params: EstimateModelRunParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof estimateModelRun>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getEstimateModelRunQueryOptions(projectId, modelName, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

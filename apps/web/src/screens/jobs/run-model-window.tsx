@@ -4,6 +4,7 @@ import {
   getListMyJobsQueryKey,
   type ProjectModel,
   type ProjectSlide,
+  useEstimateModelRun,
   useGetModelRunDefaults,
   useGetProject,
   useListProjectModels,
@@ -112,11 +113,21 @@ function RunModelForm({
   const items = slideItems(slides, setNames, model);
   const again = picked.some((id) => items.find((item) => item.id === id)?.end);
   const blockers = runBlockers(picked.length, model);
+  const projectedModel = model?.seconds_per_mm2 != null ? model : undefined;
+  const estimates = okData(
+    useEstimateModelRun(
+      projectId,
+      projectedModel?.name ?? "",
+      { slide_id: picked },
+      { query: { enabled: projectedModel !== undefined && picked.length > 0 } },
+    ).data,
+  );
   const estimate = model
     ? runEstimate(
         model,
         picked.map((id) => slides.find((slide) => slide.id === id) ?? {}),
         now(),
+        estimates,
       )
     : null;
   const run = async () => {
@@ -208,9 +219,13 @@ function RunModelForm({
               <OutcomeRow
                 icon="calendar"
                 title={
-                  picked.length
-                    ? t`About ${estimate.total} min, done around ${estimate.doneAround}`
-                    : t`No slides picked yet`
+                  !picked.length
+                    ? t`No slides picked yet`
+                    : estimate.total === null
+                      ? t`Time and cost are not known yet`
+                      : estimate.cost === null
+                        ? t`About ${estimate.total} min, done around ${estimate.doneAround}`
+                        : t`About ${estimate.total} min and ${estimate.cost}, done around ${estimate.doneAround}`
                 }
                 detail={estimate.perSlide}
               />

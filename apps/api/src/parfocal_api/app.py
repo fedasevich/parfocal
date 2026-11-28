@@ -57,6 +57,7 @@ from parfocal_api import (
     link_imports,
     maintenance,
     model_area,
+    model_estimates,
     model_registry,
     model_run_progress,
     model_runs,
@@ -280,6 +281,7 @@ def create_app(
     app.include_router(admin_console.router)
     app.include_router(invite_preview.router)
     app.include_router(model_runs.router)
+    app.include_router(model_estimates.router)
     app.include_router(tumor_maps.router)
     app.include_router(model_tiers.router)
     app.include_router(hidden_models.router)

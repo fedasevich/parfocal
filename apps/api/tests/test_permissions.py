@@ -863,6 +863,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/projects/{w.project}/slides/{w.slide}/tumor-maps"
     ),
     "listProjectModels": lambda w: Call("GET", f"/api/projects/{w.project}/models"),
+    "estimateModelRun": lambda w: Call(
+        "GET",
+        f"/api/projects/{w.project}/models/pathosam-hovernext/estimates?slide_id={w.slide}",
+    ),
     "getModelRunDefaults": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs/defaults"),
     "getModelRun": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}"),
     "listModelRunAreas": lambda w: Call(

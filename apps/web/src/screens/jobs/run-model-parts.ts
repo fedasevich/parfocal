@@ -41,7 +41,10 @@ export function modelGroups(models: ProjectModel[]): ModelGroup[] {
     title: model.title,
     description: model.description,
     makes: model.makes.map((item) => makesLabel[item]),
-    perSlide: `${model.minutes_per_slide} min a slide`,
+    perSlide:
+      model.seconds_per_mm2 != null
+        ? "Time and cost follow the tissue"
+        : `${model.minutes_per_slide} min a slide`,
     offline: model.serving === "offline",
   });
   return [

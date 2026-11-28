@@ -17,6 +17,7 @@ import type {
 } from "../generated/api.ts";
 import { hiddenModelHandlers, isModelHidden } from "./hidden-models.ts";
 import { fakeJobsState, updateJobsState } from "./jobs-scene.ts";
+import { modelEstimateHandlers } from "./model-estimate-handlers.ts";
 import { people, projectByCode, projects } from "./scenario.ts";
 import {
   batchesFor,
@@ -163,6 +164,7 @@ export const toProjectModels = (): ProjectModel[] =>
       runs_ahead: model.runsAhead,
       queue_minutes: model.queueMinutes,
       start_minutes: 0,
+      seconds_per_mm2: model.name === "pathosam-hovernext" ? 150.1 : null,
       latency_ms: isWorkerOffline(model.name) ? null : model.latencyMs,
       serving: servingOf(model.name),
     }),
@@ -221,6 +223,7 @@ export function jobHandlers(): RequestHandler[] {
     getGetModelRunDefaultsMockHandler(() => toModelRunDefaults()),
     moveRunHandler(),
     ...hiddenModelHandlers(),
+    ...modelEstimateHandlers(),
     getListMyJobsMockHandler(() => toMyJobs()),
     getListModelRunsMockHandler(({ params, request }) =>
       toModelRuns(String(params.projectId), new URL(request.url).searchParams.get("batch_id")),

@@ -55,7 +55,7 @@ export const models: ScenarioModel[] = [
     version: "v1.2",
     title: "PathoSAM + HoVer-NeXt",
     description: "Every nucleus outlined and typed",
-    makes: ["regions", "cells"],
+    makes: ["cells"],
     minutesPerSlide: 17,
     host: "parfocal",
     server: parfocalGpu,
